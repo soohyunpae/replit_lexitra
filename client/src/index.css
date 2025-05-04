@@ -1,0 +1,196 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    --primary: 245 76% 59%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 160 84% 39%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+
+    --radius: 0.5rem;
+
+    --chart-1: 245 76% 59%;
+    --chart-2: 160 84% 39%;
+    --chart-3: 23 100% 50%;
+    --chart-4: 7 91% 71%;
+    --chart-5: 271 91% 65%;
+    
+    --sidebar-background: 240 5.9% 100%;
+    --sidebar-foreground: 240 10% 3.9%;
+    --sidebar-primary: 245 76% 59%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 240 5.9% 90%;
+    --sidebar-ring: 240 5.9% 10%;
+  }
+
+  .dark {
+    --background: 225 14% 10%;
+    --foreground: 0 0% 95%;
+
+    --card: 222 13% 16%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 223 14% 12%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 245 76% 59%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 160 84% 39%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 223 14% 20%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 223 14% 20%;
+    --accent-foreground: 0 0% 95%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 222 13% 20%;
+    --input: 222 13% 18%;
+    --ring: 240 4.9% 83.9%;
+    
+    --sidebar-background: 222 13% 16%;
+    --sidebar-foreground: 0 0% 95%; 
+    --sidebar-primary: 245 76% 59%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 223 14% 20%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 222 13% 20%;
+    --sidebar-ring: 240 4.9% 83.9%;
+  }
+  
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .dark ::-webkit-scrollbar-track {
+    @apply bg-accent;
+  }
+  
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-sm;
+  }
+  
+  .dark ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-sm;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+  
+  /* Split pane resizer */
+  .gutter {
+    @apply bg-border;
+    background-repeat: no-repeat;
+    background-position: 50%;
+  }
+
+  .gutter.gutter-horizontal {
+    cursor: col-resize;
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
+  }
+  
+  .highlight-match {
+    @apply bg-primary/15 border-b border-dashed border-primary;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@layer components {
+  .status-badge-mt {
+    @apply bg-yellow-500/20 text-yellow-400;
+  }
+  
+  .status-badge-fuzzy {
+    @apply bg-orange-500/20 text-orange-400;
+  }
+  
+  .status-badge-100 {
+    @apply bg-green-500/20 text-green-400;
+  }
+  
+  .status-badge-reviewed {
+    @apply bg-blue-500/20 text-blue-400;
+  }
+  
+  .status-badge-untranslated {
+    @apply bg-gray-500/20 text-gray-400;
+  }
+  
+  .status-indicator-mt {
+    @apply bg-yellow-500;
+  }
+  
+  .status-indicator-fuzzy {
+    @apply bg-orange-500;
+  }
+  
+  .status-indicator-100 {
+    @apply bg-green-500;
+  }
+  
+  .status-indicator-reviewed {
+    @apply bg-blue-500;
+  }
+  
+  .status-indicator-untranslated {
+    @apply bg-gray-500;
+  }
+}

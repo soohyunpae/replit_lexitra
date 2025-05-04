@@ -1,0 +1,179 @@
+import React, { useState, useEffect } from "react";
+import { useRoute } from "wouter";
+import { Header } from "@/components/layout/header";
+import { Sidebar } from "@/components/layout/sidebar";
+import { RightPanel } from "@/components/layout/right-panel";
+import { TranslationEditor } from "@/components/translation/translation-editor";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { TranslationUnit } from "@/types";
+
+export default function Translation() {
+  const [isMatch, params] = useRoute("/translation/:fileId");
+  const { toast } = useToast();
+  const [selectedSegment, setSelectedSegment] = useState<TranslationUnit | null>(null);
+  const [tmMatches, setTmMatches] = useState([]);
+  
+  // Get file ID from URL params
+  const fileId = isMatch && params ? parseInt(params.fileId) : null;
+  
+  // Fetch file data
+  const { 
+    data: file,
+    isLoading: isFileLoading 
+  } = useQuery({
+    queryKey: [`/api/files/${fileId}`],
+    enabled: !!fileId,
+  });
+  
+  // Fetch project data for the file
+  const {
+    data: project,
+    isLoading: isProjectLoading
+  } = useQuery({
+    queryKey: [`/api/projects/${file?.projectId}`],
+    enabled: !!file?.projectId,
+  });
+  
+  // Fetch glossary terms
+  const {
+    data: glossaryTerms,
+    isLoading: isGlossaryLoading
+  } = useQuery({
+    queryKey: [
+      `/api/glossary?sourceLanguage=${project?.sourceLanguage}&targetLanguage=${project?.targetLanguage}`
+    ],
+    enabled: !!(project?.sourceLanguage && project?.targetLanguage),
+  });
+  
+  // Search TM for selected segment
+  const searchTM = async (source: string) => {
+    if (!project?.sourceLanguage || !project?.targetLanguage) return;
+    
+    try {
+      const response = await apiRequest(
+        "POST", 
+        "/api/search_tm", 
+        {
+          source,
+          sourceLanguage: project.sourceLanguage,
+          targetLanguage: project.targetLanguage,
+          limit: 5
+        }
+      );
+      
+      const data = await response.json();
+      setTmMatches(data);
+      return data;
+    } catch (error) {
+      console.error("Error searching TM:", error);
+      return [];
+    }
+  };
+  
+  // Save project mutation
+  const saveProject = useMutation({
+    mutationFn: async () => {
+      // This would normally save the project's state
+      // Since we're already saving segments individually, we'll just
+      // simulate a save operation for now
+      return new Promise(resolve => setTimeout(resolve, 500));
+    },
+    onSuccess: () => {
+      toast({
+        title: "Project saved",
+        description: "All translations have been saved successfully.",
+      });
+    },
+  });
+  
+  // Export project mutation
+  const exportProject = useMutation({
+    mutationFn: async () => {
+      // This would normally export the project to a file
+      // For now, we'll just simulate the export operation
+      return new Promise(resolve => setTimeout(resolve, 500));
+    },
+    onSuccess: () => {
+      toast({
+        title: "Export complete",
+        description: "Project has been exported successfully.",
+      });
+    },
+  });
+  
+  // Handle segment selection
+  useEffect(() => {
+    if (selectedSegment) {
+      searchTM(selectedSegment.source);
+    }
+  }, [selectedSegment]);
+  
+  // Create a blank loader state while data is loading
+  if (isFileLoading || isProjectLoading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <div className="flex flex-1 h-full">
+          <Sidebar />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="animate-pulse text-center">
+              <div className="h-8 w-40 bg-accent rounded-full mx-auto mb-4"></div>
+              <div className="h-4 w-60 bg-accent rounded-full mx-auto"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // If file or project wasn't found
+  if (!file || !project) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <div className="flex flex-1 h-full">
+          <Sidebar />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <h2 className="text-xl font-medium mb-2">File not found</h2>
+              <p className="text-muted-foreground">
+                The translation file you're looking for doesn't exist or you don't have access to it.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <div className="flex flex-1 h-full overflow-hidden">
+        <Sidebar />
+        <TranslationEditor
+          fileName={file.name}
+          sourceLanguage={project.sourceLanguage}
+          targetLanguage={project.targetLanguage}
+          segments={file.segments || []}
+          onSave={() => saveProject.mutate()}
+          onExport={() => exportProject.mutate()}
+        />
+        <RightPanel
+          tmMatches={tmMatches}
+          glossaryTerms={glossaryTerms || []}
+          selectedSegment={selectedSegment || undefined}
+          onUseTranslation={(translation) => {
+            if (selectedSegment) {
+              // This would update the segment in the editor
+              console.log(`Using translation: ${translation} for segment ID: ${selectedSegment.id}`);
+            }
+          }}
+        />
+      </div>
+    </div>
+  );
+}

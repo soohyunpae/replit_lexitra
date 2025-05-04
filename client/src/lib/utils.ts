@@ -1,0 +1,84 @@
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+// Calculate similarity between two strings (0-100%)
+export function calculateSimilarity(str1: string, str2: string): number {
+  if (!str1 || !str2) return 0;
+  
+  const longer = str1.length > str2.length ? str1 : str2;
+  const shorter = str1.length > str2.length ? str2 : str1;
+  
+  if (longer.length === 0) return 100;
+  
+  const editDistance = levenshteinDistance(longer, shorter);
+  const similarity = (longer.length - editDistance) / longer.length * 100;
+  
+  return Math.round(similarity);
+}
+
+// Levenshtein distance calculation
+function levenshteinDistance(str1: string, str2: string): number {
+  const matrix: number[][] = [];
+  
+  // Initialize the matrix
+  for (let i = 0; i <= str1.length; i++) {
+    matrix[i] = [i];
+  }
+  
+  for (let j = 0; j <= str2.length; j++) {
+    matrix[0][j] = j;
+  }
+  
+  // Fill the matrix
+  for (let i = 1; i <= str1.length; i++) {
+    for (let j = 1; j <= str2.length; j++) {
+      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1, // deletion
+        matrix[i][j - 1] + 1, // insertion
+        matrix[i - 1][j - 1] + cost // substitution
+      );
+    }
+  }
+  
+  return matrix[str1.length][str2.length];
+}
+
+// Format date in a readable format
+export function formatDate(date: string | Date): string {
+  if (!date) return '';
+  
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  return dateObj.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+}
+
+// Count words in a string
+export function countWords(str: string): number {
+  if (!str) return 0;
+  
+  // Split by whitespace and filter out empty strings
+  return str.trim().split(/\s+/).filter(Boolean).length;
+}
+
+// Highlight matching parts in two strings
+export function highlightMatches(source: string, target: string): {
+  sourceHighlighted: string;
+  targetHighlighted: string;
+} {
+  // This is a simplified implementation
+  // A more sophisticated version would use sequence alignment
+  
+  return {
+    sourceHighlighted: source,
+    targetHighlighted: target
+  };
+}
