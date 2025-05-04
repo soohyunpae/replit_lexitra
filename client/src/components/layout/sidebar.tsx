@@ -41,6 +41,16 @@ export function Sidebar() {
   const [isProjectOpen, setIsProjectOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
+  // State for language direction
+  const [sourceLanguage, setSourceLanguage] = useState("KO");
+  const [targetLanguage, setTargetLanguage] = useState("EN");
+  
+  // Function to swap languages
+  const swapLanguages = () => {
+    setSourceLanguage(targetLanguage);
+    setTargetLanguage(sourceLanguage);
+  };
+  
   const { data: projects } = useQuery({ 
     queryKey: ['/api/projects'],
   });
@@ -183,7 +193,7 @@ export function Sidebar() {
           className="w-full"
         >
           <div className="flex items-center justify-between">
-            <h2 className="font-medium text-sidebar-foreground text-xs hidden lg:block">Language Settings</h2>
+            <h2 className="font-medium text-sidebar-foreground text-xs">Language Settings</h2>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                 <ChevronsUpDown className="h-4 w-4" />
@@ -192,17 +202,38 @@ export function Sidebar() {
           </div>
           
           <CollapsibleContent>
-            <div className="mt-3 hidden lg:block">
+            <div className="mt-3">
               <div className="text-xs text-muted-foreground mb-1">Language Direction</div>
               <div className="flex bg-accent rounded-md p-1 w-full">
-                <Button variant="secondary" size="sm" className="flex-1 font-medium text-xs">
-                  KO
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  className="flex-1 font-medium text-xs"
+                  onClick={() => {
+                    // In the future, this could open a dropdown to select source language
+                  }}
+                >
+                  {sourceLanguage}
                 </Button>
                 <div className="flex items-center px-1">
-                  <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="p-0 h-6 w-6" 
+                    onClick={swapLanguages}
+                  >
+                    <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+                  </Button>
                 </div>
-                <Button variant="ghost" size="sm" className="flex-1 font-medium text-muted-foreground text-xs">
-                  EN
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="flex-1 font-medium text-muted-foreground text-xs"
+                  onClick={() => {
+                    // In the future, this could open a dropdown to select target language
+                  }}
+                >
+                  {targetLanguage}
                 </Button>
               </div>
             </div>
