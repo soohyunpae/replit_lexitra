@@ -5,14 +5,12 @@ import { Sidebar } from "./sidebar";
 interface MainLayoutProps {
   children: React.ReactNode;
   title?: string;
-  showSearch?: boolean;
   showSidebarTrigger?: boolean;
 }
 
 export function MainLayout({ 
   children, 
   title = "Lexitra", 
-  showSearch = false,
   showSidebarTrigger = false 
 }: MainLayoutProps) {
 
@@ -25,7 +23,6 @@ export function MainLayout({
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header 
           title={title} 
-          showSearch={showSearch} 
           showSidebarTrigger={showSidebarTrigger}
         />
         

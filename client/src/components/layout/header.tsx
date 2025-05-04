@@ -22,18 +22,15 @@ import { Sidebar } from "./sidebar";
 
 interface HeaderProps {
   title?: string;
-  showSearch?: boolean;
   showSidebarTrigger?: boolean;
 }
 
 export function Header({ 
   title = "Lexitra", 
-  showSearch = true,
   showSidebarTrigger = true
 }: HeaderProps) {
   const { toggleTheme, isDarkMode, mounted } = useThemeToggle();
   const { user, logoutMutation } = useAuth();
-  const [searchQuery, setSearchQuery] = useState("");
   const [_, navigate] = useLocation();
 
   return (
@@ -68,21 +65,6 @@ export function Header({
       </div>
       
       <div className="flex items-center space-x-3">
-        {showSearch && (
-          <div className="relative md:block hidden">
-            <div className="flex items-center bg-accent rounded-lg px-3 py-1.5 text-sm">
-              <Search className="text-muted-foreground h-4 w-4 mr-2" />
-              <Input 
-                type="text" 
-                placeholder="Search in TM..." 
-                className="bg-transparent border-none focus:outline-none h-7 placeholder:text-muted-foreground"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-        )}
-        
         <Button
           variant="ghost"
           size="icon"
