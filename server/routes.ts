@@ -77,10 +77,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Projects API
   app.get(`${apiPrefix}/projects`, async (req, res) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const userId = req.user!.id;
+      
+      // Filter projects based on authentication logic
+      // Show projects where:
+      // 1. Status is Unclaimed, OR
+      // 2. Status is Claimed and claimed by current user
+      // Don't show completed projects on the main list
+      
       const projects = await db.query.projects.findMany({
+        where: (projects) => {
+          return or(
+            eq(projects.status, 'Unclaimed'),
+            and(
+              eq(projects.status, 'Claimed'),
+              eq(projects.claimedBy, userId)
+            )
+          );
+        },
         orderBy: desc(schema.projects.createdAt),
         with: {
-          files: true
+          files: true,
+          claimer: true
         }
       });
       

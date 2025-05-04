@@ -25,6 +25,11 @@ export const projects = pgTable("projects", {
   description: text("description"),
   sourceLanguage: text("source_language").notNull(),
   targetLanguage: text("target_language").notNull(),
+  status: text("status").notNull().default("Unclaimed"),
+  claimedBy: integer("claimed_by").references(() => users.id),
+  claimedAt: timestamp("claimed_at"),
+  completedAt: timestamp("completed_at"),
+  deadline: timestamp("deadline"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   userId: integer("user_id").references(() => users.id),
@@ -32,6 +37,7 @@ export const projects = pgTable("projects", {
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   user: one(users, { fields: [projects.userId], references: [users.id] }),
+  claimer: one(users, { fields: [projects.claimedBy], references: [users.id] }),
   files: many(files),
 }));
 
@@ -131,3 +137,7 @@ export type Glossary = typeof glossary.$inferSelect;
 // Status Types Enum 
 export const StatusTypes = z.enum(['MT', 'Fuzzy', '100%', 'Reviewed']);
 export type StatusType = z.infer<typeof StatusTypes>;
+
+// Project Status Types Enum
+export const ProjectStatusTypes = z.enum(['Unclaimed', 'Claimed', 'Completed']);
+export type ProjectStatusType = z.infer<typeof ProjectStatusTypes>;
