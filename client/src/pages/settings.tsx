@@ -32,7 +32,7 @@ export default function SettingsPage() {
   };
   
   return (
-    <MainLayout title="Settings" showSearch={false}>
+    <MainLayout title="Settings">
       <div className="container max-w-screen-lg mx-auto p-6">
         <div className="flex items-center mb-6">
           <Settings className="h-6 w-6 mr-2" />

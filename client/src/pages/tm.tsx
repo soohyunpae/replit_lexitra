@@ -80,7 +80,7 @@ export default function TranslationMemoryPage() {
   }, [tmData, searchQuery, sourceLanguageFilter, targetLanguageFilter, statusFilter]);
 
   return (
-    <MainLayout title="Translation Memory" showSearch={true}>
+    <MainLayout title="Translation Memory">
       <div className="container max-w-screen-xl mx-auto p-4">
       <Card>
         <CardHeader>
