@@ -8,6 +8,47 @@ import { fromZodError } from "zod-validation-error";
 import { ZodError } from "zod";
 import { translateWithGPT } from "./openai";
 
+// Helper function for calculating text similarity
+function calculateSimilarity(str1: string, str2: string): number {
+  // Convert to lowercase and remove punctuation
+  const s1 = str1.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+  const s2 = str2.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+  
+  // Calculate Levenshtein distance
+  const distance = levenshteinDistance(s1, s2);
+  
+  // Calculate similarity score (0 to 1)
+  const maxLength = Math.max(s1.length, s2.length);
+  return maxLength === 0 ? 1 : 1 - distance / maxLength;
+}
+
+// Levenshtein distance algorithm
+function levenshteinDistance(str1: string, str2: string): number {
+  const m = str1.length;
+  const n = str2.length;
+  
+  // Create a matrix of size (m+1) x (n+1)
+  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+  
+  // Initialize first row and column
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  
+  // Fill the matrix
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,      // deletion
+        dp[i][j - 1] + 1,      // insertion
+        dp[i - 1][j - 1] + cost // substitution
+      );
+    }
+  }
+  
+  return dp[m][n];
+}
+
 // API Error Handler
 const handleApiError = (res: Response, error: unknown) => {
   console.error("API Error:", error);
@@ -437,6 +478,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       return res.json(matches);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // Translation Memory API
+  // Get all TM entries
+  app.get(`${apiPrefix}/tm/all`, async (req, res) => {
+    try {
+      const tmEntries = await db.query.translationMemory.findMany({
+        orderBy: desc(schema.translationMemory.createdAt)
+      });
+      
+      return res.json(tmEntries);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // Get TM entries by language pair
+  app.get(`${apiPrefix}/tm`, async (req, res) => {
+    try {
+      const sourceLanguage = req.query.sourceLanguage as string;
+      const targetLanguage = req.query.targetLanguage as string;
+      
+      if (!sourceLanguage || !targetLanguage) {
+        return res.status(400).json({ message: 'Source and target languages are required' });
+      }
+      
+      const tmEntries = await db.query.translationMemory.findMany({
+        where: and(
+          eq(schema.translationMemory.sourceLanguage, sourceLanguage),
+          eq(schema.translationMemory.targetLanguage, targetLanguage)
+        )
+      });
+      
+      return res.json(tmEntries);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // Search in TM
+  app.post(`${apiPrefix}/tm/search`, async (req, res) => {
+    try {
+      const searchSchema = z.object({
+        text: z.string(),
+        sourceLanguage: z.string(),
+        targetLanguage: z.string(),
+        threshold: z.number().optional().default(0.7)
+      });
+      
+      const { text, sourceLanguage, targetLanguage, threshold } = searchSchema.parse(req.body);
+      
+      // Get all TM entries for the language pair
+      const allEntries = await db.query.translationMemory.findMany({
+        where: and(
+          eq(schema.translationMemory.sourceLanguage, sourceLanguage),
+          eq(schema.translationMemory.targetLanguage, targetLanguage)
+        )
+      });
+      
+      // Find fuzzy matches based on similarity
+      const matches = allEntries
+        .map(entry => {
+          const similarity = calculateSimilarity(text, entry.source);
+          return {
+            ...entry,
+            similarity
+          };
+        })
+        .filter(entry => entry.similarity >= threshold)
+        .sort((a, b) => b.similarity - a.similarity);
+      
+      return res.json(matches);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // Add entry to TM
+  app.post(`${apiPrefix}/tm`, async (req, res) => {
+    try {
+      const data = schema.insertTranslationMemorySchema.parse(req.body);
+      const [entry] = await db.insert(schema.translationMemory).values(data).returning();
+      
+      return res.status(201).json(entry);
     } catch (error) {
       return handleApiError(res, error);
     }
