@@ -323,6 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({
           source,
           target: translationResult.target,
+          alternatives: translationResult.alternatives,
           status: 'MT',
           tmMatches,
           glossaryTerms: relevantTerms.length > 0 ? relevantTerms : undefined

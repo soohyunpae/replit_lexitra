@@ -31,6 +31,7 @@ export function TranslationEditor({
   const [localSegments, setLocalSegments] = useState<TranslationUnit[]>(segments);
   const [selectedSegmentTmMatches, setSelectedSegmentTmMatches] = useState<TranslationMemory[]>([]);
   const [selectedSegmentGlossaryTerms, setSelectedSegmentGlossaryTerms] = useState<Glossary[]>([]);
+  const [translationAlternatives, setTranslationAlternatives] = useState<string[]>([]);
   
   // Update local segments when props change
   useEffect(() => {
@@ -208,6 +209,13 @@ export function TranslationEditor({
         setSelectedSegmentGlossaryTerms(data.glossaryTerms);
       }
       
+      // Store alternative translations if available
+      if (data.alternatives && data.alternatives.length > 0) {
+        setTranslationAlternatives(data.alternatives);
+      } else {
+        setTranslationAlternatives([]);
+      }
+      
       if (data.target) {
         await handleSegmentUpdate(id, data.target, "MT");
       }
@@ -244,6 +252,7 @@ export function TranslationEditor({
     setActiveSegmentId(null);
     setSelectedSegmentTmMatches([]);
     setSelectedSegmentGlossaryTerms([]);
+    setTranslationAlternatives([]);
   };
   
   // Handle use TM match
@@ -305,6 +314,7 @@ export function TranslationEditor({
           segment={activeSegment}
           tmMatches={selectedSegmentTmMatches}
           glossaryTerms={selectedSegmentGlossaryTerms}
+          alternatives={translationAlternatives}
           onClose={handleCloseDetail}
           onUpdate={(target, status) => 
             handleSegmentUpdate(activeSegment.id, target, status)

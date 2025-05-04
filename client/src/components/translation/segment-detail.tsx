@@ -9,6 +9,7 @@ interface SegmentDetailProps {
   segment: TranslationUnit;
   tmMatches?: TranslationMemory[];
   glossaryTerms?: Glossary[];
+  alternatives?: string[];
   onClose: () => void;
   onUpdate: (target: string, status: string) => void;
   onTranslateWithGPT: () => void;
@@ -19,6 +20,7 @@ export function SegmentDetail({
   segment,
   tmMatches = [],
   glossaryTerms = [],
+  alternatives = [],
   onClose,
   onUpdate,
   onTranslateWithGPT,
@@ -89,6 +91,30 @@ export function SegmentDetail({
             value={targetText}
             onChange={(e) => setTargetText(e.target.value)}
           />
+          
+          {/* GPT Translation Alternatives */}
+          {alternatives.length > 0 && (
+            <div className="mt-3">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">Alternative Translations</label>
+              <div className="space-y-2">
+                {alternatives.map((alt, index) => (
+                  <div 
+                    key={index} 
+                    className="bg-background border border-border rounded-md p-3 flex justify-between items-center hover:bg-accent/30 transition-colors"
+                  >
+                    <div className="font-mono text-sm">{alt}</div>
+                    <Button 
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setTargetText(alt)}
+                    >
+                      Use
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="space-y-4">
