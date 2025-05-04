@@ -50,7 +50,8 @@ import {
   ChevronLeft,
   Book,
   Database,
-  Clock
+  Clock,
+  FolderOpen
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
