@@ -21,34 +21,37 @@ export function SegmentItem({
 }: SegmentItemProps) {
   const { source, target, status } = segment;
   
-  // Determine status badge class
+  // Helper function to get the badge class
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case "MT": return "status-badge-mt";
-      case "Fuzzy": return "status-badge-fuzzy";
-      case "100%": return "status-badge-100";
-      case "Reviewed": return "status-badge-reviewed";
-      default: return "status-badge-untranslated";
+      case 'MT':
+        return 'bg-yellow-200/20 text-yellow-700 dark:bg-yellow-200/10 dark:text-yellow-400';
+      case 'Fuzzy':
+        return 'bg-orange-200/20 text-orange-700 dark:bg-orange-200/10 dark:text-orange-400';
+      case '100%':
+        return 'bg-blue-200/20 text-blue-700 dark:bg-blue-200/10 dark:text-blue-400';
+      case 'Reviewed':
+        return 'bg-green-200/20 text-green-700 dark:bg-green-200/10 dark:text-green-400';
+      default:
+        return 'bg-gray-200/20 text-gray-700 dark:bg-gray-200/10 dark:text-gray-400';
     }
   };
   
+  // Fixed height for segments to match source and target
+  const minSegmentHeight = 'min-h-[120px]';
+
   // For source panel
   if (isSource) {
     return (
       <div 
-        className="group mb-4 pb-3 border-b border-border cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors"
+        className={`group mb-4 pb-3 border-b border-border cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors flex flex-col ${minSegmentHeight}`}
         onClick={onClick}
       >
         <div className="flex items-center justify-between mb-1">
           <div className="text-xs text-muted-foreground">Segment {index}</div>
-          <div className={cn(
-            "text-xs px-1.5 py-0.5 rounded",
-            getStatusBadgeClass(status)
-          )}>
-            {status}
-          </div>
+          {/* 원문에는 상태 표시를 하지 않음 */}
         </div>
-        <div className="font-mono text-sm leading-relaxed">
+        <div className="font-mono text-sm leading-relaxed flex-1">
           {source}
         </div>
       </div>
@@ -58,12 +61,20 @@ export function SegmentItem({
   // For target panel
   return (
     <div 
-      className="group mb-4 pb-3 border-b border-border"
+      className={`group mb-4 pb-3 border-b border-border flex flex-col ${minSegmentHeight}`}
       onClick={onClick}
     >
       <div className="flex items-center justify-between mb-1">
         <div className="text-xs text-muted-foreground">Target {index}</div>
         <div className="flex items-center space-x-1">
+          {status && (
+            <div className={cn(
+              "text-xs px-1.5 py-0.5 rounded",
+              getStatusBadgeClass(status)
+            )}>
+              {status}
+            </div>
+          )}
           <Button 
             variant="ghost" 
             size="icon" 
@@ -87,13 +98,13 @@ export function SegmentItem({
       
       {target ? (
         <div 
-          className="font-mono text-sm leading-relaxed bg-accent rounded-md p-3 cursor-pointer"
+          className="font-mono text-sm leading-relaxed bg-accent rounded-md p-3 cursor-pointer flex-1 flex items-start"
           onClick={onClick}
         >
           {target}
         </div>
       ) : (
-        <div className="font-mono text-sm leading-relaxed bg-accent/50 border border-dashed border-accent rounded-md p-3 flex items-center justify-center h-20">
+        <div className="font-mono text-sm leading-relaxed bg-accent/50 border border-dashed border-accent rounded-md p-3 flex items-center justify-center flex-1">
           <Button
             onClick={(e) => {
               e.stopPropagation();

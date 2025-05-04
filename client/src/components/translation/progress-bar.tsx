@@ -1,11 +1,14 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Progress } from "@/components/ui/progress";
+import { countWords } from "@/lib/utils";
+import { type TranslationUnit } from "@/types";
 
 interface ProgressBarProps {
   percentage: number;
   completed: number;
   total: number;
   statusCounts: Record<string, number>;
+  segments?: TranslationUnit[];
 }
 
 export function ProgressBar({
