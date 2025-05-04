@@ -4,7 +4,7 @@ import { type TranslationMemory } from "@/types";
 
 interface TmMatchProps {
   match: TranslationMemory;
-  onUse: (translation: string) => void;
+  onUse?: (translation: string) => void;
   sourceSimilarity: number;
   isDetailed?: boolean;
 }
@@ -28,7 +28,9 @@ export function TmMatch({ match, onUse, sourceSimilarity, isDetailed = false }: 
   
   // Handle use translation
   const handleUseTranslation = () => {
-    onUse(match.target);
+    if (onUse) {
+      onUse(match.target);
+    }
   };
   
   return (
@@ -56,15 +58,17 @@ export function TmMatch({ match, onUse, sourceSimilarity, isDetailed = false }: 
         </div>
       </div>
       
-      <div className="mt-2 flex justify-end">
-        <Button 
-          size="sm"
-          className="text-xs"
-          onClick={handleUseTranslation}
-        >
-          Use This Translation
-        </Button>
-      </div>
+      {onUse && (
+        <div className="mt-2 flex justify-end">
+          <Button 
+            size="sm"
+            className="text-xs"
+            onClick={handleUseTranslation}
+          >
+            Use This Translation
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
