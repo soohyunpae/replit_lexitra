@@ -7,7 +7,12 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { TranslationUnit } from "@/types";
+import { TranslationUnit, Project, File, Glossary } from "@/types";
+
+// Extended File type with segments for the translation interface
+interface ExtendedFile extends File {
+  segments?: TranslationUnit[];
+}
 
 export default function Translation() {
   const [isMatch, params] = useRoute("/translation/:fileId");
@@ -18,29 +23,49 @@ export default function Translation() {
   // Get file ID from URL params
   const fileId = isMatch && params ? parseInt(params.fileId) : null;
   
+  // Initial empty data with correct type shape to avoid TypeScript errors
+  const emptyFile: ExtendedFile = {
+    id: 0,
+    name: '',
+    content: '',
+    projectId: 0,
+    createdAt: '',
+    updatedAt: '',
+    segments: []
+  };
+
+  const emptyProject: Project = {
+    id: 0,
+    name: '',
+    sourceLanguage: '',
+    targetLanguage: '',
+    createdAt: '',
+    updatedAt: ''
+  };
+
   // Fetch file data
   const { 
-    data: file = {},
+    data: file = emptyFile,
     isLoading: isFileLoading 
-  } = useQuery({
+  } = useQuery<ExtendedFile>({
     queryKey: [`/api/files/${fileId}`],
     enabled: !!fileId,
   });
   
   // Fetch project data for the file
   const {
-    data: project = {},
+    data: project = emptyProject,
     isLoading: isProjectLoading
-  } = useQuery({
+  } = useQuery<Project>({
     queryKey: [`/api/projects/${file?.projectId}`],
     enabled: !!file?.projectId,
   });
   
   // Fetch glossary terms
   const {
-    data: glossaryTerms = [],
+    data: glossaryTerms = [] as Glossary[],
     isLoading: isGlossaryLoading
-  } = useQuery({
+  } = useQuery<Glossary[]>({
     queryKey: [
       `/api/glossary?sourceLanguage=${project?.sourceLanguage}&targetLanguage=${project?.targetLanguage}`
     ],
@@ -147,7 +172,7 @@ export default function Translation() {
           fileName={file.name}
           sourceLanguage={project.sourceLanguage}
           targetLanguage={project.targetLanguage}
-          segments={file.segments || []}
+          segments={(file as ExtendedFile).segments || []}
           onSave={() => saveProject.mutate()}
           onExport={() => exportProject.mutate()}
         />
