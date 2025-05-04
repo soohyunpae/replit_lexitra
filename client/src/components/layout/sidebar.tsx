@@ -4,14 +4,12 @@ import { Button } from "@/components/ui/button";
 import { 
   FileText, 
   ChevronsUpDown, 
-  Settings, 
   PlusCircle,
   FolderOpen,
   Book,
   Database,
   Home,
-  Layers,
-  Server
+  Layers
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMobile } from "@/hooks/use-mobile";
@@ -92,11 +90,6 @@ export function Sidebar() {
       icon: <Database className="h-5 w-5" />,
       label: "Translation Memory",
       href: "/tm"
-    },
-    {
-      icon: <Server className="h-5 w-5" />,
-      label: "Settings",
-      href: "/settings"
     }
   ];
   
@@ -136,10 +129,7 @@ export function Sidebar() {
                       (item.label === "Terminology Base" && location === "/glossary") ||
                       
                       // Translation Memory: active on TM page
-                      (item.label === "Translation Memory" && location === "/tm") ||
-                      
-                      // Settings: active on settings page
-                      (item.label === "Settings" && location === "/settings")
+                      (item.label === "Translation Memory" && location === "/tm")
                   }
                 )}>
                   <span className="flex-shrink-0">{item.icon}</span>
