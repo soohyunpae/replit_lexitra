@@ -10,6 +10,7 @@ import Project from "@/pages/project";
 import Translation from "@/pages/translation";
 import Glossary from "@/pages/glossary";
 import TM from "@/pages/tm";
+import Settings from "@/pages/settings";
 
 function Router() {
   return (
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/translation/:fileId" component={Translation} />
       <Route path="/glossary" component={Glossary} />
       <Route path="/tm" component={TM} />
+      <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
   );
