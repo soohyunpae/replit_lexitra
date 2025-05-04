@@ -8,6 +8,10 @@ interface TranslationRequest {
   sourceLanguage: string;
   targetLanguage: string;
   context?: string[];
+  glossaryTerms?: {
+    source: string;
+    target: string;
+  }[];
 }
 
 interface TranslationResponse {
@@ -21,7 +25,7 @@ interface TranslationResponse {
 export async function translateWithGPT(
   request: TranslationRequest
 ): Promise<TranslationResponse> {
-  const { source, sourceLanguage, targetLanguage, context } = request;
+  const { source, sourceLanguage, targetLanguage, context, glossaryTerms } = request;
   
   // Construct prompt with context if available
   let systemPrompt = `You are a professional translator specializing in patent documents. 
@@ -29,6 +33,14 @@ export async function translateWithGPT(
   systemPrompt += `Translate the following text from ${sourceLanguage} to ${targetLanguage}. `;
   systemPrompt += `Maintain the technical accuracy and terminology. `;
   systemPrompt += `Respond with only the translation, nothing else.`;
+  
+  // Add glossary context if available
+  if (glossaryTerms && glossaryTerms.length > 0) {
+    systemPrompt += `\n\nYou MUST use the following terminology in your translation:\n`;
+    glossaryTerms.forEach(term => {
+      systemPrompt += `- When you see "${term.source}" in ${sourceLanguage}, translate it as "${term.target}" in ${targetLanguage}\n`;
+    });
+  }
   
   let contextPrompt = "";
   if (context && context.length > 0) {

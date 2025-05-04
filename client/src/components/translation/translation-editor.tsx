@@ -294,6 +294,7 @@ export function TranslationEditor({
         <SegmentDetail
           segment={activeSegment}
           tmMatches={selectedSegmentTmMatches}
+          glossaryTerms={selectedSegmentGlossaryTerms}
           onClose={handleCloseDetail}
           onUpdate={(target, status) => 
             handleSegmentUpdate(activeSegment.id, target, status)

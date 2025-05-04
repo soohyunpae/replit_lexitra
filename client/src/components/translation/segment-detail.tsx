@@ -8,6 +8,7 @@ import { type TranslationUnit, type TranslationMemory, type Glossary } from "@/t
 interface SegmentDetailProps {
   segment: TranslationUnit;
   tmMatches?: TranslationMemory[];
+  glossaryTerms?: Glossary[];
   onClose: () => void;
   onUpdate: (target: string, status: string) => void;
   onTranslateWithGPT: () => void;
@@ -17,6 +18,7 @@ interface SegmentDetailProps {
 export function SegmentDetail({
   segment,
   tmMatches = [],
+  glossaryTerms = [],
   onClose,
   onUpdate,
   onTranslateWithGPT,
@@ -90,6 +92,34 @@ export function SegmentDetail({
         </div>
         
         <div className="space-y-4">
+          {/* Glossary terms section */}
+          {glossaryTerms.length > 0 && (
+            <div className="bg-accent/50 border border-border rounded-md p-4 mb-4">
+              <div className="text-sm font-medium mb-3">Glossary Terms</div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                {glossaryTerms.map((term, index) => (
+                  <div 
+                    key={index} 
+                    className="bg-background rounded-md p-2 flex justify-between items-center border border-border/50"
+                  >
+                    <div>
+                      <div className="text-sm font-mono font-medium">{term.source}</div>
+                      <div className="text-sm font-mono text-muted-foreground">{term.target}</div>
+                    </div>
+                    <Button 
+                      size="sm"
+                      variant="ghost"
+                      className="h-7"
+                      onClick={() => onUseTmMatch(term.target)}
+                    >
+                      Use
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
           {/* TM Matches */}
           {tmMatches.length > 0 ? (
             tmMatches.map((match, index) => (
