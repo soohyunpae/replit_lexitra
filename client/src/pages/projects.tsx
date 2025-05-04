@@ -478,7 +478,8 @@ export default function ProjectsPage() {
             {filteredAndSortedProjects.map((project) => (
               <Card 
                 key={project.id} 
-                className="overflow-hidden group hover:shadow-md transition-all duration-200 border-border hover:border-primary/30"
+                className="overflow-hidden group hover:shadow-md transition-all duration-200 border-border hover:border-primary/30 cursor-pointer"
+                onClick={() => navigate(`/projects/${project.id}`)}
               >
                 <div className="h-1.5 w-full bg-gradient-to-r from-primary to-primary/70"></div>
                 <CardHeader className="pb-2 pt-4">
@@ -499,38 +500,34 @@ export default function ProjectsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pb-2">
-                  <div className="mb-3">
+                  <div>
                     <CombinedProgress 
                       reviewedPercentage={projectStats[project.id]?.reviewedPercentage || 0}
                       translatedPercentage={projectStats[project.id]?.translatedPercentage || 0}
                       height="h-2"
                     />
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {project.description || "No description provided."}
-                  </p>
+                  <div className="text-xs text-muted-foreground flex items-center justify-between mt-2">
+                    <span>Translated: {projectStats[project.id]?.translatedPercentage || 0}%</span>
+                    <span>Reviewed: {projectStats[project.id]?.reviewedPercentage || 0}%</span>
+                  </div>
                 </CardContent>
                 <CardFooter className="pt-2 flex items-center justify-between border-t border-border/30">
                   <div className="text-xs text-muted-foreground flex items-center">
-                    <Calendar className="h-3.5 w-3.5 mr-1" />
-                    {new Date(project.createdAt).toLocaleDateString()}
+                    <Clock className="h-3.5 w-3.5 mr-1" />
+                    {project.deadline ? new Date(project.deadline).toLocaleString() : 'No deadline set'}
                   </div>
-                  <div className="flex gap-2">
+                  <div>
                     <Button 
                       size="icon" 
                       variant="ghost"
                       className="h-8 w-8 opacity-70 hover:opacity-100"
-                      onClick={() => window.confirm('Delete this project?') && console.log('Delete project:', project.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.confirm('Delete this project?') && console.log('Delete project:', project.id);
+                      }}
                     >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      size="sm"
-                      className="gap-1 font-medium"
-                      onClick={() => navigate(`/projects/${project.id}`)}
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      Open
                     </Button>
                   </div>
                 </CardFooter>
