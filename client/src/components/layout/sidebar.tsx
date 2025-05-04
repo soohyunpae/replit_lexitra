@@ -6,7 +6,9 @@ import {
   ChevronsUpDown, 
   Settings, 
   PlusCircle,
-  FolderOpen
+  FolderOpen,
+  Book,
+  Database
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMobile } from "@/hooks/use-mobile";
@@ -91,7 +93,40 @@ export function Sidebar() {
         </nav>
       </div>
       
+      {/* System Links */}
       <div className="p-3 border-t border-border">
+        <div className="mb-3">
+          <h2 className="font-medium text-sidebar-foreground hidden lg:block mb-2">Translation Resources</h2>
+          <ul className="space-y-1">
+            <li>
+              <Link href="/glossary">
+                <a className={cn(
+                  "flex items-center px-2 py-2 text-sm rounded-md",
+                  location === "/glossary" 
+                    ? "bg-primary/90 text-primary-foreground"
+                    : "hover:bg-accent text-foreground/80 hover:text-foreground"
+                )}>
+                  <Book className="h-5 w-5 mr-3 lg:mr-2 flex-shrink-0" />
+                  <span className="hidden lg:block">Terminology Base</span>
+                </a>
+              </Link>
+            </li>
+            <li>
+              <Link href="/tm">
+                <a className={cn(
+                  "flex items-center px-2 py-2 text-sm rounded-md",
+                  location === "/tm" 
+                    ? "bg-primary/90 text-primary-foreground"
+                    : "hover:bg-accent text-foreground/80 hover:text-foreground"
+                )}>
+                  <Database className="h-5 w-5 mr-3 lg:mr-2 flex-shrink-0" />
+                  <span className="hidden lg:block">Translation Memory</span>
+                </a>
+              </Link>
+            </li>
+          </ul>
+        </div>
+        
         <Collapsible 
           open={isSettingsOpen} 
           onOpenChange={setIsSettingsOpen}

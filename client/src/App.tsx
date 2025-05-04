@@ -7,6 +7,7 @@ import Home from "@/pages/home";
 import Project from "@/pages/project";
 import Translation from "@/pages/translation";
 import Glossary from "@/pages/glossary";
+import TM from "@/pages/tm";
 
 function Router() {
   return (
@@ -15,6 +16,7 @@ function Router() {
       <Route path="/projects/:id" component={Project} />
       <Route path="/translation/:fileId" component={Translation} />
       <Route path="/glossary" component={Glossary} />
+      <Route path="/tm" component={TM} />
       <Route component={NotFound} />
     </Switch>
   );
