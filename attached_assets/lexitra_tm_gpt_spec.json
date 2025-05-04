@@ -1,0 +1,61 @@
+{
+  "tool": "Lexitra",
+  "description": "A secure AI translation tool specialized for patent/legal documents. Uses Translation Memory (TM) and GPT together to enhance consistency and accuracy.",
+  "architecture": {
+    "frontend": "React + Tailwind CSS",
+    "backend": "FastAPI",
+    "database": "SQLite with Prisma ORM"
+  },
+  "statusTypes": [
+    "MT",
+    "Fuzzy",
+    "100%",
+    "Reviewed"
+  ],
+  "workflow": [
+    "User uploads file and initializes project.",
+    "Each sentence is checked against TM.",
+    "Top-N TM matches (if any) are passed to GPT as prompt context.",
+    "GPT returns a translation.",
+    "Translation is stored with status 'MT'.",
+    "If reviewed, status is updated to 'Reviewed' and saved to TM."
+  ],
+  "api": {
+    "initialize": "POST /api/initialize",
+    "translate": "POST /api/translate",
+    "search_tm": "POST /api/search_tm",
+    "update_tm": "POST /api/update_tm",
+    "get_file": "GET /api/file/{id}"
+  },
+  "dbModels": {
+    "TranslationUnit": {
+      "fields": [
+        "id",
+        "source",
+        "target",
+        "status",
+        "comment",
+        "fileId"
+      ]
+    },
+    "TranslationMemory": {
+      "fields": [
+        "id",
+        "source",
+        "target",
+        "status",
+        "context"
+      ]
+    }
+  },
+  "promptExample": {
+    "languageDirection": "KO \u2192 EN",
+    "template": "You are a professional translator specializing in patent and legal translation.\n\nHere are similar translations from Translation Memory:\n- \"\uae30\uae30\ub294 \uc2e0\ub8b0\uc131 \uc788\uac8c \uc791\ub3d9\ud574\uc57c \ud55c\ub2e4.\" \u2192 \"The device must operate reliably.\"\n- \"\uae30\uae30\ub294 \uace0\uc628 \ud658\uacbd\uc5d0\uc11c\ub3c4 \uc791\ub3d9\ud574\uc57c \ud55c\ub2e4.\" \u2192 \"The device must operate in high-temperature environments.\"\n\nNow translate:\n\"\uae30\uae30\ub294 \uc800\uc628 \ud658\uacbd\uc5d0\uc11c\ub3c4 \ube60\ub974\uace0 \uc2e0\ub8b0\uc131 \uc788\uac8c \uc791\ub3d9\ud574\uc57c \ud55c\ub2e4.\""
+  },
+  "futureConsiderations": [
+    "Use vector search (embedding) for fuzzy TM matches",
+    "Token-aware prompt generation",
+    "Glossary priority integration",
+    "TM-only / GPT-only mode toggle"
+  ]
+}
