@@ -93,9 +93,11 @@ export function Header({
           )}
         </Button>
         
-        <Button variant="ghost" size="icon" aria-label="Settings">
-          <Settings className="h-5 w-5" />
-        </Button>
+        <Link href="/settings">
+          <Button variant="ghost" size="icon" aria-label="Settings">
+            <Settings className="h-5 w-5" />
+          </Button>
+        </Link>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -109,7 +111,9 @@ export function Header({
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Your Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/settings">Settings</Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Sign out</DropdownMenuItem>
           </DropdownMenuContent>
