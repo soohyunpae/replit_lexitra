@@ -15,8 +15,18 @@ export function ProgressBar({
   percentage,
   completed,
   total,
-  statusCounts
+  statusCounts,
+  segments = []
 }: ProgressBarProps) {
+  // 전체 단어 수 계산 (원문만 계산)
+  const totalWords = useMemo(() => {
+    if (segments.length === 0) return 0;
+    
+    return segments.reduce((total, segment) => {
+      return total + countWords(segment.source);
+    }, 0);
+  }, [segments]);
+  
   return (
     <div className="bg-card px-4 py-2 border-b border-border">
       <div className="flex items-center justify-between mb-2">
@@ -46,12 +56,7 @@ export function ProgressBar({
           </div>
         </div>
         <div>
-          <span>Total words: {
-            // Count words in all source segments
-            total > 0 ? 
-              "Calculating..." : 
-              "0"
-          }</span>
+          <span>Total words: {totalWords.toLocaleString()}</span>
         </div>
       </div>
     </div>

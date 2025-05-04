@@ -203,6 +203,7 @@ export function TranslationEditor({
         completed={completedSegments}
         total={localSegments.length}
         statusCounts={statusCounts}
+        segments={localSegments}
       />
       
       {activeSegment ? (
