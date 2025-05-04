@@ -36,8 +36,9 @@ export function RightPanel({
         {/* Tab navigation */}
         <div className="px-4 py-3 border-b border-border">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-3">
+            <TabsList className="grid grid-cols-4">
               <TabsTrigger value="tm">TM Matches</TabsTrigger>
+              <TabsTrigger value="tb">Glossary</TabsTrigger>
               <TabsTrigger value="comments">Comments</TabsTrigger>
               <TabsTrigger value="history">History</TabsTrigger>
             </TabsList>
@@ -114,6 +115,63 @@ export function RightPanel({
                 <div className="text-sm text-muted-foreground">
                   No comments available for this segment.
                 </div>
+              </div>
+            </div>
+          )}
+          
+          {activeTab === "tb" && (
+            <div className="p-4">
+              <div className="text-sm font-medium mb-2">Terminology Base</div>
+              
+              {selectedSegment?.source ? (
+                <div className="mb-4">
+                  <div className="text-xs font-semibold mb-1 text-muted-foreground">Source Text</div>
+                  <div className="text-sm mb-2 bg-accent p-2 rounded">{selectedSegment.source}</div>
+                </div>
+              ) : null}
+              
+              {glossaryTerms.length > 0 ? (
+                <div className="space-y-3">
+                  {glossaryTerms.map((term, index) => (
+                    <div key={index} className="bg-accent rounded-md p-3">
+                      <div className="flex justify-between items-center mb-1">
+                        <div className="font-mono font-medium">{term.source}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {term.sourceLanguage} → {term.targetLanguage}
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="font-mono text-muted-foreground">{term.target}</div>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-6 text-xs" 
+                          onClick={() => handleUseTranslation(term.target)}
+                        >
+                          Use Term
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : selectedSegment?.source ? (
+                <div className="bg-accent rounded-md p-3 text-sm text-muted-foreground">
+                  No matching terms found in the glossary for this segment.
+                </div>
+              ) : (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-sm text-muted-foreground">
+                    Select a segment to see matching glossary terms.
+                  </div>
+                </div>
+              )}
+              
+              <div className="mt-4 pt-3 border-t border-border">
+                <Button asChild variant="outline" size="sm" className="w-full">
+                  <a href="/glossary" target="_blank" rel="noopener noreferrer">
+                    Manage Terminology Base
+                  </a>
+                </Button>
               </div>
             </div>
           )}

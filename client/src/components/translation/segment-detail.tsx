@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { X, Languages, Save } from "lucide-react";
 import { TmMatch } from "./tm-match";
-import { type TranslationUnit, type TranslationMemory } from "@/types";
+import { type TranslationUnit, type TranslationMemory, type Glossary } from "@/types";
 
 interface SegmentDetailProps {
   segment: TranslationUnit;

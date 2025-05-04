@@ -6,7 +6,7 @@ import { SegmentItem } from "./segment-item";
 import { SegmentDetail } from "./segment-detail";
 import { ProgressBar } from "./progress-bar";
 import { apiRequest } from "@/lib/queryClient";
-import { type TranslationUnit, type TranslationMemory } from "@/types";
+import { type TranslationUnit, type TranslationMemory, type Glossary } from "@/types";
 
 interface TranslationEditorProps {
   fileName: string;
@@ -30,6 +30,7 @@ export function TranslationEditor({
   const [activeSegmentId, setActiveSegmentId] = useState<number | null>(null);
   const [localSegments, setLocalSegments] = useState<TranslationUnit[]>(segments);
   const [selectedSegmentTmMatches, setSelectedSegmentTmMatches] = useState<TranslationMemory[]>([]);
+  const [selectedSegmentGlossaryTerms, setSelectedSegmentGlossaryTerms] = useState<Glossary[]>([]);
   
   // Update local segments when props change
   useEffect(() => {
@@ -138,8 +139,14 @@ export function TranslationEditor({
     
     const segment = localSegments.find(s => s.id === id);
     if (segment) {
-      const matches = await searchTM(segment.source);
-      setSelectedSegmentTmMatches(matches);
+      // Search TM and glossary in parallel
+      const [tmMatches, glossaryTerms] = await Promise.all([
+        searchTM(segment.source),
+        searchGlossary(segment.source)
+      ]);
+      
+      setSelectedSegmentTmMatches(tmMatches);
+      setSelectedSegmentGlossaryTerms(glossaryTerms);
     }
   };
   
@@ -199,10 +206,34 @@ export function TranslationEditor({
     }
   };
   
+  // Search glossary for active segment
+  const searchGlossary = async (source: string) => {
+    try {
+      const response = await apiRequest(
+        "GET", 
+        `/api/glossary?sourceLanguage=${sourceLanguage}&targetLanguage=${targetLanguage}`
+      );
+      
+      const allTerms = await response.json();
+      
+      // Filter terms that appear in the source text
+      const matchingTerms = allTerms.filter((term: Glossary) => 
+        source.toLowerCase().includes(term.source.toLowerCase())
+      );
+      
+      setSelectedSegmentGlossaryTerms(matchingTerms);
+      return matchingTerms;
+    } catch (error) {
+      console.error("Error searching glossary:", error);
+      return [];
+    }
+  };
+
   // Handle close detail view
   const handleCloseDetail = () => {
     setActiveSegmentId(null);
     setSelectedSegmentTmMatches([]);
+    setSelectedSegmentGlossaryTerms([]);
   };
   
   // Handle use TM match
