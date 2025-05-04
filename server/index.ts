@@ -1,8 +1,16 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import cors from "cors";
 
 const app = express();
+
+// CORS 설정 - 인증 관련 쿠키를 위해 필수
+app.use(cors({
+  origin: true, // 모든 origin에 대해 허용
+  credentials: true // 인증 정보(쿠키)를 포함하도록 허용
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
