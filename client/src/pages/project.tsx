@@ -447,9 +447,6 @@ export default function Project() {
                     <div className="font-medium flex items-center gap-1">
                       <Book className="h-3.5 w-3.5" />
                       <span>Default Glossary</span>
-                      <Badge variant="secondary" className="ml-1 text-xs py-0 px-1.5 h-5">
-                        {glossaryTerms?.length || 0} terms
-                      </Badge>
                     </div>
                   </div>
                   
@@ -458,9 +455,6 @@ export default function Project() {
                     <div className="font-medium flex items-center gap-1">
                       <Database className="h-3.5 w-3.5" />
                       <span>Default TM</span>
-                      <Badge variant="secondary" className="ml-1 text-xs py-0 px-1.5 h-5">
-                        {tmEntries?.length || 0} entries
-                      </Badge>
                     </div>
                   </div>
                 </div>
@@ -560,7 +554,6 @@ export default function Project() {
               <CardTitle className="text-lg flex items-center gap-1">
                 <FolderOpen className="h-4 w-4" />
                 Files
-                <Badge className="ml-2">{project.files?.length || 0}</Badge>
               </CardTitle>
               <CardDescription>
                 All uploaded files for translation
