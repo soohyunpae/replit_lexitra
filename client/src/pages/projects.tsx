@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useLocation } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,15 @@ import {
   ArrowRight, 
   Trash2, 
   ExternalLink,
-  Clock
+  Clock,
+  Search,
+  List,
+  LayoutGrid,
+  ArrowUpDown,
+  ArrowDown,
+  ArrowUp,
+  CheckSquare,
+  Filter
 } from "lucide-react";
 import {
   Dialog,
@@ -52,6 +60,20 @@ import { z } from "zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
+import { CombinedProgress } from "@/components/ui/combined-progress";
+import { Switch } from "@/components/ui/switch";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { formatDate } from "@/lib/utils";
+
+// Define a type for sorting direction
+type SortDirection = 'asc' | 'desc' | null;
 
 const projectFormSchema = z.object({
   name: z.string().min(3, "Project name must be at least 3 characters"),
@@ -65,9 +87,31 @@ type ProjectFormValues = z.infer<typeof projectFormSchema>;
 export default function ProjectsPage() {
   const [, navigate] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('list'); // Default to list view
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortField, setSortField] = useState<string>('updatedAt');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   
-  type Project = { id: number; name: string; description?: string; sourceLanguage: string; targetLanguage: string; files?: any[]; createdAt: string; };
+  type Project = { 
+    id: number; 
+    name: string; 
+    description?: string; 
+    sourceLanguage: string; 
+    targetLanguage: string; 
+    files?: any[]; 
+    createdAt: string; 
+    updatedAt?: string;
+  };
   
+  // Mock data for translation status - in a real app, this would come from the API
+  // This simulates the project-level progress statistics we already have in the project detail page
+  const [projectStats, setProjectStats] = useState<{
+    [key: number]: { 
+      reviewedPercentage: number; 
+      translatedPercentage: number;
+    }
+  }>({});
+
   const { data: projects, isLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
     queryFn: async () => {
@@ -75,6 +119,86 @@ export default function ProjectsPage() {
       return res.json();
     },
   });
+
+  // Generate some demo statistics for each project
+  useEffect(() => {
+    if (projects) {
+      const stats: typeof projectStats = {};
+      projects.forEach(project => {
+        // Generate random percentages for demo purposes
+        // In a real application, these would be fetched from the API
+        const translatedPercentage = Math.floor(Math.random() * 100);
+        const reviewedPercentage = Math.floor(Math.random() * (translatedPercentage + 1));
+        stats[project.id] = {
+          translatedPercentage,
+          reviewedPercentage,
+        };
+      });
+      setProjectStats(stats);
+    }
+  }, [projects]);
+
+  // Handle sorting
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      // Cycle through: asc -> desc -> null -> asc
+      if (sortDirection === "asc") {
+        setSortDirection("desc");
+      } else if (sortDirection === "desc") {
+        setSortDirection(null);
+        setSortField('');
+      } else {
+        setSortDirection("asc");
+        setSortField(field);
+      }
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  // Filter and sort projects
+  const filteredAndSortedProjects = useMemo(() => {
+    if (!projects) return [];
+
+    // First apply search filter
+    let filtered = projects;
+    if (searchQuery) {
+      const lowerQuery = searchQuery.toLowerCase();
+      filtered = projects.filter(project => 
+        project.name.toLowerCase().includes(lowerQuery) ||
+        (project.description && project.description.toLowerCase().includes(lowerQuery))
+      );
+    }
+
+    // Then sort
+    if (sortField && sortDirection) {
+      return [...filtered].sort((a, b) => {
+        let aValue: any = a[sortField as keyof Project];
+        let bValue: any = b[sortField as keyof Project];
+
+        // Handle dates
+        if (sortField === 'createdAt' || sortField === 'updatedAt') {
+          aValue = aValue ? new Date(aValue).getTime() : 0;
+          bValue = bValue ? new Date(bValue).getTime() : 0;
+        }
+
+        // Handle progress - special case
+        if (sortField === 'progress') {
+          aValue = projectStats[a.id]?.translatedPercentage || 0;
+          bValue = projectStats[b.id]?.translatedPercentage || 0;
+        }
+
+        if (sortDirection === 'asc') {
+          return aValue > bValue ? 1 : -1;
+        } else {
+          return aValue < bValue ? 1 : -1;
+        }
+      });
+    }
+
+    return filtered;
+  }, [projects, searchQuery, sortField, sortDirection, projectStats]);
   
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
@@ -102,11 +226,57 @@ export default function ProjectsPage() {
   function onSubmit(data: ProjectFormValues) {
     createProject.mutate(data);
   }
+
+  // Function to render the sort button for column headers
+  const renderSortButton = (field: string, label: string) => {
+    const isActive = sortField === field;
+    const direction = isActive ? sortDirection : null;
+    
+    return (
+      <Button 
+        variant="ghost" 
+        className="font-medium px-2 hover:bg-transparent" 
+        onClick={() => handleSort(field)}
+      >
+        {label}
+        <span className="ml-1">
+          {direction === 'asc' ? (
+            <ArrowUp className="h-4 w-4" />
+          ) : direction === 'desc' ? (
+            <ArrowDown className="h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="h-4 w-4 opacity-50" />
+          )}
+        </span>
+      </Button>
+    );
+  };
+  
+  // Function to render the empty state
+  const renderEmptyState = () => (
+    <div className="col-span-full flex flex-col items-center justify-center py-12">
+      <div className="rounded-full bg-accent p-6 mb-4">
+        <FileText className="h-10 w-10 text-primary" />
+      </div>
+      <h3 className="text-xl font-medium mb-2">No projects yet</h3>
+      <p className="text-muted-foreground text-center max-w-md mb-6">
+        Create your first translation project to get started. You can upload
+        patent documents and translate them with GPT and Translation Memory.
+      </p>
+      <Button 
+        onClick={() => setIsDialogOpen(true)}
+        className="flex items-center"
+      >
+        <Plus className="mr-1 h-4 w-4" />
+        Create Project
+      </Button>
+    </div>
+  );
   
   return (
     <MainLayout title="Projects">
       <main className="flex-1 container max-w-6xl px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
             <p className="text-muted-foreground mt-1">Manage your translation projects</p>
@@ -231,30 +401,85 @@ export default function ProjectsPage() {
           </Dialog>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading ? (
-            Array(3).fill(0).map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <CardHeader className="space-y-2">
-                  <div className="h-5 w-2/3 bg-accent rounded"></div>
-                  <div className="h-4 w-full bg-accent rounded"></div>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-4 w-full bg-accent rounded mb-2"></div>
-                  <div className="h-4 w-3/4 bg-accent rounded"></div>
-                </CardContent>
-                <CardFooter>
-                  <div className="h-9 w-1/3 bg-accent rounded"></div>
-                </CardFooter>
-              </Card>
-            ))
-          ) : projects && projects.length > 0 ? (
-            projects.map((project: Project) => (
+        {/* Search and Filters */}
+        <div className="flex flex-col gap-4 sm:flex-row justify-between items-center mb-6">
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search projects..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 w-full"
+            />
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm text-muted-foreground">View:</span>
+              <div className="border rounded-md overflow-hidden flex">
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="rounded-none px-3 h-8"
+                  onClick={() => setViewMode('list')}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'card' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="rounded-none px-3 h-8"
+                  onClick={() => setViewMode('card')}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Loading State */}
+        {isLoading && (
+          viewMode === 'card' ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array(3).fill(0).map((_, i) => (
+                <Card key={i} className="animate-pulse">
+                  <CardHeader className="space-y-2">
+                    <div className="h-5 w-2/3 bg-accent rounded"></div>
+                    <div className="h-4 w-full bg-accent rounded"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-4 w-full bg-accent rounded mb-2"></div>
+                    <div className="h-4 w-3/4 bg-accent rounded"></div>
+                  </CardContent>
+                  <CardFooter>
+                    <div className="h-9 w-1/3 bg-accent rounded"></div>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <div className="p-4 animate-pulse space-y-4">
+                <div className="h-5 bg-accent rounded w-1/3"></div>
+                <div className="h-4 bg-accent rounded w-full"></div>
+                <div className="h-4 bg-accent rounded w-3/4"></div>
+              </div>
+            </div>
+          )
+        )}
+        
+        {/* Empty State */}
+        {!isLoading && filteredAndSortedProjects.length === 0 && renderEmptyState()}
+        
+        {/* Card View */}
+        {!isLoading && filteredAndSortedProjects.length > 0 && viewMode === 'card' && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredAndSortedProjects.map((project) => (
               <Card 
                 key={project.id} 
                 className="overflow-hidden group hover:shadow-md transition-all duration-200 border-border hover:border-primary/30"
               >
-                {/* 프로젝트 랭귀지 컬러 바 추가 */}
                 <div className="h-1.5 w-full bg-gradient-to-r from-primary to-primary/70"></div>
                 <CardHeader className="pb-2 pt-4">
                   <div className="flex justify-between items-start mb-1">
@@ -274,6 +499,13 @@ export default function ProjectsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pb-2">
+                  <div className="mb-3">
+                    <CombinedProgress 
+                      reviewedPercentage={projectStats[project.id]?.reviewedPercentage || 0}
+                      translatedPercentage={projectStats[project.id]?.translatedPercentage || 0}
+                      height="h-2"
+                    />
+                  </div>
                   <p className="text-sm text-muted-foreground line-clamp-2">
                     {project.description || "No description provided."}
                   </p>
@@ -303,27 +535,79 @@ export default function ProjectsPage() {
                   </div>
                 </CardFooter>
               </Card>
-            ))
-          ) : (
-            <div className="col-span-3 flex flex-col items-center justify-center py-12">
-              <div className="rounded-full bg-accent p-6 mb-4">
-                <FileText className="h-10 w-10 text-primary" />
-              </div>
-              <h3 className="text-xl font-medium mb-2">No projects yet</h3>
-              <p className="text-muted-foreground text-center max-w-md mb-6">
-                Create your first translation project to get started. You can upload
-                patent documents and translate them with GPT and Translation Memory.
-              </p>
-              <Button 
-                onClick={() => setIsDialogOpen(true)}
-                className="flex items-center"
-              >
-                <Plus className="mr-1 h-4 w-4" />
-                Create Project
-              </Button>
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
+        
+        {/* List View */}
+        {!isLoading && filteredAndSortedProjects.length > 0 && viewMode === 'list' && (
+          <div className="rounded-md border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[300px]">{renderSortButton('name', 'Project Name')}</TableHead>
+                  <TableHead className="w-[150px]">Language Pair</TableHead>
+                  <TableHead className="w-[300px]">{renderSortButton('progress', 'Progress')}</TableHead>
+                  <TableHead className="w-[150px]">{renderSortButton('updatedAt', 'Last Updated')}</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAndSortedProjects.map((project) => {
+                  const stats = projectStats[project.id] || { translatedPercentage: 0, reviewedPercentage: 0 };
+                  return (
+                    <TableRow 
+                      key={project.id}
+                      className="group hover:bg-muted/40 cursor-pointer"
+                      onClick={() => navigate(`/projects/${project.id}`)}
+                    >
+                      <TableCell className="font-medium">{project.name}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1 bg-accent/50 px-2 py-0.5 rounded-full text-xs w-fit">
+                          <span className="font-medium">{project.sourceLanguage}</span>
+                          <ArrowRight className="h-3 w-3" />
+                          <span className="font-medium">{project.targetLanguage}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1.5">
+                          <CombinedProgress 
+                            reviewedPercentage={stats.reviewedPercentage}
+                            translatedPercentage={stats.translatedPercentage}
+                            height="h-2.5"
+                          />
+                          <div className="text-xs text-muted-foreground flex items-center justify-between">
+                            <span>Translated: {stats.translatedPercentage}%</span>
+                            <span>Reviewed: {stats.reviewedPercentage}%</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Clock className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                          <span className="text-sm">{formatDate(project.updatedAt || project.createdAt)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          size="sm"
+                          className="gap-1 font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/projects/${project.id}`);
+                          }}
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          Open
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </main>
     </MainLayout>
   );
