@@ -103,8 +103,7 @@ export default function ProjectsPage() {
     updatedAt?: string;
   };
   
-  // Mock data for translation status - in a real app, this would come from the API
-  // This simulates the project-level progress statistics we already have in the project detail page
+  // Project statistics state for progress info
   const [projectStats, setProjectStats] = useState<{
     [key: number]: { 
       reviewedPercentage: number; 
@@ -120,12 +119,11 @@ export default function ProjectsPage() {
     },
   });
 
-  // Generate some demo statistics for each project
+  // Generate demo statistics for projects
   useEffect(() => {
     if (projects) {
       const stats: typeof projectStats = {};
       projects.forEach(project => {
-        // Generate random percentages for demo purposes
         // In a real application, these would be fetched from the API
         const translatedPercentage = Math.floor(Math.random() * 100);
         const reviewedPercentage = Math.floor(Math.random() * (translatedPercentage + 1));
@@ -276,6 +274,7 @@ export default function ProjectsPage() {
   return (
     <MainLayout title="Projects">
       <main className="flex-1 container max-w-6xl px-4 py-8">
+        {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
