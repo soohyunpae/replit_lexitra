@@ -139,16 +139,14 @@ export function Sidebar() {
           <ul className="space-y-1">
             {currentProject?.files?.map((file: ProjectFile) => (
               <li key={file.id}>
-                <Link href={`/translation/${file.id}`}>
-                  <a className={cn(
-                    "flex items-center px-2 py-2 text-sm rounded-md",
-                    fileId === file.id 
-                      ? "bg-primary/90 text-primary-foreground"
-                      : "hover:bg-accent text-foreground/80 hover:text-foreground"
-                  )}>
-                    <FileText className="h-4 w-4 mr-2 lg:mr-2 flex-shrink-0" />
-                    <span className="hidden lg:block truncate text-xs">{file.name}</span>
-                  </a>
+                <Link href={`/translation/${file.id}`} className={cn(
+                  "flex items-center px-2 py-2 text-sm rounded-md",
+                  fileId === file.id 
+                    ? "bg-primary/90 text-primary-foreground"
+                    : "hover:bg-accent text-foreground/80 hover:text-foreground"
+                )}>
+                  <FileText className="h-4 w-4 mr-2 lg:mr-2 flex-shrink-0" />
+                  <span className="hidden lg:block truncate text-xs">{file.name}</span>
                 </Link>
               </li>
             ))}

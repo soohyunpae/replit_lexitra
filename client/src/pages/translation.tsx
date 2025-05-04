@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useRoute } from "wouter";
-import { Header } from "@/components/layout/header";
-import { Sidebar } from "@/components/layout/sidebar";
+import { MainLayout } from "@/components/layout/main-layout";
 import { RightPanel } from "@/components/layout/right-panel";
 import { TranslationEditor } from "@/components/translation/translation-editor";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -21,7 +20,7 @@ export default function Translation() {
   
   // Fetch file data
   const { 
-    data: file,
+    data: file = {},
     isLoading: isFileLoading 
   } = useQuery({
     queryKey: [`/api/files/${fileId}`],
@@ -30,7 +29,7 @@ export default function Translation() {
   
   // Fetch project data for the file
   const {
-    data: project,
+    data: project = {},
     isLoading: isProjectLoading
   } = useQuery({
     queryKey: [`/api/projects/${file?.projectId}`],
@@ -39,7 +38,7 @@ export default function Translation() {
   
   // Fetch glossary terms
   const {
-    data: glossaryTerms,
+    data: glossaryTerms = [],
     isLoading: isGlossaryLoading
   } = useQuery({
     queryKey: [
@@ -114,46 +113,36 @@ export default function Translation() {
   // Create a blank loader state while data is loading
   if (isFileLoading || isProjectLoading) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <div className="flex flex-1 h-full">
-          <Sidebar />
-          <div className="flex-1 flex items-center justify-center">
-            <div className="animate-pulse text-center">
-              <div className="h-8 w-40 bg-accent rounded-full mx-auto mb-4"></div>
-              <div className="h-4 w-60 bg-accent rounded-full mx-auto"></div>
-            </div>
+      <MainLayout title="Loading...">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-pulse text-center">
+            <div className="h-8 w-40 bg-accent rounded-full mx-auto mb-4"></div>
+            <div className="h-4 w-60 bg-accent rounded-full mx-auto"></div>
           </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
   
   // If file or project wasn't found
   if (!file || !project) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <div className="flex flex-1 h-full">
-          <Sidebar />
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-xl font-medium mb-2">File not found</h2>
-              <p className="text-muted-foreground">
-                The translation file you're looking for doesn't exist or you don't have access to it.
-              </p>
-            </div>
+      <MainLayout title="File Not Found">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-medium mb-2">File not found</h2>
+            <p className="text-muted-foreground">
+              The translation file you're looking for doesn't exist or you don't have access to it.
+            </p>
           </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
   
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      <div className="flex flex-1 h-full overflow-hidden">
-        <Sidebar />
+    <MainLayout title={`Translating: ${file.name}`} showSearch={true}>
+      <div className="flex h-full overflow-hidden">
         <TranslationEditor
           fileName={file.name}
           sourceLanguage={project.sourceLanguage}
@@ -174,6 +163,6 @@ export default function Translation() {
           }}
         />
       </div>
-    </div>
+    </MainLayout>
   );
 }
