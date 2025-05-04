@@ -101,6 +101,7 @@ export default function ProjectsPage() {
     files?: any[]; 
     createdAt: string; 
     updatedAt?: string;
+    deadline?: string;
   };
   
   // Project statistics state for progress info
@@ -176,7 +177,7 @@ export default function ProjectsPage() {
         let bValue: any = b[sortField as keyof Project];
 
         // Handle dates
-        if (sortField === 'createdAt' || sortField === 'updatedAt') {
+        if (sortField === 'createdAt' || sortField === 'updatedAt' || sortField === 'deadline') {
           aValue = aValue ? new Date(aValue).getTime() : 0;
           bValue = bValue ? new Date(bValue).getTime() : 0;
         }
@@ -544,11 +545,12 @@ export default function ProjectsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[300px]">{renderSortButton('name', 'Project Name')}</TableHead>
+                  <TableHead className="w-[250px]">{renderSortButton('name', 'Project Name')}</TableHead>
                   <TableHead className="w-[150px]">Language Pair</TableHead>
-                  <TableHead className="w-[300px]">{renderSortButton('progress', 'Progress')}</TableHead>
+                  <TableHead className="w-[250px]">{renderSortButton('progress', 'Progress')}</TableHead>
+                  <TableHead className="w-[150px]">{renderSortButton('createdAt', 'Created')}</TableHead>
                   <TableHead className="w-[150px]">{renderSortButton('updatedAt', 'Last Updated')}</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="w-[150px]">{renderSortButton('deadline', 'Deadline')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -560,7 +562,7 @@ export default function ProjectsPage() {
                       className="group hover:bg-muted/40 cursor-pointer"
                       onClick={() => navigate(`/projects/${project.id}`)}
                     >
-                      <TableCell className="font-medium">{project.name}</TableCell>
+                      <TableCell className="font-medium text-primary hover:underline">{project.name}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1 bg-accent/50 px-2 py-0.5 rounded-full text-xs w-fit">
                           <span className="font-medium">{project.sourceLanguage}</span>
@@ -583,22 +585,21 @@ export default function ProjectsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center">
-                          <Clock className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                          <span className="text-sm">{formatDate(project.updatedAt || project.createdAt)}</span>
+                          <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                          <span className="text-sm">{new Date(project.createdAt).toLocaleString()}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          size="sm"
-                          className="gap-1 font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/projects/${project.id}`);
-                          }}
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          Open
-                        </Button>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Clock className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                          <span className="text-sm">{project.updatedAt ? new Date(project.updatedAt).toLocaleString() : '-'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Clock className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                          <span className="text-sm">{project.deadline ? new Date(project.deadline).toLocaleString() : 'Not set'}</span>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
