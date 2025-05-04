@@ -193,4 +193,9 @@
   .status-indicator-untranslated {
     @apply bg-gray-500;
   }
+  
+  /* Segment rows for translation alignment */
+  .segment-row {
+    @apply flex flex-col w-full min-h-[120px];
+  }
 }

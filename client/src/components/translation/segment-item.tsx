@@ -38,7 +38,8 @@ export function SegmentItem({
   };
   
   // Fixed height for segments to match source and target
-  const minSegmentHeight = 'min-h-[120px]';
+  // This ensures both segment versions have the same height
+  const minSegmentHeight = 'min-h-[120px] h-full';
 
   // For source panel
   if (isSource) {

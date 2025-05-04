@@ -36,6 +36,59 @@ export function TranslationEditor({
     setLocalSegments(segments);
   }, [segments]);
   
+  // Synchronize scroll between source and target panels
+  useEffect(() => {
+    const sourcePanel = document.getElementById('source-panel');
+    const targetPanel = document.getElementById('target-panel');
+    
+    if (!sourcePanel || !targetPanel) return;
+    
+    // Synchronize source panel scroll to target panel
+    const handleSourceScroll = () => {
+      targetPanel.scrollTop = sourcePanel.scrollTop;
+    };
+    
+    // Synchronize target panel scroll to source panel
+    const handleTargetScroll = () => {
+      sourcePanel.scrollTop = targetPanel.scrollTop;
+    };
+    
+    sourcePanel.addEventListener('scroll', handleSourceScroll);
+    targetPanel.addEventListener('scroll', handleTargetScroll);
+    
+    // Match segment heights for better alignment
+    const syncSegmentHeights = () => {
+      const sourceRows = document.querySelectorAll('#source-panel .segment-row');
+      const targetRows = document.querySelectorAll('#target-panel .segment-row');
+      
+      // Reset heights first
+      sourceRows.forEach(row => (row as HTMLElement).style.height = 'auto');
+      targetRows.forEach(row => (row as HTMLElement).style.height = 'auto');
+      
+      // Then set all to the max height of each pair
+      sourceRows.forEach((sourceRow, index) => {
+        if (index < targetRows.length) {
+          const targetRow = targetRows[index];
+          const maxHeight = Math.max(
+            (sourceRow as HTMLElement).clientHeight,
+            (targetRow as HTMLElement).clientHeight
+          );
+          
+          (sourceRow as HTMLElement).style.height = `${maxHeight}px`;
+          (targetRow as HTMLElement).style.height = `${maxHeight}px`;
+        }
+      });
+    };
+    
+    // Run once after render
+    setTimeout(syncSegmentHeights, 500);
+    
+    return () => {
+      sourcePanel.removeEventListener('scroll', handleSourceScroll);
+      targetPanel.removeEventListener('scroll', handleTargetScroll);
+    };
+  }, [localSegments.length]);
+  
   // Get active segment
   const activeSegment = activeSegmentId 
     ? localSegments.find(segment => segment.id === activeSegmentId)
@@ -219,17 +272,18 @@ export function TranslationEditor({
         />
       ) : (
         <div className="flex-1 overflow-hidden flex">
-          {/* Source panel */}
-          <div className="w-1/2 overflow-y-auto">
+          {/* Two column layout with synchronized scroll */}
+          <div className="w-1/2 overflow-y-auto" id="source-panel">
             <div className="px-4 py-3">
               {localSegments.map((segment, index) => (
-                <SegmentItem
-                  key={segment.id}
-                  segment={segment}
-                  index={index + 1}
-                  isSource={true}
-                  onClick={() => handleSegmentClick(segment.id)}
-                />
+                <div key={segment.id} className="segment-row" data-segment-id={segment.id}>
+                  <SegmentItem
+                    segment={segment}
+                    index={index + 1}
+                    isSource={true}
+                    onClick={() => handleSegmentClick(segment.id)}
+                  />
+                </div>
               ))}
             </div>
           </div>
@@ -238,17 +292,18 @@ export function TranslationEditor({
           <div className="border-l border-border w-1 cursor-col-resize"></div>
           
           {/* Target panel */}
-          <div className="w-1/2 overflow-y-auto">
+          <div className="w-1/2 overflow-y-auto" id="target-panel">
             <div className="px-4 py-3">
               {localSegments.map((segment, index) => (
-                <SegmentItem
-                  key={segment.id}
-                  segment={segment}
-                  index={index + 1}
-                  isSource={false}
-                  onClick={() => handleSegmentClick(segment.id)}
-                  onTranslateWithGPT={() => handleTranslateWithGPT(segment.id)}
-                />
+                <div key={segment.id} className="segment-row" data-segment-id={segment.id}>
+                  <SegmentItem
+                    segment={segment}
+                    index={index + 1}
+                    isSource={false}
+                    onClick={() => handleSegmentClick(segment.id)}
+                    onTranslateWithGPT={() => handleTranslateWithGPT(segment.id)}
+                  />
+                </div>
               ))}
             </div>
           </div>
