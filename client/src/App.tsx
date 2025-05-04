@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
+import Projects from "@/pages/projects";
 import Project from "@/pages/project";
 import Translation from "@/pages/translation";
 import Glossary from "@/pages/glossary";
@@ -20,6 +21,7 @@ function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={Home} />
+      <ProtectedRoute path="/projects" component={Projects} />
       <ProtectedRoute path="/projects/:id" component={Project} />
       <ProtectedRoute path="/translation/:fileId" component={Translation} />
       <ProtectedRoute path="/glossary" component={Glossary} />

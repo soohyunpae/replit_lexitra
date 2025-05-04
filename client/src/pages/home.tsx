@@ -154,12 +154,12 @@ export default function Home() {
   }
   
   return (
-    <MainLayout title="Projects">
+    <MainLayout title="Dashboard">
       <main className="flex-1 container max-w-6xl px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Welcome to Lexitra</h1>
-            <p className="text-muted-foreground mt-1">Specialized translation tool for patent documents</p>
+            <p className="text-muted-foreground mt-1">Your translation workspace dashboard</p>
           </div>
           
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -281,98 +281,207 @@ export default function Home() {
           </Dialog>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading ? (
-            Array(3).fill(0).map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <CardHeader className="space-y-2">
-                  <div className="h-5 w-2/3 bg-accent rounded"></div>
-                  <div className="h-4 w-full bg-accent rounded"></div>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-4 w-full bg-accent rounded mb-2"></div>
-                  <div className="h-4 w-3/4 bg-accent rounded"></div>
-                </CardContent>
-                <CardFooter>
-                  <div className="h-9 w-1/3 bg-accent rounded"></div>
-                </CardFooter>
-              </Card>
-            ))
-          ) : projects && projects.length > 0 ? (
-            projects.map((project: Project) => (
-              <Card 
-                key={project.id} 
-                className="overflow-hidden group hover:shadow-md transition-all duration-200 border-border hover:border-primary/30"
-              >
-                {/* 프로젝트 랭귀지 컬러 바 추가 */}
-                <div className="h-1.5 w-full bg-gradient-to-r from-primary to-primary/70"></div>
-                <CardHeader className="pb-2 pt-4">
-                  <div className="flex justify-between items-start mb-1">
-                    <CardTitle className="truncate group-hover:text-primary transition-colors">
-                      {project.name}
-                    </CardTitle>
-                    <Badge variant="outline" className="text-xs font-normal">
-                      {project.files?.length || 0} {project.files?.length === 1 ? 'file' : 'files'}
-                    </Badge>
-                  </div>
-                  <CardDescription className="flex items-center gap-1 mt-1.5">
-                    <div className="flex items-center gap-1 bg-accent/50 px-2 py-0.5 rounded-full text-xs">
-                      <span className="font-medium">{project.sourceLanguage}</span>
-                      <ArrowRight className="h-3 w-3" />
-                      <span className="font-medium">{project.targetLanguage}</span>
-                    </div>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pb-2">
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {project.description || "No description provided."}
-                  </p>
-                </CardContent>
-                <CardFooter className="pt-2 flex items-center justify-between border-t border-border/30">
-                  <div className="text-xs text-muted-foreground flex items-center">
-                    <Calendar className="h-3.5 w-3.5 mr-1" />
-                    {new Date(project.createdAt).toLocaleDateString()}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      size="icon" 
-                      variant="ghost"
-                      className="h-8 w-8 opacity-70 hover:opacity-100"
-                      onClick={() => window.confirm('Delete this project?') && console.log('Delete project:', project.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      size="sm"
-                      className="gap-1 font-medium"
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Recent Projects Section */}
+          <Card className="lg:col-span-2">
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="text-xl">Recent Projects</CardTitle>
+                  <CardDescription>Your latest translation projects</CardDescription>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-1 text-sm"
+                  onClick={() => navigate("/projects")}
+                >
+                  All Projects
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {projectsLoading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-16 bg-accent animate-pulse rounded-md" />
+                  ))}
+                </div>
+              ) : getRecentProjects().length > 0 ? (
+                <div className="space-y-2">
+                  {getRecentProjects().map((project) => (
+                    <div 
+                      key={project.id} 
+                      className="flex items-center justify-between p-3 rounded-md border border-border hover:border-primary/50 hover:bg-accent/30 transition-colors cursor-pointer"
                       onClick={() => navigate(`/projects/${project.id}`)}
                     >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      Open
-                    </Button>
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 bg-primary/10 rounded-md flex items-center justify-center">
+                          <FolderOpen className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <div className="font-medium">{project.name}</div>
+                          <div className="text-xs flex items-center gap-1 text-muted-foreground">
+                            <div className="flex items-center gap-1 bg-accent/50 px-2 py-0.5 rounded-full">
+                              <span>{project.sourceLanguage}</span>
+                              <ArrowRight className="h-3 w-3" />
+                              <span>{project.targetLanguage}</span>
+                            </div>
+                            <span className="px-2 py-0.5">
+                              {project.files?.length || 0} {project.files?.length === 1 ? 'file' : 'files'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center text-xs text-muted-foreground">
+                        <Clock className="h-3.5 w-3.5 mr-1.5" />
+                        {formatDate(project.updatedAt || project.createdAt)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <FolderOpen className="h-10 w-10 text-muted-foreground mb-2" />
+                  <h3 className="text-lg font-medium mb-1">No projects yet</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Create your first translation project</p>
+                  <Button
+                    size="sm" 
+                    onClick={() => setIsDialogOpen(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-1" /> Create Project
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter className="pt-0">
+              {getRecentProjects().length > 0 && (
+                <Button
+                  className="w-full" 
+                  variant="outline" 
+                  onClick={() => setIsDialogOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> New Project
+                </Button>
+              )}
+            </CardFooter>
+          </Card>
+          
+          {/* Activity Section */}
+          <div className="space-y-6">
+            {/* Translation Memory Activity */}
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-lg flex items-center gap-1">
+                    <Database className="h-4 w-4" />
+                    <span>Translation Memory</span>
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2"
+                    onClick={() => navigate("/tm")}
+                  >
+                    View
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {tmLoading ? (
+                  <div className="space-y-2 py-1">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-[70px] bg-accent animate-pulse rounded-md" />
+                    ))}
                   </div>
-                </CardFooter>
-              </Card>
-            ))
-          ) : (
-            <div className="col-span-3 flex flex-col items-center justify-center py-12">
-              <div className="rounded-full bg-accent p-6 mb-4">
-                <FileText className="h-10 w-10 text-primary" />
-              </div>
-              <h3 className="text-xl font-medium mb-2">No projects yet</h3>
-              <p className="text-muted-foreground text-center max-w-md mb-6">
-                Create your first translation project to get started. You can upload
-                patent documents and translate them with GPT and Translation Memory.
-              </p>
-              <Button 
-                onClick={() => setIsDialogOpen(true)}
-                className="flex items-center"
-              >
-                <Plus className="mr-1 h-4 w-4" />
-                Create Project
-              </Button>
-            </div>
-          )}
+                ) : getRecentTMEntries().length > 0 ? (
+                  <div className="space-y-2.5 py-1">
+                    {getRecentTMEntries().map((entry: TMEntry) => (
+                      <div key={entry.id} className="border border-border rounded-md p-2 text-sm hover:border-primary/50 transition-colors">
+                        <div className="flex justify-between mb-1">
+                          <div className="flex items-center gap-1 text-xs">
+                            <span className="font-medium">{entry.sourceLanguage}</span>
+                            <ArrowRight className="h-3 w-3" />
+                            <span className="font-medium">{entry.targetLanguage}</span>
+                          </div>
+                          <div 
+                            className={`text-xs px-1.5 py-0.5 rounded-full font-medium 
+                              ${entry.status === "100%" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : ""}
+                              ${entry.status === "Fuzzy" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" : ""}
+                              ${entry.status === "MT" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : ""}
+                              ${entry.status === "Reviewed" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" : ""}
+                            `}
+                          >
+                            {entry.status}
+                          </div>
+                        </div>
+                        <div className="line-clamp-1 mb-1">{entry.source}</div>
+                        <div className="line-clamp-1 text-muted-foreground">{entry.target}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-4 text-center text-muted-foreground text-sm">
+                    No translation memory entries yet
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Glossary Activity */}
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-lg flex items-center gap-1">
+                    <Book className="h-4 w-4" />
+                    <span>Terminology Base</span>
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2"
+                    onClick={() => navigate("/glossary")}
+                  >
+                    View
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {glossaryLoading ? (
+                  <div className="space-y-2 py-1">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-12 bg-accent animate-pulse rounded-md" />
+                    ))}
+                  </div>
+                ) : getRecentGlossaryTerms().length > 0 ? (
+                  <div className="space-y-2 py-1">
+                    {getRecentGlossaryTerms().map((term: GlossaryTerm) => (
+                      <div key={term.id} className="border border-border rounded-md p-2 text-sm hover:border-primary/50 transition-colors">
+                        <div className="flex justify-between mb-1">
+                          <div className="flex items-center gap-1 text-xs">
+                            <span className="font-medium">{term.sourceLanguage}</span>
+                            <ArrowRight className="h-3 w-3" />
+                            <span className="font-medium">{term.targetLanguage}</span>
+                          </div>
+                        </div>
+                        <div className="flex justify-between">
+                          <div className="font-medium">{term.source}</div>
+                          <div>{term.target}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-4 text-center text-muted-foreground text-sm">
+                    No terminology entries yet
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
     </MainLayout>

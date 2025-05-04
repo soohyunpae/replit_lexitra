@@ -72,8 +72,13 @@ export function Sidebar() {
   const mainNavItems: NavItem[] = [
     {
       icon: <Home className="h-5 w-5" />,
-      label: "Projects",
+      label: "Dashboard",
       href: "/"
+    },
+    {
+      icon: <FolderOpen className="h-5 w-5" />,
+      label: "Projects",
+      href: "/projects"
     },
     {
       icon: <Book className="h-5 w-5" />,
@@ -113,8 +118,11 @@ export function Sidebar() {
                   "text-foreground/70 hover:text-foreground hover:bg-accent/60",
                   {
                     "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground": 
-                      // Projects menu: active on home or any project page
-                      (item.label === "Projects" && (location === "/" || /^\/projects\/\d+$/.test(location) || /^\/translation\/\d+$/.test(location))) ||
+                      // Dashboard menu: active on home page
+                      (item.label === "Dashboard" && location === "/") ||
+                      
+                      // Projects menu: active on projects list or project detail page or translation page
+                      (item.label === "Projects" && (location === "/projects" || /^\/projects\/\d+$/.test(location) || /^\/translation\/\d+$/.test(location))) ||
                       
                       // Terminology Base: active on glossary page
                       (item.label === "Terminology Base" && location === "/glossary") ||
