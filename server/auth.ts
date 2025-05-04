@@ -37,22 +37,24 @@ async function comparePasswords(supplied: string, stored: string) {
 export function setupAuth(app: Express) {
   const PostgresSessionStore = connectPgSimple(session);
   
-  // 테스팅을 위해 메모리 스토어 사용
-  const memoryStore = new session.MemoryStore();
-  
   const sessionSettings: session.SessionOptions = {
-    name: 'lexitra.sid',
+    name: 'lexitra.sid', // 쿠키 이름 변경
     secret: process.env.SESSION_SECRET || "lexitra-secret-key",
-    resave: true,
-    saveUninitialized: true,
+    resave: true, // 세션을 항상 저장하도록 변경
+    saveUninitialized: true, // 초기화되지 않은 세션도 저장
+    rolling: true, // 요청마다 세션 유효시간 초기화
     cookie: {
-      secure: false,
+      secure: false, // 개발 환경에서는 false로 설정
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       httpOnly: true,
       sameSite: 'lax',
-      path: '/'
+      path: '/' // 모든 경로에서 쿠키 사용 가능
     },
-    store: memoryStore,
+    store: new PostgresSessionStore({
+      pool,
+      tableName: "session", // Default
+      createTableIfMissing: true,
+    }),
   };
 
   app.set("trust proxy", 1);
@@ -111,7 +113,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // Route for registering a new user - 더 단순한 방식으로 변경
+  // Route for registering a new user
   app.post("/api/register", async (req, res, next) => {
     try {
       const { username, password } = req.body;
@@ -140,20 +142,50 @@ export function setupAuth(app: Express) {
           return next(err);
         }
         
-        console.log('User registered and logged in successfully:', user.id);
-        return res.status(201).json(user);
+        // 로그인이 성공했으므로 세션을 저장하고 쿠키를 설정합니다
+        req.session.save((err) => {
+          if (err) {
+            console.error('Registration session save error:', err);
+            return next(err);
+          }
+          console.log('User registered and logged in successfully:', user.id);
+          return res.status(201).json(user);
+        });
       });
     } catch (error) {
       next(error);
     }
   });
 
-  // Route for logging in - 더 단순한 방식으로 변경
-  app.post("/api/login", passport.authenticate("local"), (req: Request & { user?: Express.User }, res) => {
-    // 인증이 성공하면 이 코드가 실행됨
-    const user = req.user as { id: number, username: string };
-    console.log('User logged in successfully:', user.id);
-    res.json(user);
+  // Route for logging in
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err: any, user: Express.User | false, info: { message: string }) => {
+      if (err) {
+        console.error('Authentication error:', err);
+        return next(err);
+      }
+      
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Invalid credentials" });
+      }
+      
+      req.login(user, (err) => {
+        if (err) {
+          console.error('Login error:', err);
+          return next(err);
+        }
+        
+        // 로그인이 성공했으므로 세션을 저장하고 쿠키를 설정하도록 합니다
+        req.session.save((err) => {
+          if (err) {
+            console.error('Session save error:', err);
+            return next(err);
+          }
+          console.log('User logged in successfully:', user.id);
+          return res.json(user);
+        });
+      });
+    })(req, res, next);
   });
 
   // Route for logging out
