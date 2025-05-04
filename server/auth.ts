@@ -38,14 +38,17 @@ export function setupAuth(app: Express) {
   const PostgresSessionStore = connectPgSimple(session);
   
   const sessionSettings: session.SessionOptions = {
+    name: 'lexitra.sid', // 쿠키 이름 변경
     secret: process.env.SESSION_SECRET || "lexitra-secret-key",
-    resave: false,
-    saveUninitialized: false,
+    resave: true, // 세션을 항상 저장하도록 변경
+    saveUninitialized: true, // 초기화되지 않은 세션도 저장
+    rolling: true, // 요청마다 세션 유효시간 초기화
     cookie: {
       secure: false, // 개발 환경에서는 false로 설정
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       httpOnly: true,
-      sameSite: 'lax'
+      sameSite: 'lax',
+      path: '/' // 모든 경로에서 쿠키 사용 가능
     },
     store: new PostgresSessionStore({
       pool,
@@ -62,11 +65,12 @@ export function setupAuth(app: Express) {
   // 세션 디버깅을 위한 미들웨어
   app.use((req, res, next) => {
     console.log('[SESSION DEBUG]', {
+      path: req.path,
+      method: req.method,
       authenticated: req.isAuthenticated(),
       sessionID: req.sessionID,
-      session: req.session,
-      cookies: req.headers.cookie,
-      user: req.user
+      cookie: req.headers.cookie,
+      userID: req.user?.id
     });
     next();
   });
@@ -133,8 +137,20 @@ export function setupAuth(app: Express) {
       
       // Log the user in
       req.login(user, (err) => {
-        if (err) return next(err);
-        return res.status(201).json(user);
+        if (err) {
+          console.error('Registration login error:', err);
+          return next(err);
+        }
+        
+        // 로그인이 성공했으므로 세션을 저장하고 쿠키를 설정합니다
+        req.session.save((err) => {
+          if (err) {
+            console.error('Registration session save error:', err);
+            return next(err);
+          }
+          console.log('User registered and logged in successfully:', user.id);
+          return res.status(201).json(user);
+        });
       });
     } catch (error) {
       next(error);
@@ -145,6 +161,7 @@ export function setupAuth(app: Express) {
   app.post("/api/login", (req, res, next) => {
     passport.authenticate("local", (err: any, user: Express.User | false, info: { message: string }) => {
       if (err) {
+        console.error('Authentication error:', err);
         return next(err);
       }
       
@@ -154,19 +171,43 @@ export function setupAuth(app: Express) {
       
       req.login(user, (err) => {
         if (err) {
+          console.error('Login error:', err);
           return next(err);
         }
         
-        return res.json(user);
+        // 로그인이 성공했으므로 세션을 저장하고 쿠키를 설정하도록 합니다
+        req.session.save((err) => {
+          if (err) {
+            console.error('Session save error:', err);
+            return next(err);
+          }
+          console.log('User logged in successfully:', user.id);
+          return res.json(user);
+        });
       });
     })(req, res, next);
   });
 
   // Route for logging out
   app.post("/api/logout", (req, res, next) => {
+    const sessionID = req.sessionID;
+    console.log('Logging out user, session ID:', sessionID);
+    
     req.logout((err) => {
-      if (err) return next(err);
-      return res.sendStatus(200);
+      if (err) {
+        console.error('Logout error:', err);
+        return next(err);
+      }
+      
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('Session destruction error:', err);
+          return next(err);
+        }
+        res.clearCookie('lexitra.sid', { path: '/' });
+        console.log('Session destroyed successfully');
+        return res.sendStatus(200);
+      });
     });
   });
 
