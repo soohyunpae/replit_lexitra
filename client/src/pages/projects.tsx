@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useLocation } from "wouter";
-import { formatDate } from "@/lib/utils";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,11 +19,7 @@ import {
   ArrowRight, 
   Trash2, 
   ExternalLink,
-  Clock,
-  Book,
-  Database,
-  ChevronRight,
-  FolderOpen,
+  Clock
 } from "lucide-react";
 import {
   Dialog,
@@ -67,64 +62,19 @@ const projectFormSchema = z.object({
 
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
-export default function Home() {
+export default function ProjectsPage() {
   const [, navigate] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
-  type Project = { id: number; name: string; description?: string; sourceLanguage: string; targetLanguage: string; files?: any[]; createdAt: string; updatedAt?: string };
-  type GlossaryTerm = { id: number; source: string; target: string; sourceLanguage: string; targetLanguage: string; createdAt: string; };
-  type TMEntry = { id: number; source: string; target: string; sourceLanguage: string; targetLanguage: string; status: string; createdAt: string; };
+  type Project = { id: number; name: string; description?: string; sourceLanguage: string; targetLanguage: string; files?: any[]; createdAt: string; };
   
-  // Fetch recent projects
-  const { data: projects, isLoading: projectsLoading } = useQuery<Project[]>({
+  const { data: projects, isLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/projects");
       return res.json();
     },
   });
-  
-  // Fetch recent TM entries
-  const { data: tmEntries, isLoading: tmLoading } = useQuery({
-    queryKey: ["/api/tm/all"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/tm/all");
-      return res.json();
-    },
-  });
-  
-  // Fetch recent glossary terms
-  const { data: glossaryTerms, isLoading: glossaryLoading } = useQuery({
-    queryKey: ["/api/glossary/all"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/glossary/all");
-      return res.json();
-    },
-  });
-  
-  // Helper to get limited entries for display
-  const getRecentProjects = () => {
-    if (!projects) return [];
-    return [...projects].sort((a, b) => {
-      const dateA = a.updatedAt ? new Date(a.updatedAt) : new Date(a.createdAt);
-      const dateB = b.updatedAt ? new Date(b.updatedAt) : new Date(b.createdAt);
-      return dateB.getTime() - dateA.getTime();
-    }).slice(0, 3);
-  };
-  
-  const getRecentTMEntries = () => {
-    if (!tmEntries) return [];
-    return [...tmEntries].sort((a, b) => {
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    }).slice(0, 3);
-  };
-  
-  const getRecentGlossaryTerms = () => {
-    if (!glossaryTerms) return [];
-    return [...glossaryTerms].sort((a, b) => {
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    }).slice(0, 3);
-  };
   
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
@@ -142,7 +92,7 @@ export default function Home() {
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
       setIsDialogOpen(false);
       form.reset();
       navigate(`/projects/${data.id}`);
@@ -158,8 +108,8 @@ export default function Home() {
       <main className="flex-1 container max-w-6xl px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Welcome to Lexitra</h1>
-            <p className="text-muted-foreground mt-1">Specialized translation tool for patent documents</p>
+            <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
+            <p className="text-muted-foreground mt-1">Manage your translation projects</p>
           </div>
           
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
