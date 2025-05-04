@@ -1,14 +1,19 @@
 import { apiRequest } from "@/lib/queryClient";
-import { type TranslationUnit, type TranslationMemory } from "@/types";
+import { type TranslationUnit, type TranslationMemory, type Glossary } from "@/types";
 
 // API functions for working with translations
 
-// Translate a segment with GPT, considering TM context
+// Translate a segment with GPT, considering TM context and glossary terms
 export async function translateWithGPT(
   source: string,
   sourceLanguage: string,
   targetLanguage: string
-): Promise<{ target: string; tmMatches: TranslationMemory[] }> {
+): Promise<{ 
+  target: string; 
+  tmMatches: TranslationMemory[]; 
+  glossaryTerms?: Glossary[];
+  error?: string;
+ }> {
   try {
     const response = await apiRequest(
       "POST",
@@ -107,7 +112,7 @@ export async function saveToTM(
 export async function getGlossaryTerms(
   sourceLanguage: string,
   targetLanguage: string
-): Promise<any[]> {
+): Promise<Glossary[]> {
   try {
     const response = await apiRequest(
       "GET",

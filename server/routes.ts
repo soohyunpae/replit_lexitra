@@ -289,6 +289,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         limit: 5
       });
       
+      // Find relevant glossary terms for this source text
+      const glossaryTerms = await db.query.glossary.findMany({
+        where: and(
+          eq(schema.glossary.sourceLanguage, sourceLanguage),
+          eq(schema.glossary.targetLanguage, targetLanguage)
+        )
+      });
+      
+      // Filter terms that are present in the source text
+      const relevantTerms = glossaryTerms.filter(term => 
+        source.toLowerCase().includes(term.source.toLowerCase())
+      );
+      
       try {
         // Extract context from TM matches to help with translation
         const context = tmMatches.map(match => 
@@ -300,14 +313,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           source,
           sourceLanguage,
           targetLanguage,
-          context: context.length > 0 ? context : undefined
+          context: context.length > 0 ? context : undefined,
+          glossaryTerms: relevantTerms.length > 0 ? relevantTerms.map(term => ({
+            source: term.source,
+            target: term.target
+          })) : undefined
         });
         
         return res.json({
           source,
           target: translationResult.target,
           status: 'MT',
-          tmMatches
+          tmMatches,
+          glossaryTerms: relevantTerms.length > 0 ? relevantTerms : undefined
         });
       } catch (translationError) {
         console.error('Error using GPT for translation:', translationError);
@@ -325,6 +343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           target: fallbackTranslation,
           status: 'MT',
           tmMatches,
+          glossaryTerms: relevantTerms.length > 0 ? relevantTerms : undefined,
           error: 'Translation service unavailable, using fallback'
         });
       }
