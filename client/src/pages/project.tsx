@@ -428,32 +428,35 @@ export default function Project() {
                   
                   <div className="grid grid-cols-2 gap-1">
                     <div className="text-muted-foreground">Created:</div>
-                    <div className="font-medium flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5" />
+                    <div className="font-medium">
                       <span>{formatDate(project.createdAt)}</span>
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-1">
                     <div className="text-muted-foreground">Last Updated:</div>
-                    <div className="font-medium flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5" />
+                    <div className="font-medium">
                       <span>{formatDate(project.updatedAt || project.createdAt)}</span>
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-1">
+                    <div className="text-muted-foreground">Deadline:</div>
+                    <div className="font-medium">
+                      <span>{project.deadline ? formatDate(project.deadline) : 'Not set'}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-1">
                     <div className="text-muted-foreground">Glossary:</div>
-                    <div className="font-medium flex items-center gap-1">
-                      <Book className="h-3.5 w-3.5" />
+                    <div className="font-medium">
                       <span>Default Glossary</span>
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-1">
                     <div className="text-muted-foreground">TM Used:</div>
-                    <div className="font-medium flex items-center gap-1">
-                      <Database className="h-3.5 w-3.5" />
+                    <div className="font-medium">
                       <span>Default TM</span>
                     </div>
                   </div>
@@ -464,8 +467,8 @@ export default function Project() {
             {/* Translation Summary Card */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-1">
-                  <FileText className="h-4 w-4" /> Translation Summary
+                <CardTitle className="text-lg">
+                  Translation Summary
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-sm space-y-3 pt-1">
@@ -532,10 +535,6 @@ export default function Project() {
           
           {/* Action Buttons row */}
           <div className="flex gap-2 mb-6 justify-end">
-            <Button variant="outline" onClick={() => navigate("/")}>
-              <ChevronLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
-            </Button>
             <Button variant="outline">
               <Download className="mr-2 h-4 w-4" />
               Download All
@@ -551,8 +550,7 @@ export default function Project() {
           {/* File list */}
           <Card className="mb-6">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-1">
-                <FolderOpen className="h-4 w-4" />
+              <CardTitle className="text-lg">
                 Files
               </CardTitle>
               <CardDescription>
@@ -571,8 +569,7 @@ export default function Project() {
                       >
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
                           <div className="md:col-span-2">
-                            <div className="flex items-center mb-2">
-                              <FileText className="mr-2 h-5 w-5 text-primary" />
+                            <div className="mb-2">
                               <h3 className="font-medium truncate">{file.name}</h3>
                             </div>
                             <div className="flex items-center gap-2">
@@ -583,8 +580,7 @@ export default function Project() {
                             </div>
                           </div>
                           
-                          <div className="text-sm text-muted-foreground flex items-center">
-                            <Clock className="mr-1.5 h-3.5 w-3.5" />
+                          <div className="text-sm text-muted-foreground">
                             {formatDate(file.updatedAt || file.createdAt)}
                           </div>
                           
