@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useThemeToggle } from "@/hooks/use-theme";
-import { Moon, Sun, Search, Settings, Menu } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { Moon, Sun, Search, Settings, Menu, UserCircle, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +32,9 @@ export function Header({
   showSidebarTrigger = true
 }: HeaderProps) {
   const { toggleTheme, isDarkMode, mounted } = useThemeToggle();
+  const { user, logoutMutation } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [_, navigate] = useLocation();
 
   return (
     <header className="bg-card border-b border-border py-2 px-4 flex items-center justify-between">
@@ -99,25 +102,40 @@ export function Header({
           </Button>
         </Link>
         
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative p-1 rounded-full">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-medium text-sm">
-                JD
-              </div>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Your Profile</DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/settings">Settings</Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Sign out</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {user ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative p-1 rounded-full">
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-medium text-sm">
+                  {user.username.charAt(0).toUpperCase()}
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>내 계정</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/profile">내 프로필</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings">설정</Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
+                <LogOut className="h-4 w-4 mr-2" />
+                로그아웃
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/auth")}
+          >
+            로그인
+          </Button>
+        )}
       </div>
     </header>
   );
