@@ -13,9 +13,9 @@ import { formatDate } from "@/lib/utils";
 
 export default function TranslationMemoryPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [sourceLanguageFilter, setSourceLanguageFilter] = React.useState<string>("");
-  const [targetLanguageFilter, setTargetLanguageFilter] = React.useState<string>("");
-  const [statusFilter, setStatusFilter] = React.useState<string>("");
+  const [sourceLanguageFilter, setSourceLanguageFilter] = React.useState<string>("all_source_languages");
+  const [targetLanguageFilter, setTargetLanguageFilter] = React.useState<string>("all_target_languages");
+  const [statusFilter, setStatusFilter] = React.useState<string>("all_statuses");
   
   // Get all translation memory entries
   const { data: tmData, isLoading } = useQuery({
@@ -62,15 +62,15 @@ export default function TranslationMemoryPage() {
           entry.target.toLowerCase().includes(searchQuery.toLowerCase())
         : true;
       
-      const matchesSourceLang = sourceLanguageFilter
+      const matchesSourceLang = sourceLanguageFilter && sourceLanguageFilter !== "all_source_languages"
         ? entry.sourceLanguage === sourceLanguageFilter
         : true;
       
-      const matchesTargetLang = targetLanguageFilter
+      const matchesTargetLang = targetLanguageFilter && targetLanguageFilter !== "all_target_languages"
         ? entry.targetLanguage === targetLanguageFilter
         : true;
       
-      const matchesStatus = statusFilter
+      const matchesStatus = statusFilter && statusFilter !== "all_statuses"
         ? entry.status === statusFilter
         : true;
       
@@ -114,7 +114,7 @@ export default function TranslationMemoryPage() {
                   <SelectValue placeholder="Source language" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All languages</SelectItem>
+                  <SelectItem value="all_source_languages">All languages</SelectItem>
                   {filters.source.map((lang) => (
                     <SelectItem key={lang} value={lang}>{lang}</SelectItem>
                   ))}
@@ -130,7 +130,7 @@ export default function TranslationMemoryPage() {
                   <SelectValue placeholder="Target language" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All languages</SelectItem>
+                  <SelectItem value="all_target_languages">All languages</SelectItem>
                   {filters.target.map((lang) => (
                     <SelectItem key={lang} value={lang}>{lang}</SelectItem>
                   ))}
@@ -147,7 +147,7 @@ export default function TranslationMemoryPage() {
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All statuses</SelectItem>
+                    <SelectItem value="all_statuses">All statuses</SelectItem>
                     {filters.statuses.map((status) => (
                       <SelectItem key={status} value={status}>{status}</SelectItem>
                     ))}

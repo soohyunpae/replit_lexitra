@@ -30,8 +30,8 @@ export default function GlossaryPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
-  const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>("");
-  const [targetLanguageFilter, setTargetLanguageFilter] = useState<string>("");
+  const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>("all_source_languages");
+  const [targetLanguageFilter, setTargetLanguageFilter] = useState<string>("all_target_languages");
   
   // Form setup
   const form = useForm<GlossaryFormValues>({
@@ -83,11 +83,11 @@ export default function GlossaryPage() {
           term.target.toLowerCase().includes(searchQuery.toLowerCase())
         : true;
       
-      const matchesSourceLang = sourceLanguageFilter
+      const matchesSourceLang = sourceLanguageFilter && sourceLanguageFilter !== "all_source_languages"
         ? term.sourceLanguage === sourceLanguageFilter
         : true;
       
-      const matchesTargetLang = targetLanguageFilter
+      const matchesTargetLang = targetLanguageFilter && targetLanguageFilter !== "all_target_languages"
         ? term.targetLanguage === targetLanguageFilter
         : true;
       
