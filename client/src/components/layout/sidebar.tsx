@@ -8,8 +8,7 @@ import {
   FolderOpen,
   Book,
   Database,
-  Home,
-  Layers
+  Home
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMobile } from "@/hooks/use-mobile";
@@ -77,11 +76,6 @@ export function Sidebar() {
       href: "/"
     },
     {
-      icon: <Layers className="h-5 w-5" />,
-      label: "Translation Editor",
-      href: fileId ? `/translation/${fileId}` : (projectId ? `/projects/${projectId}` : "/")
-    },
-    {
       icon: <Book className="h-5 w-5" />,
       label: "Terminology Base",
       href: "/glossary"
@@ -120,10 +114,7 @@ export function Sidebar() {
                   {
                     "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground": 
                       // Projects menu: active on home or any project page
-                      (item.label === "Projects" && (location === "/" || /^\/projects\/\d+$/.test(location))) ||
-                      
-                      // Translation Editor: active on any translation page
-                      (item.label === "Translation Editor" && /^\/translation\/\d+$/.test(location)) ||
+                      (item.label === "Projects" && (location === "/" || /^\/projects\/\d+$/.test(location) || /^\/translation\/\d+$/.test(location))) ||
                       
                       // Terminology Base: active on glossary page
                       (item.label === "Terminology Base" && location === "/glossary") ||
