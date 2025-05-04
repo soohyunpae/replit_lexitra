@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
 import * as schema from "@shared/schema";
-import { eq, and, desc, like } from "drizzle-orm";
+import { eq, and, or, desc, like } from "drizzle-orm";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { ZodError } from "zod";
@@ -128,12 +128,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get(`${apiPrefix}/projects/:id`, async (req, res) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
       const id = parseInt(req.params.id);
+      const userId = req.user!.id;
       
       const project = await db.query.projects.findFirst({
         where: eq(schema.projects.id, id),
         with: {
-          files: true
+          files: true,
+          claimer: true
         }
       });
       
@@ -141,7 +147,243 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Project not found' });
       }
       
+      // 클레임된 프로젝트이고 현재 사용자가 클레임하지 않았다면 접근 거부
+      if (project.status === 'Claimed' && project.claimedBy !== userId) {
+        return res.status(403).json({ message: 'Access denied. This project is claimed by another user.' });
+      }
+      
       return res.json(project);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // 완료된 프로젝트 목록 가져오기
+  app.get(`${apiPrefix}/completed-projects`, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const projects = await db.query.projects.findMany({
+        where: eq(schema.projects.status, 'Completed'),
+        orderBy: desc(schema.projects.completedAt),
+        with: {
+          files: true,
+          claimer: true
+        }
+      });
+      
+      return res.json(projects);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // 프로젝트 클레임하기
+  app.post(`${apiPrefix}/projects/:id/claim`, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const id = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      // 프로젝트가 존재하고 Unclaimed 상태인지 확인
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, id)
+      });
+      
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      if (project.status !== 'Unclaimed') {
+        return res.status(400).json({ message: 'Project is already claimed' });
+      }
+      
+      // 프로젝트 클레임 처리
+      const [updatedProject] = await db
+        .update(schema.projects)
+        .set({
+          status: 'Claimed',
+          claimedBy: userId,
+          claimedAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(schema.projects.id, id))
+        .returning();
+      
+      return res.json(updatedProject);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // 프로젝트 클레임 해제하기
+  app.post(`${apiPrefix}/projects/:id/release`, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const id = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      // 프로젝트가 존재하고 현재 사용자가 클레임했는지 확인
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, id)
+      });
+      
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      if (project.status !== 'Claimed') {
+        return res.status(400).json({ message: 'Project is not in claimed status' });
+      }
+      
+      if (project.claimedBy !== userId) {
+        return res.status(403).json({ message: 'You do not have permission to release this project' });
+      }
+      
+      // 프로젝트 클레임 해제 처리
+      const [updatedProject] = await db
+        .update(schema.projects)
+        .set({
+          status: 'Unclaimed',
+          claimedBy: null,
+          claimedAt: null,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.projects.id, id))
+        .returning();
+      
+      return res.json(updatedProject);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // 프로젝트 완료 처리하기
+  app.post(`${apiPrefix}/projects/:id/complete`, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const id = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      // 프로젝트가 존재하고 현재 사용자가 클레임했는지 확인
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, id)
+      });
+      
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      if (project.status !== 'Claimed') {
+        return res.status(400).json({ message: 'Project is not in claimed status' });
+      }
+      
+      if (project.claimedBy !== userId) {
+        return res.status(403).json({ message: 'You do not have permission to complete this project' });
+      }
+      
+      // 프로젝트 완료 처리
+      const [completedProject] = await db
+        .update(schema.projects)
+        .set({
+          status: 'Completed',
+          completedAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(schema.projects.id, id))
+        .returning();
+      
+      return res.json(completedProject);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // 완료된 프로젝트 재오픈하기
+  app.post(`${apiPrefix}/projects/:id/reopen`, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const id = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      // 프로젝트가 존재하고 Completed 상태인지 확인
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, id)
+      });
+      
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      if (project.status !== 'Completed') {
+        return res.status(400).json({ message: 'Project is not in completed status' });
+      }
+      
+      // 프로젝트 재오픈 처리 - 이전 클레임 사용자가 그대로 유지됨
+      const [reopenedProject] = await db
+        .update(schema.projects)
+        .set({
+          status: 'Claimed',
+          completedAt: null,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.projects.id, id))
+        .returning();
+      
+      return res.json(reopenedProject);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // 프로젝트 삭제하기
+  app.delete(`${apiPrefix}/projects/:id`, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const id = parseInt(req.params.id);
+      
+      // 프로젝트가 존재하는지 확인
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, id)
+      });
+      
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      // 먼저 연관된 모든 파일의 segments를 삭제
+      const files = await db.query.files.findMany({
+        where: eq(schema.files.projectId, id)
+      });
+      
+      for (const file of files) {
+        await db.delete(schema.translationUnits).where(eq(schema.translationUnits.fileId, file.id));
+      }
+      
+      // 그 다음 파일 삭제
+      await db.delete(schema.files).where(eq(schema.files.projectId, id));
+      
+      // 마지막으로 프로젝트 삭제
+      await db.delete(schema.projects).where(eq(schema.projects.id, id));
+      
+      return res.json({ message: 'Project deleted successfully' });
     } catch (error) {
       return handleApiError(res, error);
     }

@@ -58,6 +58,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { CombinedProgress } from "@/components/ui/combined-progress";
@@ -91,6 +92,7 @@ export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<string>('updatedAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const { user } = useAuth();
   
   type Project = { 
     id: number; 
@@ -98,10 +100,18 @@ export default function ProjectsPage() {
     description?: string; 
     sourceLanguage: string; 
     targetLanguage: string; 
+    status: 'Unclaimed' | 'Claimed' | 'Completed';
+    claimedBy?: number;
+    claimedAt?: string;
+    completedAt?: string;
     files?: any[]; 
     createdAt: string; 
     updatedAt?: string;
     deadline?: string;
+    claimer?: {
+      id: number;
+      username: string;
+    };
   };
   
   // Project statistics state for progress info
@@ -219,6 +229,17 @@ export default function ProjectsPage() {
       setIsDialogOpen(false);
       form.reset();
       navigate(`/projects/${data.id}`);
+    },
+  });
+  
+  // 프로젝트 클레임 mutation
+  const claimProject = useMutation({
+    mutationFn: async (projectId: number) => {
+      const response = await apiRequest("POST", `/api/projects/${projectId}/claim`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
     },
   });
   
