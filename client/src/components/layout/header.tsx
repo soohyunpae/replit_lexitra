@@ -117,9 +117,6 @@ export function Header({
               <DropdownMenuItem asChild>
                 <Link href="/profile">내 프로필</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/settings">설정</Link>
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
                 <LogOut className="h-4 w-4 mr-2" />
