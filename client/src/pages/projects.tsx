@@ -483,13 +483,10 @@ export default function ProjectsPage() {
               >
                 <div className="h-1.5 w-full bg-gradient-to-r from-primary to-primary/70"></div>
                 <CardHeader className="pb-2 pt-4">
-                  <div className="flex justify-between items-start mb-1">
+                  <div className="mb-1">
                     <CardTitle className="truncate group-hover:text-primary transition-colors">
                       {project.name}
                     </CardTitle>
-                    <Badge variant="outline" className="text-xs font-normal">
-                      {project.files?.length || 0} {project.files?.length === 1 ? 'file' : 'files'}
-                    </Badge>
                   </div>
                   <CardDescription className="flex items-center gap-1 mt-1.5">
                     <div className="flex items-center gap-1 bg-accent/50 px-2 py-0.5 rounded-full text-xs">
