@@ -34,16 +34,27 @@ import { Upload, FileText, FileIcon, Plus } from "lucide-react";
 const fileFormSchema = z.object({
   name: z.string().min(1, "File name is required"),
   content: z.string().min(1, "File content is required"),
-  file: z.instanceof(File).optional(),
-  uploadMethod: z.enum(["paste", "upload"]).default("paste"),
+  uploadType: z.enum(["paste", "upload"]).default("paste")
 });
 
 type FileFormValues = z.infer<typeof fileFormSchema>;
+
+// Helper function to read file contents
+const readFileAsText = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => resolve(event.target?.result as string);
+    reader.onerror = (error) => reject(error);
+    reader.readAsText(file);
+  });
+};
 
 export default function Project() {
   const [isMatch, params] = useRoute("/projects/:id");
   const [, navigate] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   // Get project ID from URL params
   const projectId = isMatch && params ? parseInt(params.id) : null;
@@ -74,6 +85,30 @@ export default function Project() {
     },
   });
   
+  // File upload handler
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      setSelectedFile(file);
+      const fileName = file.name;
+      const fileContent = await readFileAsText(file);
+      
+      form.setValue("name", fileName);
+      form.setValue("content", fileContent);
+      form.setValue("uploadType", "upload");
+    } catch (error) {
+      console.error("Error reading file:", error);
+    }
+  };
+  
+  // Click handler for file upload button
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+  
+  // Form submit handler
   function onSubmit(data: FileFormValues) {
     if (!projectId) return;
     
@@ -155,6 +190,47 @@ export default function Project() {
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                       <FormField
                         control={form.control}
+                        name="uploadType"
+                        render={({ field }) => (
+                          <FormItem className="pb-3">
+                            <div className="flex items-center space-x-4 mb-2">
+                              <Button
+                                type="button"
+                                className={`flex-1 ${field.value === 'paste' ? 'bg-primary' : 'bg-accent text-muted-foreground'}`}
+                                onClick={() => form.setValue("uploadType", "paste")}
+                              >
+                                <FileText className="mr-2 h-4 w-4" />
+                                Paste Text
+                              </Button>
+
+                              <Button
+                                type="button"
+                                className={`flex-1 ${field.value === 'upload' ? 'bg-primary' : 'bg-accent text-muted-foreground'}`}
+                                onClick={handleUploadClick}
+                              >
+                                <Upload className="mr-2 h-4 w-4" />
+                                Upload File
+                              </Button>
+
+                              <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileUpload}
+                                className="hidden"
+                                accept=".txt,.docx,.pdf"
+                              />
+                            </div>
+                            {selectedFile && (
+                              <div className="text-sm text-muted-foreground">
+                                Selected file: {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+                              </div>
+                            )}
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
                         name="name"
                         render={({ field }) => (
                           <FormItem>
@@ -175,7 +251,7 @@ export default function Project() {
                             <FormLabel>Content</FormLabel>
                             <FormControl>
                               <Textarea 
-                                placeholder="Paste text content here. Each line will be treated as a separate segment for translation."
+                                placeholder="Paste text content here or upload a file. Each line will be treated as a separate segment for translation."
                                 className="min-h-[200px]"
                                 {...field}
                               />
@@ -219,7 +295,10 @@ export default function Project() {
                     <Button 
                       size="sm" 
                       className="w-full"
-                      onClick={() => window.location.href = `/translation/${file.id}`}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent the click from propagating to parent
+                        navigate(`/translation/${file.id}`);
+                      }}
                     >
                       Open Translation
                     </Button>
