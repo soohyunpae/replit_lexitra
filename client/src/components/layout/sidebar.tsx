@@ -116,8 +116,8 @@ export function Sidebar() {
                   {
                     "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground": 
                       (location === item.href) || 
-                      (item.href === "/" && location === "/") || 
-                      (item.href.includes("/translation/") && location.includes("/translation/"))
+                      (item.href === "/" && location === "/" && !location.includes("/translation/")) || 
+                      (item.label === "Translation Editor" && location.includes("/translation/"))
                   }
                 )}>
                   <span className="flex-shrink-0">{item.icon}</span>
