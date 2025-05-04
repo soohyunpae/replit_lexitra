@@ -116,12 +116,19 @@ export function Sidebar() {
                   "text-foreground/70 hover:text-foreground hover:bg-accent/60",
                   {
                     "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground": 
-                      (location === item.href) || 
-                      (item.label === "Projects" && location === "/" && !location.includes("/translation/") && !location.includes("/projects/")) || 
-                      (item.label === "Projects" && location.includes("/projects/")) ||  
-                      (item.label === "Translation Editor" && location.includes("/translation/")) ||
+                      // Projects menu: active on home or any project page
+                      (item.label === "Projects" && (location === "/" || /^\/projects\/\d+$/.test(location))) ||
+                      
+                      // Translation Editor: active on any translation page
+                      (item.label === "Translation Editor" && /^\/translation\/\d+$/.test(location)) ||
+                      
+                      // Terminology Base: active on glossary page
                       (item.label === "Terminology Base" && location === "/glossary") ||
+                      
+                      // Translation Memory: active on TM page
                       (item.label === "Translation Memory" && location === "/tm") ||
+                      
+                      // Settings: active on settings page
                       (item.label === "Settings" && location === "/settings")
                   }
                 )}>

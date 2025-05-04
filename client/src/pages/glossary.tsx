@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { MainLayout } from "@/components/layout/main-layout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -152,8 +153,9 @@ export default function GlossaryPage() {
   };
 
   return (
-    <div className="container max-w-screen-xl mx-auto p-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <MainLayout title="Terminology Base" showSearch={true}>
+      <div className="container max-w-screen-xl mx-auto p-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Add Term Form */}
         <Card>
           <CardHeader>
@@ -383,6 +385,7 @@ export default function GlossaryPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </MainLayout>
   );
 }

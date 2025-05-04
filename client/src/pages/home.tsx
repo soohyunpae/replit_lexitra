@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLocation } from "wouter";
-import { Header } from "@/components/layout/header";
+import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -57,8 +57,14 @@ export default function Home() {
   const [, navigate] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
-  const { data: projects, isLoading } = useQuery({
+  type Project = { id: number; name: string; description?: string; sourceLanguage: string; targetLanguage: string; files?: any[]; createdAt: string; };
+  
+  const { data: projects, isLoading } = useQuery<Project[]>({
     queryKey: ['/api/projects'],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/projects");
+      return res.json();
+    },
   });
   
   const form = useForm<ProjectFormValues>({
@@ -89,9 +95,7 @@ export default function Home() {
   }
   
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header showSidebarTrigger={false} />
-      
+    <MainLayout title="Projects">
       <main className="flex-1 container max-w-6xl px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -235,8 +239,8 @@ export default function Home() {
                 </CardFooter>
               </Card>
             ))
-          ) : projects?.length > 0 ? (
-            projects.map((project: any) => (
+          ) : projects && projects.length > 0 ? (
+            projects.map((project: Project) => (
               <Card key={project.id} className="overflow-hidden">
                 <CardHeader className="pb-2">
                   <CardTitle className="truncate">{project.name}</CardTitle>
@@ -293,6 +297,6 @@ export default function Home() {
           )}
         </div>
       </main>
-    </div>
+    </MainLayout>
   );
 }

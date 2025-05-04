@@ -1,4 +1,5 @@
 import React from "react";
+import { MainLayout } from "@/components/layout/main-layout";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -79,7 +80,8 @@ export default function TranslationMemoryPage() {
   }, [tmData, searchQuery, sourceLanguageFilter, targetLanguageFilter, statusFilter]);
 
   return (
-    <div className="container max-w-screen-xl mx-auto p-4">
+    <MainLayout title="Translation Memory" showSearch={true}>
+      <div className="container max-w-screen-xl mx-auto p-4">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -241,5 +243,6 @@ export default function TranslationMemoryPage() {
         </CardContent>
       </Card>
     </div>
+    </MainLayout>
   );
 }
