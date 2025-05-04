@@ -18,6 +18,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Project } from "@/types";
 
 interface ProjectFile {
   id: number;
@@ -44,7 +45,7 @@ export function Sidebar() {
     ? parseInt(location.split('/translation/')[1])
     : null;
   
-  const { data: currentProject } = useQuery({
+  const { data: currentProject } = useQuery<Project>({
     queryKey: [`/api/projects/${projectId}`],
     enabled: !!projectId,
   });

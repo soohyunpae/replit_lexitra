@@ -198,6 +198,16 @@ export function TranslationEditor({
       
       const data = await response.json();
       
+      // Update TM matches if they came back from the API
+      if (data.tmMatches && data.tmMatches.length > 0) {
+        setSelectedSegmentTmMatches(data.tmMatches);
+      }
+      
+      // Update glossary terms if they came back from the API
+      if (data.glossaryTerms && data.glossaryTerms.length > 0) {
+        setSelectedSegmentGlossaryTerms(data.glossaryTerms);
+      }
+      
       if (data.target) {
         await handleSegmentUpdate(id, data.target, "MT");
       }
