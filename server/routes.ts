@@ -334,7 +334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Glossary API
+  // Glossary API (Terminology Base)
   app.get(`${apiPrefix}/glossary`, async (req, res) => {
     try {
       const sourceLanguage = req.query.sourceLanguage as string;
@@ -352,6 +352,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       return res.json(terms);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+
+  // Get all glossary terms (for management page)
+  app.get(`${apiPrefix}/glossary/all`, async (req, res) => {
+    try {
+      const terms = await db.query.glossary.findMany({
+        orderBy: desc(schema.glossary.createdAt)
+      });
+      
+      return res.json(terms);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // Add new glossary term
+  app.post(`${apiPrefix}/glossary`, async (req, res) => {
+    try {
+      const data = schema.insertGlossarySchema.parse(req.body);
+      const [term] = await db.insert(schema.glossary).values(data).returning();
+      
+      return res.status(201).json(term);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // Delete glossary term
+  app.delete(`${apiPrefix}/glossary/:id`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Check if term exists
+      const term = await db.query.glossary.findFirst({
+        where: eq(schema.glossary.id, id)
+      });
+      
+      if (!term) {
+        return res.status(404).json({ message: 'Terminology term not found' });
+      }
+      
+      // Delete the term
+      await db.delete(schema.glossary).where(eq(schema.glossary.id, id));
+      
+      return res.json({ message: 'Terminology term deleted successfully' });
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // Search glossary terms (TB search)
+  app.post(`${apiPrefix}/glossary/search`, async (req, res) => {
+    try {
+      const searchSchema = z.object({
+        text: z.string(),
+        sourceLanguage: z.string(),
+        targetLanguage: z.string()
+      });
+      
+      const { text, sourceLanguage, targetLanguage } = searchSchema.parse(req.body);
+      
+      // Split the input text into words for matching
+      const words = text.split(/\s+/);
+      
+      // Get all glossary terms for the specified language pair
+      const allTerms = await db.query.glossary.findMany({
+        where: and(
+          eq(schema.glossary.sourceLanguage, sourceLanguage),
+          eq(schema.glossary.targetLanguage, targetLanguage)
+        )
+      });
+      
+      // Find matches in the text
+      const matches = allTerms.filter(term => {
+        // Check if any word in the text matches the source term
+        return words.some(word => 
+          word.toLowerCase() === term.source.toLowerCase() ||
+          text.toLowerCase().includes(term.source.toLowerCase())
+        );
+      });
+      
+      return res.json(matches);
     } catch (error) {
       return handleApiError(res, error);
     }
