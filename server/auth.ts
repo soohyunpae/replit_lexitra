@@ -143,19 +143,41 @@ export function setupAuth(app: Express) {
 
   // Route for logging in
   app.post("/api/login", (req, res, next) => {
+    console.log('\n[LOGIN ATTEMPT]', {
+      body: req.body,
+      headers: {
+        cookie: req.headers.cookie,
+        origin: req.headers.origin,
+        host: req.headers.host
+      }
+    });
+    
     passport.authenticate("local", (err: any, user: Express.User | false, info: { message: string }) => {
       if (err) {
+        console.log('[LOGIN ERROR]', err);
         return next(err);
       }
       
       if (!user) {
+        console.log('[LOGIN FAILED]', info);
         return res.status(401).json({ message: info?.message || "Invalid credentials" });
       }
       
       req.login(user, (err) => {
         if (err) {
+          console.log('[LOGIN SESSION ERROR]', err);
           return next(err);
         }
+        
+        // 응답 전에 세션 상태 확인
+        console.log('[LOGIN SUCCESS]', {
+          user,
+          sessionID: req.sessionID,
+          authenticated: req.isAuthenticated()
+        });
+        
+        // Set-Cookie 헤더 추가
+        res.setHeader('Set-Cookie', [`connect.sid=${req.sessionID}; Path=/; HttpOnly; SameSite=Lax`]);
         
         return res.json(user);
       });
