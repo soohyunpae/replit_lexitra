@@ -588,8 +588,7 @@ export default function ProjectsPage() {
                     </div>
                   </CardFooter>
                 </Card>
-              );
-            })}
+            ))}
           </div>
         )}
         
