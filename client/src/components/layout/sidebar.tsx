@@ -110,20 +110,18 @@ export function Sidebar() {
           <ul className="space-y-2">
             {mainNavItems.map((item, index) => (
               <li key={index}>
-                <Link href={item.href}>
-                  <a className={cn(
-                    "flex items-center px-3 py-2.5 rounded-lg transition-colors",
-                    "text-foreground/70 hover:text-foreground hover:bg-accent/60",
-                    {
-                      "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground": 
-                        (location === item.href) || 
-                        (item.href === "/" && location === "/") || 
-                        (item.href.includes("/translation/") && location.includes("/translation/"))
-                    }
-                  )}>
-                    <span className="flex-shrink-0">{item.icon}</span>
-                    <span className="ml-3 text-sm font-medium hidden lg:block">{item.label}</span>
-                  </a>
+                <Link href={item.href} className={cn(
+                  "flex items-center px-3 py-2.5 rounded-lg transition-colors",
+                  "text-foreground/70 hover:text-foreground hover:bg-accent/60",
+                  {
+                    "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground": 
+                      (location === item.href) || 
+                      (item.href === "/" && location === "/") || 
+                      (item.href.includes("/translation/") && location.includes("/translation/"))
+                  }
+                )}>
+                  <span className="flex-shrink-0">{item.icon}</span>
+                  <span className="ml-3 text-sm font-medium hidden lg:block">{item.label}</span>
                 </Link>
               </li>
             ))}
