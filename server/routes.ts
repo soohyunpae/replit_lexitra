@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
 import * as schema from "@shared/schema";
@@ -7,6 +7,7 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { ZodError } from "zod";
 import { translateWithGPT } from "./openai";
+import { setupAuth } from "./auth";
 
 // Helper function for calculating text similarity
 function calculateSimilarity(str1: string, str2: string): number {
@@ -67,6 +68,9 @@ const handleApiError = (res: Response, error: unknown) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication
+  setupAuth(app);
+  
   // prefix all routes with /api
   const apiPrefix = "/api";
   
