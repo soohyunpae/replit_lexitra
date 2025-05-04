@@ -303,7 +303,7 @@ export default function GlossaryPage() {
                       <SelectValue placeholder="Source language" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All languages</SelectItem>
+                      <SelectItem value="all_source_languages">All languages</SelectItem>
                       {languages.source.map((lang) => (
                         <SelectItem key={lang} value={lang}>{lang}</SelectItem>
                       ))}
@@ -318,7 +318,7 @@ export default function GlossaryPage() {
                       <SelectValue placeholder="Target language" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All languages</SelectItem>
+                      <SelectItem value="all_target_languages">All languages</SelectItem>
                       {languages.target.map((lang) => (
                         <SelectItem key={lang} value={lang}>{lang}</SelectItem>
                       ))}
