@@ -46,18 +46,19 @@ export function Sidebar() {
   });
   
   // Get the current project ID from URL if it exists
-  const projectId = location.startsWith('/projects/') 
-    ? parseInt(location.split('/projects/')[1])
-    : null;
+  const projectMatch = location.match(/\/projects\/(\d+)/);
+  const projectId = projectMatch ? parseInt(projectMatch[1]) : null;
   
   // Get the current file ID from URL if it exists
-  const fileId = location.startsWith('/translation/') 
-    ? parseInt(location.split('/translation/')[1])
-    : null;
+  const fileMatch = location.match(/\/translation\/(\d+)/);
+  const fileId = fileMatch ? parseInt(fileMatch[1]) : null;
+  
+  // Only query the current project when on a project page or translation page
+  const showProjectContext = location.includes('/projects/') || location.includes('/translation/');
   
   const { data: currentProject } = useQuery<Project>({
     queryKey: [`/api/projects/${projectId}`],
-    enabled: !!projectId,
+    enabled: !!projectId && showProjectContext,
   });
 
   // Main navigation items
@@ -70,7 +71,7 @@ export function Sidebar() {
     {
       icon: <Layers className="h-5 w-5" />,
       label: "Translation Editor",
-      href: fileId ? `/translation/${fileId}` : "/"
+      href: fileId ? `/translation/${fileId}` : (projectId ? `/projects/${projectId}` : "/")
     },
     {
       icon: <Book className="h-5 w-5" />,
@@ -116,8 +117,12 @@ export function Sidebar() {
                   {
                     "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground": 
                       (location === item.href) || 
-                      (item.href === "/" && location === "/" && !location.includes("/translation/")) || 
-                      (item.label === "Translation Editor" && location.includes("/translation/"))
+                      (item.label === "Projects" && location === "/" && !location.includes("/translation/") && !location.includes("/projects/")) || 
+                      (item.label === "Projects" && location.includes("/projects/")) ||  
+                      (item.label === "Translation Editor" && location.includes("/translation/")) ||
+                      (item.label === "Terminology Base" && location === "/glossary") ||
+                      (item.label === "Translation Memory" && location === "/tm") ||
+                      (item.label === "Settings" && location === "/settings")
                   }
                 )}>
                   <span className="flex-shrink-0">{item.icon}</span>
