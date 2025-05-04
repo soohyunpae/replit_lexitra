@@ -342,6 +342,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({
           source,
           target: fallbackTranslation,
+          alternatives: [], // Empty alternatives when translation fails
           status: 'MT',
           tmMatches,
           glossaryTerms: relevantTerms.length > 0 ? relevantTerms : undefined,
