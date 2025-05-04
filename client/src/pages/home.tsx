@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { 
   Card, 
   CardContent, 
@@ -11,6 +12,15 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
+import {
+  Calendar, 
+  FileText, 
+  Plus, 
+  ArrowRight, 
+  Trash2, 
+  ExternalLink,
+  Clock
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -42,7 +52,6 @@ import { z } from "zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { FileText, Calendar, Clock, Plus } from "lucide-react";
 
 const projectFormSchema = z.object({
   name: z.string().min(3, "Project name must be at least 3 characters"),
@@ -241,19 +250,26 @@ export default function Home() {
             ))
           ) : projects && projects.length > 0 ? (
             projects.map((project: Project) => (
-              <Card key={project.id} className="overflow-hidden">
-                <CardHeader className="pb-2">
-                  <CardTitle className="truncate">{project.name}</CardTitle>
-                  <CardDescription className="flex items-center gap-1">
-                    <div className="flex items-center gap-1">
-                      <FileText className="h-3.5 w-3.5" />
-                      <span>{project.files?.length || 0} files</span>
-                    </div>
-                    <span className="mx-1">•</span>
-                    <div className="flex items-center gap-1">
-                      <span>{project.sourceLanguage}</span>
-                      <span className="mx-0.5">→</span>
-                      <span>{project.targetLanguage}</span>
+              <Card 
+                key={project.id} 
+                className="overflow-hidden group hover:shadow-md transition-all duration-200 border-border hover:border-primary/30"
+              >
+                {/* 프로젝트 랭귀지 컬러 바 추가 */}
+                <div className="h-1.5 w-full bg-gradient-to-r from-primary to-primary/70"></div>
+                <CardHeader className="pb-2 pt-4">
+                  <div className="flex justify-between items-start mb-1">
+                    <CardTitle className="truncate group-hover:text-primary transition-colors">
+                      {project.name}
+                    </CardTitle>
+                    <Badge variant="outline" className="text-xs font-normal">
+                      {project.files?.length || 0} {project.files?.length === 1 ? 'file' : 'files'}
+                    </Badge>
+                  </div>
+                  <CardDescription className="flex items-center gap-1 mt-1.5">
+                    <div className="flex items-center gap-1 bg-accent/50 px-2 py-0.5 rounded-full text-xs">
+                      <span className="font-medium">{project.sourceLanguage}</span>
+                      <ArrowRight className="h-3 w-3" />
+                      <span className="font-medium">{project.targetLanguage}</span>
                     </div>
                   </CardDescription>
                 </CardHeader>
@@ -262,17 +278,29 @@ export default function Home() {
                     {project.description || "No description provided."}
                   </p>
                 </CardContent>
-                <CardFooter className="pt-2 flex items-center justify-between">
+                <CardFooter className="pt-2 flex items-center justify-between border-t border-border/30">
                   <div className="text-xs text-muted-foreground flex items-center">
                     <Calendar className="h-3.5 w-3.5 mr-1" />
                     {new Date(project.createdAt).toLocaleDateString()}
                   </div>
-                  <Button 
-                    size="sm"
-                    onClick={() => navigate(`/projects/${project.id}`)}
-                  >
-                    Open
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="icon" 
+                      variant="ghost"
+                      className="h-8 w-8 opacity-70 hover:opacity-100"
+                      onClick={() => window.confirm('Delete this project?') && console.log('Delete project:', project.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      size="sm"
+                      className="gap-1 font-medium"
+                      onClick={() => navigate(`/projects/${project.id}`)}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Open
+                    </Button>
+                  </div>
                 </CardFooter>
               </Card>
             ))

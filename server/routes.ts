@@ -78,7 +78,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get(`${apiPrefix}/projects`, async (req, res) => {
     try {
       const projects = await db.query.projects.findMany({
-        orderBy: desc(schema.projects.createdAt)
+        orderBy: desc(schema.projects.createdAt),
+        with: {
+          files: true
+        }
       });
       
       return res.json(projects);
@@ -92,7 +95,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = schema.insertProjectSchema.parse(req.body);
       const [project] = await db.insert(schema.projects).values(data).returning();
       
-      return res.status(201).json(project);
+      // 새 프로젝트는 파일이 없으므로 빈 배열을 추가
+      const projectWithFiles = { ...project, files: [] };
+      
+      return res.status(201).json(projectWithFiles);
     } catch (error) {
       return handleApiError(res, error);
     }
