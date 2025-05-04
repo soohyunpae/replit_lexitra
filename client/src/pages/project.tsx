@@ -29,11 +29,13 @@ import { z } from "zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Upload, FileText, File, Plus } from "lucide-react";
+import { Upload, FileText, FileIcon, Plus } from "lucide-react";
 
 const fileFormSchema = z.object({
   name: z.string().min(1, "File name is required"),
   content: z.string().min(1, "File content is required"),
+  file: z.instanceof(File).optional(),
+  uploadMethod: z.enum(["paste", "upload"]).default("paste"),
 });
 
 type FileFormValues = z.infer<typeof fileFormSchema>;
@@ -46,7 +48,7 @@ export default function Project() {
   // Get project ID from URL params
   const projectId = isMatch && params ? parseInt(params.id) : null;
   
-  const { data: project, isLoading } = useQuery({
+  const { data: project, isLoading } = useQuery<any>({
     queryKey: [`/api/projects/${projectId}`],
     enabled: !!projectId,
   });
@@ -137,7 +139,7 @@ export default function Project() {
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
-                    <File className="mr-2 h-4 w-4" />
+                    <FileIcon className="mr-2 h-4 w-4" />
                     Add File
                   </Button>
                 </DialogTrigger>
@@ -214,7 +216,11 @@ export default function Project() {
                     <p className="text-sm text-muted-foreground mb-4">
                       Created {new Date(file.createdAt).toLocaleDateString()}
                     </p>
-                    <Button size="sm" className="w-full">
+                    <Button 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => window.location.href = `/translation/${file.id}`}
+                    >
                       Open Translation
                     </Button>
                   </div>
