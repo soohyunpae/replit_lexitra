@@ -163,12 +163,6 @@ export default function Home() {
           </div>
           
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-1 h-4 w-4" />
-                New Project
-              </Button>
-            </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create New Translation Project</DialogTitle>
