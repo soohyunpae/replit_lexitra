@@ -32,7 +32,13 @@ export async function translateWithGPT(
 `;
   systemPrompt += `Translate the following text from ${sourceLanguage} to ${targetLanguage}. `;
   systemPrompt += `Maintain the technical accuracy and terminology. `;
-  systemPrompt += `Respond with only the translation, nothing else.`;
+  systemPrompt += `Respond with a JSON object in the following format:
+{
+  "translation": "your translation here",
+  "alternatives": ["alternative 1", "alternative 2"]
+}`;
+  systemPrompt += `
+The alternatives array should contain 2 slightly different translation options if appropriate.`;
   
   // Add glossary context if available
   if (glossaryTerms && glossaryTerms.length > 0) {
@@ -56,14 +62,25 @@ export async function translateWithGPT(
         { role: "user", content: source + contextPrompt }
       ],
       temperature: 0.3, // Lower temperature for more accurate translations
-      max_tokens: 2048
+      max_tokens: 2048,
+      response_format: { type: "json_object" }
     });
     
-    const translation = response.choices[0].message.content?.trim() || "";
+    const responseContent = response.choices[0].message.content?.trim() || "";
     
-    return {
-      target: translation,
-    };
+    try {
+      const parsedResponse = JSON.parse(responseContent);
+      return {
+        target: parsedResponse.translation,
+        alternatives: parsedResponse.alternatives || []
+      };
+    } catch (parseError) {
+      console.error("Error parsing GPT JSON response:", parseError);
+      // Fallback to using the raw response if JSON parsing fails
+      return {
+        target: responseContent,
+      };
+    }
   } catch (error: any) {
     console.error("Error translating with GPT:", error);
     throw new Error(`Translation failed: ${error?.message || 'Unknown error'}`);
