@@ -42,8 +42,10 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === "production",
+      secure: false, // 개발 환경에서는 false로 설정
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      httpOnly: true,
+      sameSite: 'lax'
     },
     store: new PostgresSessionStore({
       pool,
@@ -56,6 +58,18 @@ export function setupAuth(app: Express) {
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
+  
+  // 세션 디버깅을 위한 미들웨어
+  app.use((req, res, next) => {
+    console.log('[SESSION DEBUG]', {
+      authenticated: req.isAuthenticated(),
+      sessionID: req.sessionID,
+      session: req.session,
+      cookies: req.headers.cookie,
+      user: req.user
+    });
+    next();
+  });
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
