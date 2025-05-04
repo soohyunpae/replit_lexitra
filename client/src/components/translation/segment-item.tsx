@@ -102,7 +102,7 @@ export function SegmentItem({
             className="flex items-center"
           >
             <Languages className="h-4 w-4 mr-1" />
-            Languages with GPT
+            Translate with GPT
           </Button>
         </div>
       )}

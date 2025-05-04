@@ -6,6 +6,7 @@ import { eq, and, desc, like } from "drizzle-orm";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { ZodError } from "zod";
+import { translateWithGPT } from "./openai";
 
 // API Error Handler
 const handleApiError = (res: Response, error: unknown) => {
@@ -102,15 +103,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fileData = schema.insertFileSchema.parse(req.body);
       const [file] = await db.insert(schema.files).values(fileData).returning();
       
-      // Parse content into segments
-      const segments = fileData.content
-        .split(/\r?\n/)
-        .filter(segment => segment.trim().length > 0)
-        .map(segment => ({
-          source: segment.trim(),
-          status: 'MT',
-          fileId: file.id
-        }));
+      // Parse content into segments by splitting into sentences
+      // Use a more sophisticated sentence splitter that handles various end-of-sentence patterns
+      const segmentText = (text: string): string[] => {
+        // Matches end of sentence: period, question mark, exclamation mark followed by space or end
+        // But doesn't split on common abbreviations, decimal numbers, etc.
+        const sentences = [];
+        const regex = /[.!?]\s+|[.!?]$/g;
+        let match;
+        let lastIndex = 0;
+        
+        // Split on sentence endings
+        while ((match = regex.exec(text)) !== null) {
+          const sentence = text.substring(lastIndex, match.index + 1).trim();
+          if (sentence) sentences.push(sentence);
+          lastIndex = match.index + match[0].length;
+        }
+        
+        // Add any remaining text
+        if (lastIndex < text.length) {
+          const remainingText = text.substring(lastIndex).trim();
+          if (remainingText) sentences.push(remainingText);
+        }
+        
+        return sentences.length > 0 ? sentences : [text.trim()];
+      };
+      
+      // First split by lines, then split each line into sentences
+      const contentLines = fileData.content.split(/\r?\n/).filter(line => line.trim().length > 0);
+      let segments: {source: string, status: string, fileId: number}[] = [];
+      
+      // Process each line
+      for (const line of contentLines) {
+        const sentences = segmentText(line.trim());
+        
+        // Add each sentence as a separate segment
+        segments = [
+          ...segments,
+          ...sentences.map(sentence => ({
+            source: sentence,
+            status: 'MT',
+            fileId: file.id
+          }))
+        ];
+      }
       
       if (segments.length > 0) {
         await db.insert(schema.translationUnits).values(segments);
@@ -212,23 +248,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         limit: 5
       });
       
-      // In a real implementation, this would use OpenAI API
-      // For now, we'll simulate by returning a basic translation
-      // with TM context if available
-      let translation = `Translated: ${source}`;
-      
-      // Simulate GPT response with TM context
-      if (tmMatches.length > 0) {
-        // Use the best match as our simulated "GPT" output
-        translation = tmMatches[0].target;
+      try {
+        // Extract context from TM matches to help with translation
+        const context = tmMatches.map(match => 
+          `${match.source} => ${match.target}`
+        );
+        
+        // Use OpenAI API for translation
+        const translationResult = await translateWithGPT({
+          source,
+          sourceLanguage,
+          targetLanguage,
+          context: context.length > 0 ? context : undefined
+        });
+        
+        return res.json({
+          source,
+          target: translationResult.target,
+          status: 'MT',
+          tmMatches
+        });
+      } catch (translationError) {
+        console.error('Error using GPT for translation:', translationError);
+        
+        // Fallback to TM if available
+        let fallbackTranslation = '';
+        if (tmMatches.length > 0) {
+          fallbackTranslation = tmMatches[0].target;
+        } else {
+          fallbackTranslation = `[Translation failed] ${source}`;
+        }
+        
+        return res.json({
+          source,
+          target: fallbackTranslation,
+          status: 'MT',
+          tmMatches,
+          error: 'Translation service unavailable, using fallback'
+        });
       }
-      
-      return res.json({
-        source,
-        target: translation,
-        status: 'MT',
-        tmMatches
-      });
     } catch (error) {
       return handleApiError(res, error);
     }
