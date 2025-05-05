@@ -167,6 +167,22 @@ export default function ProjectsPage() {
     }
   };
 
+  // 프로젝트 상태가 사용자에 따라 다르게 표시되는 함수
+  const getDisplayStatus = (project: Project) => {
+    // 사용자가 해당 프로젝트를 클레임했는지 확인
+    const isClaimedByCurrentUser = user && project.claimedBy === user.id;
+    
+    if (project.status === 'Claimed') {
+      if (isClaimedByCurrentUser) {
+        return 'In Progress'; // 내가 클레임한 프로젝트
+      } else {
+        return 'Claimed';      // 다른 사용자가 클레임한 프로젝트
+      }
+    }
+    // 나머지 상태는 그대로 유지
+    return project.status;
+  };
+
   // Filter and sort projects
   const filteredAndSortedProjects = useMemo(() => {
     if (!projects) return [];
@@ -183,7 +199,11 @@ export default function ProjectsPage() {
 
     // Apply status filter
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(project => project.status === statusFilter);
+      filtered = filtered.filter(project => {
+        // 사용자에게 보이는 상태가 필터와 일치하는지 확인
+        const displayStatus = getDisplayStatus(project);
+        return displayStatus === statusFilter;
+      });
     }
 
     // Then sort
@@ -558,18 +578,25 @@ export default function ProjectsPage() {
         {!isLoading && filteredAndSortedProjects.length > 0 && viewMode === 'card' && (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredAndSortedProjects.map((project) => {
+              // 사용자에게 보여질 상태 가져오기
+              const displayStatus = getDisplayStatus(project);
+              
               // Status badge color and text
               let statusBadgeVariant: "default" | "outline" | "secondary" | "destructive" | null = "default";
               let statusColor = "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400";
               
-              switch (project.status) {
+              switch (displayStatus) {
                 case "Unclaimed":
                   statusBadgeVariant = "outline";
                   statusColor = "text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-300";
                   break;
-                case "Claimed":
+                case "In Progress":
                   statusBadgeVariant = "secondary";
                   statusColor = "text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400";
+                  break;
+                case "Claimed":
+                  statusBadgeVariant = "secondary";
+                  statusColor = "text-indigo-600 bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400";
                   break;
                 case "Completed":
                   statusBadgeVariant = "default";

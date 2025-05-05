@@ -139,12 +139,12 @@ export type Glossary = typeof glossary.$inferSelect;
 export const StatusTypes = z.enum(['MT', 'Fuzzy', '100%', 'Reviewed']);
 export type StatusType = z.infer<typeof StatusTypes>;
 
-// Project Status Types Enum
+// Project Status Types Enum - 프로젝트 실제 상태값
 export const ProjectStatusTypes = z.enum(['Unclaimed', 'Claimed', 'Completed']);
 export type ProjectStatusType = z.infer<typeof ProjectStatusTypes>;
 
-// Project Status Display Types Enum
-export const ProjectDisplayStatusTypes = z.enum(['Not Started', 'In Progress', 'Taken', 'Completed']);
+// Project Display Status Types Enum - 사용자에게 보여지는 상태값
+export const ProjectDisplayStatusTypes = z.enum(['Unclaimed', 'In Progress', 'Claimed', 'Completed']);
 export type ProjectDisplayStatusType = z.infer<typeof ProjectDisplayStatusTypes>;
 
 // User Roles Enum
