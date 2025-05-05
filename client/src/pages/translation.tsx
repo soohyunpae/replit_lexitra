@@ -141,6 +141,16 @@ export default function Translation() {
     },
   });
   
+  // Refresh segments when page loads
+  useEffect(() => {
+    if (fileId) {
+      // Invalidate and refetch file data to get the latest segments
+      queryClient.invalidateQueries({
+        queryKey: [`/api/files/${fileId}`],
+      });
+    }
+  }, [fileId]);
+
   // Handle segment selection
   useEffect(() => {
     if (selectedSegment) {
@@ -179,7 +189,7 @@ export default function Translation() {
   }
   
   return (
-    <MainLayout title={`Translating: ${file.name}`} showSearch={true}>
+    <MainLayout title={`Translating: ${file.name}`}>
       <div className="flex h-full overflow-hidden">
         <TranslationEditor
           fileName={file.name}
