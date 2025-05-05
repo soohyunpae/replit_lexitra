@@ -421,7 +421,7 @@ export default function Project() {
                     <div className="text-muted-foreground">Language Pair:</div>
                     <div className="font-medium flex items-center">
                       <span className="px-2 py-0.5 bg-primary/10 rounded-md text-xs">{project.sourceLanguage}</span>
-                      <ArrowRight className="h-3 w-3 mx-1" />
+                      <span className="mx-1">→</span>
                       <span className="px-2 py-0.5 bg-primary/10 rounded-md text-xs">{project.targetLanguage}</span>
                     </div>
                   </div>
