@@ -99,6 +99,25 @@ export const insertTranslationUnitSchema = createInsertSchema(translationUnits, 
 export type InsertTranslationUnit = z.infer<typeof insertTranslationUnitSchema>;
 export type TranslationUnit = typeof translationUnits.$inferSelect;
 
+// Translation Memory Resources model
+export const tmResources = pgTable("tm_resources", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  defaultSourceLanguage: text("default_source_language"),
+  defaultTargetLanguage: text("default_target_language"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertTmResourceSchema = createInsertSchema(tmResources, {
+  name: (schema) => schema.min(1, "TM Resource name is required"),
+});
+
+export type InsertTmResource = z.infer<typeof insertTmResourceSchema>;
+export type TmResource = typeof tmResources.$inferSelect;
+
 // Translation Memory model
 export const translationMemory = pgTable("translation_memory", {
   id: serial("id").primaryKey(),
@@ -108,9 +127,14 @@ export const translationMemory = pgTable("translation_memory", {
   context: text("context"),
   sourceLanguage: text("source_language").notNull(),
   targetLanguage: text("target_language").notNull(),
+  resourceId: integer("resource_id").references(() => tmResources.id).notNull().default(1),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const tmRelations = relations(translationMemory, ({ one }) => ({
+  resource: one(tmResources, { fields: [translationMemory.resourceId], references: [tmResources.id] }),
+}));
 
 export const insertTranslationMemorySchema = createInsertSchema(translationMemory, {
   source: (schema) => schema.min(1, "Source text is required"),
@@ -120,6 +144,26 @@ export const insertTranslationMemorySchema = createInsertSchema(translationMemor
 export type InsertTranslationMemory = z.infer<typeof insertTranslationMemorySchema>;
 export type TranslationMemory = typeof translationMemory.$inferSelect;
 
+// Terminology Base Resources model
+export const tbResources = pgTable("tb_resources", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  domain: text("domain"),  // e.g., 'Legal', 'Medical', 'Technical'
+  defaultSourceLanguage: text("default_source_language"),
+  defaultTargetLanguage: text("default_target_language"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertTbResourceSchema = createInsertSchema(tbResources, {
+  name: (schema) => schema.min(1, "TB Resource name is required"),
+});
+
+export type InsertTbResource = z.infer<typeof insertTbResourceSchema>;
+export type TbResource = typeof tbResources.$inferSelect;
+
 // Glossary model
 export const glossary = pgTable("glossary", {
   id: serial("id").primaryKey(),
@@ -127,9 +171,16 @@ export const glossary = pgTable("glossary", {
   target: text("target").notNull(),
   sourceLanguage: text("source_language").notNull(),
   targetLanguage: text("target_language").notNull(),
+  resourceId: integer("resource_id").references(() => tbResources.id).notNull().default(1),
+  domain: text("domain"),  // 세부 도메인 태그 (예: 'Patent Law', 'Electronics')
+  notes: text("notes"),     // 사용 노트, 컨텍스트 등
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const glossaryRelations = relations(glossary, ({ one }) => ({
+  resource: one(tbResources, { fields: [glossary.resourceId], references: [tbResources.id] }),
+}));
 
 export const insertGlossarySchema = createInsertSchema(glossary, {
   source: (schema) => schema.min(1, "Source term is required"),

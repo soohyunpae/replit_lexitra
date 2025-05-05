@@ -1582,14 +1582,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Translation Memory API
-  // Get all TM entries
+  // Get all TM resources
+  app.get(`${apiPrefix}/tm/resources`, verifyToken, async (req, res) => {
+    try {
+      const tmResources = await db.query.tmResources.findMany({
+        orderBy: desc(schema.tmResources.createdAt)
+      });
+      
+      return res.json(tmResources);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+
+  // Get all TM entries (with optional resourceId filter)
   app.get(`${apiPrefix}/tm/all`, verifyToken, async (req, res) => {
     try {
-      const tmEntries = await db.query.translationMemory.findMany({
+      const resourceId = req.query.resourceId ? parseInt(req.query.resourceId as string) : undefined;
+      
+      let query = db.select().from(schema.translationMemory)
+        .orderBy(desc(schema.translationMemory.createdAt));
+      
+      if (resourceId) {
+        query = query.where(eq(schema.translationMemory.resourceId, resourceId));
+      }
+      
+      const tmEntries = await query;
+      
+      return res.json(tmEntries);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // Get a specific TM resource and its entries
+  app.get(`${apiPrefix}/tm/resource/:id`, verifyToken, async (req, res) => {
+    try {
+      const resourceId = parseInt(req.params.id);
+      
+      const resource = await db.query.tmResources.findFirst({
+        where: eq(schema.tmResources.id, resourceId)
+      });
+      
+      if (!resource) {
+        return res.status(404).json({ message: 'TM resource not found' });
+      }
+      
+      const entries = await db.query.translationMemory.findMany({
+        where: eq(schema.translationMemory.resourceId, resourceId),
         orderBy: desc(schema.translationMemory.createdAt)
       });
       
-      return res.json(tmEntries);
+      return res.json({
+        resource,
+        entries
+      });
     } catch (error) {
       return handleApiError(res, error);
     }

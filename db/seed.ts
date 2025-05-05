@@ -56,6 +56,73 @@ async function seed() {
 
 async function seedSampleData(userId: number) {
   try {
+    // Create TM resources
+    const tmResources = [
+      {
+        name: "Default TM",
+        description: "Default Translation Memory for all projects",
+        defaultSourceLanguage: "KO",
+        defaultTargetLanguage: "EN",
+        isActive: true
+      },
+      {
+        name: "Patent TM",
+        description: "Translation Memory for patent documents",
+        domain: "Patents",
+        defaultSourceLanguage: "KO",
+        defaultTargetLanguage: "EN",
+        isActive: true
+      },
+      {
+        name: "Legal TM",
+        description: "Translation Memory for legal documents",
+        domain: "Legal",
+        defaultSourceLanguage: "KO",
+        defaultTargetLanguage: "EN",
+        isActive: true
+      }
+    ];
+
+    // Insert TM resources and handle conflicts
+    for (const resource of tmResources) {
+      await db.insert(schema.tmResources)
+        .values(resource)
+        .onConflictDoNothing();
+    }
+
+    // Create TB resources
+    const tbResources = [
+      {
+        name: "Default TB",
+        description: "Default Terminology Base for all projects",
+        defaultSourceLanguage: "KO",
+        defaultTargetLanguage: "EN",
+        isActive: true
+      },
+      {
+        name: "Patent TB",
+        description: "Terminology Base for patent documents",
+        domain: "Patents",
+        defaultSourceLanguage: "KO",
+        defaultTargetLanguage: "EN",
+        isActive: true
+      },
+      {
+        name: "Electronics TB",
+        description: "Terminology Base for electronics documents",
+        domain: "Electronics",
+        defaultSourceLanguage: "KO",
+        defaultTargetLanguage: "EN",
+        isActive: true
+      }
+    ];
+
+    // Insert TB resources and handle conflicts
+    for (const resource of tbResources) {
+      await db.insert(schema.tbResources)
+        .values(resource)
+        .onConflictDoNothing();
+    }
 
     // Create a demo project
     const [project] = await db.insert(schema.projects)
@@ -113,6 +180,12 @@ async function seedSampleData(userId: number) {
 
     await db.insert(schema.translationUnits).values(segments);
 
+    // Get the created TM resources
+    const [defaultTm, patentTm, legalTm] = await db.query.tmResources.findMany();
+
+    // Get the created TB resources
+    const [defaultTb, patentTb, electronicsTb] = await db.query.tbResources.findMany();
+
     // Add sample translation memory entries
     const tmEntries = [
       {
@@ -120,21 +193,32 @@ async function seedSampleData(userId: number) {
         target: "The machine must operate reliably.",
         status: "Reviewed",
         sourceLanguage: "KO",
-        targetLanguage: "EN"
+        targetLanguage: "EN",
+        resourceId: defaultTm?.id || 1
       },
       {
         source: "기계는 고온 환경에서도 작동해야 한다.",
         target: "The machine must operate in high-temperature environments.",
         status: "Reviewed",
         sourceLanguage: "KO",
-        targetLanguage: "EN"
+        targetLanguage: "EN",
+        resourceId: patentTm?.id || 1
       },
       {
         source: "본 발명의 장치는 충전식 배터리로 작동하며 최소 8시간동안 사용할 수 있다.",
         target: "The device of the present invention operates on a rechargeable battery and can be used for a minimum of 8 hours.",
         status: "Reviewed",
         sourceLanguage: "KO",
-        targetLanguage: "EN"
+        targetLanguage: "EN",
+        resourceId: patentTm?.id || 1
+      },
+      {
+        source: "법적 통지는 계약 서명 전에 제공되어야 한다.",
+        target: "Legal notices must be provided before contract signing.",
+        status: "Reviewed",
+        sourceLanguage: "KO",
+        targetLanguage: "EN",
+        resourceId: legalTm?.id || 1
       }
     ];
 
@@ -146,25 +230,45 @@ async function seedSampleData(userId: number) {
         source: "기계",
         target: "machine",
         sourceLanguage: "KO",
-        targetLanguage: "EN"
+        targetLanguage: "EN",
+        resourceId: defaultTb?.id || 1
       },
       {
         source: "장치",
         target: "device",
         sourceLanguage: "KO",
-        targetLanguage: "EN"
+        targetLanguage: "EN",
+        resourceId: defaultTb?.id || 1
       },
       {
         source: "신뢰성",
         target: "reliability",
         sourceLanguage: "KO",
-        targetLanguage: "EN"
+        targetLanguage: "EN",
+        resourceId: defaultTb?.id || 1
       },
       {
         source: "반도체",
         target: "semiconductor",
         sourceLanguage: "KO",
-        targetLanguage: "EN"
+        targetLanguage: "EN",
+        resourceId: patentTb?.id || 1
+      },
+      {
+        source: "집적회로",
+        target: "integrated circuit",
+        sourceLanguage: "KO",
+        targetLanguage: "EN",
+        resourceId: electronicsTb?.id || 1,
+        domain: "Electronics"
+      },
+      {
+        source: "트랜지스터",
+        target: "transistor",
+        sourceLanguage: "KO",
+        targetLanguage: "EN",
+        resourceId: electronicsTb?.id || 1,
+        domain: "Electronics"
       }
     ];
 
