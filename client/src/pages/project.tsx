@@ -662,15 +662,54 @@ export default function Project() {
                       <div key={`file-ref-${index}`} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground" />
-                          <a 
-                            href={`/api/files/${file.id}/download?token=${localStorage.getItem('auth_token')}`}
-                            className="text-sm text-primary hover:underline cursor-pointer"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            download={file.name}
+                          <button
+                            onClick={() => {
+                              const token = localStorage.getItem('auth_token');
+                              const downloadFile = async () => {
+                                try {
+                                  const response = await fetch(`/api/files/${file.id}/download`, {
+                                    method: 'GET',
+                                    headers: {
+                                      'Authorization': `Bearer ${token}`
+                                    }
+                                  });
+                                  
+                                  if (!response.ok) {
+                                    throw new Error(`Download failed: ${response.status}`);
+                                  }
+                                  
+                                  const blob = await response.blob();
+                                  const url = window.URL.createObjectURL(blob);
+                                  const a = document.createElement('a');
+                                  a.style.display = 'none';
+                                  a.href = url;
+                                  a.download = file.name;
+                                  document.body.appendChild(a);
+                                  a.click();
+                                  window.URL.revokeObjectURL(url);
+                                  document.body.removeChild(a);
+                                  
+                                  toast({
+                                    title: "Download started",
+                                    description: `File ${file.name} is being downloaded.`
+                                  });
+                                } catch (error) {
+                                  console.error('Download error:', error);
+                                  toast({
+                                    title: "Download failed",
+                                    description: error instanceof Error ? error.message : 'Unknown error',
+                                    variant: "destructive"
+                                  });
+                                }
+                              };
+                              
+                              downloadFile();
+                            }}
+                            className="text-sm text-primary hover:underline cursor-pointer text-left flex items-center gap-2"
                           >
+                            <FileDownIcon className="h-3.5 w-3.5" />
                             {file.name}
-                          </a>
+                          </button>
                         </div>
                         <div className="flex items-center">
                           <span className="text-xs text-muted-foreground mr-2">
