@@ -142,3 +142,11 @@ export type StatusType = z.infer<typeof StatusTypes>;
 // Project Status Types Enum
 export const ProjectStatusTypes = z.enum(['Unclaimed', 'Claimed', 'Completed']);
 export type ProjectStatusType = z.infer<typeof ProjectStatusTypes>;
+
+// Project Status Display Types Enum
+export const ProjectDisplayStatusTypes = z.enum(['Not Started', 'In Progress', 'Taken', 'Completed']);
+export type ProjectDisplayStatusType = z.infer<typeof ProjectDisplayStatusTypes>;
+
+// User Roles Enum
+export const UserRoleTypes = z.enum(['user', 'admin']);
+export type UserRoleType = z.infer<typeof UserRoleTypes>;

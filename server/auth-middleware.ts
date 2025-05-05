@@ -57,6 +57,26 @@ export function isAdmin(req: Request, res: Response, next: NextFunction) {
   return next();
 }
 
+// TM 및 Glossary 관리 권한 확인 미들웨어
+export function canManageTMAndGlossary(req: Request, res: Response, next: NextFunction) {
+  // 먼저 인증 확인
+  if (!req.user) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+  
+  // GET 요청은 모든 인증된 사용자에게 허용 (읽기)
+  if (req.method === 'GET') {
+    return next();
+  }
+  
+  // POST, PUT, DELETE 등 수정 요청은 관리자만 가능
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: "Admin privileges required to modify TM or Glossary entries" });
+  }
+  
+  return next();
+}
+
 // 자원 소유자 또는 관리자만 접근 가능한 라우트를 위한 미들웨어
 export function isResourceOwnerOrAdmin(resourceField: string) {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -78,7 +98,7 @@ export function isResourceOwnerOrAdmin(resourceField: string) {
   };
 }
 
-// 프로젝트 클레임 확인 미들웨어
+// 프로젝트 관리 권한 확인 미들웨어
 export function canManageProject(req: Request, res: Response, next: NextFunction) {
   // 인증 확인 - req.user가 없으면 인증 실패
   if (!req.user) {
@@ -90,20 +110,58 @@ export function canManageProject(req: Request, res: Response, next: NextFunction
   
   // 관리자 권한 확인
   const isUserAdmin = req.user.role === 'admin';
+  const userId = req.user.id; // 현재 사용자 ID
   
-  // 클레임 요청 시 추가 검증
-  if (req.path.includes('/claim') || req.path.includes('/unclaim') || req.path.includes('/complete')) {
-    // 관리자는 항상 프로젝트를 관리할 수 있음
-    if (isUserAdmin) {
+  // 관리자는 항상 프로젝트를 관리할 수 있음
+  if (isUserAdmin) {
+    return next();
+  }
+  
+  // 단순 조회(반드시 내 프로젝트여야 할 필요가 없는 경우)
+  if (req.method === 'GET' && !req.path.includes('/delete') && !req.path.includes('/claim') && 
+      !req.path.includes('/unclaim') && !req.path.includes('/complete') && !req.path.includes('/reopen')) {
+    return next();
+  }
+  
+  // 나머지 경우 DB에서 프로젝트 정보를 가져와 권한 확인
+  const { db } = require('@db');
+  const { projects } = require('@shared/schema');
+  const { eq } = require('drizzle-orm');
+  
+  db.query.projects.findFirst({
+    where: eq(projects.id, projectId)
+  }).then((project: any) => {
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+    
+    // claim 작업의 경우 (Unclaimed 상태인 프로젝트만 클레임 가능)
+    if (req.path.includes('/claim') && project.status === 'Unclaimed') {
       return next();
     }
     
-    // 여기서 프로젝트의 상태와 claimedBy 필드를 확인해야 함
-    // 실제 구현에서는 DB 조회 필요
-    // 간소화를 위해 여기서는 생략하고 다음 단계로 넘김
-  }
-  
-  return next();
+    // unclaim, complete 작업의 경우 (본인이 클레임한 프로젝트만 처리 가능)
+    if ((req.path.includes('/unclaim') || req.path.includes('/complete')) && 
+        project.status === 'Claimed' && 
+        project.claimedBy === userId) {
+      return next();
+    }
+    
+    // reopen 작업의 경우 (본인이 완료한 프로젝트만 다시 열기 가능)
+    if (req.path.includes('/reopen') && 
+        project.status === 'Completed' && 
+        project.claimedBy === userId) {
+      return next();
+    }
+    
+    // 이 외의 모든 경우는 권한 거부
+    return res.status(403).json({ 
+      message: "You don't have permission to perform this action on this project" 
+    });
+  }).catch((error: any) => {
+    console.error("Project permission check error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  });
 }
 
 // 에러 핸들링 미들웨어
