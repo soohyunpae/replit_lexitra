@@ -530,8 +530,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // File Download API
-  app.get(`${apiPrefix}/files/:id/download`, verifyToken, async (req, res) => {
+  app.get(`${apiPrefix}/files/:id/download`, async (req, res) => {
     try {
+      // 쿼리 파라미터에서 토큰을 받아서 검증
+      const token = req.query.token as string || req.headers.authorization?.split(' ')[1];
+      
+      if (!token) {
+        return res.status(401).json({ message: 'No token provided' });
+      }
+      
+      try {
+        // 토큰 검증
+        const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+        
+        // req.user 설정
+        req.user = {
+          id: decoded.id,
+          username: decoded.username,
+          role: decoded.role
+        };
+      } catch (err) {
+        return res.status(401).json({ message: 'Invalid token' });
+      }
+      
       const id = parseInt(req.params.id);
       
       const file = await db.query.files.findFirst({

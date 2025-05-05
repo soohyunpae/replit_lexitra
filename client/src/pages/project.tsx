@@ -564,7 +564,7 @@ export default function Project() {
                   <div className="grid grid-cols-2 gap-1">
                     <div className="text-muted-foreground">Files:</div>
                     <div className="font-medium">
-                      <span>{project.files?.length || 0} file(s)</span>
+                      <span>{workFiles?.length || 0} file(s)</span>
                     </div>
                   </div>
                 </div>
