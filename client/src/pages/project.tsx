@@ -330,7 +330,7 @@ export default function Project() {
   if (isLoading) {
     return (
       <MainLayout title="Loading Project...">
-        <div className="flex-1 p-8 flex items-center justify-center">
+        <div className="flex-1 p-6 flex items-center justify-center">
           <div className="animate-pulse space-y-4 w-full max-w-2xl">
             <div className="h-8 bg-accent rounded w-1/3"></div>
             <div className="h-4 bg-accent rounded w-1/2"></div>
@@ -344,7 +344,7 @@ export default function Project() {
   if (!project) {
     return (
       <MainLayout title="Project Not Found">
-        <div className="flex-1 p-8 flex items-center justify-center">
+        <div className="flex-1 p-6 flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-xl font-medium mb-2">Project not found</h2>
             <p className="text-muted-foreground mb-4">
@@ -363,7 +363,7 @@ export default function Project() {
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold">{project.name}</h1>
+              <span className="text-muted-foreground">Project details and files</span>
             </div>
             
             {/* Workflow actions based on project status */}
