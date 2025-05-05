@@ -722,7 +722,7 @@ export default function Project() {
                 {savedReferences.length > 0 && (
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium">Legacy References</h3>
-                    {savedReferences.map((file, index) => (
+                    {savedReferences.map((file: SavedReference, index: number) => (
                       <div key={`saved-${index}`} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground" />
@@ -745,7 +745,7 @@ export default function Project() {
                 {references.length > 0 ? (
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium">New References</h3>
-                    {references.map((file, index) => (
+                    {references.map((file: File, index: number) => (
                       <div key={`new-${index}`} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground" />
@@ -880,7 +880,7 @@ export default function Project() {
             <CardContent>
               {project.files && project.files.length > 0 ? (
                 <div className="space-y-2">
-                  {project.files.map((file: any) => {
+                  {project.files.map((file: FileType) => {
                     const stats = fileStats[file.id] || { total: 0, completed: 0, percentage: 0 };
                     return (
                       <div 
