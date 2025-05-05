@@ -123,7 +123,6 @@ export default function TMCleanup({ embedded = false }: { embedded?: boolean }) 
   const CleanupForm = () => (
     <Card>
       <CardHeader>
-        <CardTitle>TM Cleanup</CardTitle>
         <CardDescription>
           Clean up your Translation Memory by removing duplicates and normalizing entries
         </CardDescription>

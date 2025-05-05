@@ -113,7 +113,6 @@ export default function TMAlignment({ embedded = false }: TMAlignmentProps) {
   const AlignmentForm = () => (
     <Card>
       <CardHeader>
-        <CardTitle>Align Bilingual Files</CardTitle>
         <CardDescription>
           Upload matching source and target text files to align them and add the segments to the translation memory.
         </CardDescription>
