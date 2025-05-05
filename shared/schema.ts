@@ -32,6 +32,7 @@ export const projects = pgTable("projects", {
   completedAt: timestamp("completed_at"),
   deadline: timestamp("deadline"),
   notes: text("notes"),
+  references: text("references"), // JSON-encoded string for reference file metadata
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   userId: integer("user_id").references(() => users.id),

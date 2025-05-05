@@ -518,6 +518,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(`${apiPrefix}/projects/:id/references`, verifyToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const { files } = req.body; // 파일 메타데이터 배열
       
       // 프로젝트가 존재하는지 확인
       const project = await db.query.projects.findFirst({
@@ -528,10 +529,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Project not found' });
       }
       
-      // 이 부분에서는 실제로는 파일을 저장하고 해당 참조정보를 DB에 업데이트
-      // 현재는 단순히 응답만 보냄
+      // 현재 참조 파일 메타데이터 가져오기
+      let existingReferences = [];
+      if (project.references) {
+        try {
+          existingReferences = JSON.parse(project.references);
+        } catch (e) {
+          console.warn('Failed to parse existing references:', e);
+        }
+      }
       
-      return res.json({ success: true, message: 'References uploaded successfully' });
+      // 새 참조 파일 메타데이터 추가
+      const updatedReferences = [
+        ...existingReferences,
+        ...files.map((file: any) => ({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          addedAt: new Date().toISOString()
+        }))
+      ];
+      
+      // 프로젝트 업데이트
+      const [updatedProject] = await db
+        .update(schema.projects)
+        .set({
+          references: JSON.stringify(updatedReferences),
+          updatedAt: new Date()
+        })
+        .where(eq(schema.projects.id, id))
+        .returning();
+      
+      return res.json({ 
+        success: true, 
+        message: 'References uploaded successfully',
+        references: updatedReferences
+      });
     } catch (error) {
       return handleApiError(res, error);
     }
