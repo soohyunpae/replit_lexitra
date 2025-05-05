@@ -29,6 +29,7 @@ type TMUploadFormValues = z.infer<typeof tmUploadSchema>;
 
 interface TMUploadProps {
   embedded?: boolean;
+  noHeader?: boolean;
 }
 
 export default function TMUpload({ embedded = false }: TMUploadProps) {
@@ -107,7 +108,7 @@ export default function TMUpload({ embedded = false }: TMUploadProps) {
       
       <Card>
         <CardHeader>
-          <CardTitle>Upload Translation Memory</CardTitle>
+          {!noHeader && <CardTitle>Upload Translation Memory</CardTitle>}
           <CardDescription>
             Upload a file containing translation memory data. Supported formats: CSV, TMX, Excel.
           </CardDescription>

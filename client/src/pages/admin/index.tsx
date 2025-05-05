@@ -27,7 +27,7 @@ export default function AdminDashboard() {
   const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("translation-memory");
-  
+
   // Show loading state
   if (isLoading) {
     return (
@@ -71,7 +71,7 @@ export default function AdminDashboard() {
   const TMCleanup = React.lazy(() => import('./tm/cleanup'));
   const PDFProcessing = React.lazy(() => import('./file/pdf'));
   const FileConversion = React.lazy(() => import('./file/conversion'));
-  
+
   // Define the module/category structure
   const adminModules: AdminModule[] = [
     {
@@ -94,7 +94,7 @@ export default function AdminDashboard() {
       ],
     },
   ];
-  
+
   // State for accordion sections
   const [tmActiveSection, setTmActiveSection] = useState<string>("");
   const [fileActiveSection, setFileActiveSection] = useState<string>("");
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
                   </div>
                   <p className="text-sm text-muted-foreground">{adminModules[0].description}</p>
                 </div>
-                
+
                 <Accordion 
                   type="single" 
                   collapsible 
@@ -157,11 +157,11 @@ export default function AdminDashboard() {
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-6">
                       <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
-                        <TMUpload embedded={true} />
+                        <TMUpload embedded={true} noHeader={true} />
                       </Suspense>
                     </AccordionContent>
                   </AccordionItem>
-                  
+
                   {/* Bilingual Alignment */}
                   <AccordionItem value="tm-alignment" className="border rounded-md mb-4 px-4">
                     <AccordionTrigger className="py-4">
@@ -176,7 +176,7 @@ export default function AdminDashboard() {
                       </Suspense>
                     </AccordionContent>
                   </AccordionItem>
-                  
+
                   {/* TM Cleanup */}
                   <AccordionItem value="tm-cleanup" className="border rounded-md mb-4 px-4">
                     <AccordionTrigger className="py-4">
@@ -193,7 +193,7 @@ export default function AdminDashboard() {
                   </AccordionItem>
                 </Accordion>
               </TabsContent>
-              
+
               {/* File Processing Tab Content */}
               <TabsContent value="file-preprocessing" className="m-0 space-y-4">
                 <div>
@@ -203,7 +203,7 @@ export default function AdminDashboard() {
                   </div>
                   <p className="text-sm text-muted-foreground">{adminModules[1].description}</p>
                 </div>
-                
+
                 <Accordion 
                   type="single" 
                   collapsible 
@@ -225,7 +225,7 @@ export default function AdminDashboard() {
                       </Suspense>
                     </AccordionContent>
                   </AccordionItem>
-                  
+
                   {/* File Format Conversion */}
                   <AccordionItem value="file-conversion" className="border rounded-md mb-4 px-4">
                     <AccordionTrigger className="py-4">
