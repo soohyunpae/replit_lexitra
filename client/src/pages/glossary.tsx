@@ -159,236 +159,309 @@ export default function GlossaryPage() {
   return (
     <MainLayout title="Terminology Base">
       <div className="container max-w-screen-xl mx-auto p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Add Term Form */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Plus size={18} />
-              Add New Term
+              <Database className="w-5 h-5" />
+              Terminology Base
             </CardTitle>
             <CardDescription>
-              Add a new term to the terminology base
+              Manage terminology database and terms
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="sourceLanguage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Source Language</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select source language" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="ko">Korean</SelectItem>
-                          <SelectItem value="ja">Japanese</SelectItem>
-                          <SelectItem value="zh">Chinese</SelectItem>
-                          <SelectItem value="es">Spanish</SelectItem>
-                          <SelectItem value="fr">French</SelectItem>
-                          <SelectItem value="de">German</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="targetLanguage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Target Language</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select target language" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="ko">Korean</SelectItem>
-                          <SelectItem value="ja">Japanese</SelectItem>
-                          <SelectItem value="zh">Chinese</SelectItem>
-                          <SelectItem value="es">Spanish</SelectItem>
-                          <SelectItem value="fr">French</SelectItem>
-                          <SelectItem value="de">German</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="source"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Source Term</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter source term" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="target"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Target Term</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter target term" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Button 
-                  type="submit" 
-                  className="w-full mt-4"
-                  disabled={addGlossaryMutation.isPending}
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Term
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-        
-        {/* Glossary List */}
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>Terminology Base</CardTitle>
-            <CardDescription>
-              Manage your terminology base
-            </CardDescription>
-            
-            <div className="mt-4 space-y-4">
-              {/* Search and Filter */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search terms..."
-                    className="pl-8"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full md:w-[400px] grid-cols-2">
+                <TabsTrigger value="entries" className="flex items-center gap-1">
+                  <FileText className="h-4 w-4" />
+                  Glossary Entries
+                </TabsTrigger>
+                <TabsTrigger value="resources" className="flex items-center gap-1">
+                  <Tag className="h-4 w-4" />
+                  TB Resources
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="entries" className="mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Add Term Form */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Plus size={18} />
+                        Add New Term
+                      </CardTitle>
+                      <CardDescription>
+                        Add a new term to the terminology base
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="sourceLanguage"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Source Language</FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select source language" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="en">English</SelectItem>
+                                    <SelectItem value="ko">Korean</SelectItem>
+                                    <SelectItem value="ja">Japanese</SelectItem>
+                                    <SelectItem value="zh">Chinese</SelectItem>
+                                    <SelectItem value="es">Spanish</SelectItem>
+                                    <SelectItem value="fr">French</SelectItem>
+                                    <SelectItem value="de">German</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="targetLanguage"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Target Language</FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select target language" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="en">English</SelectItem>
+                                    <SelectItem value="ko">Korean</SelectItem>
+                                    <SelectItem value="ja">Japanese</SelectItem>
+                                    <SelectItem value="zh">Chinese</SelectItem>
+                                    <SelectItem value="es">Spanish</SelectItem>
+                                    <SelectItem value="fr">French</SelectItem>
+                                    <SelectItem value="de">German</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="source"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Source Term</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Enter source term" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="target"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Target Term</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Enter target term" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <Button 
+                            type="submit" 
+                            className="w-full mt-4"
+                            disabled={addGlossaryMutation.isPending}
+                          >
+                            <Save className="w-4 h-4 mr-2" />
+                            Save Term
+                          </Button>
+                        </form>
+                      </Form>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Glossary List */}
+                  <Card className="md:col-span-2">
+                    <CardHeader>
+                      <CardTitle>Terminology Entries</CardTitle>
+                      <CardDescription>
+                        Manage your terminology entries
+                      </CardDescription>
+                      
+                      <div className="mt-4 space-y-4">
+                        {/* Search and Filter */}
+                        <div className="flex flex-col sm:flex-row gap-4">
+                          <div className="relative flex-1">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              placeholder="Search terms..."
+                              className="pl-8"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                          </div>
+                          
+                          <Select
+                            value={sourceLanguageFilter}
+                            onValueChange={setSourceLanguageFilter}
+                          >
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="Source language" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all_source_languages">All languages</SelectItem>
+                              {languages.source.map((lang) => (
+                                <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          
+                          <Select
+                            value={targetLanguageFilter}
+                            onValueChange={setTargetLanguageFilter}
+                          >
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="Target language" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all_target_languages">All languages</SelectItem>
+                              {languages.target.map((lang) => (
+                                <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <Separator className="my-4" />
+                    </CardHeader>
+                    
+                    <CardContent>
+                      <div className="rounded-md border">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Source Term</TableHead>
+                              <TableHead>Target Term</TableHead>
+                              <TableHead>Languages</TableHead>
+                              <TableHead>Added</TableHead>
+                              <TableHead className="w-[80px]">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {isLoading ? (
+                              <TableRow>
+                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                  Loading...
+                                </TableCell>
+                              </TableRow>
+                            ) : filteredGlossary.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                  No terminology terms found
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              filteredGlossary.map((term: any) => (
+                                <TableRow key={term.id}>
+                                  <TableCell className="font-medium">{term.source}</TableCell>
+                                  <TableCell>{term.target}</TableCell>
+                                  <TableCell>
+                                    <div className="flex flex-col">
+                                      <span className="text-xs text-muted-foreground">Source: {term.sourceLanguage}</span>
+                                      <span className="text-xs text-muted-foreground">Target: {term.targetLanguage}</span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="text-sm text-muted-foreground">
+                                    {formatDate(term.createdAt)}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleDeleteTerm(term.id)}
+                                      className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="resources" className="mt-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium">Terminology Base Resources</h3>
+                  <Dialog open={showResourceDialog} onOpenChange={setShowResourceDialog}>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" /> Add New Resource
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[500px]">
+                      <DialogHeader>
+                        <DialogTitle>Add New TB Resource</DialogTitle>
+                        <DialogDescription>
+                          Create a new terminology base resource for managing glossary entries.
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      {/* Resource Form will go here */}
+                    </DialogContent>
+                  </Dialog>
                 </div>
                 
-                <Select
-                  value={sourceLanguageFilter}
-                  onValueChange={setSourceLanguageFilter}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Source language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all_source_languages">All languages</SelectItem>
-                    {languages.source.map((lang) => (
-                      <SelectItem key={lang} value={lang}>{lang}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                <Select
-                  value={targetLanguageFilter}
-                  onValueChange={setTargetLanguageFilter}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Target language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all_target_languages">All languages</SelectItem>
-                    {languages.target.map((lang) => (
-                      <SelectItem key={lang} value={lang}>{lang}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <Separator className="my-4" />
-          </CardHeader>
-          
-          <CardContent>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Source Term</TableHead>
-                    <TableHead>Target Term</TableHead>
-                    <TableHead>Languages</TableHead>
-                    <TableHead>Added</TableHead>
-                    <TableHead className="w-[80px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        Loading...
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredGlossary.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        No terminology terms found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredGlossary.map((term: any) => (
-                      <TableRow key={term.id}>
-                        <TableCell className="font-medium">{term.source}</TableCell>
-                        <TableCell>{term.target}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="text-xs text-muted-foreground">Source: {term.sourceLanguage}</span>
-                            <span className="text-xs text-muted-foreground">Target: {term.targetLanguage}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {formatDate(term.createdAt)}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteTerm(term.id)}
-                            className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                <div className="rounded-md border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Languages</TableHead>
+                        <TableHead>Domain</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                          No TB resources found
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                    </TableBody>
+                  </Table>
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
-      </div>
       </div>
     </MainLayout>
   );

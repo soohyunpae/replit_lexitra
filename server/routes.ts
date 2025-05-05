@@ -1637,7 +1637,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: data.description || '',
         defaultSourceLanguage: data.defaultSourceLanguage,
         defaultTargetLanguage: data.defaultTargetLanguage,
-        domain: data.domain || 'General',
         isActive: data.isActive,
         createdAt: new Date(),
         updatedAt: new Date(),
