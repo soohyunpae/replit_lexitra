@@ -305,6 +305,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const id = parseInt(req.params.id);
       const userId = req.user!.id;
+      const isAdmin = req.user?.role === 'admin';
       
       // 프로젝트가 존재하고 Completed 상태인지 확인
       const project = await db.query.projects.findFirst({
@@ -317,6 +318,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (project.status !== 'Completed') {
         return res.status(400).json({ message: 'Project is not in completed status' });
+      }
+      
+      // 권한 확인: 이전 클레이머 또는 관리자만 재오픈 가능
+      if (!isAdmin && project.claimedBy !== userId) {
+        return res.status(403).json({ message: 'You do not have permission to reopen this project' });
       }
       
       // 프로젝트 재오픈 처리 - 이전 클레임 사용자가 그대로 유지됨
@@ -349,6 +355,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!project) {
         return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      // 프로젝트가 Completed 상태인지 확인
+      if (project.status !== 'Completed') {
+        return res.status(400).json({ message: 'Only completed projects can be deleted' });
       }
       
       // 먼저 연관된 모든 파일의 segments를 삭제
