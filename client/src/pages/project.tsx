@@ -733,10 +733,11 @@ export default function Project() {
                       <div key={`saved-${index}`} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{file.name}</span>
+                          <span className="text-sm text-muted-foreground">{file.name}</span>
                           <span className="text-xs text-muted-foreground ml-2">
                             {formatFileSize(file.size)}
                           </span>
+                          <span className="text-xs text-amber-500 ml-2">(레거시 형식 - 다운로드 불가)</span>
                         </div>
                         <div className="flex items-center">
                           <span className="text-xs text-muted-foreground mr-2">
