@@ -52,6 +52,19 @@ export default function Translation() {
     enabled: !!fileId,
   });
   
+  // Log file data for debugging
+  useEffect(() => {
+    if (file && file !== emptyFile) {
+      console.log('File data loaded successfully:', {
+        fileId,
+        fileName: file.name,
+        hasSegments: !!file.segments,
+        segmentsCount: file.segments?.length || 0,
+        segmentSample: file.segments && file.segments.length > 0 ? file.segments[0] : null
+      });
+    }
+  }, [file, fileId]);
+  
   // Fetch project data for the file
   const {
     data: project = emptyProject,

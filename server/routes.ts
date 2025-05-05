@@ -512,6 +512,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       
+      console.log('[FILES API] Request for file ID:', id, {
+        tokenAuthenticated: !!req.user,
+        user: req.user
+      });
+      
       const file = await db.query.files.findFirst({
         where: eq(schema.files.id, id),
         with: {
@@ -522,11 +527,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       if (!file) {
+        console.log(`[FILES API] File with ID ${id} not found`);
         return res.status(404).json({ message: 'File not found' });
       }
       
+      console.log(`[FILES API] Successfully fetched file ${id}:`, {
+        name: file.name,
+        segmentsCount: file.segments?.length || 0
+      });
+      
       return res.json(file);
     } catch (error) {
+      console.error('[FILES API] Error:', error);
       return handleApiError(res, error);
     }
   });
