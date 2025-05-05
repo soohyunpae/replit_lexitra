@@ -58,30 +58,6 @@ export default function AdminDashboard() {
         { name: "TM Cleanup", path: "/admin/tm/cleanup", icon: <FileHeart className="h-4 w-4" /> },
       ],
     },
-    {
-      title: "TB Tools",
-      description: "Manage terminology base resources",
-      icon: <Book className="h-6 w-6" />,
-      links: [
-        { name: "Manage Terms", path: "/admin/tb/manage", icon: <SearchCode className="h-4 w-4" /> },
-      ],
-    },
-    {
-      title: "System Settings",
-      description: "Configure application settings",
-      icon: <Settings className="h-6 w-6" />,
-      links: [
-        { name: "General Settings", path: "/admin/settings", icon: <Settings className="h-4 w-4" /> },
-      ],
-    },
-    {
-      title: "Analytics",
-      description: "View usage statistics and reports",
-      icon: <BarChart3 className="h-6 w-6" />,
-      links: [
-        { name: "Usage Reports", path: "/admin/analytics", icon: <BarChart3 className="h-4 w-4" /> },
-      ],
-    },
   ];
 
   return (
@@ -89,8 +65,7 @@ export default function AdminDashboard() {
       <div className="container py-6 space-y-6">
         <h1 className="text-2xl font-bold">Admin Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome to the Lexitra admin dashboard. Here you can manage translation memory,
-          terminology bases, system settings, and view analytics.
+          Welcome to the Lexitra admin dashboard. Here you can manage translation memory resources.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">

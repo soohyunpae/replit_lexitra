@@ -203,7 +203,7 @@ export default function TMCleanup() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="">Any language</SelectItem>
+                                <SelectItem value="any_language">Any language</SelectItem>
                                 <SelectItem value="EN">English</SelectItem>
                                 <SelectItem value="KO">Korean</SelectItem>
                                 <SelectItem value="JA">Japanese</SelectItem>
@@ -233,7 +233,7 @@ export default function TMCleanup() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="">Any language</SelectItem>
+                                <SelectItem value="any_language">Any language</SelectItem>
                                 <SelectItem value="EN">English</SelectItem>
                                 <SelectItem value="KO">Korean</SelectItem>
                                 <SelectItem value="JA">Japanese</SelectItem>
