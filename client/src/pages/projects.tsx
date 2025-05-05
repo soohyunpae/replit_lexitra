@@ -533,6 +533,7 @@ export default function ProjectsPage() {
               <SelectContent>
                 <SelectItem value="all">All Projects</SelectItem>
                 <SelectItem value="Unclaimed">Unclaimed</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
                 <SelectItem value="Claimed">Claimed</SelectItem>
                 <SelectItem value="Completed">Completed</SelectItem>
               </SelectContent>
@@ -616,7 +617,7 @@ export default function ProjectsPage() {
                   <div className="h-1.5 w-full bg-gradient-to-r from-primary to-primary/70"></div>
                   <div className="absolute top-2 right-2">
                     <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusColor}`}>
-                      {project.status}
+                      {displayStatus}
                       {isClaimedByUser && " (by you)"}
                       {project.status === "Claimed" && !isClaimedByUser && project.claimer && ` (by ${project.claimer.username})`}
                     </span>
@@ -654,90 +655,18 @@ export default function ProjectsPage() {
                       {project.deadline ? new Date(project.deadline).toLocaleString() : 'No deadline set'}
                     </div>
                     <div className="flex gap-2">
-                      {/* 상태가 Unclaimed이고 사용자가 로그인했을 때 클레임 버튼 */}
-                      {project.status === 'Unclaimed' && user && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            claimProject.mutate(project.id);
-                          }}
-                          disabled={claimProject.isPending}
-                        >
-                          Claim
-                        </Button>
-                      )}
-                      
-                      {/* 사용자가 클레임한 프로젝트의 경우 - 작업 버튼, 해제 버튼, 완료 버튼 */}
-                      {project.status === 'Claimed' && isClaimedByUser && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/projects/${project.id}`);
-                            }}
-                          >
-                            Continue
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              releaseProject.mutate(project.id);
-                            }}
-                            disabled={releaseProject.isPending}
-                          >
-                            Release
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="default"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              completeProject.mutate(project.id);
-                            }}
-                            disabled={completeProject.isPending}
-                          >
-                            Complete
-                          </Button>
-                        </>
-                      )}
-                      
-                      {/* 완료된 프로젝트의 경우 - 재오픈 버튼 */}
-                      {project.status === 'Completed' && isClaimedByUser && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            reopenProject.mutate(project.id);
-                          }}
-                          disabled={reopenProject.isPending}
-                        >
-                          Reopen
-                        </Button>
-                      )}
-                      
-                      {/* 관리자인 경우 삭제 버튼 제공 */}
-                      {user?.role === 'admin' && (
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (window.confirm(`Are you sure you want to delete the project "${project.name}"?`)) {
-                              deleteProject.mutate(project.id);
-                            }
-                          }}
-                          disabled={deleteProject.isPending}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
+                      {/* 프로젝트 상세 페이지 뷰 버튼만 제공 */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/projects/${project.id}`);
+                        }}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
                     </div>
                   </CardFooter>
                 </Card>
@@ -766,18 +695,25 @@ export default function ProjectsPage() {
                 {filteredAndSortedProjects.map((project) => {
                   const stats = projectStats[project.id] || { translatedPercentage: 0, reviewedPercentage: 0 };
 
+                  // 사용자에게 보여질 상태 가져오기
+                  const displayStatus = getDisplayStatus(project);
+                  
                   // Status badge color and text
                   let statusBadgeVariant: "default" | "outline" | "secondary" | "destructive" | null = "default";
                   let statusColor = "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400";
                   
-                  switch (project.status) {
+                  switch (displayStatus) {
                     case "Unclaimed":
                       statusBadgeVariant = "outline";
                       statusColor = "text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-300";
                       break;
-                    case "Claimed":
+                    case "In Progress":
                       statusBadgeVariant = "secondary";
                       statusColor = "text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400";
+                      break;
+                    case "Claimed":
+                      statusBadgeVariant = "secondary";
+                      statusColor = "text-indigo-600 bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400";
                       break;
                     case "Completed":
                       statusBadgeVariant = "default";
@@ -804,7 +740,7 @@ export default function ProjectsPage() {
                       </TableCell>
                       <TableCell onClick={() => navigate(`/projects/${project.id}`)}>
                         <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusColor}`}>
-                          {project.status}
+                          {getDisplayStatus(project)}
                           {isClaimedByUser && " (by you)"}
                           {project.status === "Claimed" && !isClaimedByUser && project.claimer && ` (by ${project.claimer.username})`}
                         </span>
@@ -842,95 +778,18 @@ export default function ProjectsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2 justify-end">
-                          {/* 상태가 Unclaimed이고 사용자가 로그인했을 때 클레임 버튼 */}
-                          {project.status === 'Unclaimed' && user && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                claimProject.mutate(project.id);
-                              }}
-                              disabled={claimProject.isPending}
-                            >
-                              Claim
-                            </Button>
-                          )}
-                          
-                          {/* 사용자가 클레임한 프로젝트의 경우 - 작업 버튼, 해제 버튼, 완료 버튼 */}
-                          {project.status === 'Claimed' && isClaimedByUser && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/projects/${project.id}`);
-                                }}
-                                title="Continue working"
-                              >
-                                <ArrowRight className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  releaseProject.mutate(project.id);
-                                }}
-                                disabled={releaseProject.isPending}
-                                title="Release claim"
-                              >
-                                Release
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="default"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  completeProject.mutate(project.id);
-                                }}
-                                disabled={completeProject.isPending}
-                                title="Mark as completed"
-                              >
-                                Complete
-                              </Button>
-                            </>
-                          )}
-                          
-                          {/* 완료된 프로젝트의 경우 - 재오픈 버튼 */}
-                          {project.status === 'Completed' && isClaimedByUser && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                reopenProject.mutate(project.id);
-                              }}
-                              disabled={reopenProject.isPending}
-                              title="Reopen project"
-                            >
-                              Reopen
-                            </Button>
-                          )}
-                          
-                          {/* 관리자인 경우 삭제 버튼 제공 */}
-                          {user?.role === 'admin' && (
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (window.confirm(`Are you sure you want to delete the project "${project.name}"?`)) {
-                                  deleteProject.mutate(project.id);
-                                }
-                              }}
-                              disabled={deleteProject.isPending}
-                              title="Delete project"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
+                          {/* 프로젝트 상세 페이지 뷰 버튼만 제공 */}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/projects/${project.id}`);
+                            }}
+                          >
+                            <ExternalLink className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
