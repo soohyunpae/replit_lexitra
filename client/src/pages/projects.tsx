@@ -743,7 +743,7 @@ export default function ProjectsPage() {
                           {getDisplayStatus(project)}
                         </span>
                       </TableCell>
-                      <TableCell onClick={() => navigate(`/projects/${project.id}`)}>
+                      <TableCell>
                         <div className="flex flex-col gap-1.5">
                           <CombinedProgress
                             reviewedPercentage={stats.reviewedPercentage}
@@ -756,13 +756,13 @@ export default function ProjectsPage() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell onClick={() => navigate(`/projects/${project.id}`)}>
+                      <TableCell>
                         <span className="text-sm">{new Date(project.createdAt).toLocaleString()}</span>
                       </TableCell>
-                      <TableCell onClick={() => navigate(`/projects/${project.id}`)}>
+                      <TableCell>
                         <span className="text-sm">{project.updatedAt ? new Date(project.updatedAt).toLocaleString() : '-'}</span>
                       </TableCell>
-                      <TableCell onClick={() => navigate(`/projects/${project.id}`)}>
+                      <TableCell>
                         <span className="text-sm">{project.deadline ? new Date(project.deadline).toLocaleString() : 'Not set'}</span>
                       </TableCell>
 

@@ -406,8 +406,8 @@ export default function Project() {
             {/* Project Info Card */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-1">
-                  <FileIcon className="h-4 w-4" /> Project Info
+                <CardTitle className="text-lg">
+                  Project Info
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-sm space-y-3">
