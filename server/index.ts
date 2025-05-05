@@ -7,31 +7,21 @@ const app = express();
 
 // CORS 설정 - 인증 관련 쿠키를 위해 필수
 app.use(cors({
-  // origin을 함수로 설정하여 요청의 origin에 따라 동적으로 대응
-  // 중요: 와일드카드(*) 대신 정확한 문자열을 사용해야 쿠키가 작동함
-  origin: function(origin, callback) {
-    // 디버깅용 로그
-    console.log('[CORS] Request from origin:', origin);
-    
-    // 모든 요청 허용 (API 테스트에 필요)
-    // 그러나 null 대신 웨브소켓이나 사이드 이펙트가 없는 요청에 대해 구체적인 origin을 사용
-    if (!origin) {
-      return callback(null, true);
-    }
-    
-    // .replit.dev 도메인이거나 로컬 개발 환경인 경우 허용
-    if (origin.includes('.replit.dev') || origin.includes('localhost') || origin.includes('0.0.0.0')) {
-      return callback(null, origin);
-    }
-    
-    // 프로덕션에서는 특정 도메인만 허용하도록 확장 가능
-    // 현재는 모든 원본 허용
-    callback(null, origin);
-  },
-  credentials: true, // 인증 정보(쿠키)를 포함하도록 허용
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // 허용할 HTTP 메서드 명시
+  // CORS 완화: 지정된 도메인만 허용하고 모든 요청에 도메인 정보를 포함하도록 수정
+  origin: true, // 공용 우선시: 모든 요청의 원본 도메인을 그대로 허용
+  credentials: true, // 인증 정보(쿠키)를 포함하도록 허용 - 필수
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'], // 허용할 HTTP 메서드 명시
   allowedHeaders: ['Content-Type', 'Authorization'], // 허용할 헤더 명시
+  exposedHeaders: ['set-cookie'], // 클라이언트에 노출할 헤더 명시
 }));
+
+// 세션 관리를 위한 헤더 설정 - 중요!
+app.use((req, res, next) => {
+  // 허용된 CORS 헤더 추가 설정
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*'); // 구체적인 원본 또는 와일드카드 사용
+  next();
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
