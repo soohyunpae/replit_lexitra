@@ -23,6 +23,7 @@ import TMAlignment from "@/pages/admin/tm/alignment";
 import TMCleanup from "@/pages/admin/tm/cleanup";
 import PDFProcessing from "@/pages/admin/file/pdf";
 import FileConversion from "@/pages/admin/file/conversion";
+import FileProcessing from "@/pages/admin/file/index";
 
 // Admin role protected route component
 const AdminRoute = ({ component: Component, ...rest }: any) => {
@@ -75,6 +76,9 @@ function Router() {
       </Route>
       <Route path="/admin/file/conversion">
         <AdminRoute component={FileConversion} />
+      </Route>
+      <Route path="/admin/file">
+        <AdminRoute component={FileProcessing} />
       </Route>
       <Route path="/auth" component={AuthPage} />
       <Route path="/auth-debug" component={AuthDebugPage} />
