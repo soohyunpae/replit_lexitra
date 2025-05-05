@@ -42,10 +42,10 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // 개발 환경에서는 false로 설정
+      secure: true, // SameSite=None을 사용할 때는 secure가 반드시 true여야 함
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       httpOnly: true,
-      sameSite: 'lax'
+      sameSite: 'none' // iframe에서 제대로 작동하려면 'none'으로 설정(개발 환경용)
     },
     store: new PostgresSessionStore({
       pool,
@@ -177,7 +177,7 @@ export function setupAuth(app: Express) {
         });
         
         // Set-Cookie 헤더 추가
-        res.setHeader('Set-Cookie', [`connect.sid=${req.sessionID}; Path=/; HttpOnly; SameSite=Lax`]);
+        res.setHeader('Set-Cookie', [`connect.sid=${req.sessionID}; Path=/; HttpOnly; SameSite=None; Secure`]);
         
         return res.json(user);
       });
