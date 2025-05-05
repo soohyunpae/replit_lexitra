@@ -10,6 +10,31 @@ import { translateWithGPT } from "./openai";
 import { setupAuth } from "./auth";
 import { setupTokenAuth, verifyToken } from "./token-auth";
 import { isAdmin, isResourceOwnerOrAdmin, canManageProject, errorHandler } from "./auth-middleware";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+
+// 파일 업로드를 위한 multer 설정
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    // uploads 디렉토리가 없으면 생성
+    const uploadDir = path.join(__dirname, '..', 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    // 고유한 파일 이름 생성
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB 제한
+});
 
 // Helper function for calculating text similarity
 function calculateSimilarity(str1: string, str2: string): number {
@@ -113,16 +138,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post(`${apiPrefix}/projects`, async (req, res) => {
+  app.post(`${apiPrefix}/projects`, verifyToken, upload.fields([
+    { name: 'files', maxCount: 10 },
+    { name: 'references', maxCount: 10 }
+  ]), async (req, res) => {
     try {
-      const data = schema.insertProjectSchema.parse(req.body);
-      const [project] = await db.insert(schema.projects).values(data).returning();
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
       
-      // 새 프로젝트는 파일이 없으므로 빈 배열을 추가
-      const projectWithFiles = { ...project, files: [] };
+      console.log('Project creation request:', {
+        body: req.body,
+        files: req.files ? 'Files present' : 'No files',
+        user: req.user
+      });
+      
+      const { name, sourceLanguage, targetLanguage, description, notes } = req.body;
+      
+      if (!name || !sourceLanguage || !targetLanguage) {
+        return res.status(400).json({ message: 'Required fields missing' });
+      }
+      
+      // 프로젝트 기본 정보 저장
+      const projectData = {
+        name,
+        sourceLanguage,
+        targetLanguage,
+        description: description || null,
+        notes: notes || null,
+        userId: req.user.id,
+        status: 'Unclaimed'
+      };
+      
+      // 프로젝트 추가
+      const [project] = await db.insert(schema.projects).values(projectData).returning();
+      
+      // 업로드된 파일 처리
+      const files: typeof schema.files.$inferInsert[] = [];
+      const uploadedFiles = (req.files as { [fieldname: string]: Express.Multer.File[] });
+      
+      if (uploadedFiles && uploadedFiles.files) {
+        // 작업 파일 처리
+        for (const file of uploadedFiles.files) {
+          try {
+            const fileContent = fs.readFileSync(file.path, 'utf8');
+            files.push({
+              name: file.originalname,
+              content: fileContent,
+              projectId: project.id,
+              type: 'work',
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
+          } catch (fileErr) {
+            console.error(`Error reading file ${file.originalname}:`, fileErr);
+          }
+        }
+      }
+      
+      if (uploadedFiles && uploadedFiles.references) {
+        // 참조 파일 처리
+        for (const file of uploadedFiles.references) {
+          try {
+            const fileContent = fs.readFileSync(file.path, 'utf8');
+            files.push({
+              name: file.originalname,
+              content: fileContent,
+              projectId: project.id,
+              type: 'reference',
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
+          } catch (fileErr) {
+            console.error(`Error reading file ${file.originalname}:`, fileErr);
+          }
+        }
+      }
+      
+      // 파일들을 데이터베이스에 저장
+      let savedFiles = [];
+      if (files.length > 0) {
+        savedFiles = await db.insert(schema.files).values(files).returning();
+        
+        // 분석 완료 후 임시 파일 삭제
+        if (uploadedFiles) {
+          Object.values(uploadedFiles).forEach(fileArray => {
+            fileArray.forEach(file => {
+              try {
+                fs.unlinkSync(file.path);
+              } catch (unlinkErr) {
+                console.error(`Failed to unlink file ${file.path}:`, unlinkErr);
+              }
+            });
+          });
+        }
+      }
+      
+      // 외부 호출에서 사용할 프로젝트 데이터
+      const projectWithFiles = { ...project, files: savedFiles };
       
       return res.status(201).json(projectWithFiles);
     } catch (error) {
+      console.error('Project creation error:', error);
       return handleApiError(res, error);
     }
   });

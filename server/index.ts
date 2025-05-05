@@ -26,7 +26,11 @@ app.use(cors({
 // 중복 설정이 문제를 일으킬 수 있음
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true })); // extended: true 사용하여 중첩 객체 허용
+
+// 멀티파트 데이터 허용 크기 증가 (100MB 제한)
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 app.use((req, res, next) => {
   const start = Date.now();
