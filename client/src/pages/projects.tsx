@@ -419,7 +419,6 @@ export default function ProjectsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
             <p className="text-muted-foreground mt-1">Manage your translation projects</p>
           </div>
 

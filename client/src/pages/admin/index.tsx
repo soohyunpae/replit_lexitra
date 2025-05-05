@@ -150,7 +150,6 @@ export default function AdminDashboard() {
     <MainLayout title="Admin Tools">
       <div className="container py-6 space-y-6">
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold">Admin Tools</h1>
           <p className="text-muted-foreground">
             Manage TMs and preprocess files
           </p>
