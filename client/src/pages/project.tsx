@@ -911,8 +911,12 @@ export default function Project() {
                           <div className="flex justify-end">
                             <Button
                               onClick={() => navigate(`/translation/${file.id}`)}
+                              disabled={project.status === 'Unclaimed' || (project.status === 'Claimed' && project.claimedBy !== user?.id && user?.role !== 'admin')}
+                              variant={project.status === 'Unclaimed' || (project.status === 'Claimed' && project.claimedBy !== user?.id && user?.role !== 'admin') ? "outline" : "default"}
                             >
-                              Open Editor
+                              {project.status === 'Unclaimed' ? "Claim Project First" : 
+                               (project.status === 'Claimed' && project.claimedBy !== user?.id) ? "Claimed by Another User" : 
+                               "Open Editor"}
                             </Button>
                           </div>
                         </div>
