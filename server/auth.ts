@@ -49,10 +49,10 @@ export function setupAuth(app: Express) {
     saveUninitialized: false,
     proxy: true,
     cookie: {
-      secure: false,
+      secure: true, // HTTPS 필수 설정 (Replit 환경에서는 true로 설정해야 함)
       maxAge: 24 * 60 * 60 * 1000, // 1일
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: 'none', // 크로스 사이트 요청을 허용하기 위해 'none'으로 설정
       path: '/',
     },
     store: new PostgresSessionStore({
