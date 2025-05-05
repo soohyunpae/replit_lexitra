@@ -107,7 +107,6 @@ export default function TMUpload({ embedded = false }: TMUploadProps) {
       
       <Card>
         <CardHeader>
-          <CardTitle>Upload Translation Memory</CardTitle>
           <CardDescription>
             Upload a file containing translation memory data. Supported formats: CSV, TMX, Excel.
           </CardDescription>

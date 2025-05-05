@@ -31,7 +31,7 @@ export default function AdminDashboard() {
   // Show loading state
   if (isLoading) {
     return (
-      <MainLayout title="Admin Dashboard">
+      <MainLayout title="Admin Tools">
         <div className="flex items-center justify-center min-h-screen">
           <Loader2 className="h-8 w-8 animate-spin text-border" />
         </div>
@@ -100,12 +100,12 @@ export default function AdminDashboard() {
   const [fileActiveSection, setFileActiveSection] = useState<string>("");
 
   return (
-    <MainLayout title="Admin Dashboard">
+    <MainLayout title="Admin Tools">
       <div className="container py-6 space-y-6">
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+          <h1 className="text-2xl font-bold">Admin Tools</h1>
           <p className="text-muted-foreground">
-            Welcome to the Lexitra admin dashboard. Here you can manage translation memory resources
+            Welcome to the Lexitra admin tools. Here you can manage translation memory resources
             and process different types of files for translation projects.
           </p>
         </div>
