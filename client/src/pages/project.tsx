@@ -364,9 +364,8 @@ export default function Project() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-xl font-semibold mb-1">{project.name}</h1>
-              <div className="flex items-center gap-2">
-                <span className="text-sm px-2 py-0.5 bg-primary/10 rounded text-primary font-medium">ID: {project.id}</span>
-                <span className="text-muted-foreground text-sm">Project details and files</span>
+              <div className="text-sm font-medium text-muted-foreground inline-flex items-center">
+                <span className="bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full text-xs">[{project.id}]</span>
               </div>
             </div>
             
