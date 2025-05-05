@@ -45,10 +45,63 @@ export default function Project() {
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [showReopenDialog, setShowReopenDialog] = useState(false);
   
-  // 참조 파일과 노트 상태 관리
+  // References & Notes 상태 관리
   const [note, setNote] = useState("");
   const [references, setReferences] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Notes 저장 mutation
+  const saveNotes = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/projects/${projectId}/notes`, { notes: note });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Notes saved",
+        description: "Project notes have been saved successfully."
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to save notes. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Reference 파일 업로드 mutation
+  const uploadReferences = useMutation({
+    mutationFn: async (files: File[]) => {
+      const formData = new FormData();
+      files.forEach(file => formData.append('files', file));
+      
+      const response = await fetch(`/api/projects/${projectId}/references`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Reference files added",
+        description: `${references.length} file(s) added successfully.`
+      });
+      // 업로드 후 references 상태 초기화 (DB에서 관리하므로)
+      setReferences([]);
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to upload files. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
   
   // Get project ID from URL params
   const projectId = isMatch && params ? parseInt(params.id) : null;
@@ -558,51 +611,61 @@ export default function Project() {
                         </Button>
                       </div>
                     ))}
+                    
+                    <div className="flex justify-end">
+                      <Button 
+                        variant="outline"
+                        className="gap-2"
+                        onClick={() => {
+                          if (references.length > 0) {
+                            uploadReferences.mutate(references);
+                          }
+                        }}
+                        disabled={uploadReferences.isPending}
+                      >
+                        {uploadReferences.isPending ? "Uploading..." : "Upload"}
+                      </Button>
+                    </div>
                   </div>
                 ) : (
-                  <div className="text-center py-6 border border-dashed border-border rounded-lg">
+                  <div 
+                    className="text-center py-6 border border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        fileInputRef.current?.click();
+                      }
+                    }}
+                  >
                     <div className="mx-auto h-10 w-10 rounded-full bg-accent flex items-center justify-center mb-3">
                       <Paperclip className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <h3 className="text-md font-medium mb-1">No reference files</h3>
-                    <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
-                      Upload reference files to assist with translation. You can attach glossaries, style guides, previous translations, or other useful materials.
+                    <p className="text-sm text-muted-foreground max-w-md mx-auto mb-2">
+                      Click to upload reference files (glossaries, style guides, etc.)
                     </p>
                   </div>
                 )}
                 
-                <div className="flex justify-center">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    style={{ display: 'none' }}
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files.length > 0) {
-                        const newFiles = Array.from(e.target.files);
-                        setReferences([...references, ...newFiles]);
-                        
-                        // Reset input field after selection
-                        if (fileInputRef.current) {
-                          fileInputRef.current.value = '';
-                        }
-                        
-                        toast({
-                          title: "Reference files added",
-                          description: `${newFiles.length} file(s) added successfully.`,
-                        });
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                      const newFiles = Array.from(e.target.files);
+                      setReferences([...references, ...newFiles]);
+                      
+                      // Reset input field after selection
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
                       }
-                    }}
-                    multiple
-                  />
-                  <Button 
-                    variant="outline" 
-                    className="gap-2"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <PlusCircle className="h-4 w-4" />
-                    Add Reference Files
-                  </Button>
-                </div>
+                    }
+                  }}
+                  multiple
+                />
               </div>
             </CardContent>
           </Card>
@@ -629,14 +692,10 @@ export default function Project() {
               <Button 
                 variant="outline"
                 className="gap-2"
-                onClick={() => {
-                  toast({
-                    title: "Notes saved",
-                    description: "Project notes have been saved successfully."
-                  });
-                }}
+                onClick={() => saveNotes.mutate()}
+                disabled={saveNotes.isPending}
               >
-                Save Notes
+                {saveNotes.isPending ? "Saving..." : "Save"}
               </Button>
             </CardFooter>
           </Card>
