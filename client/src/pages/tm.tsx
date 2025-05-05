@@ -1,6 +1,6 @@
 import React from "react";
 import { MainLayout } from "@/components/layout/main-layout";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,8 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Database, ChevronRight, FileText, Tag, ListFilter } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/hooks/use-toast";
+import { Search, Database, ChevronRight, FileText, Tag, ListFilter, Plus } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import { formatDate } from "@/lib/utils";
 
@@ -20,6 +27,65 @@ export default function TranslationMemoryPage() {
   const [statusFilter, setStatusFilter] = React.useState<string>("all_statuses");
   const [activeTab, setActiveTab] = React.useState<string>("entries");
   const [selectedResourceId, setSelectedResourceId] = React.useState<string>("all_resources");
+  const [showResourceDialog, setShowResourceDialog] = React.useState<boolean>(false);
+  
+  // Form schema for adding new TM resource
+  const tmResourceSchema = z.object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    description: z.string().optional(),
+    defaultSourceLanguage: z.string().min(2, "Source language is required"),
+    defaultTargetLanguage: z.string().min(2, "Target language is required"),
+    domain: z.string().optional(),
+    isActive: z.boolean().default(true),
+  });
+
+  // Type for the form values
+  type TmResourceFormValues = z.infer<typeof tmResourceSchema>;
+
+  // Default form values
+  const defaultFormValues: Partial<TmResourceFormValues> = {
+    name: "",
+    description: "",
+    defaultSourceLanguage: "en",
+    defaultTargetLanguage: "ko",
+    domain: "General",
+    isActive: true,
+  };
+
+  // Form hook for adding new TM resource
+  const form = useForm<TmResourceFormValues>({
+    resolver: zodResolver(tmResourceSchema),
+    defaultValues: defaultFormValues,
+  });
+
+  // Mutation for adding new TM resource
+  const addResourceMutation = useMutation({
+    mutationFn: async (data: TmResourceFormValues) => {
+      const res = await apiRequest("POST", "/api/tm/resources", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tm/resources"] });
+      toast({
+        title: "Success",
+        description: "Translation memory resource added successfully",
+      });
+      form.reset(defaultFormValues);
+      setShowResourceDialog(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to add translation memory resource: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle form submission
+  const onSubmit = (data: TmResourceFormValues) => {
+    addResourceMutation.mutate(data);
+  };
   
   // Get all TM resources
   const { data: tmResources, isLoading: isLoadingResources } = useQuery({
@@ -237,6 +303,7 @@ export default function TranslationMemoryPage() {
                         <TableHead>Source</TableHead>
                         <TableHead>Target</TableHead>
                         <TableHead>Languages</TableHead>
+                        <TableHead>Project</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Added</TableHead>
                       </TableRow>
@@ -264,6 +331,11 @@ export default function TranslationMemoryPage() {
                                 <span className="text-xs text-muted-foreground">Source: {entry.sourceLanguage}</span>
                                 <span className="text-xs text-muted-foreground">Target: {entry.targetLanguage}</span>
                               </div>
+                            </TableCell>
+                            <TableCell>
+                              {entry.projectName ? entry.projectName : 
+                                <span className="text-xs text-muted-foreground">No project</span>
+                              }
                             </TableCell>
                             <TableCell>
                               <div className="inline-flex px-2 py-1 rounded-full text-xs font-medium">
@@ -303,9 +375,166 @@ export default function TranslationMemoryPage() {
               <TabsContent value="resources">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-medium">Translation Memory Resources</h3>
-                  <Button size="sm">
-                    <Tag className="h-4 w-4 mr-2" /> Add New Resource
-                  </Button>
+                  <Dialog open={showResourceDialog} onOpenChange={setShowResourceDialog}>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" /> Add New Resource
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[500px]">
+                      <DialogHeader>
+                        <DialogTitle>Add New TM Resource</DialogTitle>
+                        <DialogDescription>
+                          Create a new translation memory resource for managing TM entries.
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Resource Name</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Patent Translation TM" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Description</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="TM resource for patent translations" 
+                                    {...field} 
+                                    value={field.value || ""}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="defaultSourceLanguage"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Source Language</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select source language" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="en">English</SelectItem>
+                                      <SelectItem value="ko">Korean</SelectItem>
+                                      <SelectItem value="ja">Japanese</SelectItem>
+                                      <SelectItem value="zh">Chinese</SelectItem>
+                                      <SelectItem value="de">German</SelectItem>
+                                      <SelectItem value="fr">French</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="defaultTargetLanguage"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Target Language</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select target language" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="en">English</SelectItem>
+                                      <SelectItem value="ko">Korean</SelectItem>
+                                      <SelectItem value="ja">Japanese</SelectItem>
+                                      <SelectItem value="zh">Chinese</SelectItem>
+                                      <SelectItem value="de">German</SelectItem>
+                                      <SelectItem value="fr">French</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
+                          <FormField
+                            control={form.control}
+                            name="domain"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Domain</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value || "General"}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select domain" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="General">General</SelectItem>
+                                    <SelectItem value="Legal">Legal</SelectItem>
+                                    <SelectItem value="Medical">Medical</SelectItem>
+                                    <SelectItem value="Technical">Technical</SelectItem>
+                                    <SelectItem value="Patents">Patents</SelectItem>
+                                    <SelectItem value="IT">IT</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="isActive"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                <FormControl>
+                                  <input
+                                    type="checkbox"
+                                    checked={field.value}
+                                    onChange={field.onChange}
+                                    className="h-4 w-4 mt-1"
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel>Active</FormLabel>
+                                  <FormDescription>
+                                    Mark this resource as active for use in translations.
+                                  </FormDescription>
+                                </div>
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <DialogFooter>
+                            <Button type="submit" disabled={addResourceMutation.isPending}>
+                              {addResourceMutation.isPending ? "Creating..." : "Create Resource"}
+                            </Button>
+                          </DialogFooter>
+                        </form>
+                      </Form>
+                    </DialogContent>
+                  </Dialog>
                 </div>
                 
                 <div className="rounded-md border overflow-hidden">

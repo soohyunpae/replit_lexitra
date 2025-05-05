@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Save, Trash2, Search } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Plus, Save, Trash2, Search, Database, FileText, Tag, ChevronRight } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -28,10 +30,12 @@ type GlossaryFormValues = z.infer<typeof glossaryFormSchema>;
 
 export default function GlossaryPage() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>("all_source_languages");
   const [targetLanguageFilter, setTargetLanguageFilter] = useState<string>("all_target_languages");
+  const [activeTab, setActiveTab] = React.useState<string>("entries");
+  const [selectedResourceId, setSelectedResourceId] = React.useState<string>("all_resources");
+  const [showResourceDialog, setShowResourceDialog] = React.useState<boolean>(false);
   
   // Form setup
   const form = useForm<GlossaryFormValues>({

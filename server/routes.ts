@@ -1617,6 +1617,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return handleApiError(res, error);
     }
   });
+  
+  // Add new TM resource
+  app.post(`${apiPrefix}/tm/resources`, verifyToken, async (req, res) => {
+    try {
+      const resourceSchema = z.object({
+        name: z.string().min(2),
+        description: z.string().optional(),
+        defaultSourceLanguage: z.string().min(2),
+        defaultTargetLanguage: z.string().min(2),
+        domain: z.string().optional(),
+        isActive: z.boolean().default(true),
+      });
+      
+      const data = resourceSchema.parse(req.body);
+      
+      const [resource] = await db.insert(schema.tmResources).values({
+        name: data.name,
+        description: data.description || '',
+        defaultSourceLanguage: data.defaultSourceLanguage,
+        defaultTargetLanguage: data.defaultTargetLanguage,
+        domain: data.domain || 'General',
+        isActive: data.isActive,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).returning();
+      
+      return res.status(201).json(resource);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
 
   // Get all TM entries (with optional resourceId filter)
   app.get(`${apiPrefix}/tm/all`, verifyToken, async (req, res) => {
