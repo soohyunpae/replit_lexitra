@@ -8,6 +8,7 @@ import { db } from "@db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import connectPgSimple from "connect-pg-simple";
+import { verifyToken, generateToken } from "./token-auth";
 import { pool } from "@db";
 
 declare global {
@@ -180,11 +181,11 @@ export function setupAuth(app: Express) {
   });
 
   // Route for logging in
+  // Token-based login endpoint that replaces session-based authentication
   app.post("/api/login", (req, res, next) => {
     console.log('\n[LOGIN ATTEMPT]', {
       body: req.body,
       headers: {
-        cookie: req.headers.cookie,
         origin: req.headers.origin,
         host: req.headers.host
       }
@@ -201,48 +202,24 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ message: info?.message || "Invalid credentials" });
       }
       
-      req.login(user, (err) => {
-        if (err) {
-          console.log('[LOGIN SESSION ERROR]', err);
-          return next(err);
-        }
+      try {
+        // Generate JWT token for the user using the imported function
+        const token = generateToken(user);
         
-        // 응답 전에 세션 설정 확인
-        // 세션을 먼저 저장하여 쿠키가 올바르게 전송되도록 함
-        if (req.session) {
-          // Replit 환경에서 필요한 쿠키 설정 강제 적용
-          req.session.cookie.sameSite = 'none';
-          req.session.cookie.secure = true;
-          req.session.cookie.httpOnly = true;
-          
-          // 세션 저장
-          req.session.save((saveErr) => {
-            if (saveErr) {
-              console.error('[SESSION SAVE ERROR]', saveErr);
-              return next(saveErr);
-            }
-            
-            // 세션 저장 후 로그
-            console.log('[LOGIN SUCCESS]', {
-              user,
-              sessionID: req.sessionID,
-              authenticated: req.isAuthenticated(),
-              cookie: req.session.cookie,
-              headers: res.getHeaders()
-            });
-            
-            // 추가 쿠키 옵션 설정을 위해 응답 헤더 추가
-            // Cross-Origin 경우 Access-Control-Expose-Headers가 필요함
-            res.header('Access-Control-Expose-Headers', 'Set-Cookie');
-            
-            // 클라이언트에게 응답
-            return res.json(user);
-          });
-        } else {
-          console.error('[SESSION NOT FOUND]');
-          return res.status(500).json({ message: "Session initialization failed" });
-        }
-      });
+        console.log('[LOGIN SUCCESS]', {
+          user,
+          tokenGenerated: true
+        });
+        
+        // Return the token along with user info
+        return res.json({
+          ...user,
+          token
+        });
+      } catch (tokenErr) {
+        console.error('[TOKEN GENERATION ERROR]', tokenErr);
+        return res.status(500).json({ message: "Failed to generate authentication token" });
+      }
     })(req, res, next);
   });
 
@@ -254,20 +231,17 @@ export function setupAuth(app: Express) {
     });
   });
 
-  // Route for getting current user
-  app.get("/api/user", (req, res) => {
-    if (req.isAuthenticated()) {
-      return res.json(req.user);
-    }
-    return res.status(401).json({ message: "Not authenticated" });
+  // Use the token verification middleware that was imported at the top
+  
+  // Route for getting current user - token protected
+  app.get("/api/user", verifyToken, (req, res) => {
+    // User is already attached to req by verifyToken middleware
+    return res.json(req.user);
   });
 
-  // Route for getting user profile
-  app.get("/api/profile", (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-    
+  // Route for getting user profile - token protected
+  app.get("/api/profile", verifyToken, (req, res) => {
+    // User is already attached to req by verifyToken middleware
     return res.json(req.user);
   });
 }

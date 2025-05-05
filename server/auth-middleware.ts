@@ -1,23 +1,56 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
+import jwt from 'jsonwebtoken';
+import { JwtPayload } from './token-auth';
 
-// 인증이 필요한 라우트를 위한 미들웨어
+// JWT 시크릿 키
+const JWT_SECRET = process.env.JWT_SECRET || 'lexitra_jwt_secret_key';
+
+// 인증이 필요한 라우트를 위한 미들웨어 (세션 또는 토큰 인증 지원)
 export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+  // 세션 기반 인증 확인
   if (req.isAuthenticated()) {
+    console.log('[AUTH] Session-based authentication successful');
     return next();
   }
   
+  // 토큰 기반 인증 시도
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(' ')[1]; // Bearer 토큰 형식 추출
+  
+  if (token) {
+    try {
+      // JWT 토큰 검증
+      const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+      
+      // 사용자 정보를 요청 객체에 첨부
+      req.user = {
+        id: decoded.id,
+        username: decoded.username,
+        role: decoded.role
+      };
+      
+      console.log('[AUTH] Token-based authentication successful', { userId: decoded.id });
+      return next();
+    } catch (error) {
+      console.error('[AUTH] Token verification error:', error);
+    }
+  }
+  
+  // 인증 실패
+  console.log('[AUTH] Authentication failed');
   return res.status(401).json({ message: "Authentication required" });
 }
 
 // 관리자 역할이 필요한 라우트를 위한 미들웨어
 export function isAdmin(req: Request, res: Response, next: NextFunction) {
-  if (!req.isAuthenticated()) {
+  // 먼저 인증 확인
+  if (!req.user) {
     return res.status(401).json({ message: "Authentication required" });
   }
   
-  // @ts-ignore - req.user.role 속성에 접근
-  if (req.user?.role !== 'admin') {
+  // 사용자 역할 확인
+  if (req.user.role !== 'admin') {
     return res.status(403).json({ message: "Admin privileges required" });
   }
   

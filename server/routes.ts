@@ -8,6 +8,7 @@ import { fromZodError } from "zod-validation-error";
 import { ZodError } from "zod";
 import { translateWithGPT } from "./openai";
 import { setupAuth } from "./auth";
+import { setupTokenAuth } from "./token-auth";
 import { isAuthenticated, isAdmin, isResourceOwnerOrAdmin, canManageProject, errorHandler } from "./auth-middleware";
 
 // Helper function for calculating text similarity
@@ -69,8 +70,9 @@ const handleApiError = (res: Response, error: unknown) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup authentication
+  // Setup authentication systems
   setupAuth(app);
+  setupTokenAuth(app); // Also setup token-based auth
   
   // prefix all routes with /api
   const apiPrefix = "/api";
