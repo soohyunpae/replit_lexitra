@@ -122,6 +122,29 @@ export function setupAuth(app: Express) {
       done(error);
     }
   });
+  
+  // Middleware to ensure sessions are properly saved before sending responses
+  app.use((req, res, next) => {
+    // Add some additional debugging for session management
+    const originalEnd = res.end;
+    
+    // @ts-ignore - we're monkey patching the response object
+    res.end = function(chunk, encoding) {
+      if (req.session) {
+        console.log(`[DEBUG SESSION ${req.path}]`, {
+          headers: res.getHeaders(),
+          hasCookieHeader: !!res.getHeader('Set-Cookie'),
+          sessionID: req.sessionID,
+          authenticated: req.isAuthenticated()
+        });
+      }
+      
+      // @ts-ignore - we're monkey patching
+      return originalEnd.apply(res, arguments);
+    };
+    
+    next();
+  });
 
   // Route for registering a new user
   app.post("/api/register", async (req, res, next) => {
@@ -184,18 +207,37 @@ export function setupAuth(app: Express) {
           return next(err);
         }
         
-        // 응답 전에 세션 상태 확인
-        console.log('[LOGIN SUCCESS]', {
-          user,
-          sessionID: req.sessionID,
-          authenticated: req.isAuthenticated(),
-          cookies: req.headers.cookie
-        });
-        
-        // 중요: 여기서 수동으로 Set-Cookie를 설정하지 않음
-        // express-session이 자동으로 처리함
-        
-        return res.json(user);
+        // 응답 전에 세션 설정 확인
+        // 세션을 먼저 저장하여 쿠키가 올바르게 전송되도록 함
+        if (req.session) {
+          // Replit 환경에서 필요한 쿠키 설정 강제 적용
+          req.session.cookie.sameSite = 'none';
+          req.session.cookie.secure = true;
+          req.session.cookie.httpOnly = true;
+          
+          // 세션 저장
+          req.session.save((saveErr) => {
+            if (saveErr) {
+              console.error('[SESSION SAVE ERROR]', saveErr);
+              return next(saveErr);
+            }
+            
+            // 세션 저장 후 로그
+            console.log('[LOGIN SUCCESS]', {
+              user,
+              sessionID: req.sessionID,
+              authenticated: req.isAuthenticated(),
+              cookie: req.session.cookie,
+              headers: res.getHeaders()
+            });
+            
+            // 클라이언트에게 응답
+            return res.json(user);
+          });
+        } else {
+          console.error('[SESSION NOT FOUND]');
+          return res.status(500).json({ message: "Session initialization failed" });
+        }
       });
     })(req, res, next);
   });

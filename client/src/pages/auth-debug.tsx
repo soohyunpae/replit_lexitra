@@ -26,12 +26,16 @@ export default function AuthDebugPage() {
   // Test API endpoints
   const testEndpoint = async (name: string, url: string, method: string = 'GET', body?: any) => {
     try {
+      // Special settings for Replit environment
       const options: RequestInit = {
         method,
-        credentials: 'include',
+        credentials: 'include', // Include cookies in the request
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
+        // Mode: 'cors' to allow cookies to be sent
+        mode: 'cors'
       };
 
       if (body) {
