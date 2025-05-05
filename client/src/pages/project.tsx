@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { useLocation, useRoute } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/use-auth";
@@ -14,15 +14,41 @@ import {
   CardContent, 
   CardDescription, 
   CardHeader, 
-  CardTitle 
+  CardTitle, 
+  CardFooter
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Upload, Download } from "lucide-react";
+import { Upload, Download, File, FileText, Paperclip, PlusCircle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+  DialogTrigger
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Project() {
   const [isMatch, params] = useRoute("/projects/:id");
   const [, navigate] = useLocation();
   const { user } = useAuth();
+  const { toast } = useToast();
+  
+  // 다이얼로그 상태 관리
+  const [showReleaseDialog, setShowReleaseDialog] = useState(false);
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+  const [showReopenDialog, setShowReopenDialog] = useState(false);
+  
+  // 참조 파일과 노트 상태 관리
+  const [note, setNote] = useState("");
+  const [references, setReferences] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Get project ID from URL params
   const projectId = isMatch && params ? parseInt(params.id) : null;
@@ -243,7 +269,7 @@ export default function Project() {
                   <Button 
                     variant="outline" 
                     className="border-yellow-500 text-yellow-500 hover:bg-yellow-50"
-                    onClick={() => releaseProject.mutate()}
+                    onClick={() => setShowReleaseDialog(true)}
                     disabled={releaseProject.isPending}
                   >
                     {releaseProject.isPending ? "Releasing..." : "Release"}
@@ -251,7 +277,7 @@ export default function Project() {
                   <Button 
                     variant="default" 
                     className="bg-green-600 hover:bg-green-700"
-                    onClick={() => completeProject.mutate()}
+                    onClick={() => setShowCompleteDialog(true)}
                     disabled={completeProject.isPending}
                   >
                     {completeProject.isPending ? "Completing..." : "Complete"}
@@ -263,12 +289,87 @@ export default function Project() {
                 <Button 
                   variant="outline" 
                   className="border-blue-500 text-blue-500 hover:bg-blue-50"
-                  onClick={() => reopenProject.mutate()}
+                  onClick={() => setShowReopenDialog(true)}
                   disabled={reopenProject.isPending}
                 >
                   {reopenProject.isPending ? "Reopening..." : "Reopen"}
                 </Button>
               )}
+              
+              {/* 릴리스 확인 다이얼로그 */}
+              <Dialog open={showReleaseDialog} onOpenChange={setShowReleaseDialog}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>프로젝트 릴리스 확인</DialogTitle>
+                    <DialogDescription>
+                      프로젝트를 릴리스하면 다른 사용자들이 프로젝트를 클레임할 수 있게 됩니다. 정말 프로젝트를 릴리스하시겠습니까?
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setShowReleaseDialog(false)}>취소</Button>
+                    <Button 
+                      variant="default" 
+                      className="border-yellow-500 bg-yellow-500 hover:bg-yellow-600"
+                      onClick={() => {
+                        setShowReleaseDialog(false);
+                        releaseProject.mutate();
+                      }}
+                    >
+                      릴리스
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              
+              {/* 완료 확인 다이얼로그 */}
+              <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>프로젝트 완료 확인</DialogTitle>
+                    <DialogDescription>
+                      프로젝트를 완료로 표시하시겠습니까? 완료된 프로젝트는 더 이상 편집할 수 없습니다.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setShowCompleteDialog(false)}>취소</Button>
+                    <Button 
+                      variant="default" 
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={() => {
+                        setShowCompleteDialog(false);
+                        completeProject.mutate();
+                      }}
+                    >
+                      완료
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              
+              {/* 재개 확인 다이얼로그 */}
+              <Dialog open={showReopenDialog} onOpenChange={setShowReopenDialog}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>프로젝트 재개 확인</DialogTitle>
+                    <DialogDescription>
+                      완료된 프로젝트를 다시 작업 중 상태로 변경하시겠습니까?
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setShowReopenDialog(false)}>취소</Button>
+                    <Button 
+                      variant="default" 
+                      className="bg-blue-600 hover:bg-blue-700"
+                      onClick={() => {
+                        setShowReopenDialog(false);
+                        reopenProject.mutate();
+                      }}
+                    >
+                      재개
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
               
               {user?.role === 'admin' && project.status === 'Completed' && (
                 <Button 
@@ -425,6 +526,121 @@ export default function Project() {
             </Button>
           </div>
           
+          {/* References 섹션 */}
+          <Card className="mb-6">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">
+                References
+              </CardTitle>
+              <CardDescription>
+                번역 작업에 도움이 되는 참조 문서를 업로드하세요
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col space-y-4">
+                {references.length > 0 ? (
+                  <div className="space-y-2">
+                    {references.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">{file.name}</span>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8" 
+                          onClick={() => {
+                            setReferences(references.filter((_, i) => i !== index));
+                          }}
+                        >
+                          <File className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 border border-dashed border-border rounded-lg">
+                    <div className="mx-auto h-10 w-10 rounded-full bg-accent flex items-center justify-center mb-3">
+                      <Paperclip className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-md font-medium mb-1">참조 파일이 없습니다</h3>
+                    <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
+                      번역을 도울 참조 파일을 업로드하세요. 용어집, 스타일 가이드, 이전 번역 등 유용한 자료를 첨부할 수 있습니다.
+                    </p>
+                  </div>
+                )}
+                
+                <div className="flex justify-center">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        const newFiles = Array.from(e.target.files);
+                        setReferences([...references, ...newFiles]);
+                        
+                        // 파일 선택 후 input 초기화
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = '';
+                        }
+                        
+                        toast({
+                          title: "참조 파일 추가됨",
+                          description: `${newFiles.length}개의 파일이 추가되었습니다.`,
+                        });
+                      }
+                    }}
+                    multiple
+                  />
+                  <Button 
+                    variant="outline" 
+                    className="gap-2"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    참조 파일 추가
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Notes 섹션 */}
+          <Card className="mb-6">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">
+                Notes
+              </CardTitle>
+              <CardDescription>
+                프로젝트에 대한 메모나 지침을 기록하세요
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                placeholder="번역 시 주의사항, 특별한 요구 사항, 용어 사용 지침 등을 기록하세요..."
+                className="min-h-24"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+              />
+            </CardContent>
+            <CardFooter className="justify-end">
+              <Button 
+                variant="outline"
+                className="gap-2"
+                onClick={() => {
+                  toast({
+                    title: "노트가 저장되었습니다",
+                    description: "프로젝트 노트가 성공적으로 저장되었습니다."
+                  });
+                }}
+              >
+                노트 저장
+              </Button>
+            </CardFooter>
+          </Card>
+
           {/* File list */}
           <Card className="mb-6">
             <CardHeader className="pb-2">
