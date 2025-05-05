@@ -106,7 +106,7 @@ export function Sidebar() {
   const adminNavItems: NavItem[] = [
     {
       icon: <ShieldCheck className="h-5 w-5" />,
-      label: "Admin Dashboard",
+      label: "Admin Tools",
       href: "/admin"
     },
     // Removed standalone items per UI review feedback

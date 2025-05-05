@@ -152,7 +152,7 @@ export default function AdminDashboard() {
                     <AccordionTrigger className="py-4">
                       <div className="flex items-center gap-2">
                         <Upload className="h-5 w-5" />
-                        <span className="text-lg font-medium">TM Upload</span>
+                        <span className="text-lg font-medium">Upload Translation Memory</span>
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-6">
