@@ -529,6 +529,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // File Download API
+  app.get(`${apiPrefix}/files/:id/download`, verifyToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const file = await db.query.files.findFirst({
+        where: eq(schema.files.id, id)
+      });
+      
+      if (!file) {
+        return res.status(404).json({ message: 'File not found' });
+      }
+      
+      // Set content disposition header for download
+      res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
+      res.setHeader('Content-Type', 'text/plain');
+      
+      // Return file content
+      return res.send(file.content);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
   app.post(`${apiPrefix}/files`, verifyToken, async (req, res) => {
     try {
       const fileData = schema.insertFileSchema.parse(req.body);

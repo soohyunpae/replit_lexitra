@@ -706,7 +706,14 @@ export default function Project() {
                       <div key={`file-ref-${index}`} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{file.name}</span>
+                          <a 
+                            href={`/api/files/${file.id}/download`}
+                            className="text-sm text-primary hover:underline cursor-pointer"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {file.name}
+                          </a>
                         </div>
                         <div className="flex items-center">
                           <span className="text-xs text-muted-foreground mr-2">
@@ -878,9 +885,9 @@ export default function Project() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {project.files && project.files.length > 0 ? (
+              {workFiles && workFiles.length > 0 ? (
                 <div className="space-y-2">
-                  {project.files.map((file: FileType) => {
+                  {workFiles.map((file: FileType) => {
                     const stats = fileStats[file.id] || { total: 0, completed: 0, percentage: 0 };
                     return (
                       <div 
