@@ -28,6 +28,9 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // extended: true 사용하여 중첩 객체 허용
 
+// 정적 파일 제공
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
 // 멀티파트 데이터 허용 크기 증가 (100MB 제한)
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));

@@ -1,25 +1,30 @@
 import React, { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, UploadCloud, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Loader2, UploadCloud, FileText, AlertCircle, CheckCircle2, Download, ChevronRight, ChevronDown } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 type ProcessResult = {
   message: string;
   extractedText?: string;
   pageCount?: number;
   segments?: string[];
+  fileUrl?: string;
+  fileName?: string;
 };
 
 export default function PDFProcessingPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [result, setResult] = useState<ProcessResult | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("upload");
   const { toast } = useToast();
 
   const pdfProcessMutation = useMutation({
@@ -39,6 +44,7 @@ export default function PDFProcessingPage() {
     },
     onSuccess: (data) => {
       setResult(data);
+      setActiveTab("results"); // Auto-switch to results tab on success
       toast({
         title: "Success",
         description: "PDF successfully processed",
@@ -84,6 +90,34 @@ export default function PDFProcessingPage() {
     }
     pdfProcessMutation.mutate();
   };
+  
+  const ProcessingStatusIndicator = () => {
+    if (pdfProcessMutation.isPending) {
+      return (
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Processing file...</span>
+        </div>
+      );
+    }
+    if (pdfProcessMutation.isError) {
+      return (
+        <div className="flex items-center gap-2 text-destructive">
+          <AlertCircle className="h-4 w-4" />
+          <span>Processing failed</span>
+        </div>
+      );
+    }
+    if (result) {
+      return (
+        <div className="flex items-center gap-2 text-green-500">
+          <CheckCircle2 className="h-4 w-4" />
+          <span>Processing complete</span>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <MainLayout title="PDF Processing">
@@ -95,130 +129,218 @@ export default function PDFProcessingPage() {
             you process PDF patent documents and extract text for translation projects.
           </p>
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Upload PDF</CardTitle>
+        
+        <Card>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <CardHeader className="pb-0">
+              <div className="flex items-center justify-between">
+                <CardTitle>PDF Processing Workflow</CardTitle>
+                <ProcessingStatusIndicator />
+              </div>
               <CardDescription>
-                Select a PDF file to process and extract text content.
+                Upload and process PDF files to extract text for translation
               </CardDescription>
+              <TabsList className="mt-4 grid grid-cols-2">
+                <TabsTrigger value="upload">1. Upload PDF</TabsTrigger>
+                <TabsTrigger value="results" disabled={!result && !pdfProcessMutation.isPending}>2. View Results</TabsTrigger>
+              </TabsList>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid w-full max-w-sm items-center gap-1.5">
-                  <Label htmlFor="pdf-file">PDF File</Label>
-                  <Input
-                    id="pdf-file"
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handleFileChange}
-                  />
-                </div>
-                
-                {selectedFile && (
-                  <div className="text-sm text-muted-foreground">
-                    <p>Selected file: {selectedFile.name}</p>
-                    <p>Size: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+            
+            <CardContent className="pt-6">
+              <TabsContent value="upload" className="mt-0">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="border rounded-md p-6 bg-muted/20">
+                    <div className="grid w-full max-w-md mx-auto items-center gap-4">
+                      <div>
+                        <Label htmlFor="pdf-file" className="text-base mb-2 block">Select PDF File</Label>
+                        <Input
+                          id="pdf-file"
+                          type="file"
+                          accept="application/pdf"
+                          onChange={handleFileChange}
+                          className="cursor-pointer"
+                        />
+                      </div>
+                      
+                      {selectedFile && (
+                        <div className="text-sm bg-muted/40 p-3 rounded-md">
+                          <p className="font-medium">Selected file:</p>
+                          <p>{selectedFile.name}</p>
+                          <p>Size: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-center">
+                    <Button 
+                      type="submit"
+                      size="lg"
+                      disabled={pdfProcessMutation.isPending || !selectedFile}
+                      className="flex items-center gap-2"
+                    >
+                      {pdfProcessMutation.isPending ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="h-5 w-5" />
+                          Process PDF
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </TabsContent>
+              
+              <TabsContent value="results" className="mt-0">
+                {pdfProcessMutation.isPending ? (
+                  <div className="flex flex-col items-center justify-center py-16">
+                    <Loader2 className="h-12 w-12 animate-spin mb-4" />
+                    <p className="text-lg">Processing PDF file...</p>
+                    <p className="text-sm text-muted-foreground mt-2">This may take a moment depending on file size</p>
+                  </div>
+                ) : pdfProcessMutation.isError ? (
+                  <Alert variant="destructive" className="my-6">
+                    <AlertCircle className="h-5 w-5" />
+                    <AlertTitle>Processing Error</AlertTitle>
+                    <AlertDescription>
+                      {pdfProcessMutation.error?.message || "Failed to process PDF"}
+                    </AlertDescription>
+                  </Alert>
+                ) : result ? (
+                  <div className="space-y-6">
+                    <Alert className="my-4">
+                      <CheckCircle2 className="h-5 w-5" />
+                      <AlertTitle>Processing Complete</AlertTitle>
+                      <AlertDescription>{result.message}</AlertDescription>
+                    </Alert>
+                    
+                    <div className="grid gap-6 md:grid-cols-2">
+                      <div>
+                        {result.pageCount && (
+                          <div className="flex items-center gap-2 mb-4 text-sm bg-muted/30 p-3 rounded-md">
+                            <FileText className="h-5 w-5" />
+                            <span><strong>Pages:</strong> {result.pageCount}</span>
+                          </div>
+                        )}
+                        
+                        {result.fileUrl && (
+                          <div className="flex flex-col gap-3 p-4 border rounded-md">
+                            <p className="text-sm font-medium">Extracted content is ready for download</p>
+                            <Button 
+                              asChild 
+                              variant="outline"
+                              className="flex items-center gap-2"
+                            >
+                              <a href={result.fileUrl} download={result.fileName || "extracted-text.txt"}>
+                                <Download className="h-4 w-4" />
+                                Download Extracted Text
+                              </a>
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div>
+                        {result.segments && result.segments.length > 0 && (
+                          <Collapsible className="border rounded-md overflow-hidden">
+                            <div className="bg-muted/30 p-3">
+                              <CollapsibleTrigger className="flex w-full items-center justify-between">
+                                <span className="font-medium">Segments ({result.segments.length})</span>
+                                <ChevronDown className="h-4 w-4" />
+                              </CollapsibleTrigger>
+                            </div>
+                            
+                            <CollapsibleContent>
+                              <div className="max-h-60 overflow-y-auto p-3">
+                                <div className="space-y-1">
+                                  {result.segments.slice(0, 10).map((segment, index) => (
+                                    <div key={index} className="text-sm border-b pb-1 last:border-0">
+                                      {segment}
+                                    </div>
+                                  ))}
+                                  {result.segments.length > 10 && (
+                                    <div className="text-sm text-muted-foreground italic pt-2">
+                                      {result.segments.length - 10} more segments not shown
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {result.extractedText && (
+                      <Collapsible className="border rounded-md overflow-hidden">
+                        <div className="bg-muted/30 p-3">
+                          <CollapsibleTrigger className="flex w-full items-center justify-between">
+                            <span className="font-medium">Sample Extracted Text</span>
+                            <ChevronDown className="h-4 w-4" />
+                          </CollapsibleTrigger>
+                        </div>
+                        
+                        <CollapsibleContent>
+                          <div className="max-h-60 overflow-y-auto p-3">
+                            <p className="text-sm whitespace-pre-line">
+                              {result.extractedText.length > 500 
+                                ? `${result.extractedText.substring(0, 500)}...` 
+                                : result.extractedText}
+                            </p>
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    )}
+                    
+                    <div className="flex justify-between pt-4">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setActiveTab("upload")}
+                      >
+                        Process Another PDF
+                      </Button>
+                      
+                      {result.fileUrl && (
+                        <Button asChild>
+                          <a href={result.fileUrl} download={result.fileName || "extracted-text.txt"}>
+                            <Download className="h-4 w-4 mr-2" />
+                            Download Results
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                    <UploadCloud className="h-12 w-12 mb-4" />
+                    <p className="text-lg">No Results Yet</p>
+                    <p className="text-sm mt-2">Upload and process a PDF file to see results</p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setActiveTab("upload")}
+                      className="mt-4"
+                    >
+                      Go to Upload
+                    </Button>
                   </div>
                 )}
-
-                <Button 
-                  type="submit"
-                  disabled={pdfProcessMutation.isPending || !selectedFile}
-                  className="flex items-center gap-2"
-                >
-                  {pdfProcessMutation.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="h-4 w-4" />
-                      Process PDF
-                    </>
-                  )}
-                </Button>
-              </form>
+              </TabsContent>
             </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Results</CardTitle>
-              <CardDescription>
-                Processing results and extracted content
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {pdfProcessMutation.isPending ? (
-                <div className="flex flex-col items-center justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin mb-2" />
-                  <p>Processing PDF file...</p>
-                </div>
-              ) : pdfProcessMutation.isError ? (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Error</AlertTitle>
-                  <AlertDescription>
-                    {pdfProcessMutation.error?.message || "Failed to process PDF"}
-                  </AlertDescription>
-                </Alert>
-              ) : result ? (
-                <div className="space-y-4">
-                  <Alert>
-                    <CheckCircle2 className="h-4 w-4" />
-                    <AlertTitle>Success</AlertTitle>
-                    <AlertDescription>{result.message}</AlertDescription>
-                  </Alert>
-                  
-                  {result.pageCount && (
-                    <p className="text-sm">Pages: {result.pageCount}</p>
-                  )}
-
-                  {result.segments && result.segments.length > 0 && (
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium">Extracted Segments ({result.segments.length}):</h3>
-                      <div className="max-h-80 overflow-y-auto border rounded-md p-2">
-                        <div className="space-y-1">
-                          {result.segments.slice(0, 20).map((segment, index) => (
-                            <div key={index} className="text-sm border-b pb-1 last:border-0">
-                              {segment}
-                            </div>
-                          ))}
-                          {result.segments.length > 20 && (
-                            <div className="text-sm text-muted-foreground italic pt-2">
-                              {result.segments.length - 20} more segments not shown
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {result.extractedText && (
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium">Sample Extracted Text:</h3>
-                      <div className="max-h-60 overflow-y-auto border rounded-md p-2">
-                        <p className="text-sm whitespace-pre-line">
-                          {result.extractedText.length > 500 
-                            ? `${result.extractedText.substring(0, 500)}...` 
-                            : result.extractedText}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                  <UploadCloud className="h-8 w-8 mb-2" />
-                  <p>Upload and process a PDF file to see results</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            
+            <CardFooter className="flex justify-between border-t pt-4 pb-4">
+              <div className="text-sm text-muted-foreground">
+                Supported file type: PDF documents
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Max file size: 50MB
+              </div>
+            </CardFooter>
+          </Tabs>
+        </Card>
       </div>
     </MainLayout>
   );

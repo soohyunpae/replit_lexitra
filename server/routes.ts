@@ -343,6 +343,16 @@ function registerAdminRoutes(app: Express) {
         const fileBuffer = fs.readFileSync(file.path);
         const fileContent = fileBuffer.toString('utf8', 0, Math.min(fileBuffer.length, 10000));
         
+        // Create output directory if it doesn't exist
+        const outputDir = path.join(__dirname, '..', 'uploads', 'processed');
+        if (!fs.existsSync(outputDir)) {
+          fs.mkdirSync(outputDir, { recursive: true });
+        }
+        
+        // Generate a unique output file name
+        const outputFileName = file.originalname.replace(/\.pdf$/i, '-extracted.txt');
+        const outputPath = path.join(outputDir, `${Date.now()}-${outputFileName}`);
+        
         // Extract text-like content from the PDF (simplified approach)
         const textLines = fileContent
           .replace(/[^\x20-\x7E\n\r\t]/g, '') // Keep only ASCII printable chars and whitespace
@@ -357,13 +367,26 @@ function registerAdminRoutes(app: Express) {
           sentences = [...sentences, ...lineSentences];
         }
         
-        // Return extracted text segments
+        // Join extracted text for saving to file
+        const extractedText = sentences.join('\n\n');
+        
+        // Save extracted text to file
+        fs.writeFileSync(outputPath, extractedText);
+        
+        // Generate a URL for the saved file
+        const fileUrl = `/uploads/processed/${path.basename(outputPath)}`;
+        
+        // Return extracted text segments and file info
         return res.status(200).json({
           message: "PDF text extraction completed",
           fileSize: fileSize,
           fileName: file.originalname,
-          sentences: sentences,
-          sentenceCount: sentences.length
+          outputFileName: outputFileName,
+          segments: sentences,
+          segmentCount: sentences.length,
+          extractedText: extractedText.substring(0, 1000) + (extractedText.length > 1000 ? '...' : ''),
+          pageCount: Math.max(1, Math.ceil(fileSize / 50000)), // Rough estimate
+          fileUrl: fileUrl
         });
       } catch (pdfError) {
         console.error("Error processing PDF file:", pdfError);
@@ -519,11 +542,20 @@ function registerAdminRoutes(app: Express) {
         }
         // For other formats, in a real implementation, you would use appropriate libraries
         
+        // Create processed directory if it doesn't exist
+        const outputDir = path.join(__dirname, '..', 'uploads', 'processed');
+        if (!fs.existsSync(outputDir)) {
+          fs.mkdirSync(outputDir, { recursive: true });
+        }
+        
+        // Use the processed directory for converted files
+        convertedPath = path.join(outputDir, convertedFilename);
+        
         // Write the converted file
         fs.writeFileSync(convertedPath, convertedContent);
         
         // Generate a download URL (in a real implementation, use a more secure approach)
-        const fileUrl = `/uploads/${convertedFilename}`;
+        const fileUrl = `/uploads/processed/${convertedFilename}`;
         
         return res.status(200).json({
           message: `File successfully converted from ${inputFormat} to ${outputFormat}`,
