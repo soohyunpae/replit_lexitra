@@ -1514,17 +1514,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const resourceId = req.query.resourceId ? parseInt(req.query.resourceId as string) : undefined;
       
-      let query;
+      let terms;
       if (resourceId) {
-        query = db.select().from(schema.glossary)
-          .where(eq(schema.glossary.resourceId, resourceId))
-          .orderBy(desc(schema.glossary.createdAt));
+        terms = await db.query.glossary.findMany({
+          where: eq(schema.glossary.resourceId, resourceId),
+          orderBy: desc(schema.glossary.createdAt)
+        });
       } else {
-        query = db.select().from(schema.glossary)
-          .orderBy(desc(schema.glossary.createdAt));
+        terms = await db.query.glossary.findMany({
+          orderBy: desc(schema.glossary.createdAt)
+        });
       }
-      
-      const terms = await query;
       
       return res.json(terms);
     } catch (error) {
