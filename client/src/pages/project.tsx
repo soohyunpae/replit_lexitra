@@ -358,12 +358,16 @@ export default function Project() {
   }
   
   return (
-    <MainLayout title={project.name}>
+    <MainLayout title="Project Detail">
       <main className="flex-1 p-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <span className="text-muted-foreground">Project details and files</span>
+              <h1 className="text-xl font-semibold mb-1">{project.name}</h1>
+              <div className="flex items-center gap-2">
+                <span className="text-sm px-2 py-0.5 bg-primary/10 rounded text-primary font-medium">ID: {project.id}</span>
+                <span className="text-muted-foreground text-sm">Project details and files</span>
+              </div>
             </div>
             
             {/* Workflow actions based on project status */}
