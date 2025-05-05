@@ -76,12 +76,11 @@ export default function AdminDashboard() {
       ],
     },
     {
-      title: "File Preprocessing",
-      description: "Process and prepare files for translation",
+      title: "File Processing",
+      description: "Process and convert files for translation projects",
       icon: <FileText className="h-6 w-6" />,
       links: [
-        { name: "PDF Processing", path: "/admin/file/pdf", icon: <FileText className="h-4 w-4" /> },
-        { name: "File Format Conversion", path: "/admin/file/conversion", icon: <FileType className="h-4 w-4" /> },
+        { name: "File Processing Center", path: "/admin/file", icon: <FileText className="h-4 w-4" /> },
       ],
     },
   ];
@@ -102,7 +101,7 @@ export default function AdminDashboard() {
             <CardHeader className="pb-0">
               <CardTitle>Management Tools</CardTitle>
               <CardDescription>
-                Control and manage translation memory and file preprocessing tools
+                Control and manage translation memory and file processing tools
               </CardDescription>
               <TabsList className="mt-4 grid w-full grid-cols-2">
                 <TabsTrigger value="translation-memory" className="flex items-center gap-2">
@@ -111,7 +110,7 @@ export default function AdminDashboard() {
                 </TabsTrigger>
                 <TabsTrigger value="file-preprocessing" className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
-                  <span>File Preprocessing</span>
+                  <span>File Processing</span>
                 </TabsTrigger>
               </TabsList>
             </CardHeader>
@@ -168,64 +167,6 @@ export default function AdminDashboard() {
               Access additional tools and features from the sidebar menu
             </CardFooter>
           </Tabs>
-        </Card>
-
-        {/* File Preprocessing Unified Card */}
-        <Card className="overflow-hidden">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <FileText className="h-6 w-6" />
-              <CardTitle>File Preprocessing Hub</CardTitle>
-            </div>
-            <CardDescription>
-              Unified workspace for file processing and preparation for translation
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-primary" />
-                  <h3 className="font-medium">Extract Text</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">Upload PDF files and extract text for translation</p>
-                <Link href="/admin/file/pdf">
-                  <Button variant="outline" className="w-full justify-start mt-2">
-                    <FileText className="h-4 w-4 mr-2" />
-                    PDF Processing
-                  </Button>
-                </Link>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <FileType className="h-5 w-5 text-primary" />
-                  <h3 className="font-medium">Convert Formats</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">Convert between different file formats for translation</p>
-                <Link href="/admin/file/conversion">
-                  <Button variant="outline" className="w-full justify-start mt-2">
-                    <FileType className="h-4 w-4 mr-2" />
-                    Format Conversion
-                  </Button>
-                </Link>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Database className="h-5 w-5 text-primary" />
-                  <h3 className="font-medium">Add to TM</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">Upload and manage translation memory entries</p>
-                <Link href="/admin/tm/upload">
-                  <Button variant="outline" className="w-full justify-start mt-2">
-                    <Upload className="h-4 w-4 mr-2" />
-                    TM Upload
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </CardContent>
         </Card>
       </div>
     </MainLayout>
