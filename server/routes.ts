@@ -13,6 +13,11 @@ import { isAdmin, isResourceOwnerOrAdmin, canManageProject, errorHandler } from 
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from 'url';
+
+// ES modules에서는 __dirname이 없으므로 import.meta.url을 사용하여 경로 구성
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // 파일 업로드를 위한 multer 설정
 const storage = multer.diskStorage({
