@@ -3,9 +3,9 @@ import { User } from '../shared/schema';
 import jwt from 'jsonwebtoken';
 import { randomBytes } from 'crypto';
 
-// Use a secret that's randomly generated on server start
-// In production, this should be an environment variable
-const JWT_SECRET = process.env.JWT_SECRET || randomBytes(32).toString('hex');
+// Use a consistent secret for development
+// In production, this should be set via environment variable
+const JWT_SECRET = process.env.JWT_SECRET || 'lexitra_jwt_secret_key';
 
 // Token expiration time (24 hours)
 const TOKEN_EXPIRATION = '24h';
