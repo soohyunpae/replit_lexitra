@@ -241,6 +241,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // 각 파일에 대해 세그먼트 생성
+      if (savedFiles.length > 0) {
+        for (const file of savedFiles) {
+          if (file.type === 'work') { // 참조 파일이 아닌 작업 파일만 세그먼트 생성
+            // Parse content into segments by splitting into sentences
+            const segmentText = (text: string): string[] => {
+              // Matches end of sentence: period, question mark, exclamation mark followed by space or end
+              // But doesn't split on common abbreviations, decimal numbers, etc.
+              const sentences = [];
+              const regex = /[.!?]\s+|[.!?]$/g;
+              let match;
+              let lastIndex = 0;
+              
+              // Split on sentence endings
+              while ((match = regex.exec(text)) !== null) {
+                const sentence = text.substring(lastIndex, match.index + 1).trim();
+                if (sentence) sentences.push(sentence);
+                lastIndex = match.index + match[0].length;
+              }
+              
+              // Add any remaining text
+              if (lastIndex < text.length) {
+                const remainingText = text.substring(lastIndex).trim();
+                if (remainingText) sentences.push(remainingText);
+              }
+              
+              return sentences.length > 0 ? sentences : [text.trim()];
+            };
+            
+            // First split by lines, then split each line into sentences
+            const contentLines = file.content.split(/\r?\n/).filter(line => line.trim().length > 0);
+            let segments: {source: string, status: string, fileId: number}[] = [];
+            
+            // Process each line
+            for (const line of contentLines) {
+              const sentences = segmentText(line.trim());
+              
+              // Add each sentence as a separate segment
+              segments = [
+                ...segments,
+                ...sentences.map(sentence => ({
+                  source: sentence,
+                  status: 'MT',
+                  fileId: file.id
+                }))
+              ];
+            }
+            
+            if (segments.length > 0) {
+              console.log(`Creating ${segments.length} segments for file ID ${file.id}`);
+              await db.insert(schema.translationUnits).values(segments);
+            }
+          }
+        }
+      }
+      
       // 외부 호출에서 사용할 프로젝트 데이터
       const projectWithFiles = { ...project, files: savedFiles };
       
