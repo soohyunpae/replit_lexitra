@@ -1623,17 +1623,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const resourceId = req.query.resourceId ? parseInt(req.query.resourceId as string) : undefined;
       
-      let query;
+      let tmEntries;
       if (resourceId) {
-        query = db.select().from(schema.translationMemory)
-          .where(eq(schema.translationMemory.resourceId, resourceId))
-          .orderBy(desc(schema.translationMemory.createdAt));
+        tmEntries = await db.query.translationMemory.findMany({
+          where: eq(schema.translationMemory.resourceId, resourceId),
+          orderBy: desc(schema.translationMemory.createdAt)
+        });
       } else {
-        query = db.select().from(schema.translationMemory)
-          .orderBy(desc(schema.translationMemory.createdAt));
+        tmEntries = await db.query.translationMemory.findMany({
+          orderBy: desc(schema.translationMemory.createdAt)
+        });
       }
-      
-      const tmEntries = await query;
       
       return res.json(tmEntries);
     } catch (error) {
