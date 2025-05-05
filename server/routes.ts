@@ -8,6 +8,7 @@ import { fromZodError } from "zod-validation-error";
 import { ZodError } from "zod";
 import { translateWithGPT } from "./openai";
 import { setupAuth } from "./auth";
+import { isAuthenticated, isAdmin, isResourceOwnerOrAdmin, canManageProject, errorHandler } from "./auth-middleware";
 
 // Helper function for calculating text similarity
 function calculateSimilarity(str1: string, str2: string): number {
@@ -138,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // 클레임된 프로젝트이고 현재 사용자가 클레임하지 않았다면 접근 거부
-      if (project.status === 'Claimed' && project.claimedBy !== userId) {
+      if (project.status === 'Claimed' && project.claimedBy !== req.user?.id) {
         return res.status(403).json({ message: 'Access denied. This project is claimed by another user.' });
       }
       
@@ -171,11 +172,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // 프로젝트 클레임하기
-  app.post(`${apiPrefix}/projects/:id/claim`, async (req, res) => {
+  app.post(`${apiPrefix}/projects/:id/claim`, isAuthenticated, async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: 'Not authenticated' });
-      }
       
       const id = parseInt(req.params.id);
       const userId = req.user!.id;
@@ -212,11 +210,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // 프로젝트 클레임 해제하기
-  app.post(`${apiPrefix}/projects/:id/release`, async (req, res) => {
+  app.post(`${apiPrefix}/projects/:id/release`, isAuthenticated, async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: 'Not authenticated' });
-      }
       
       const id = parseInt(req.params.id);
       const userId = req.user!.id;
@@ -257,11 +252,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // 프로젝트 완료 처리하기
-  app.post(`${apiPrefix}/projects/:id/complete`, async (req, res) => {
+  app.post(`${apiPrefix}/projects/:id/complete`, isAuthenticated, async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: 'Not authenticated' });
-      }
       
       const id = parseInt(req.params.id);
       const userId = req.user!.id;
