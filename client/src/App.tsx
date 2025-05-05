@@ -18,6 +18,9 @@ import AuthPage from "@/pages/auth-page";
 import ProfilePage from "@/pages/profile";
 import AuthDebugPage from "@/pages/auth-debug";
 import AdminDashboard from "@/pages/admin";
+import TMUpload from "@/pages/admin/tm/upload";
+import TMAlignment from "@/pages/admin/tm/alignment";
+import TMCleanup from "@/pages/admin/tm/cleanup";
 
 // Admin role protected route component
 const AdminRoute = ({ component: Component, ...rest }: any) => {
@@ -53,7 +56,18 @@ function Router() {
       <ProtectedRoute path="/tm" component={TM} />
       <ProtectedRoute path="/settings" component={Settings} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
-      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin">
+        <AdminRoute component={AdminDashboard} />
+      </Route>
+      <Route path="/admin/tm/upload">
+        <AdminRoute component={TMUpload} />
+      </Route>
+      <Route path="/admin/tm/alignment">
+        <AdminRoute component={TMAlignment} />
+      </Route>
+      <Route path="/admin/tm/cleanup">
+        <AdminRoute component={TMCleanup} />
+      </Route>
       <Route path="/auth" component={AuthPage} />
       <Route path="/auth-debug" component={AuthDebugPage} />
       <Route component={NotFound} />
