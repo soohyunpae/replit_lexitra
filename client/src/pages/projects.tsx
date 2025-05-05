@@ -63,6 +63,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { formatFileSize } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { CombinedProgress } from "@/components/ui/combined-progress";
@@ -258,12 +259,7 @@ export default function ProjectsPage() {
     },
   });
   
-  // Helper function to format file size
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
+
 
   const createProject = useMutation({
     mutationFn: async (data: ProjectFormValues) => {
