@@ -514,7 +514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // 프로젝트 참조 파일 업로드 API
+  // 프로젝트 참조 파일 저장 API
   app.post(`${apiPrefix}/projects/:id/references`, verifyToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
