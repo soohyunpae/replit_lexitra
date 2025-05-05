@@ -51,7 +51,7 @@ export function Sidebar() {
   };
   
   // Get current user
-  const { data: user } = useQuery({ 
+  const { data: user } = useQuery<{ id: number; username: string; role?: string }>({ 
     queryKey: ['/api/user'],
   });
   
@@ -108,6 +108,16 @@ export function Sidebar() {
       icon: <ShieldCheck className="h-5 w-5" />,
       label: "Admin Dashboard",
       href: "/admin"
+    },
+    {
+      icon: <FileText className="h-5 w-5" />,
+      label: "File Preprocessing",
+      href: "/admin/file"
+    },
+    {
+      icon: <Database className="h-5 w-5" />,
+      label: "Translation Memory",
+      href: "/admin/tm/upload"
     },
   ];
   

@@ -48,7 +48,7 @@ export default function TMUpload() {
     mutationFn: async (data: FormData) => {
       setUploadProgress(0);
       const response = await apiRequest("POST", "/api/admin/tm/upload", data, {
-        onUploadProgress: (progressEvent) => {
+        onUploadProgress: (progressEvent: { loaded: number; total?: number }) => {
           if (progressEvent.total) {
             const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
             setUploadProgress(progress);
