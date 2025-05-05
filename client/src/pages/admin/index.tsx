@@ -152,12 +152,12 @@ export default function AdminDashboard() {
                     <AccordionTrigger className="py-4">
                       <div className="flex items-center gap-2">
                         <Upload className="h-5 w-5" />
-                        <span className="text-lg font-medium">Upload Translation Memory</span>
+                        <span className="text-lg font-medium">Translation Memory Upload</span>
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-6">
                       <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
-                        <TMUpload embedded={true} noHeader={true} />
+                        <TMUpload embedded={true} />
                       </Suspense>
                     </AccordionContent>
                   </AccordionItem>
