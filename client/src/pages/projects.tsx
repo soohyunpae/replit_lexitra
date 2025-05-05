@@ -1,3 +1,4 @@
+
 import React from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useQuery } from "@tanstack/react-query";
@@ -24,12 +25,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { LayoutGrid, List } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function ProjectsPage() {
   const { user } = useAuth();
   const [statusFilter, setStatusFilter] = React.useState("all");
+  const [viewMode, setViewMode] = React.useState<"grid" | "list">("list");
 
   const { data: projects = [] } = useQuery({
     queryKey: ["projects"],
@@ -42,7 +46,6 @@ export default function ProjectsPage() {
 
   const filteredProjects = projects.filter(project => {
     if (statusFilter === "all") return true;
-
     const status = getProjectStatus(project, user?.id);
     return status === statusFilter;
   });
@@ -64,6 +67,13 @@ export default function ProjectsPage() {
     return badges[status as keyof typeof badges];
   }
 
+  function getProgress(project: any) {
+    const total = project.files?.reduce((acc: number, file: any) => acc + (file.segments?.length || 0), 0) || 0;
+    const completed = project.files?.reduce((acc: number, file: any) => 
+      acc + (file.segments?.filter((s: any) => s.status === 'reviewed' || s.status === 'completed').length || 0), 0) || 0;
+    return total === 0 ? 0 : Math.round((completed / total) * 100);
+  }
+
   return (
     <MainLayout>
       <div className="container mx-auto py-6">
@@ -74,57 +84,116 @@ export default function ProjectsPage() {
                 <CardTitle>Projects</CardTitle>
                 <CardDescription>View and manage translation projects</CardDescription>
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Projects</SelectItem>
-                  <SelectItem value="not_started">Not Started</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="taken">Taken</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-4">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Projects</SelectItem>
+                    <SelectItem value="not_started">Not Started</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="taken">Taken</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="flex items-center rounded-md border">
+                  <Button
+                    variant={viewMode === "grid" ? "secondary" : "ghost"}
+                    size="sm"
+                    className="px-2.5"
+                    onClick={() => setViewMode("grid")}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === "list" ? "secondary" : "ghost"}
+                    size="sm"
+                    className="px-2.5"
+                    onClick={() => setViewMode("list")}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Project</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Deadline</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            {viewMode === "list" ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Project</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Language Pair</TableHead>
+                    <TableHead>Progress</TableHead>
+                    <TableHead>Last Updated</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredProjects.map((project: any) => {
+                    const status = getProjectStatus(project, user?.id);
+                    const canAccess = status === "not_started" || status === "in_progress" || user?.role === "admin";
+                    const progress = getProgress(project);
+
+                    return (
+                      <TableRow key={project.id}>
+                        <TableCell>
+                          {canAccess ? (
+                            <Link 
+                              to={`/projects/${project.id}`}
+                              className="text-primary hover:underline"
+                            >
+                              {project.name}
+                            </Link>
+                          ) : (
+                            <span className="text-muted-foreground">{project.name}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(status)}</TableCell>
+                        <TableCell>{project.sourceLanguage} → {project.targetLanguage}</TableCell>
+                        <TableCell>{progress}%</TableCell>
+                        <TableCell>{formatDate(project.updatedAt || project.createdAt)}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredProjects.map((project: any) => {
                   const status = getProjectStatus(project, user?.id);
                   const canAccess = status === "not_started" || status === "in_progress" || user?.role === "admin";
 
                   return (
-                    <TableRow key={project.id}>
-                      <TableCell>
+                    <Card key={project.id}>
+                      <CardHeader className="relative">
+                        <div className="absolute top-4 right-4">
+                          {getStatusBadge(status)}
+                        </div>
                         {canAccess ? (
-                          <Link 
-                            to={`/projects/${project.id}`}
-                            className="text-primary hover:underline"
-                          >
-                            {project.name}
+                          <Link to={`/projects/${project.id}`}>
+                            <CardTitle className="text-lg hover:underline cursor-pointer">
+                              {project.name}
+                            </CardTitle>
                           </Link>
                         ) : (
-                          <span className="text-muted-foreground">{project.name}</span>
+                          <CardTitle className="text-lg text-muted-foreground">
+                            {project.name}
+                          </CardTitle>
                         )}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(status)}</TableCell>
-                      <TableCell>{formatDate(project.createdAt)}</TableCell>
-                      <TableCell>{project.deadline ? formatDate(project.deadline) : "-"}</TableCell>
-                    </TableRow>
+                        <CardDescription>{project.description}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-sm text-muted-foreground">
+                          Last updated: {formatDate(project.updatedAt || project.createdAt)}
+                        </div>
+                      </CardContent>
+                    </Card>
                   );
                 })}
-              </TableBody>
-            </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
