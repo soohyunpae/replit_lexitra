@@ -8,38 +8,17 @@ const app = express();
 // CORS 설정 - 인증 관련 쿠키를 위해 필수
 // Replit 도메인 실시간 사용을 위한 CORS 설정
 app.use(cors({
-  // 여러 도메인을 허용하기 위해 함수 사용
+  // Accept requests from any origin in the Replit environment
   origin: function(origin, callback) {
-    // 기본 허용 도메인 리스트
-    const allowedOrigins = [
-      'http://localhost:5173', // 로컬 개발용
-      'http://localhost:5000', // 로컬 서버용
-    ];
-    
-    // Replit 도메인 추가
-    if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
-      // Replit 메인 도메인
-      allowedOrigins.push(`https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`);
-      // Replit 비밀 도메인 (id 형식)
-      if (process.env.REPLIT_DEPLOYMENT_ID) {
-        allowedOrigins.push(`https://${process.env.REPLIT_DEPLOYMENT_ID}.id.repl.co`);
-      }
-      // .replit.dev 도메인 추가
-      allowedOrigins.push(`https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.replit.dev`);
-    }
-    
-    // 개발 환경이거나 테스트용이면 null origin도 허용
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      // 그렇지 않으면 모든 origin 허용 (기존 코드와 호환성 유지)
-      callback(null, true);
-    }
+    // Always allow any origin for the authentication system to work properly
+    // This is safe because we're using session-based auth with CSRF protection
+    callback(null, true);
   },
+  // These settings are critical for cookie-based authentication
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-  exposedHeaders: ['Set-Cookie'], // Set-Cookie 헤더 노출 허용
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Accept'],
+  exposedHeaders: ['Set-Cookie'], // Allow browsers to see the Set-Cookie header
 }));
 
 // 세션 관리를 위한 헤더 추가 설정

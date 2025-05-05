@@ -48,9 +48,9 @@ export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     name: 'lexitra.sid',
     secret: process.env.SESSION_SECRET || "lexitra-secret-key",
-    resave: false,
+    resave: true, // Changed to true to ensure session changes are always saved
     rolling: true, 
-    saveUninitialized: false,
+    saveUninitialized: true, // Changed to true to ensure cookie is set even for uninitialized sessions
     proxy: true,
     cookie: {
       secure: true, // HTTPS 필수 설정 (Replit 환경에서는 true로 설정해야 함)
@@ -230,6 +230,10 @@ export function setupAuth(app: Express) {
               cookie: req.session.cookie,
               headers: res.getHeaders()
             });
+            
+            // 추가 쿠키 옵션 설정을 위해 응답 헤더 추가
+            // Cross-Origin 경우 Access-Control-Expose-Headers가 필요함
+            res.header('Access-Control-Expose-Headers', 'Set-Cookie');
             
             // 클라이언트에게 응답
             return res.json(user);
