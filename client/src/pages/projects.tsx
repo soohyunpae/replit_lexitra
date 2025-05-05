@@ -617,7 +617,7 @@ export default function ProjectsPage() {
                           <div className="mt-2 space-y-2">
                             <p className="text-sm font-medium">Selected References:</p>
                             <div className="space-y-1.5">
-                              {Array.from(field.value).map((file: File, index: number) => (
+                              {field.value && Array.from(field.value as File[]).map((file: File, index: number) => (
                                 <div key={index} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
                                   <div className="flex items-center gap-2">
                                     <FileText className="h-4 w-4 text-muted-foreground" />
