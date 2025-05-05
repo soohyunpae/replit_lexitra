@@ -1,23 +1,23 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card";
 import {
-  Calendar, 
-  FileText, 
-  Plus, 
-  ArrowRight, 
-  Trash2, 
+  Calendar,
+  FileText,
+  Plus,
+  ArrowRight,
+  Trash2,
   ExternalLink,
   Clock,
   Search,
@@ -92,20 +92,21 @@ export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<string>('updatedAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [statusFilter, setStatusFilter] = useState<string>('all'); // Added status filter
   const { user } = useAuth();
-  
-  type Project = { 
-    id: number; 
-    name: string; 
-    description?: string; 
-    sourceLanguage: string; 
-    targetLanguage: string; 
+
+  type Project = {
+    id: number;
+    name: string;
+    description?: string;
+    sourceLanguage: string;
+    targetLanguage: string;
     status: 'Unclaimed' | 'Claimed' | 'Completed';
     claimedBy?: number;
     claimedAt?: string;
     completedAt?: string;
-    files?: any[]; 
-    createdAt: string; 
+    files?: any[];
+    createdAt: string;
     updatedAt?: string;
     deadline?: string;
     claimer?: {
@@ -113,11 +114,11 @@ export default function ProjectsPage() {
       username: string;
     };
   };
-  
+
   // Project statistics state for progress info
   const [projectStats, setProjectStats] = useState<{
-    [key: number]: { 
-      reviewedPercentage: number; 
+    [key: number]: {
+      reviewedPercentage: number;
       translatedPercentage: number;
     }
   }>({});
@@ -174,10 +175,15 @@ export default function ProjectsPage() {
     let filtered = projects;
     if (searchQuery) {
       const lowerQuery = searchQuery.toLowerCase();
-      filtered = projects.filter(project => 
+      filtered = projects.filter(project =>
         project.name.toLowerCase().includes(lowerQuery) ||
         (project.description && project.description.toLowerCase().includes(lowerQuery))
       );
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(project => project.status === statusFilter);
     }
 
     // Then sort
@@ -207,8 +213,8 @@ export default function ProjectsPage() {
     }
 
     return filtered;
-  }, [projects, searchQuery, sortField, sortDirection, projectStats]);
-  
+  }, [projects, searchQuery, sortField, sortDirection, projectStats, statusFilter]);
+
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
@@ -218,7 +224,7 @@ export default function ProjectsPage() {
       targetLanguage: "EN",
     },
   });
-  
+
   const createProject = useMutation({
     mutationFn: async (data: ProjectFormValues) => {
       const response = await apiRequest("POST", "/api/projects", data);
@@ -231,7 +237,7 @@ export default function ProjectsPage() {
       navigate(`/projects/${data.id}`);
     },
   });
-  
+
   // 프로젝트 클레임 mutation
   const claimProject = useMutation({
     mutationFn: async (projectId: number) => {
@@ -242,7 +248,7 @@ export default function ProjectsPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
     },
   });
-  
+
   function onSubmit(data: ProjectFormValues) {
     createProject.mutate(data);
   }
@@ -251,11 +257,11 @@ export default function ProjectsPage() {
   const renderSortButton = (field: string, label: string) => {
     const isActive = sortField === field;
     const direction = isActive ? sortDirection : null;
-    
+
     return (
-      <Button 
-        variant="ghost" 
-        className="font-medium px-2 hover:bg-transparent" 
+      <Button
+        variant="ghost"
+        className="font-medium px-2 hover:bg-transparent"
         onClick={() => handleSort(field)}
       >
         {label}
@@ -271,7 +277,7 @@ export default function ProjectsPage() {
       </Button>
     );
   };
-  
+
   // Function to render the empty state
   const renderEmptyState = () => (
     <div className="col-span-full flex flex-col items-center justify-center py-12">
@@ -283,7 +289,7 @@ export default function ProjectsPage() {
         Create your first translation project to get started. You can upload
         patent documents and translate them with GPT and Translation Memory.
       </p>
-      <Button 
+      <Button
         onClick={() => setIsDialogOpen(true)}
         className="flex items-center"
       >
@@ -292,7 +298,7 @@ export default function ProjectsPage() {
       </Button>
     </div>
   );
-  
+
   return (
     <MainLayout title="Projects">
       <main className="flex-1 container max-w-6xl px-4 py-8">
@@ -302,7 +308,7 @@ export default function ProjectsPage() {
             <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
             <p className="text-muted-foreground mt-1">Manage your translation projects</p>
           </div>
-          
+
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -317,7 +323,7 @@ export default function ProjectsPage() {
                   Set up a new translation project with source and target languages.
                 </DialogDescription>
               </DialogHeader>
-              
+
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
@@ -333,7 +339,7 @@ export default function ProjectsPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="description"
@@ -341,7 +347,7 @@ export default function ProjectsPage() {
                       <FormItem>
                         <FormLabel>Description (Optional)</FormLabel>
                         <FormControl>
-                          <Textarea 
+                          <Textarea
                             placeholder="Brief description of the project"
                             className="resize-none"
                             {...field}
@@ -351,7 +357,7 @@ export default function ProjectsPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -359,8 +365,8 @@ export default function ProjectsPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Source Language</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
+                          <Select
+                            onValueChange={field.onChange}
                             defaultValue={field.value}
                           >
                             <FormControl>
@@ -379,15 +385,15 @@ export default function ProjectsPage() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="targetLanguage"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Target Language</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
+                          <Select
+                            onValueChange={field.onChange}
                             defaultValue={field.value}
                           >
                             <FormControl>
@@ -407,10 +413,10 @@ export default function ProjectsPage() {
                       )}
                     />
                   </div>
-                  
+
                   <DialogFooter>
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       disabled={createProject.isPending}
                     >
                       {createProject.isPending ? "Creating..." : "Create Project"}
@@ -421,7 +427,7 @@ export default function ProjectsPage() {
             </DialogContent>
           </Dialog>
         </div>
-        
+
         {/* Search and Filters */}
         <div className="flex flex-col gap-4 sm:flex-row justify-between items-center mb-6">
           <div className="relative w-full max-w-md">
@@ -433,7 +439,7 @@ export default function ProjectsPage() {
               className="pl-9 w-full"
             />
           </div>
-          
+
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <span className="text-sm text-muted-foreground">View:</span>
@@ -456,9 +462,20 @@ export default function ProjectsPage() {
                 </Button>
               </div>
             </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Projects</SelectItem>
+                <SelectItem value="Unclaimed">Unclaimed</SelectItem>
+                <SelectItem value="Claimed">Claimed</SelectItem>
+                <SelectItem value="Completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
-        
+
         {/* Loading State */}
         {isLoading && (
           viewMode === 'card' ? (
@@ -489,10 +506,10 @@ export default function ProjectsPage() {
             </div>
           )
         )}
-        
+
         {/* Empty State */}
         {!isLoading && filteredAndSortedProjects.length === 0 && renderEmptyState()}
-        
+
         {/* Card View */}
         {!isLoading && filteredAndSortedProjects.length > 0 && viewMode === 'card' && (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -510,14 +527,14 @@ export default function ProjectsPage() {
                   statusBadgeVariant = "default";
                   break;
               }
-              
+
               // Determine if current user can claim this project
               const canClaim = user && project.status === "Unclaimed";
               const isClaimedByUser = user && project.status === "Claimed" && project.claimedBy === user.id;
-              
+
               return (
-                <Card 
-                  key={project.id} 
+                <Card
+                  key={project.id}
                   className="overflow-hidden group hover:shadow-md transition-all duration-200 border-border hover:border-primary/30 relative"
                 >
                   <div className="h-1.5 w-full bg-gradient-to-r from-primary to-primary/70"></div>
@@ -528,14 +545,12 @@ export default function ProjectsPage() {
                       {project.status === "Claimed" && !isClaimedByUser && project.claimer && ` (by ${project.claimer.username})`}
                     </Badge>
                   </div>
-                  <div className="cursor-pointer" onClick={() => navigate(`/projects/${project.id}`)}>
+                  <Link to={`/projects/${project.id}`} className="cursor-pointer">
                     <CardHeader className="pb-2 pt-4">
-                      <div className="mb-1">
-                        <CardTitle className="truncate group-hover:text-primary transition-colors">
-                          {project.name}
-                        </CardTitle>
-                      </div>
-                      <CardDescription className="flex items-center gap-1 mt-1.5">
+                      <CardTitle className="truncate group-hover:text-primary transition-colors">
+                        {project.name}
+                      </CardTitle>
+                      <CardDescription className="flex items-center gap-1 mt-1.5 line-clamp-2">
                         <div className="flex items-center gap-1 bg-accent/50 px-2 py-0.5 rounded-full text-xs">
                           <span className="font-medium">{project.sourceLanguage}</span>
                           <ArrowRight className="h-3 w-3" />
@@ -545,7 +560,7 @@ export default function ProjectsPage() {
                     </CardHeader>
                     <CardContent className="pb-2">
                       <div>
-                        <CombinedProgress 
+                        <CombinedProgress
                           reviewedPercentage={projectStats[project.id]?.reviewedPercentage || 0}
                           translatedPercentage={projectStats[project.id]?.translatedPercentage || 0}
                           height="h-2"
@@ -556,7 +571,7 @@ export default function ProjectsPage() {
                         <span>Reviewed: {projectStats[project.id]?.reviewedPercentage || 0}%</span>
                       </div>
                     </CardContent>
-                  </div>
+                  </Link>
                   <CardFooter className="pt-2 flex items-center justify-between border-t border-border/30">
                     <div className="text-xs text-muted-foreground flex items-center">
                       <Clock className="h-3.5 w-3.5 mr-1" />
@@ -564,8 +579,8 @@ export default function ProjectsPage() {
                     </div>
                     <div className="flex gap-2">
                       {canClaim && (
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -577,10 +592,13 @@ export default function ProjectsPage() {
                         </Button>
                       )}
                       {isClaimedByUser && (
-                        <Button 
+                        <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => navigate(`/projects/${project.id}`)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/projects/${project.id}`);
+                          }}
                         >
                           Continue
                         </Button>
@@ -592,7 +610,7 @@ export default function ProjectsPage() {
             })}
           </div>
         )}
-        
+
         {/* List View */}
         {!isLoading && filteredAndSortedProjects.length > 0 && viewMode === 'list' && (
           <div className="rounded-md border overflow-hidden">
@@ -612,7 +630,7 @@ export default function ProjectsPage() {
               <TableBody>
                 {filteredAndSortedProjects.map((project) => {
                   const stats = projectStats[project.id] || { translatedPercentage: 0, reviewedPercentage: 0 };
-                  
+
                   // Status badge color and text
                   let statusBadgeVariant: "default" | "outline" | "secondary" | "destructive" | null = "default";
                   switch (project.status) {
@@ -626,13 +644,13 @@ export default function ProjectsPage() {
                       statusBadgeVariant = "default";
                       break;
                   }
-                  
+
                   // Determine if current user can claim this project
                   const canClaim = user && project.status === "Unclaimed";
                   const isClaimedByUser = user && project.status === "Claimed" && project.claimedBy === user.id;
-                  
+
                   return (
-                    <TableRow 
+                    <TableRow
                       key={project.id}
                       className="group hover:bg-muted/40 cursor-pointer"
                     >
@@ -653,7 +671,7 @@ export default function ProjectsPage() {
                       </TableCell>
                       <TableCell onClick={() => navigate(`/projects/${project.id}`)}>
                         <div className="flex flex-col gap-1.5">
-                          <CombinedProgress 
+                          <CombinedProgress
                             reviewedPercentage={stats.reviewedPercentage}
                             translatedPercentage={stats.translatedPercentage}
                             height="h-2.5"
@@ -685,8 +703,8 @@ export default function ProjectsPage() {
                       <TableCell>
                         <div className="flex gap-2 justify-end">
                           {canClaim && (
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -698,7 +716,7 @@ export default function ProjectsPage() {
                             </Button>
                           )}
                           {isClaimedByUser && (
-                            <Button 
+                            <Button
                               size="sm"
                               variant="outline"
                               onClick={(e) => {
