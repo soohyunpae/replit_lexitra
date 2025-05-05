@@ -1,21 +1,61 @@
 import { db } from "./index";
 import * as schema from "@shared/schema";
+import { scrypt, randomBytes } from "crypto";
+import { promisify } from "util";
+
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
 
 async function seed() {
   try {
-    // Create a demo user
+    // Create test users with appropriate roles
+    const testUsers = [
+      {
+        username: "admin",
+        password: await hashPassword("admin123"),
+        role: "admin"
+      },
+      {
+        username: "test",
+        password: await hashPassword("password"),
+        role: "user"
+      }
+    ];
+
+    // Insert users and handle conflicts
     const [user] = await db.insert(schema.users)
-      .values({
-        username: "demo",
-        password: "password" // In production, this would be hashed
-      })
+      .values(testUsers)
       .returning()
       .onConflictDoNothing();
 
     if (!user) {
-      console.log("User already exists, skipping...");
-      return;
+      console.log("Users already exist, skipping user creation...");
+      
+      // Fetch an existing user for creating sample projects
+      const existingUser = await db.query.users.findFirst();
+      if (!existingUser) {
+        console.log("No users found in database. Cannot create sample data.");
+        return;
+      }
+      
+      // Use the existing user for further seeding
+      return seedSampleData(existingUser.id);
     }
+    
+    // If we created new users, seed the sample data with the first user's ID
+    return seedSampleData(user.id);
+  } catch (error) {
+    console.error("Error seeding database:", error);
+  }
+}
+
+async function seedSampleData(userId: number) {
+  try {
 
     // Create a demo project
     const [project] = await db.insert(schema.projects)
@@ -24,7 +64,7 @@ async function seed() {
         description: "Korean to English patent translation",
         sourceLanguage: "KO",
         targetLanguage: "EN",
-        userId: user.id
+        userId: userId
       })
       .returning();
 
