@@ -9,6 +9,18 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { formatDate, formatFileSize } from "@/lib/utils";
 import { TranslationUnit } from "@/types";
+import { File as FileType } from "@shared/schema";
+import { 
+  ArrowRight, 
+  FileText, 
+  X, 
+  Plus, 
+  Paperclip, 
+  Upload, 
+  Download,
+  PlusCircle,
+  File 
+} from "lucide-react";
 import { 
   Card, 
   CardContent, 
@@ -18,7 +30,6 @@ import {
   CardFooter
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Upload, Download, File, FileText, Paperclip, PlusCircle, X, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -81,6 +92,17 @@ export default function Project() {
   });
   
   // 프로젝트 로드 후 노트와 참조파일 가져오기
+  // Separate work files from reference files
+  const workFiles = useMemo(() => {
+    if (!project?.files) return [];
+    return project.files.filter((file: FileType) => !file.type || file.type === 'work');
+  }, [project?.files]);
+
+  const referenceFiles = useMemo(() => {
+    if (!project?.files) return [];
+    return project.files.filter((file: FileType) => file.type === 'reference');
+  }, [project?.files]);
+
   useEffect(() => {
     if (project) {
       // 노트 가져오기
@@ -88,7 +110,7 @@ export default function Project() {
         setNote(project.notes);
       }
       
-      // 참조파일 가져오기
+      // 참조파일 가져오기 (기존 JSON 참조 방식)
       if (project.references) {
         try {
           const parsedReferences = JSON.parse(project.references);
@@ -618,7 +640,51 @@ export default function Project() {
             </Card>
           </div>
           
-          {/* Project file section - No Download button as per file management policy */}
+          {/* Project File Section (work files) */}
+          <Card className="mb-6">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">
+                Work Files
+              </CardTitle>
+              <CardDescription>
+                Files in this project that need translation
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col space-y-4">
+                {workFiles.length > 0 ? (
+                  <div className="space-y-2">
+                    {workFiles.map((file: FileType, index: number) => (
+                      <div key={`work-${index}`} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">{file.name}</span>
+                          <span className="text-xs text-muted-foreground ml-2">
+                            {file.content ? `${file.content.length} chars` : '0 chars'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {fileStats && fileStats[file.id] && (
+                            <div className="flex items-center">
+                              <Progress value={fileStats[file.id].percentage} className="w-24 h-2 mr-2" />
+                              <span className="text-xs">{fileStats[file.id].percentage}%</span>
+                            </div>
+                          )}
+                          <Button size="sm" variant="ghost">
+                            <ArrowRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground">
+                    No work files available
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
           
           {/* References Section */}
           <Card className="mb-6">
@@ -632,10 +698,30 @@ export default function Project() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col space-y-4">
-                {/* Display saved references */}
+                {/* Display saved reference files (from files table with type='reference') */}
+                {referenceFiles.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Reference Files</h3>
+                    {referenceFiles.map((file: FileType, index: number) => (
+                      <div key={`file-ref-${index}`} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">{file.name}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-xs text-muted-foreground mr-2">
+                            {new Date(file.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Display legacy saved references from JSON field (for backward compatibility) */}
                 {savedReferences.length > 0 && (
                   <div className="space-y-2">
-                    <h3 className="text-sm font-medium">Saved References</h3>
+                    <h3 className="text-sm font-medium">Legacy References</h3>
                     {savedReferences.map((file, index) => (
                       <div key={`saved-${index}`} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
                         <div className="flex items-center gap-2">
