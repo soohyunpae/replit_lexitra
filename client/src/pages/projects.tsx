@@ -516,15 +516,20 @@ export default function ProjectsPage() {
             {filteredAndSortedProjects.map((project) => {
               // Status badge color and text
               let statusBadgeVariant: "default" | "outline" | "secondary" | "destructive" | null = "default";
+              let statusColor = "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400";
+              
               switch (project.status) {
                 case "Unclaimed":
                   statusBadgeVariant = "outline";
+                  statusColor = "text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-300";
                   break;
                 case "Claimed":
                   statusBadgeVariant = "secondary";
+                  statusColor = "text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400";
                   break;
                 case "Completed":
                   statusBadgeVariant = "default";
+                  statusColor = "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400";
                   break;
               }
 
@@ -539,11 +544,11 @@ export default function ProjectsPage() {
                 >
                   <div className="h-1.5 w-full bg-gradient-to-r from-primary to-primary/70"></div>
                   <div className="absolute top-2 right-2">
-                    <Badge variant={statusBadgeVariant} className="text-xs font-normal">
+                    <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusColor}`}>
                       {project.status}
                       {isClaimedByUser && " (by you)"}
                       {project.status === "Claimed" && !isClaimedByUser && project.claimer && ` (by ${project.claimer.username})`}
-                    </Badge>
+                    </span>
                   </div>
                   <Link to={`/projects/${project.id}`} className="cursor-pointer">
                     <CardHeader className="pb-2 pt-4">
@@ -633,15 +638,20 @@ export default function ProjectsPage() {
 
                   // Status badge color and text
                   let statusBadgeVariant: "default" | "outline" | "secondary" | "destructive" | null = "default";
+                  let statusColor = "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400";
+                  
                   switch (project.status) {
                     case "Unclaimed":
                       statusBadgeVariant = "outline";
+                      statusColor = "text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-300";
                       break;
                     case "Claimed":
                       statusBadgeVariant = "secondary";
+                      statusColor = "text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400";
                       break;
                     case "Completed":
                       statusBadgeVariant = "default";
+                      statusColor = "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400";
                       break;
                   }
 
@@ -663,11 +673,11 @@ export default function ProjectsPage() {
                         </div>
                       </TableCell>
                       <TableCell onClick={() => navigate(`/projects/${project.id}`)}>
-                        <Badge variant={statusBadgeVariant} className="text-xs font-normal">
+                        <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusColor}`}>
                           {project.status}
                           {isClaimedByUser && " (by you)"}
                           {project.status === "Claimed" && !isClaimedByUser && project.claimer && ` (by ${project.claimer.username})`}
-                        </Badge>
+                        </span>
                       </TableCell>
                       <TableCell onClick={() => navigate(`/projects/${project.id}`)}>
                         <div className="flex flex-col gap-1.5">
