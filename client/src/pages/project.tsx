@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useLocation, useRoute } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/use-auth";
@@ -50,6 +50,32 @@ export default function Project() {
   const [references, setReferences] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // Get project ID from URL params
+  const projectId = isMatch && params ? parseInt(params.id) : null;
+  
+  // Get project data
+  const { data: project, isLoading } = useQuery<any>({
+    queryKey: [`/api/projects/${projectId}`],
+    enabled: !!projectId,
+  });
+  
+  // Get all TM entries to count TM matches
+  const { data: tmEntries } = useQuery<any>({
+    queryKey: ["/api/tm/all"],
+  });
+  
+  // Get all glossary terms
+  const { data: glossaryTerms } = useQuery<any>({
+    queryKey: ["/api/glossary/all"],
+  });
+  
+  // 프로젝트 로드 후 노트 가져오기
+  useEffect(() => {
+    if (project?.notes) {
+      setNote(project.notes);
+    }
+  }, [project]);
+  
   // Notes 저장 mutation
   const saveNotes = useMutation({
     mutationFn: async () => {
@@ -75,13 +101,16 @@ export default function Project() {
   // Reference 파일 업로드 mutation
   const uploadReferences = useMutation({
     mutationFn: async (files: File[]) => {
-      const formData = new FormData();
-      files.forEach(file => formData.append('files', file));
+      // 현재 우리 서버에서는 실제 파일 업로드 처리 대신 메타데이터만 전송
+      // 파일 이름과 크기를 서버에 전송합니다
+      const fileMetadata = files.map(file => ({
+        name: file.name,
+        size: file.size,
+        type: file.type
+      }));
       
-      const response = await fetch(`/api/projects/${projectId}/references`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
+      const response = await apiRequest("POST", `/api/projects/${projectId}/references`, {
+        files: fileMetadata
       });
       return response.json();
     },
@@ -101,24 +130,6 @@ export default function Project() {
         variant: "destructive"
       });
     }
-  });
-  
-  // Get project ID from URL params
-  const projectId = isMatch && params ? parseInt(params.id) : null;
-  
-  const { data: project, isLoading } = useQuery<any>({
-    queryKey: [`/api/projects/${projectId}`],
-    enabled: !!projectId,
-  });
-  
-  // Get all TM entries to count TM matches
-  const { data: tmEntries } = useQuery<any>({
-    queryKey: ["/api/tm/all"],
-  });
-  
-  // Get all glossary terms
-  const { data: glossaryTerms } = useQuery<any>({
-    queryKey: ["/api/glossary/all"],
   });
   
   // Get all segments for all files in this project
