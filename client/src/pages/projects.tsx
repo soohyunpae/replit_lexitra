@@ -618,8 +618,6 @@ export default function ProjectsPage() {
                   <div className="absolute top-2 right-2">
                     <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusColor}`}>
                       {displayStatus}
-                      {isClaimedByUser && " (by you)"}
-                      {project.status === "Claimed" && !isClaimedByUser && project.claimer && ` (by ${project.claimer.username})`}
                     </span>
                   </div>
                   <Link to={`/projects/${project.id}`} className="cursor-pointer">
@@ -681,6 +679,7 @@ export default function ProjectsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[80px]">{renderSortButton('id', 'Project ID')}</TableHead>
                   <TableHead className="w-[220px]">{renderSortButton('name', 'Project Name')}</TableHead>
                   <TableHead className="w-[120px]">Language Pair</TableHead>
                   <TableHead className="w-[120px]">{renderSortButton('status', 'Status')}</TableHead>
@@ -688,7 +687,6 @@ export default function ProjectsPage() {
                   <TableHead className="w-[120px]">{renderSortButton('createdAt', 'Created')}</TableHead>
                   <TableHead className="w-[120px]">{renderSortButton('updatedAt', 'Last Updated')}</TableHead>
                   <TableHead className="w-[120px]">{renderSortButton('deadline', 'Deadline')}</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -729,20 +727,20 @@ export default function ProjectsPage() {
                     <TableRow
                       key={project.id}
                       className="group hover:bg-muted/40 cursor-pointer"
+                      onClick={() => navigate(`/projects/${project.id}`)}
                     >
-                      <TableCell className="font-medium text-primary hover:underline" onClick={() => navigate(`/projects/${project.id}`)}>{project.name}</TableCell>
-                      <TableCell onClick={() => navigate(`/projects/${project.id}`)}>
+                      <TableCell className="font-medium">{project.id}</TableCell>
+                      <TableCell className="font-medium text-primary hover:underline">{project.name}</TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-1 bg-accent/50 px-2 py-0.5 rounded-full text-xs w-fit">
                           <span className="font-medium">{project.sourceLanguage}</span>
                           <ArrowRight className="h-3 w-3" />
                           <span className="font-medium">{project.targetLanguage}</span>
                         </div>
                       </TableCell>
-                      <TableCell onClick={() => navigate(`/projects/${project.id}`)}>
+                      <TableCell>
                         <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusColor}`}>
                           {getDisplayStatus(project)}
-                          {isClaimedByUser && " (by you)"}
-                          {project.status === "Claimed" && !isClaimedByUser && project.claimer && ` (by ${project.claimer.username})`}
                         </span>
                       </TableCell>
                       <TableCell onClick={() => navigate(`/projects/${project.id}`)}>
@@ -759,39 +757,15 @@ export default function ProjectsPage() {
                         </div>
                       </TableCell>
                       <TableCell onClick={() => navigate(`/projects/${project.id}`)}>
-                        <div className="flex items-center">
-                          <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                          <span className="text-sm">{new Date(project.createdAt).toLocaleString()}</span>
-                        </div>
+                        <span className="text-sm">{new Date(project.createdAt).toLocaleString()}</span>
                       </TableCell>
                       <TableCell onClick={() => navigate(`/projects/${project.id}`)}>
-                        <div className="flex items-center">
-                          <Clock className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                          <span className="text-sm">{project.updatedAt ? new Date(project.updatedAt).toLocaleString() : '-'}</span>
-                        </div>
+                        <span className="text-sm">{project.updatedAt ? new Date(project.updatedAt).toLocaleString() : '-'}</span>
                       </TableCell>
                       <TableCell onClick={() => navigate(`/projects/${project.id}`)}>
-                        <div className="flex items-center">
-                          <Clock className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                          <span className="text-sm">{project.deadline ? new Date(project.deadline).toLocaleString() : 'Not set'}</span>
-                        </div>
+                        <span className="text-sm">{project.deadline ? new Date(project.deadline).toLocaleString() : 'Not set'}</span>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2 justify-end">
-                          {/* 프로젝트 상세 페이지 뷰 버튼만 제공 */}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/projects/${project.id}`);
-                            }}
-                          >
-                            <ExternalLink className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
-                        </div>
-                      </TableCell>
+
                     </TableRow>
                   );
                 })}
