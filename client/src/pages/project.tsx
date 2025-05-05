@@ -498,6 +498,13 @@ export default function Project() {
                       <span>Default TM</span>
                     </div>
                   </div>
+                  
+                  <div className="grid grid-cols-2 gap-1">
+                    <div className="text-muted-foreground">Files:</div>
+                    <div className="font-medium">
+                      <span>{project.files?.length || 0} file(s)</span>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

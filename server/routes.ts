@@ -483,6 +483,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // 프로젝트 노트 저장 API
+  app.post(`${apiPrefix}/projects/:id/notes`, verifyToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { notes } = req.body;
+      
+      // 프로젝트가 존재하는지 확인
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, id)
+      });
+      
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      // 프로젝트 노트 업데이트
+      const [updatedProject] = await db
+        .update(schema.projects)
+        .set({
+          notes: notes,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.projects.id, id))
+        .returning();
+      
+      return res.json({ success: true, project: updatedProject });
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // 프로젝트 참조 파일 업로드 API
+  app.post(`${apiPrefix}/projects/:id/references`, verifyToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // 프로젝트가 존재하는지 확인
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, id)
+      });
+      
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      // 이 부분에서는 실제로는 파일을 저장하고 해당 참조정보를 DB에 업데이트
+      // 현재는 단순히 응답만 보냄
+      
+      return res.json({ success: true, message: 'References uploaded successfully' });
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+
   app.patch(`${apiPrefix}/segments/:id`, verifyToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);

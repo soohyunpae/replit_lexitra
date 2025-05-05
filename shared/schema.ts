@@ -31,6 +31,7 @@ export const projects = pgTable("projects", {
   claimedAt: timestamp("claimed_at"),
   completedAt: timestamp("completed_at"),
   deadline: timestamp("deadline"),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   userId: integer("user_id").references(() => users.id),
