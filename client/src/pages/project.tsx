@@ -45,9 +45,18 @@ export default function Project() {
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [showReopenDialog, setShowReopenDialog] = useState(false);
   
+  // 참조 파일 타입 정의
+  interface SavedReference {
+    name: string;
+    size: number;
+    type: string;
+    addedAt: string;
+  }
+  
   // References & Notes 상태 관리
   const [note, setNote] = useState("");
   const [references, setReferences] = useState<File[]>([]);
+  const [savedReferences, setSavedReferences] = useState<SavedReference[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Get project ID from URL params
@@ -69,10 +78,28 @@ export default function Project() {
     queryKey: ["/api/glossary/all"],
   });
   
-  // 프로젝트 로드 후 노트 가져오기
+  // 프로젝트 로드 후 노트와 참조파일 가져오기
   useEffect(() => {
-    if (project?.notes) {
-      setNote(project.notes);
+    if (project) {
+      // 노트 가져오기
+      if (project.notes) {
+        setNote(project.notes);
+      }
+      
+      // 참조파일 가져오기
+      if (project.references) {
+        try {
+          const parsedReferences = JSON.parse(project.references);
+          if (Array.isArray(parsedReferences)) {
+            setSavedReferences(parsedReferences);
+          }
+        } catch (error) {
+          console.error("Failed to parse references:", error);
+          setSavedReferences([]);
+        }
+      } else {
+        setSavedReferences([]);
+      }
     }
   }, [project]);
   
@@ -609,13 +636,41 @@ export default function Project() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col space-y-4">
-                {references.length > 0 ? (
+                {/* Display saved references */}
+                {savedReferences.length > 0 && (
                   <div className="space-y-2">
-                    {references.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
+                    <h3 className="text-sm font-medium">Saved References</h3>
+                    {savedReferences.map((file, index) => (
+                      <div key={`saved-${index}`} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm">{file.name}</span>
+                          <span className="text-xs text-muted-foreground ml-2">
+                            {formatFileSize(file.size)}
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-xs text-muted-foreground mr-2">
+                            {new Date(file.addedAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Display new references being uploaded */}
+                {references.length > 0 ? (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">New References</h3>
+                    {references.map((file, index) => (
+                      <div key={`new-${index}`} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">{file.name}</span>
+                          <span className="text-xs text-muted-foreground ml-2">
+                            {formatFileSize(file.size)}
+                          </span>
                         </div>
                         <Button 
                           variant="ghost" 
@@ -625,7 +680,7 @@ export default function Project() {
                             setReferences(references.filter((_, i) => i !== index));
                           }}
                         >
-                          <File className="h-4 w-4" />
+                          <X className="h-4 w-4" />
                         </Button>
                       </div>
                     ))}
@@ -645,7 +700,7 @@ export default function Project() {
                       </Button>
                     </div>
                   </div>
-                ) : (
+                ) : savedReferences.length === 0 && (
                   <div 
                     className="text-center py-6 border border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors"
                     onClick={() => fileInputRef.current?.click()}
@@ -665,6 +720,18 @@ export default function Project() {
                       Click to upload reference files (glossaries, style guides, etc.)
                     </p>
                   </div>
+                )}
+                
+                {/* Add more references button when there are already references */}
+                {(savedReferences.length > 0 && references.length === 0) && (
+                  <Button 
+                    variant="outline" 
+                    className="gap-2"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add References
+                  </Button>
                 )}
                 
                 <input
