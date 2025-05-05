@@ -1508,6 +1508,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return handleApiError(res, error);
     }
   });
+  
+  // Add new TB resource
+  app.post(`${apiPrefix}/glossary/resource`, verifyToken, async (req, res) => {
+    try {
+      const resourceSchema = z.object({
+        name: z.string().min(2),
+        description: z.string().optional(),
+        defaultSourceLanguage: z.string().min(2),
+        defaultTargetLanguage: z.string().min(2),
+        domain: z.string().optional(),
+        isActive: z.boolean().default(true),
+      });
+      
+      const data = resourceSchema.parse(req.body);
+      
+      const [resource] = await db.insert(schema.tbResources).values({
+        name: data.name,
+        description: data.description || '',
+        defaultSourceLanguage: data.defaultSourceLanguage,
+        defaultTargetLanguage: data.defaultTargetLanguage,
+        domain: data.domain || '',
+        isActive: data.isActive,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).returning();
+      
+      return res.status(201).json(resource);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // Delete TB resource
+  app.delete(`${apiPrefix}/glossary/resource/:id`, verifyToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Check if resource exists
+      const resource = await db.query.tbResources.findFirst({
+        where: eq(schema.tbResources.id, id)
+      });
+      
+      if (!resource) {
+        return res.status(404).json({ message: 'TB resource not found' });
+      }
+      
+      // Delete the resource
+      await db.delete(schema.tbResources).where(eq(schema.tbResources.id, id));
+      
+      return res.json({ message: 'TB resource deleted successfully' });
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
 
   // Get all glossary terms (for management page) with optional resourceId filter
   app.get(`${apiPrefix}/glossary/all`, verifyToken, async (req, res) => {

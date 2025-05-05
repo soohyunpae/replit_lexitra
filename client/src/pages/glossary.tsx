@@ -76,10 +76,14 @@ export default function GlossaryPage() {
 
   // Get all glossary terms
   const { data: glossaryData, isLoading, error } = useQuery({
-    queryKey: ["/api/glossary/all"],
+    queryKey: ["/api/glossary/all", resourceFilter],
     queryFn: async () => {
       try {
-        const res = await apiRequest("GET", "/api/glossary/all");
+        let url = "/api/glossary/all";
+        if (resourceFilter) {
+          url += `?resourceId=${resourceFilter}`;
+        }
+        const res = await apiRequest("GET", url);
         return res.json();
       } catch (error) {
         console.error("Error fetching glossary terms:", error);
@@ -360,6 +364,37 @@ export default function GlossaryPage() {
                           
                           <FormField
                             control={form.control}
+                            name="resourceId"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>TB Resource</FormLabel>
+                                <Select
+                                  onValueChange={(value) => {
+                                    field.onChange(value === "none" ? undefined : Number(value))
+                                  }}
+                                  value={field.value ? String(field.value) : "none"}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select TB resource" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="none">None</SelectItem>
+                                    {tbResources.map((resource: any) => (
+                                      <SelectItem key={resource.id} value={String(resource.id)}>
+                                        {resource.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
                             name="source"
                             render={({ field }) => (
                               <FormItem>
@@ -446,6 +481,23 @@ export default function GlossaryPage() {
                               <SelectItem value="all_target_languages">All languages</SelectItem>
                               {languages.target.map((lang) => (
                                 <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          
+                          <Select
+                            value={resourceFilter ? String(resourceFilter) : "all_resources"}
+                            onValueChange={(value) => setResourceFilter(
+                              value === "all_resources" ? undefined : Number(value)
+                            )}
+                          >
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="TB Resource" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all_resources">All resources</SelectItem>
+                              {tbResources.map((resource: any) => (
+                                <SelectItem key={resource.id} value={String(resource.id)}>{resource.name}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -688,7 +740,12 @@ export default function GlossaryPage() {
                                 <Button variant="ghost" size="icon">
                                   <Pencil className="h-4 w-4" />
                                 </Button>
-                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90 hover:bg-destructive/10">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                                  onClick={() => handleDeleteResource(resource.id)}
+                                >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
