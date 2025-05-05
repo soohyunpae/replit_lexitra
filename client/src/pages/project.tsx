@@ -296,17 +296,17 @@ export default function Project() {
                 </Button>
               )}
               
-              {/* 릴리스 확인 다이얼로그 */}
+              {/* Release confirmation dialog */}
               <Dialog open={showReleaseDialog} onOpenChange={setShowReleaseDialog}>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>프로젝트 릴리스 확인</DialogTitle>
+                    <DialogTitle>Confirm Release</DialogTitle>
                     <DialogDescription>
-                      프로젝트를 릴리스하면 다른 사용자들이 프로젝트를 클레임할 수 있게 됩니다. 정말 프로젝트를 릴리스하시겠습니까?
+                      Releasing the project will allow other users to claim it. Are you sure you want to release this project?
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setShowReleaseDialog(false)}>취소</Button>
+                    <Button variant="outline" onClick={() => setShowReleaseDialog(false)}>Cancel</Button>
                     <Button 
                       variant="default" 
                       className="border-yellow-500 bg-yellow-500 hover:bg-yellow-600"
@@ -315,23 +315,23 @@ export default function Project() {
                         releaseProject.mutate();
                       }}
                     >
-                      릴리스
+                      Release
                     </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
               
-              {/* 완료 확인 다이얼로그 */}
+              {/* Complete confirmation dialog */}
               <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>프로젝트 완료 확인</DialogTitle>
+                    <DialogTitle>Confirm Complete</DialogTitle>
                     <DialogDescription>
-                      프로젝트를 완료로 표시하시겠습니까? 완료된 프로젝트는 더 이상 편집할 수 없습니다.
+                      Are you sure you want to mark this project as completed? Completed projects cannot be edited further.
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setShowCompleteDialog(false)}>취소</Button>
+                    <Button variant="outline" onClick={() => setShowCompleteDialog(false)}>Cancel</Button>
                     <Button 
                       variant="default" 
                       className="bg-green-600 hover:bg-green-700"
@@ -340,23 +340,23 @@ export default function Project() {
                         completeProject.mutate();
                       }}
                     >
-                      완료
+                      Complete
                     </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
               
-              {/* 재개 확인 다이얼로그 */}
+              {/* Reopen confirmation dialog */}
               <Dialog open={showReopenDialog} onOpenChange={setShowReopenDialog}>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>프로젝트 재개 확인</DialogTitle>
+                    <DialogTitle>Confirm Reopen</DialogTitle>
                     <DialogDescription>
-                      완료된 프로젝트를 다시 작업 중 상태로 변경하시겠습니까?
+                      Are you sure you want to reopen this completed project and change its status back to in progress?
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setShowReopenDialog(false)}>취소</Button>
+                    <Button variant="outline" onClick={() => setShowReopenDialog(false)}>Cancel</Button>
                     <Button 
                       variant="default" 
                       className="bg-blue-600 hover:bg-blue-700"
@@ -365,7 +365,7 @@ export default function Project() {
                         reopenProject.mutate();
                       }}
                     >
-                      재개
+                      Reopen
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -526,14 +526,14 @@ export default function Project() {
             </Button>
           </div>
           
-          {/* References 섹션 */}
+          {/* References Section */}
           <Card className="mb-6">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">
                 References
               </CardTitle>
               <CardDescription>
-                번역 작업에 도움이 되는 참조 문서를 업로드하세요
+                Upload reference documents to help with translation
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -564,9 +564,9 @@ export default function Project() {
                     <div className="mx-auto h-10 w-10 rounded-full bg-accent flex items-center justify-center mb-3">
                       <Paperclip className="h-5 w-5 text-muted-foreground" />
                     </div>
-                    <h3 className="text-md font-medium mb-1">참조 파일이 없습니다</h3>
+                    <h3 className="text-md font-medium mb-1">No reference files</h3>
                     <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
-                      번역을 도울 참조 파일을 업로드하세요. 용어집, 스타일 가이드, 이전 번역 등 유용한 자료를 첨부할 수 있습니다.
+                      Upload reference files to assist with translation. You can attach glossaries, style guides, previous translations, or other useful materials.
                     </p>
                   </div>
                 )}
@@ -581,14 +581,14 @@ export default function Project() {
                         const newFiles = Array.from(e.target.files);
                         setReferences([...references, ...newFiles]);
                         
-                        // 파일 선택 후 input 초기화
+                        // Reset input field after selection
                         if (fileInputRef.current) {
                           fileInputRef.current.value = '';
                         }
                         
                         toast({
-                          title: "참조 파일 추가됨",
-                          description: `${newFiles.length}개의 파일이 추가되었습니다.`,
+                          title: "Reference files added",
+                          description: `${newFiles.length} file(s) added successfully.`,
                         });
                       }
                     }}
@@ -600,26 +600,26 @@ export default function Project() {
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <PlusCircle className="h-4 w-4" />
-                    참조 파일 추가
+                    Add Reference Files
                   </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
           
-          {/* Notes 섹션 */}
+          {/* Notes Section */}
           <Card className="mb-6">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">
                 Notes
               </CardTitle>
               <CardDescription>
-                프로젝트에 대한 메모나 지침을 기록하세요
+                Record notes or instructions for this project
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Textarea
-                placeholder="번역 시 주의사항, 특별한 요구 사항, 용어 사용 지침 등을 기록하세요..."
+                placeholder="Document translation guidelines, special requirements, terminology instructions..."
                 className="min-h-24"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
@@ -631,12 +631,12 @@ export default function Project() {
                 className="gap-2"
                 onClick={() => {
                   toast({
-                    title: "노트가 저장되었습니다",
-                    description: "프로젝트 노트가 성공적으로 저장되었습니다."
+                    title: "Notes saved",
+                    description: "Project notes have been saved successfully."
                   });
                 }}
               >
-                노트 저장
+                Save Notes
               </Button>
             </CardFooter>
           </Card>
