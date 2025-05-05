@@ -37,6 +37,9 @@ async function comparePasswords(supplied: string, stored: string) {
 export function setupAuth(app: Express) {
   const PostgresSessionStore = connectPgSimple(session);
   
+  // 세션 정리 주기 설정 (1일)
+  const sessionCleanupInterval = 1000 * 60 * 60 * 24;
+  
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "lexitra-secret-key",
     resave: false,
@@ -45,12 +48,16 @@ export function setupAuth(app: Express) {
       secure: true, // SameSite=None을 사용할 때는 secure가 반드시 true여야 함
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       httpOnly: true,
-      sameSite: 'none' // iframe에서 제대로 작동하려면 'none'으로 설정(개발 환경용)
+      sameSite: 'none', // iframe에서 제대로 작동하려면 'none'으로 설정(개발 환경용)
+      // Replit 도메인이 있는 경우 도메인 설정 추가
+      domain: process.env.NODE_ENV === 'production' ? '.replit.dev' : undefined
     },
     store: new PostgresSessionStore({
       pool,
       tableName: "session", // Default
       createTableIfMissing: true,
+      // 만료된 세션 자동 정리 설정
+      pruneSessionInterval: sessionCleanupInterval
     }),
   };
 
@@ -173,11 +180,12 @@ export function setupAuth(app: Express) {
         console.log('[LOGIN SUCCESS]', {
           user,
           sessionID: req.sessionID,
-          authenticated: req.isAuthenticated()
+          authenticated: req.isAuthenticated(),
+          cookies: req.headers.cookie
         });
         
-        // Set-Cookie 헤더 추가
-        res.setHeader('Set-Cookie', [`connect.sid=${req.sessionID}; Path=/; HttpOnly; SameSite=None; Secure`]);
+        // 중요: 여기서 수동으로 Set-Cookie를 설정하지 않음
+        // express-session이 자동으로 처리함
         
         return res.json(user);
       });

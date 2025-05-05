@@ -10,9 +10,27 @@ app.use(cors({
   // origin을 함수로 설정하여 요청의 origin에 따라 동적으로 대응
   // 중요: 와일드카드(*) 대신 정확한 문자열을 사용해야 쿠키가 작동함
   origin: function(origin, callback) {
-    callback(null, origin); // 모든 origin 허용하지만, 와일드카드(*) 대신 정확한 문자열 반환
+    // 디버깅용 로그
+    console.log('[CORS] Request from origin:', origin);
+    
+    // 모든 요청 허용 (API 테스트에 필요)
+    // 그러나 null 대신 웨브소켓이나 사이드 이펙트가 없는 요청에 대해 구체적인 origin을 사용
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    // .replit.dev 도메인이거나 로컬 개발 환경인 경우 허용
+    if (origin.includes('.replit.dev') || origin.includes('localhost') || origin.includes('0.0.0.0')) {
+      return callback(null, origin);
+    }
+    
+    // 프로덕션에서는 특정 도메인만 허용하도록 확장 가능
+    // 현재는 모든 원본 허용
+    callback(null, origin);
   },
-  credentials: true // 인증 정보(쿠키)를 포함하도록 허용
+  credentials: true, // 인증 정보(쿠키)를 포함하도록 허용
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // 허용할 HTTP 메서드 명시
+  allowedHeaders: ['Content-Type', 'Authorization'], // 허용할 헤더 명시
 }));
 
 app.use(express.json());
