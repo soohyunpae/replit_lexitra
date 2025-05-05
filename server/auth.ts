@@ -15,6 +15,7 @@ declare global {
     interface User {
       id: number;
       username: string;
+      role?: string; // role 필드 추가
     }
   }
 }
@@ -90,7 +91,7 @@ export function setupAuth(app: Express) {
           return done(null, false, { message: "Invalid username or password" });
         }
         
-        return done(null, { id: user.id, username: user.username });
+        return done(null, { id: user.id, username: user.username, role: user.role });
       } catch (error) {
         return done(error);
       }
@@ -111,7 +112,7 @@ export function setupAuth(app: Express) {
         return done(null, false);
       }
       
-      done(null, { id: user.id, username: user.username });
+      done(null, { id: user.id, username: user.username, role: user.role });
     } catch (error) {
       done(error);
     }
@@ -136,8 +137,9 @@ export function setupAuth(app: Express) {
         .values({
           username,
           password: await hashPassword(password),
+          role: 'user', // 기본으로 일반 사용자 권한 부여
         })
-        .returning({ id: users.id, username: users.username });
+        .returning({ id: users.id, username: users.username, role: users.role });
       
       // Log the user in
       req.login(user, (err) => {
