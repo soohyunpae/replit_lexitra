@@ -1,14 +1,25 @@
 import React from "react";
-import { useRoute, Link } from "wouter";
+import { useLocation, Link, Redirect } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Database, AlignLeft, BarChart3, Book, Settings, Upload, FileHeart, SearchCode, Lock } from "lucide-react";
+import { Database, AlignLeft, BarChart3, Book, Settings, Upload, FileHeart, SearchCode, Lock, Loader2 } from "lucide-react";
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
+  
+  // Show loading state
+  if (isLoading) {
+    return (
+      <MainLayout title="Admin Dashboard">
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-border" />
+        </div>
+      </MainLayout>
+    );
+  }
 
   // Check if user is admin
   if (!user || user.role !== 'admin') {

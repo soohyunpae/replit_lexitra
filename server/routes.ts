@@ -100,10 +100,65 @@ const handleApiError = (res: Response, error: unknown) => {
   });
 };
 
+// Admin routes for TM management
+function registerAdminRoutes(app: Express) {
+  // TM Upload endpoint
+  app.post("/api/admin/tm/upload", verifyToken, async (req: Request, res: Response) => {
+    try {
+      // Check if user is admin
+      if (!req.user || req.user.role !== "admin") {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      // Handle file upload logic here
+      const { sourceLanguage, targetLanguage, format, description } = req.body;
+
+      // TODO: Process the uploaded file based on format
+      // For now, return a success message
+      return res.status(200).json({ message: "Translation memory upload endpoint" });
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+
+  // TM Alignment endpoint
+  app.post("/api/admin/tm/alignment", verifyToken, async (req: Request, res: Response) => {
+    try {
+      // Check if user is admin
+      if (!req.user || req.user.role !== "admin") {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      // TODO: Implement alignment logic
+      return res.status(200).json({ message: "Translation memory alignment endpoint" });
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+
+  // TM Cleanup endpoint
+  app.post("/api/admin/tm/cleanup", verifyToken, async (req: Request, res: Response) => {
+    try {
+      // Check if user is admin
+      if (!req.user || req.user.role !== "admin") {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      // TODO: Implement cleanup logic
+      return res.status(200).json({ message: "Translation memory cleanup endpoint" });
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication systems
   setupAuth(app);
   setupTokenAuth(app); // Also setup token-based auth
+  
+  // Register admin routes
+  registerAdminRoutes(app);
   
   // prefix all routes with /api
   const apiPrefix = "/api";
