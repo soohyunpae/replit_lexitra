@@ -144,8 +144,8 @@ export default function AdminDashboard() {
                   type="single" 
                   collapsible 
                   className="w-full"
-                  value={activeSection}
-                  onValueChange={setActiveSection}
+                  value={tmActiveSection}
+                  onValueChange={setTmActiveSection}
                 >
                   {/* TM Upload */}
                   <AccordionItem value="tm-upload" className="border rounded-md mb-4 px-4">
@@ -208,8 +208,8 @@ export default function AdminDashboard() {
                   type="single" 
                   collapsible 
                   className="w-full"
-                  value={activeSection}
-                  onValueChange={setActiveSection}
+                  value={fileActiveSection}
+                  onValueChange={setFileActiveSection}
                 >
                   {/* PDF Processing */}
                   <AccordionItem value="pdf-processing" className="border rounded-md mb-4 px-4">
