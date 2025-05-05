@@ -43,12 +43,13 @@ export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     name: 'lexitra.sid',
     secret: process.env.SESSION_SECRET || "lexitra-secret-key",
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    rolling: true,
+    saveUninitialized: false,
     proxy: true,
     cookie: {
       secure: false,
-      maxAge: 30 * 24 * 60 * 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000, // 1일
       httpOnly: true,
       sameSite: 'lax',
       path: '/',

@@ -116,12 +116,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get(`${apiPrefix}/projects/:id`, async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: 'Not authenticated' });
-      }
+      console.log('[PROJECT DETAIL]', {
+        authenticated: req.isAuthenticated(),
+        sessionID: req.sessionID,
+        cookies: req.headers.cookie,
+        user: req.user
+      });
       
       const id = parseInt(req.params.id);
-      const userId = req.user!.id;
       
       const project = await db.query.projects.findFirst({
         where: eq(schema.projects.id, id),
