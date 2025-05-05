@@ -9,7 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Save, Trash2, Search, Database, FileText, Tag, ChevronRight } from "lucide-react";
+import { Plus, Save, Trash2, Search, Database, FileText, Tag, ChevronRight, Pencil } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -48,7 +50,7 @@ export default function GlossaryPage() {
   const [selectedResourceId, setSelectedResourceId] = React.useState<string>("all_resources");
   const [showResourceDialog, setShowResourceDialog] = React.useState<boolean>(false);
   
-  // Form setup
+  // Glossary form setup
   const form = useForm<GlossaryFormValues>({
     resolver: zodResolver(glossaryFormSchema),
     defaultValues: {
@@ -56,6 +58,19 @@ export default function GlossaryPage() {
       target: "",
       sourceLanguage: "",
       targetLanguage: "",
+    },
+  });
+  
+  // TB Resource form setup
+  const resourceForm = useForm<TbResourceFormValues>({
+    resolver: zodResolver(tbResourceFormSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      defaultSourceLanguage: "",
+      defaultTargetLanguage: "",
+      domain: "",
+      isActive: true,
     },
   });
 
@@ -174,17 +189,72 @@ export default function GlossaryPage() {
     },
   });
 
-  // Handle form submission
-  const onSubmit = (data: GlossaryFormValues) => {
-    addGlossaryMutation.mutate(data);
-  };
+  // Add TB resource mutation
+  const addResourceMutation = useMutation({
+    mutationFn: async (data: TbResourceFormValues) => {
+      const response = await apiRequest("POST", "/api/glossary/resource", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/glossary/resources"] });
+      resourceForm.reset();
+      setShowResourceDialog(false);
+      toast({
+        title: "TB Resource added",
+        description: "The terminology base resource has been added successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add TB resource",
+        variant: "destructive",
+      });
+    },
+  });
 
-  // Handle delete term
-  const handleDeleteTerm = (id: number) => {
+  // Delete TB resource mutation
+  const deleteResourceMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("DELETE", `/api/glossary/resource/${id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/glossary/resources"] });
+      toast({
+        title: "Resource deleted",
+        description: "The TB resource has been deleted successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete resource",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Form submission handlers
+  function onSubmit(data: GlossaryFormValues) {
+    addGlossaryMutation.mutate(data);
+  }
+
+  function onResourceSubmit(data: TbResourceFormValues) {
+    addResourceMutation.mutate(data);
+  }
+  
+  function handleDeleteTerm(id: number) {
     if (window.confirm("Are you sure you want to delete this term?")) {
       deleteGlossaryMutation.mutate(id);
     }
-  };
+  }
+  
+  function handleDeleteResource(id: number) {
+    if (window.confirm("Are you sure you want to delete this resource?")) {
+      deleteResourceMutation.mutate(id);
+    }
+  }
 
   return (
     <MainLayout title="Terminology Base">
@@ -462,64 +532,117 @@ export default function GlossaryPage() {
                         </DialogDescription>
                       </DialogHeader>
                       
-                      {/* Resource Form will go here */}
-                      <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="name">Resource Name</Label>
-                          <Input id="name" placeholder="Enter TB resource name" />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="description">Description</Label>
-                          <Input id="description" placeholder="Enter description" />
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="sourceLanguage">Default Source Language</Label>
-                            <Select>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select language" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="en">English</SelectItem>
-                                <SelectItem value="ko">Korean</SelectItem>
-                                <SelectItem value="ja">Japanese</SelectItem>
-                                <SelectItem value="zh">Chinese</SelectItem>
-                              </SelectContent>
-                            </Select>
+                      {/* TB Resource Form */}
+                      <Form {...resourceForm}>
+                        <form onSubmit={resourceForm.handleSubmit(onResourceSubmit)} className="space-y-4 py-4">
+                          <FormField
+                            control={resourceForm.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Resource Name</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Enter TB resource name" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={resourceForm.control}
+                            name="description"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Description</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Enter description" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={resourceForm.control}
+                              name="defaultSourceLanguage"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Default Source Language</FormLabel>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select language" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="en">English</SelectItem>
+                                      <SelectItem value="ko">Korean</SelectItem>
+                                      <SelectItem value="ja">Japanese</SelectItem>
+                                      <SelectItem value="zh">Chinese</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={resourceForm.control}
+                              name="defaultTargetLanguage"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Default Target Language</FormLabel>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select language" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="en">English</SelectItem>
+                                      <SelectItem value="ko">Korean</SelectItem>
+                                      <SelectItem value="ja">Japanese</SelectItem>
+                                      <SelectItem value="zh">Chinese</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                           </div>
                           
-                          <div className="space-y-2">
-                            <Label htmlFor="targetLanguage">Default Target Language</Label>
-                            <Select>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select language" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="en">English</SelectItem>
-                                <SelectItem value="ko">Korean</SelectItem>
-                                <SelectItem value="ja">Japanese</SelectItem>
-                                <SelectItem value="zh">Chinese</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="domain">Domain</Label>
-                          <Input id="domain" placeholder="e.g., Technical, Legal, Medical" />
-                        </div>
-                      </div>
-                      
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowResourceDialog(false)}>
-                          Cancel
-                        </Button>
-                        <Button type="submit">
-                          <Save className="w-4 h-4 mr-2" /> Save Resource
-                        </Button>
-                      </DialogFooter>
+                          <FormField
+                            control={resourceForm.control}
+                            name="domain"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Domain</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g., Technical, Legal, Medical" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <DialogFooter className="mt-6">
+                            <Button variant="outline" onClick={() => setShowResourceDialog(false)} type="button">
+                              Cancel
+                            </Button>
+                            <Button type="submit" disabled={addResourceMutation.isPending}>
+                              <Save className="w-4 h-4 mr-2" /> Save Resource
+                            </Button>
+                          </DialogFooter>
+                        </form>
+                      </Form>
                     </DialogContent>
                   </Dialog>
                 </div>
@@ -556,7 +679,7 @@ export default function GlossaryPage() {
                             </TableCell>
                             <TableCell>{resource.domain || 'General'}</TableCell>
                             <TableCell>
-                              <Badge variant={resource.isActive ? "success" : "secondary"}>
+                              <Badge className={resource.isActive ? "bg-green-500 hover:bg-green-600" : "bg-gray-400 hover:bg-gray-500"}>
                                 {resource.isActive ? 'Active' : 'Inactive'}
                               </Badge>
                             </TableCell>
