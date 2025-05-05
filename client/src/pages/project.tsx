@@ -17,7 +17,7 @@ import {
   Plus, 
   Paperclip, 
   Upload, 
-  Download,
+  Download as FileDownIcon,
   PlusCircle,
   File 
 } from "lucide-react";
@@ -707,7 +707,7 @@ export default function Project() {
                             }}
                             className="text-sm text-primary hover:underline cursor-pointer text-left flex items-center gap-2"
                           >
-                            <FileDownIcon className="h-3.5 w-3.5" />
+                            <Download className="h-3.5 w-3.5" />
                             {file.name}
                           </button>
                         </div>
