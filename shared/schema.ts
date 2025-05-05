@@ -8,6 +8,7 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  role: text("role").notNull().default("user"), // 'user' 또는 'admin' 값을 가짐
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -30,6 +31,8 @@ export const projects = pgTable("projects", {
   claimedAt: timestamp("claimed_at"),
   completedAt: timestamp("completed_at"),
   deadline: timestamp("deadline"),
+  notes: text("notes"),
+  references: text("references"), // JSON-encoded string for reference file metadata
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   userId: integer("user_id").references(() => users.id),
@@ -43,6 +46,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
 
 export const insertProjectSchema = createInsertSchema(projects, {
   name: (schema) => schema.min(3, "Project name must be at least 3 characters"),
+  deadline: (schema) => schema.optional(),
 });
 
 export type InsertProject = z.infer<typeof insertProjectSchema>;
@@ -54,6 +58,7 @@ export const files = pgTable("files", {
   name: text("name").notNull(),
   content: text("content").notNull(),
   projectId: integer("project_id").references(() => projects.id).notNull(),
+  type: text("type").default("work"),  // 'work' 또는 'reference' 값을 가짐
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -138,6 +143,14 @@ export type Glossary = typeof glossary.$inferSelect;
 export const StatusTypes = z.enum(['MT', 'Fuzzy', '100%', 'Reviewed']);
 export type StatusType = z.infer<typeof StatusTypes>;
 
-// Project Status Types Enum
+// Project Status Types Enum - 프로젝트 실제 상태값
 export const ProjectStatusTypes = z.enum(['Unclaimed', 'Claimed', 'Completed']);
 export type ProjectStatusType = z.infer<typeof ProjectStatusTypes>;
+
+// Project Display Status Types Enum - 사용자에게 보여지는 상태값
+export const ProjectDisplayStatusTypes = z.enum(['Unclaimed', 'In Progress', 'Claimed', 'Completed']);
+export type ProjectDisplayStatusType = z.infer<typeof ProjectDisplayStatusTypes>;
+
+// User Roles Enum
+export const UserRoleTypes = z.enum(['user', 'admin']);
+export type UserRoleType = z.infer<typeof UserRoleTypes>;

@@ -8,6 +8,7 @@ import { db } from "@db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import connectPgSimple from "connect-pg-simple";
+import { verifyToken, generateToken } from "./token-auth";
 import { pool } from "@db";
 
 declare global {
@@ -15,6 +16,7 @@ declare global {
     interface User {
       id: number;
       username: string;
+      role?: string; // role 필드 추가
     }
   }
 }
@@ -40,19 +42,24 @@ export function setupAuth(app: Express) {
   // 세션 정리 주기 설정 (1일)
   const sessionCleanupInterval = 1000 * 60 * 60 * 24;
   
+  // 쿠키 도메인 계산
+  // Replit 환경에서는 .repl.co 또는 커스텀 도메인 등 다양한 상황에 맞게 자동 조정
+  const cookieDomain = undefined; // undefined로 설정하면 현재 도메인에 쿠키 설정
+
   const sessionSettings: session.SessionOptions = {
     name: 'lexitra.sid',
     secret: process.env.SESSION_SECRET || "lexitra-secret-key",
-    resave: false,
-    rolling: true,
-    saveUninitialized: false,
+    resave: true, // Changed to true to ensure session changes are always saved
+    rolling: true, 
+    saveUninitialized: true, // Changed to true to ensure cookie is set even for uninitialized sessions
     proxy: true,
     cookie: {
-      secure: false,
+      secure: true, // HTTPS 필수 설정 (Replit 환경에서는 true로 설정해야 함)
       maxAge: 24 * 60 * 60 * 1000, // 1일
-      httpOnly: true,
-      sameSite: 'lax',
-      path: '/',
+      httpOnly: true, 
+      sameSite: 'none', // 크로스 사이트 요청을 허용하기 위해 'none'으로 설정
+      path: '/', 
+      domain: cookieDomain, // 자동으로 현재 도메인에 설정됨
     },
     store: new PostgresSessionStore({
       pool,
@@ -90,7 +97,7 @@ export function setupAuth(app: Express) {
           return done(null, false, { message: "Invalid username or password" });
         }
         
-        return done(null, { id: user.id, username: user.username });
+        return done(null, { id: user.id, username: user.username, role: user.role });
       } catch (error) {
         return done(error);
       }
@@ -111,10 +118,33 @@ export function setupAuth(app: Express) {
         return done(null, false);
       }
       
-      done(null, { id: user.id, username: user.username });
+      done(null, { id: user.id, username: user.username, role: user.role });
     } catch (error) {
       done(error);
     }
+  });
+  
+  // Middleware to ensure sessions are properly saved before sending responses
+  app.use((req, res, next) => {
+    // Add some additional debugging for session management
+    const originalEnd = res.end;
+    
+    // @ts-ignore - we're monkey patching the response object
+    res.end = function(chunk, encoding) {
+      if (req.session) {
+        console.log(`[DEBUG SESSION ${req.path}]`, {
+          headers: res.getHeaders(),
+          hasCookieHeader: !!res.getHeader('Set-Cookie'),
+          sessionID: req.sessionID,
+          authenticated: req.isAuthenticated()
+        });
+      }
+      
+      // @ts-ignore - we're monkey patching
+      return originalEnd.apply(res, arguments);
+    };
+    
+    next();
   });
 
   // Route for registering a new user
@@ -136,25 +166,39 @@ export function setupAuth(app: Express) {
         .values({
           username,
           password: await hashPassword(password),
+          role: 'user', // 기본으로 일반 사용자 권한 부여
         })
-        .returning({ id: users.id, username: users.username });
+        .returning({ id: users.id, username: users.username, role: users.role });
       
-      // Log the user in
-      req.login(user, (err) => {
-        if (err) return next(err);
-        return res.status(201).json(user);
-      });
+      try {
+        // Generate JWT token for the user
+        const token = generateToken(user);
+        
+        console.log('[REGISTER SUCCESS]', {
+          user,
+          tokenGenerated: true
+        });
+        
+        // Return the token along with user info
+        return res.status(201).json({
+          ...user,
+          token
+        });
+      } catch (tokenErr) {
+        console.error('[TOKEN GENERATION ERROR]', tokenErr);
+        return res.status(500).json({ message: "Failed to generate authentication token" });
+      }
     } catch (error) {
       next(error);
     }
   });
 
   // Route for logging in
+  // Token-based login endpoint that replaces session-based authentication
   app.post("/api/login", (req, res, next) => {
     console.log('\n[LOGIN ATTEMPT]', {
       body: req.body,
       headers: {
-        cookie: req.headers.cookie,
         origin: req.headers.origin,
         host: req.headers.host
       }
@@ -171,50 +215,52 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ message: info?.message || "Invalid credentials" });
       }
       
-      req.login(user, (err) => {
-        if (err) {
-          console.log('[LOGIN SESSION ERROR]', err);
-          return next(err);
-        }
+      try {
+        // Generate JWT token for the user using the imported function
+        const token = generateToken(user);
         
-        // 응답 전에 세션 상태 확인
         console.log('[LOGIN SUCCESS]', {
           user,
-          sessionID: req.sessionID,
-          authenticated: req.isAuthenticated(),
-          cookies: req.headers.cookie
+          tokenGenerated: true
         });
         
-        // 중요: 여기서 수동으로 Set-Cookie를 설정하지 않음
-        // express-session이 자동으로 처리함
-        
-        return res.json(user);
-      });
+        // Return the token along with user info
+        return res.json({
+          ...user,
+          token
+        });
+      } catch (tokenErr) {
+        console.error('[TOKEN GENERATION ERROR]', tokenErr);
+        return res.status(500).json({ message: "Failed to generate authentication token" });
+      }
     })(req, res, next);
   });
 
   // Route for logging out
   app.post("/api/logout", (req, res, next) => {
+    // For session-based auth - log out of the session
     req.logout((err) => {
       if (err) return next(err);
-      return res.sendStatus(200);
+      
+      // For token-based auth, we don't need to do anything server-side
+      // The client will remove the token from localStorage
+      
+      console.log('[LOGOUT SUCCESS]');
+      return res.status(200).json({ message: 'Logged out successfully' });
     });
   });
 
-  // Route for getting current user
-  app.get("/api/user", (req, res) => {
-    if (req.isAuthenticated()) {
-      return res.json(req.user);
-    }
-    return res.status(401).json({ message: "Not authenticated" });
+  // Use the token verification middleware that was imported at the top
+  
+  // Route for getting current user - token protected
+  app.get("/api/user", verifyToken, (req, res) => {
+    // User is already attached to req by verifyToken middleware
+    return res.json(req.user);
   });
 
-  // Route for getting user profile
-  app.get("/api/profile", (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-    
+  // Route for getting user profile - token protected
+  app.get("/api/profile", verifyToken, (req, res) => {
+    // User is already attached to req by verifyToken middleware
     return res.json(req.user);
   });
 }
