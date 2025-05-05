@@ -1496,12 +1496,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all glossary terms (for management page)
+  // Get all TB resources
+  app.get(`${apiPrefix}/glossary/resources`, verifyToken, async (req, res) => {
+    try {
+      const tbResources = await db.query.tbResources.findMany({
+        orderBy: desc(schema.tbResources.createdAt)
+      });
+      
+      return res.json(tbResources);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+
+  // Get all glossary terms (for management page) with optional resourceId filter
   app.get(`${apiPrefix}/glossary/all`, verifyToken, async (req, res) => {
     try {
-      const terms = await db.query.glossary.findMany({
-        orderBy: desc(schema.glossary.createdAt)
-      });
+      const resourceId = req.query.resourceId ? parseInt(req.query.resourceId as string) : undefined;
+      
+      let query;
+      if (resourceId) {
+        query = db.select().from(schema.glossary)
+          .where(eq(schema.glossary.resourceId, resourceId))
+          .orderBy(desc(schema.glossary.createdAt));
+      } else {
+        query = db.select().from(schema.glossary)
+          .orderBy(desc(schema.glossary.createdAt));
+      }
+      
+      const terms = await query;
       
       return res.json(terms);
     } catch (error) {
@@ -1600,11 +1623,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const resourceId = req.query.resourceId ? parseInt(req.query.resourceId as string) : undefined;
       
-      let query = db.select().from(schema.translationMemory)
-        .orderBy(desc(schema.translationMemory.createdAt));
-      
+      let query;
       if (resourceId) {
-        query = query.where(eq(schema.translationMemory.resourceId, resourceId));
+        query = db.select().from(schema.translationMemory)
+          .where(eq(schema.translationMemory.resourceId, resourceId))
+          .orderBy(desc(schema.translationMemory.createdAt));
+      } else {
+        query = db.select().from(schema.translationMemory)
+          .orderBy(desc(schema.translationMemory.createdAt));
       }
       
       const tmEntries = await query;
