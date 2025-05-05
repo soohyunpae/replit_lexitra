@@ -16,6 +16,15 @@ export interface Project {
   sourceLanguage: string;
   targetLanguage: string;
   userId?: number;
+  status?: 'Unclaimed' | 'Claimed' | 'Completed';
+  claimedBy?: number;
+  claimedAt?: string;
+  completedAt?: string;
+  claimer?: {
+    id: number;
+    username: string;
+    role?: string;
+  };
   createdAt: string;
   updatedAt: string;
   files?: File[];

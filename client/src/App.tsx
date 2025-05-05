@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { MainLayout } from "@/components/layout/main-layout";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -17,6 +17,30 @@ import Settings from "@/pages/settings";
 import AuthPage from "@/pages/auth-page";
 import ProfilePage from "@/pages/profile";
 import AuthDebugPage from "@/pages/auth-debug";
+import AdminDashboard from "@/pages/admin";
+
+// Admin role protected route component
+const AdminRoute = ({ component: Component, ...rest }: any) => {
+  const { user } = useAuth();
+  const [, navigate] = useLocation();
+
+  // Check if the user is admin
+  const isAdmin = user?.role === "admin";
+
+  if (!user) {
+    // User not logged in
+    navigate("/auth");
+    return null;
+  }
+
+  if (!isAdmin) {
+    // User logged in but not admin
+    navigate("/");
+    return null;
+  }
+
+  return <Component {...rest} />;
+};
 
 function Router() {
   return (
@@ -29,6 +53,7 @@ function Router() {
       <ProtectedRoute path="/tm" component={TM} />
       <ProtectedRoute path="/settings" component={Settings} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
+      <Route path="/admin" component={AdminDashboard} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/auth-debug" component={AuthDebugPage} />
       <Route component={NotFound} />
