@@ -41,19 +41,24 @@ export function setupAuth(app: Express) {
   // 세션 정리 주기 설정 (1일)
   const sessionCleanupInterval = 1000 * 60 * 60 * 24;
   
+  // 쿠키 도메인 계산
+  // Replit 환경에서는 .repl.co 또는 커스텀 도메인 등 다양한 상황에 맞게 자동 조정
+  const cookieDomain = undefined; // undefined로 설정하면 현재 도메인에 쿠키 설정
+
   const sessionSettings: session.SessionOptions = {
     name: 'lexitra.sid',
     secret: process.env.SESSION_SECRET || "lexitra-secret-key",
     resave: false,
-    rolling: true,
+    rolling: true, 
     saveUninitialized: false,
     proxy: true,
     cookie: {
       secure: true, // HTTPS 필수 설정 (Replit 환경에서는 true로 설정해야 함)
       maxAge: 24 * 60 * 60 * 1000, // 1일
-      httpOnly: true,
+      httpOnly: true, 
       sameSite: 'none', // 크로스 사이트 요청을 허용하기 위해 'none'으로 설정
-      path: '/',
+      path: '/', 
+      domain: cookieDomain, // 자동으로 현재 도메인에 설정됨
     },
     store: new PostgresSessionStore({
       pool,

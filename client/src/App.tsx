@@ -16,6 +16,7 @@ import TM from "@/pages/tm";
 import Settings from "@/pages/settings";
 import AuthPage from "@/pages/auth-page";
 import ProfilePage from "@/pages/profile";
+import AuthDebugPage from "@/pages/auth-debug";
 
 function Router() {
   return (
@@ -29,6 +30,7 @@ function Router() {
       <ProtectedRoute path="/settings" component={Settings} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/auth-debug" component={AuthDebugPage} />
       <Route component={NotFound} />
     </Switch>
   );
