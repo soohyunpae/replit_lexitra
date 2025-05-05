@@ -625,13 +625,7 @@ export default function Project() {
             </Card>
           </div>
           
-          {/* Download button */}
-          <div className="flex gap-2 mb-6 justify-end">
-            <Button variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              Download All
-            </Button>
-          </div>
+          {/* Project file section - No Download button as per file management policy */}
           
           {/* References Section */}
           <Card className="mb-6">
@@ -640,7 +634,7 @@ export default function Project() {
                 References
               </CardTitle>
               <CardDescription>
-                Upload reference documents to help with translation
+                Upload reference files (glossaries, guides, etc.) to help with translation - unlike work files, reference files can be added anytime
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -801,7 +795,7 @@ export default function Project() {
                 Files
               </CardTitle>
               <CardDescription>
-                All uploaded files for translation
+                Files for translation (cannot be modified after project creation)
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -850,7 +844,7 @@ export default function Project() {
                   </div>
                   <h3 className="text-lg font-medium mb-2">No files yet</h3>
                   <p className="text-muted-foreground max-w-md mx-auto mb-6">
-                    Create a new project to upload files. You can paste text directly or upload a file during the project creation process.
+                    Files must be added during project creation. Per the file management policy, projects without files cannot be created, and files cannot be added or modified after creation.
                   </p>
                 </div>
               )}
