@@ -2,44 +2,29 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import cors from "cors";
-import path from "path";
-import { fileURLToPath } from 'url';
-
-// ES Module equivalent for __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 
 // CORS 설정 - 인증 관련 쿠키를 위해 필수
-// Replit 도메인 실시간 사용을 위한 CORS 설정
 app.use(cors({
-  // Accept requests from any origin in the Replit environment
-  origin: function(origin, callback) {
-    // Always allow any origin for the authentication system to work properly
-    // This is safe because we're using session-based auth with CSRF protection
-    callback(null, true);
-  },
-  // These settings are critical for cookie-based authentication
+  origin: process.env.NODE_ENV === 'development' 
+    ? 'http://localhost:5173'
+    : 'https://' + process.env.REPL_SLUG + '.' + process.env.REPL_OWNER + '.repl.co',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Accept'],
-  exposedHeaders: ['Set-Cookie'], // Allow browsers to see the Set-Cookie header
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
 }));
 
-// 세션 관리를 위한 헤더 추가 설정
-// cors 모듈에서 이미 헤더를 설정하므로 여기선 삭제
-// 중복 설정이 문제를 일으킬 수 있음
+// 세션 관리를 위한 헤더 설정 - 중요!
+app.use((req, res, next) => {
+  // 허용된 CORS 헤더 추가 설정
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*'); // 구체적인 원본 또는 와일드카드 사용
+  next();
+});
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // extended: true 사용하여 중첩 객체 허용
-
-// 정적 파일 제공
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
-
-// 멀티파트 데이터 허용 크기 증가 (100MB 제한)
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ limit: '100mb', extended: true }));
+app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
   const start = Date.now();

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useRoute, useLocation } from "wouter";
+import { useRoute } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
 import { RightPanel } from "@/components/layout/right-panel";
 import { TranslationEditor } from "@/components/translation/translation-editor";
@@ -8,10 +8,6 @@ import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { TranslationUnit, Project, File, Glossary } from "@/types";
-import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { FileX, AlertTriangle } from "lucide-react";
 
 // Extended File type with segments for the translation interface
 interface ExtendedFile extends File {
@@ -20,12 +16,9 @@ interface ExtendedFile extends File {
 
 export default function Translation() {
   const [isMatch, params] = useRoute("/translation/:fileId");
-  const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { user } = useAuth();
   const [selectedSegment, setSelectedSegment] = useState<TranslationUnit | null>(null);
   const [tmMatches, setTmMatches] = useState([]);
-  const [accessError, setAccessError] = useState<string | null>(null);
   
   // Get file ID from URL params
   const fileId = isMatch && params ? parseInt(params.fileId) : null;
@@ -58,19 +51,6 @@ export default function Translation() {
     queryKey: [`/api/files/${fileId}`],
     enabled: !!fileId,
   });
-  
-  // Log file data for debugging
-  useEffect(() => {
-    if (file && file !== emptyFile) {
-      console.log('File data loaded successfully:', {
-        fileId,
-        fileName: file.name,
-        hasSegments: !!file.segments,
-        segmentsCount: file.segments?.length || 0,
-        segmentSample: file.segments && file.segments.length > 0 ? file.segments[0] : null
-      });
-    }
-  }, [file, fileId]);
   
   // Fetch project data for the file
   const {
@@ -148,47 +128,12 @@ export default function Translation() {
     },
   });
   
-  // Refresh segments when page loads
-  useEffect(() => {
-    if (fileId) {
-      // Invalidate and refetch file data to get the latest segments
-      queryClient.invalidateQueries({
-        queryKey: [`/api/files/${fileId}`],
-      });
-    }
-  }, [fileId]);
-
   // Handle segment selection
   useEffect(() => {
     if (selectedSegment) {
       searchTM(selectedSegment.source);
     }
   }, [selectedSegment]);
-  
-  // Check editor access permissions
-  useEffect(() => {
-    if (!user) {
-      setAccessError("You must be logged in to access the editor");
-      return;
-    }
-    
-    if (project && project.id > 0) {
-      // Check project status and claimedBy property
-      if (project.status === 'Unclaimed') {
-        setAccessError("This project must be claimed before accessing the editor");
-        return;
-      }
-      
-      // If project is claimed by another user and current user is not admin
-      if (project.status === 'Claimed' && project.claimedBy !== user.id && user.role !== 'admin') {
-        setAccessError(`This project is claimed by another user (${project.claimer?.username || 'User #' + project.claimedBy})`);
-        return;
-      }
-      
-      // Clear any access errors if all checks pass
-      setAccessError(null);
-    }
-  }, [project, user]);
   
   // Create a blank loader state while data is loading
   if (isFileLoading || isProjectLoading) {
@@ -220,40 +165,8 @@ export default function Translation() {
     );
   }
   
-  // If access error exists, show error UI
-  if (accessError) {
-    return (
-      <MainLayout title="Access Denied">
-        <div className="flex-1 flex items-center justify-center p-6">
-          <Card className="max-w-md w-full">
-            <CardHeader>
-              <div className="mx-auto h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
-                <AlertTriangle className="h-6 w-6 text-destructive" />
-              </div>
-              <CardTitle className="text-center">Access Denied</CardTitle>
-              <CardDescription className="text-center">{accessError}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col space-y-4">
-                <p className="text-muted-foreground text-center text-sm">
-                  You don't have permission to access this editor. Only the user who has claimed the project or an admin can access the translation editor.
-                </p>
-                <Button 
-                  onClick={() => setLocation(`/project/${project.id}`)}
-                  className="w-full"
-                >
-                  Go Back to Project
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </MainLayout>
-    );
-  }
-  
   return (
-    <MainLayout title={`Translating: ${file.name}`}>
+    <MainLayout title={`Translating: ${file.name}`} showSearch={true}>
       <div className="flex h-full overflow-hidden">
         <TranslationEditor
           fileName={file.name}

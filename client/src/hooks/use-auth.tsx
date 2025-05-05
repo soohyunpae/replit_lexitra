@@ -5,7 +5,7 @@ import {
   UseMutationResult,
 } from "@tanstack/react-query";
 import { User } from "@shared/schema";
-import { getQueryFn, apiRequest, queryClient, saveAuthToken, removeAuthToken } from "../lib/queryClient";
+import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 type AuthContextType = {
@@ -41,23 +41,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
-  const loginMutation = useMutation<User & { token?: string }, Error, LoginData>({
+  const loginMutation = useMutation<User, Error, LoginData>({
     mutationFn: async (credentials: LoginData) => {
       const res = await apiRequest("POST", "/api/login", credentials);
       return await res.json();
     },
-    onSuccess: (data) => {
-      // Extract token from response if exists
-      const { token, ...user } = data;
-      
-      // Save token to localStorage if it exists
-      if (token) {
-        saveAuthToken(token);
-      }
-      
-      // Update user data in query cache
+    onSuccess: (user) => {
       queryClient.setQueryData(["/api/user"], user);
-      
       toast({
         title: "로그인 성공",
         description: `${user.username}님, 환영합니다.`,
@@ -72,23 +62,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const registerMutation = useMutation<User & { token?: string }, Error, RegisterData>({
+  const registerMutation = useMutation<User, Error, RegisterData>({
     mutationFn: async (credentials: RegisterData) => {
       const res = await apiRequest("POST", "/api/register", credentials);
       return await res.json();
     },
-    onSuccess: (data) => {
-      // Extract token from response if exists
-      const { token, ...user } = data;
-      
-      // Save token to localStorage if it exists
-      if (token) {
-        saveAuthToken(token);
-      }
-      
-      // Update user data in query cache
+    onSuccess: (user) => {
       queryClient.setQueryData(["/api/user"], user);
-      
       toast({
         title: "회원가입 성공",
         description: `${user.username}님, 환영합니다.`,
@@ -108,12 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
-      // Remove token from localStorage
-      removeAuthToken();
-      
-      // Clear user data from cache
       queryClient.setQueryData(["/api/user"], null);
-      
       toast({
         title: "로그아웃 성공",
         description: "로그아웃 되었습니다.",
