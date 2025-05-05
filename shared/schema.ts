@@ -57,6 +57,7 @@ export const files = pgTable("files", {
   name: text("name").notNull(),
   content: text("content").notNull(),
   projectId: integer("project_id").references(() => projects.id).notNull(),
+  type: text("type").default("work"),  // 'work' 또는 'reference' 값을 가짐
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
