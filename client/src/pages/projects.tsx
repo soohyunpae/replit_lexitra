@@ -63,7 +63,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { formatFileSize } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { CombinedProgress } from "@/components/ui/combined-progress";
@@ -76,7 +75,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatFileSize } from "@/lib/utils";
 
 // Define a type for sorting direction
 type SortDirection = 'asc' | 'desc' | null;
@@ -466,9 +465,7 @@ export default function ProjectsPage() {
                                     <FileText className="h-4 w-4 text-muted-foreground" />
                                     <span className="text-sm">{file.name}</span>
                                     <span className="text-xs text-muted-foreground ml-2">
-                                      {file.size < 1024 ? `${file.size} B` :
-                                       file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` :
-                                       `${(file.size / (1024 * 1024)).toFixed(1)} MB`}
+                                      {formatFileSize(file.size)}
                                     </span>
                                   </div>
                                   <Button 
@@ -539,9 +536,7 @@ export default function ProjectsPage() {
                                     <FileText className="h-4 w-4 text-muted-foreground" />
                                     <span className="text-sm">{file.name}</span>
                                     <span className="text-xs text-muted-foreground ml-2">
-                                      {file.size < 1024 ? `${file.size} B` :
-                                       file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` :
-                                       `${(file.size / (1024 * 1024)).toFixed(1)} MB`}
+                                      {formatFileSize(file.size)}
                                     </span>
                                   </div>
                                   <Button 
