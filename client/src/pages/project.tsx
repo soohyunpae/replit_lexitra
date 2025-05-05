@@ -223,9 +223,6 @@ export default function Project() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold">{project.name}</h1>
-              <p className="text-muted-foreground">
-                {project.sourceLanguage} → {project.targetLanguage}
-              </p>
             </div>
             
             {/* Workflow actions based on project status */}
@@ -237,7 +234,7 @@ export default function Project() {
                   onClick={() => claimProject.mutate()}
                   disabled={claimProject.isPending}
                 >
-                  {claimProject.isPending ? "Claiming..." : "Claim Project"}
+                  {claimProject.isPending ? "Claiming..." : "Claim"}
                 </Button>
               )}
               
@@ -249,7 +246,7 @@ export default function Project() {
                     onClick={() => releaseProject.mutate()}
                     disabled={releaseProject.isPending}
                   >
-                    {releaseProject.isPending ? "Releasing..." : "Release Project"}
+                    {releaseProject.isPending ? "Releasing..." : "Release"}
                   </Button>
                   <Button 
                     variant="default" 
@@ -257,7 +254,7 @@ export default function Project() {
                     onClick={() => completeProject.mutate()}
                     disabled={completeProject.isPending}
                   >
-                    {completeProject.isPending ? "Completing..." : "Complete Project"}
+                    {completeProject.isPending ? "Completing..." : "Complete"}
                   </Button>
                 </>
               )}
@@ -269,7 +266,7 @@ export default function Project() {
                   onClick={() => reopenProject.mutate()}
                   disabled={reopenProject.isPending}
                 >
-                  {reopenProject.isPending ? "Reopening..." : "Reopen Project"}
+                  {reopenProject.isPending ? "Reopening..." : "Reopen"}
                 </Button>
               )}
               
@@ -280,7 +277,7 @@ export default function Project() {
                   onClick={() => deleteProject.mutate()}
                   disabled={deleteProject.isPending}
                 >
-                  {deleteProject.isPending ? "Deleting..." : "Delete Project"}
+                  {deleteProject.isPending ? "Deleting..." : "Delete"}
                 </Button>
               )}
             </div>
