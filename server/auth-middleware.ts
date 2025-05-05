@@ -60,14 +60,14 @@ export function isAdmin(req: Request, res: Response, next: NextFunction) {
 // 자원 소유자 또는 관리자만 접근 가능한 라우트를 위한 미들웨어
 export function isResourceOwnerOrAdmin(resourceField: string) {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.isAuthenticated()) {
+    // 인증 확인 - req.user가 없으면 인증 실패
+    if (!req.user) {
       return res.status(401).json({ message: "Authentication required" });
     }
     
     const resourceId = req.params[resourceField];
-    const userId = req.user?.id;
-    // @ts-ignore - req.user.role 속성에 접근
-    const isUserAdmin = req.user?.role === 'admin';
+    const userId = req.user.id;
+    const isUserAdmin = req.user.role === 'admin';
     
     // 리소스의 소유자 또는 관리자인 경우에만 접근 허용
     if (parseInt(resourceId) === userId || isUserAdmin) {
@@ -80,15 +80,16 @@ export function isResourceOwnerOrAdmin(resourceField: string) {
 
 // 프로젝트 클레임 확인 미들웨어
 export function canManageProject(req: Request, res: Response, next: NextFunction) {
-  if (!req.isAuthenticated()) {
+  // 인증 확인 - req.user가 없으면 인증 실패
+  if (!req.user) {
     return res.status(401).json({ message: "Authentication required" });
   }
   
   // 프로젝트 ID 파라미터로 가져오기
   const projectId = parseInt(req.params.projectId);
   
-  // @ts-ignore - req.user.role 속성에 접근
-  const isUserAdmin = req.user?.role === 'admin';
+  // 관리자 권한 확인
+  const isUserAdmin = req.user.role === 'admin';
   
   // 클레임 요청 시 추가 검증
   if (req.path.includes('/claim') || req.path.includes('/unclaim') || req.path.includes('/complete')) {
