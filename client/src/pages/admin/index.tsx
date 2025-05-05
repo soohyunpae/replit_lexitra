@@ -6,6 +6,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Database, AlignLeft, BarChart3, Book, Settings, Upload, FileHeart, SearchCode, Lock, Loader2 } from "lucide-react";
 
+interface AdminLink {
+  name: string;
+  path: string;
+  icon: React.ReactNode;
+  disabled?: boolean;
+}
+
+interface AdminModule {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  links: AdminLink[];
+}
+
 export default function AdminDashboard() {
   const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
@@ -47,7 +61,7 @@ export default function AdminDashboard() {
     );
   }
 
-  const adminModules = [
+  const adminModules: AdminModule[] = [
     {
       title: "TM Tools",
       description: "Manage translation memory resources",
@@ -58,6 +72,22 @@ export default function AdminDashboard() {
         { name: "TM Cleanup", path: "/admin/tm/cleanup", icon: <FileHeart className="h-4 w-4" /> },
       ],
     },
+    {
+      title: "TB Tools",
+      description: "Manage terminology base resources",
+      icon: <Book className="h-6 w-6" />,
+      links: [
+        { name: "Manage Terms", path: "/admin/tb/manage", icon: <SearchCode className="h-4 w-4" />, disabled: true },
+      ],
+    },
+    {
+      title: "System Settings",
+      description: "Configure application settings",
+      icon: <Settings className="h-6 w-6" />,
+      links: [
+        { name: "General Settings", path: "/admin/settings", icon: <Settings className="h-4 w-4" />, disabled: true },
+      ],
+    },
   ];
 
   return (
@@ -65,7 +95,8 @@ export default function AdminDashboard() {
       <div className="container py-6 space-y-6">
         <h1 className="text-2xl font-bold">Admin Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome to the Lexitra admin dashboard. Here you can manage translation memory resources.
+          Welcome to the Lexitra admin dashboard. Here you can manage translation memory resources,
+          terminology bases, and system settings.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
@@ -81,17 +112,33 @@ export default function AdminDashboard() {
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {module.links.map((link) => (
-                    <Link key={link.path} href={link.path}>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start h-auto py-3"
-                      >
-                        <div className="flex items-center gap-2">
-                          {link.icon}
-                          <span>{link.name}</span>
-                        </div>
-                      </Button>
-                    </Link>
+                    link.disabled ? (
+                      <div key={link.path}>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start h-auto py-3 opacity-60 cursor-not-allowed"
+                          disabled
+                        >
+                          <div className="flex items-center gap-2">
+                            {link.icon}
+                            <span>{link.name}</span>
+                            <span className="ml-auto text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">개발 중</span>
+                          </div>
+                        </Button>
+                      </div>
+                    ) : (
+                      <Link key={link.path} href={link.path}>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start h-auto py-3"
+                        >
+                          <div className="flex items-center gap-2">
+                            {link.icon}
+                            <span>{link.name}</span>
+                          </div>
+                        </Button>
+                      </Link>
+                    )
                   ))}
                 </div>
               </CardContent>
