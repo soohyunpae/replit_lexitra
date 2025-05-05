@@ -10,7 +10,7 @@ export const tbResources = pgTable("tb_resources", {
         domain: text(),
         defaultSourceLanguage: text("default_source_language"),
         defaultTargetLanguage: text("default_target_language"),
-        isActive: boolean("is_active").default(true).notNull(),
+        isActive: text("is_active").default('true').notNull(),
         createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
         updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
 });
@@ -39,6 +39,18 @@ export const users = pgTable("users", {
         }
 });
 
+export const tmResources = pgTable("tm_resources", {
+        id: serial().primaryKey().notNull(),
+        name: text().notNull(),
+        description: text(),
+        domain: text(),
+        defaultSourceLanguage: text("default_source_language"),
+        defaultTargetLanguage: text("default_target_language"),
+        isActive: text("is_active").default('true').notNull(),
+        createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+        updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
+});
+
 export const translationMemory = pgTable("translation_memory", {
         id: serial().primaryKey().notNull(),
         source: text().notNull(),
@@ -47,6 +59,7 @@ export const translationMemory = pgTable("translation_memory", {
         context: text(),
         sourceLanguage: text("source_language").notNull(),
         targetLanguage: text("target_language").notNull(),
+        resourceId: integer("resource_id").references(() => tmResources.id).notNull().default(1),
         createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
         updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
 });
