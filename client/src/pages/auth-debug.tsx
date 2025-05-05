@@ -17,6 +17,12 @@ export default function AuthDebugPage() {
   const { user, loginMutation, logoutMutation } = useAuth();
   const [testResults, setTestResults] = useState<Record<string, ApiResponse>>({});
   const [browserCookies, setBrowserCookies] = useState<string>('');
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  
+  // Get auth token
+  useEffect(() => {
+    setAuthToken(localStorage.getItem('auth_token'));
+  }, []);
   
   // Get browser cookies
   useEffect(() => {
@@ -26,10 +32,13 @@ export default function AuthDebugPage() {
   // Test API endpoints
   const testEndpoint = async (name: string, url: string, method: string = 'GET', body?: any) => {
     try {
+      // Get auth token from localStorage
+      const token = localStorage.getItem('auth_token');
+      
       // Special settings for Replit environment
       const options: RequestInit = {
         method,
-        credentials: 'include', // Include cookies in the request
+        credentials: 'include', // Include cookies for backwards compatibility
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -37,6 +46,14 @@ export default function AuthDebugPage() {
         // Mode: 'cors' to allow cookies to be sent
         mode: 'cors'
       };
+      
+      // Add Authorization header if token exists
+      if (token) {
+        options.headers = {
+          ...options.headers,
+          'Authorization': `Bearer ${token}`
+        };
+      }
 
       if (body) {
         options.body = JSON.stringify(body);
@@ -83,9 +100,11 @@ export default function AuthDebugPage() {
   };
 
   const runAllTests = async () => {
+    await testEndpoint('auth-debug', '/api/auth-debug');
     await testEndpoint('user', '/api/user');
     await testEndpoint('login', '/api/login', 'POST', { username: 'test', password: 'password' });
     await testEndpoint('user-after-login', '/api/user');
+    await testEndpoint('auth-debug-after-login', '/api/auth-debug');
   };
 
   const testLoginAndProfile = async () => {
@@ -134,6 +153,20 @@ export default function AuthDebugPage() {
 
         <Card>
           <CardHeader>
+            <CardTitle>Auth Token</CardTitle>
+            <CardDescription>JWT token stored in localStorage</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-muted p-3 rounded-md overflow-x-auto max-h-[150px] overflow-y-auto">
+              <pre className="text-xs break-all">
+                {authToken ? authToken : 'No token found'}
+              </pre>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Browser Cookies</CardTitle>
             <CardDescription>Cookies currently stored in the browser</CardDescription>
           </CardHeader>
@@ -150,6 +183,7 @@ export default function AuthDebugPage() {
       <div className="space-y-4 mb-8">
         <div className="flex flex-wrap gap-3">
           <Button onClick={runAllTests}>Run All Tests</Button>
+          <Button onClick={() => testEndpoint('auth-debug', '/api/auth-debug')} variant="outline">Test Auth Debug</Button>
           <Button onClick={() => testEndpoint('user', '/api/user')} variant="outline">Test /api/user</Button>
           <Button onClick={testLoginAndProfile} variant="outline">Test Login & Profile</Button>
           <Button onClick={handleLoginMutation} variant="outline">Login via Mutation</Button>

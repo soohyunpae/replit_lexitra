@@ -9,7 +9,7 @@ import { ZodError } from "zod";
 import { translateWithGPT } from "./openai";
 import { setupAuth } from "./auth";
 import { setupTokenAuth, verifyToken } from "./token-auth";
-import { isAuthenticated, isAdmin, isResourceOwnerOrAdmin, canManageProject, errorHandler } from "./auth-middleware";
+import { isAdmin, isResourceOwnerOrAdmin, canManageProject, errorHandler } from "./auth-middleware";
 
 // Helper function for calculating text similarity
 function calculateSimilarity(str1: string, str2: string): number {
@@ -76,6 +76,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // prefix all routes with /api
   const apiPrefix = "/api";
+  
+  // Debug authentication endpoint
+  app.get(`${apiPrefix}/auth-debug`, (req, res) => {
+    return res.json({
+      authenticated: !!req.user,
+      method: req.method,
+      path: req.path,
+      headers: {
+        authorization: req.headers.authorization ? 'Present' : 'Not present',
+        cookie: req.headers.cookie ? 'Present' : 'Not present'
+      },
+      user: req.user || null
+    });
+  });
   
   // Projects API
   app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
@@ -146,7 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // 완료된 프로젝트 목록 가져오기
-  app.get(`${apiPrefix}/completed-projects`, isAuthenticated, async (req, res) => {
+  app.get(`${apiPrefix}/completed-projects`, verifyToken, async (req, res) => {
     try {
       
       const projects = await db.query.projects.findMany({
@@ -165,7 +179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // 프로젝트 클레임하기
-  app.post(`${apiPrefix}/projects/:id/claim`, isAuthenticated, async (req, res) => {
+  app.post(`${apiPrefix}/projects/:id/claim`, verifyToken, async (req, res) => {
     try {
       
       const id = parseInt(req.params.id);
@@ -203,7 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // 프로젝트 클레임 해제하기
-  app.post(`${apiPrefix}/projects/:id/release`, isAuthenticated, async (req, res) => {
+  app.post(`${apiPrefix}/projects/:id/release`, verifyToken, async (req, res) => {
     try {
       
       const id = parseInt(req.params.id);
@@ -245,7 +259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // 프로젝트 완료 처리하기
-  app.post(`${apiPrefix}/projects/:id/complete`, isAuthenticated, async (req, res) => {
+  app.post(`${apiPrefix}/projects/:id/complete`, verifyToken, async (req, res) => {
     try {
       
       const id = parseInt(req.params.id);
@@ -286,7 +300,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // 완료된 프로젝트 재오픈하기
-  app.post(`${apiPrefix}/projects/:id/reopen`, isAuthenticated, async (req, res) => {
+  app.post(`${apiPrefix}/projects/:id/reopen`, verifyToken, async (req, res) => {
     try {
       
       const id = parseInt(req.params.id);
@@ -359,7 +373,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Files API
-  app.get(`${apiPrefix}/files/:id`, isAuthenticated, async (req, res) => {
+  app.get(`${apiPrefix}/files/:id`, verifyToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       
@@ -382,7 +396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post(`${apiPrefix}/files`, isAuthenticated, async (req, res) => {
+  app.post(`${apiPrefix}/files`, verifyToken, async (req, res) => {
     try {
       const fileData = schema.insertFileSchema.parse(req.body);
       const [file] = await db.insert(schema.files).values(fileData).returning();
@@ -443,7 +457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Translation Units API
-  app.get(`${apiPrefix}/segments/:fileId`, isAuthenticated, async (req, res) => {
+  app.get(`${apiPrefix}/segments/:fileId`, verifyToken, async (req, res) => {
     try {
       const fileId = parseInt(req.params.fileId);
       
@@ -458,7 +472,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.patch(`${apiPrefix}/segments/:id`, isAuthenticated, async (req, res) => {
+  app.patch(`${apiPrefix}/segments/:id`, verifyToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updateSchema = z.object({
@@ -508,7 +522,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Translation API
-  app.post(`${apiPrefix}/translate`, isAuthenticated, async (req, res) => {
+  app.post(`${apiPrefix}/translate`, verifyToken, async (req, res) => {
     try {
       const translateSchema = z.object({
         source: z.string(),
@@ -598,7 +612,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // TM API
-  app.post(`${apiPrefix}/search_tm`, isAuthenticated, async (req, res) => {
+  app.post(`${apiPrefix}/search_tm`, verifyToken, async (req, res) => {
     try {
       const searchSchema = z.object({
         source: z.string(),
@@ -628,7 +642,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post(`${apiPrefix}/update_tm`, isAuthenticated, async (req, res) => {
+  app.post(`${apiPrefix}/update_tm`, verifyToken, async (req, res) => {
     try {
       const data = schema.insertTranslationMemorySchema.parse(req.body);
       const [tmEntry] = await db.insert(schema.translationMemory).values(data).returning();
@@ -640,7 +654,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Glossary API (Terminology Base)
-  app.get(`${apiPrefix}/glossary`, isAuthenticated, async (req, res) => {
+  app.get(`${apiPrefix}/glossary`, verifyToken, async (req, res) => {
     try {
       const sourceLanguage = req.query.sourceLanguage as string;
       const targetLanguage = req.query.targetLanguage as string;
@@ -663,7 +677,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all glossary terms (for management page)
-  app.get(`${apiPrefix}/glossary/all`, isAuthenticated, async (req, res) => {
+  app.get(`${apiPrefix}/glossary/all`, verifyToken, async (req, res) => {
     try {
       const terms = await db.query.glossary.findMany({
         orderBy: desc(schema.glossary.createdAt)
@@ -676,7 +690,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Add new glossary term
-  app.post(`${apiPrefix}/glossary`, isAuthenticated, async (req, res) => {
+  app.post(`${apiPrefix}/glossary`, verifyToken, async (req, res) => {
     try {
       const data = schema.insertGlossarySchema.parse(req.body);
       const [term] = await db.insert(schema.glossary).values(data).returning();
@@ -688,7 +702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Delete glossary term
-  app.delete(`${apiPrefix}/glossary/:id`, isAuthenticated, async (req, res) => {
+  app.delete(`${apiPrefix}/glossary/:id`, verifyToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       
@@ -711,7 +725,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Search glossary terms (TB search)
-  app.post(`${apiPrefix}/glossary/search`, isAuthenticated, async (req, res) => {
+  app.post(`${apiPrefix}/glossary/search`, verifyToken, async (req, res) => {
     try {
       const searchSchema = z.object({
         text: z.string(),
@@ -749,7 +763,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Translation Memory API
   // Get all TM entries
-  app.get(`${apiPrefix}/tm/all`, isAuthenticated, async (req, res) => {
+  app.get(`${apiPrefix}/tm/all`, verifyToken, async (req, res) => {
     try {
       const tmEntries = await db.query.translationMemory.findMany({
         orderBy: desc(schema.translationMemory.createdAt)
@@ -762,7 +776,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get TM entries by language pair
-  app.get(`${apiPrefix}/tm`, isAuthenticated, async (req, res) => {
+  app.get(`${apiPrefix}/tm`, verifyToken, async (req, res) => {
     try {
       const sourceLanguage = req.query.sourceLanguage as string;
       const targetLanguage = req.query.targetLanguage as string;
@@ -785,7 +799,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Search in TM
-  app.post(`${apiPrefix}/tm/search`, isAuthenticated, async (req, res) => {
+  app.post(`${apiPrefix}/tm/search`, verifyToken, async (req, res) => {
     try {
       const searchSchema = z.object({
         text: z.string(),
@@ -823,7 +837,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Add entry to TM
-  app.post(`${apiPrefix}/tm`, isAuthenticated, async (req, res) => {
+  app.post(`${apiPrefix}/tm`, verifyToken, async (req, res) => {
     try {
       const data = schema.insertTranslationMemorySchema.parse(req.body);
       const [entry] = await db.insert(schema.translationMemory).values(data).returning();

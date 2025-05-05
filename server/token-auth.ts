@@ -3,6 +3,19 @@ import { User } from '../shared/schema';
 import jwt from 'jsonwebtoken';
 import { randomBytes } from 'crypto';
 
+// Add user property to Express Request interface
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: number;
+        username: string;
+        role?: string;
+      };
+    }
+  }
+}
+
 // Use a consistent secret for development
 // In production, this should be set via environment variable
 const JWT_SECRET = process.env.JWT_SECRET || 'lexitra_jwt_secret_key';
