@@ -134,8 +134,8 @@ export const getQueryFn: <T>(options: {
     }
     
     const res = await fetch(queryKey[0] as string, {
-      credentials: "include", // Still include cookies for backward compatibility
-      mode: "cors",          // Enable CORS
+      credentials: "include" as RequestCredentials, // Still include cookies for backward compatibility
+      mode: "cors" as RequestMode,          // Enable CORS
       headers
     });
 
