@@ -5,6 +5,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Suspense } from "react";
 import { Database, AlignLeft, FileText, Upload, FileHeart, Lock, Loader2, FileType, FilePlus2, FileOutput } from "lucide-react";
 
 interface AdminLink {
@@ -63,27 +65,39 @@ export default function AdminDashboard() {
     );
   }
 
+  // Import components for embedded mode
+  const TMUpload = React.lazy(() => import('./tm/upload'));
+  const TMAlignment = React.lazy(() => import('./tm/alignment'));
+  const TMCleanup = React.lazy(() => import('./tm/cleanup'));
+  const PDFProcessing = React.lazy(() => import('./file/pdf'));
+  const FileConversion = React.lazy(() => import('./file/conversion'));
+  
   // Define the module/category structure
   const adminModules: AdminModule[] = [
     {
-      title: "Translation Memory",
-      description: "Manage translation memory resources",
+      title: "TM Management",
+      description: "Manage Translation Memory (TM) assets, align files, clean duplicates",
       icon: <Database className="h-6 w-6" />,
       links: [
-        { name: "TM Upload", path: "/admin/tm/upload", icon: <Upload className="h-4 w-4" /> },
-        { name: "Bilingual Alignment", path: "/admin/tm/alignment", icon: <AlignLeft className="h-4 w-4" /> },
-        { name: "TM Cleanup", path: "/admin/tm/cleanup", icon: <FileHeart className="h-4 w-4" /> },
+        { name: "TM Upload", path: "tm-upload", icon: <Upload className="h-4 w-4" /> },
+        { name: "Bilingual Alignment", path: "tm-alignment", icon: <AlignLeft className="h-4 w-4" /> },
+        { name: "TM Cleanup", path: "tm-cleanup", icon: <FileHeart className="h-4 w-4" /> },
       ],
     },
     {
       title: "File Processing",
-      description: "Process and convert files for translation projects",
+      description: "Convert or prepare files (PDFs, DOCX, etc.) before translation",
       icon: <FileText className="h-6 w-6" />,
       links: [
-        { name: "File Processing Center", path: "/admin/file", icon: <FileText className="h-4 w-4" /> },
+        { name: "PDF Processing", path: "pdf-processing", icon: <FileType className="h-4 w-4" /> },
+        { name: "File Format Conversion", path: "file-conversion", icon: <FileOutput className="h-4 w-4" /> },
       ],
     },
   ];
+  
+  // State for accordion sections
+  const [tmActiveSection, setTmActiveSection] = useState<string>("");
+  const [fileActiveSection, setFileActiveSection] = useState<string>("");
 
   return (
     <MainLayout title="Admin Dashboard">
@@ -106,7 +120,7 @@ export default function AdminDashboard() {
               <TabsList className="mt-4 grid w-full grid-cols-2">
                 <TabsTrigger value="translation-memory" className="flex items-center gap-2">
                   <Database className="h-4 w-4" />
-                  <span>Translation Memory</span>
+                  <span>TM Management</span>
                 </TabsTrigger>
                 <TabsTrigger value="file-preprocessing" className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
@@ -116,51 +130,118 @@ export default function AdminDashboard() {
             </CardHeader>
 
             <CardContent className="pt-6 pb-4">
-              {adminModules.map((module, index) => (
-                <TabsContent key={module.title} value={index === 0 ? "translation-memory" : "file-preprocessing"} className="m-0">
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        {module.icon}
-                        <h3 className="text-lg font-medium">{module.title}</h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{module.description}</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                      {module.links.map((link) => (
-                        link.disabled ? (
-                          <div key={link.path}>
-                            <Button
-                              variant="outline"
-                              className="w-full justify-start h-auto py-3 opacity-60 cursor-not-allowed"
-                              disabled
-                            >
-                              <div className="flex items-center gap-2">
-                                {link.icon}
-                                <span>{link.name}</span>
-                                <span className="ml-auto text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">개발 중</span>
-                              </div>
-                            </Button>
-                          </div>
-                        ) : (
-                          <Link key={link.path} href={link.path}>
-                            <Button
-                              variant="outline"
-                              className="w-full justify-start h-auto py-3"
-                            >
-                              <div className="flex items-center gap-2">
-                                {link.icon}
-                                <span>{link.name}</span>
-                              </div>
-                            </Button>
-                          </Link>
-                        )
-                      ))}
-                    </div>
+              {/* Translation Memory Tab Content */}
+              <TabsContent value="translation-memory" className="m-0 space-y-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    {adminModules[0].icon}
+                    <h3 className="text-lg font-medium">{adminModules[0].title}</h3>
                   </div>
-                </TabsContent>
-              ))}
+                  <p className="text-sm text-muted-foreground">{adminModules[0].description}</p>
+                </div>
+                
+                <Accordion 
+                  type="single" 
+                  collapsible 
+                  className="w-full"
+                  value={activeSection}
+                  onValueChange={setActiveSection}
+                >
+                  {/* TM Upload */}
+                  <AccordionItem value="tm-upload" className="border rounded-md mb-4 px-4">
+                    <AccordionTrigger className="py-4">
+                      <div className="flex items-center gap-2">
+                        <Upload className="h-5 w-5" />
+                        <span className="text-lg font-medium">TM Upload</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6">
+                      <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+                        <TMUpload embedded={true} />
+                      </Suspense>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  {/* Bilingual Alignment */}
+                  <AccordionItem value="tm-alignment" className="border rounded-md mb-4 px-4">
+                    <AccordionTrigger className="py-4">
+                      <div className="flex items-center gap-2">
+                        <AlignLeft className="h-5 w-5" />
+                        <span className="text-lg font-medium">Bilingual Alignment</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6">
+                      <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+                        <TMAlignment embedded={true} />
+                      </Suspense>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  {/* TM Cleanup */}
+                  <AccordionItem value="tm-cleanup" className="border rounded-md mb-4 px-4">
+                    <AccordionTrigger className="py-4">
+                      <div className="flex items-center gap-2">
+                        <FileHeart className="h-5 w-5" />
+                        <span className="text-lg font-medium">TM Cleanup</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6">
+                      <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+                        <TMCleanup embedded={true} />
+                      </Suspense>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </TabsContent>
+              
+              {/* File Processing Tab Content */}
+              <TabsContent value="file-preprocessing" className="m-0 space-y-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    {adminModules[1].icon}
+                    <h3 className="text-lg font-medium">{adminModules[1].title}</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{adminModules[1].description}</p>
+                </div>
+                
+                <Accordion 
+                  type="single" 
+                  collapsible 
+                  className="w-full"
+                  value={activeSection}
+                  onValueChange={setActiveSection}
+                >
+                  {/* PDF Processing */}
+                  <AccordionItem value="pdf-processing" className="border rounded-md mb-4 px-4">
+                    <AccordionTrigger className="py-4">
+                      <div className="flex items-center gap-2">
+                        <FileType className="h-5 w-5" />
+                        <span className="text-lg font-medium">PDF Processing</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6">
+                      <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+                        <PDFProcessing embedded={true} />
+                      </Suspense>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  {/* File Format Conversion */}
+                  <AccordionItem value="file-conversion" className="border rounded-md mb-4 px-4">
+                    <AccordionTrigger className="py-4">
+                      <div className="flex items-center gap-2">
+                        <FileOutput className="h-5 w-5" />
+                        <span className="text-lg font-medium">File Format Conversion</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6">
+                      <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+                        <FileConversion embedded={true} />
+                      </Suspense>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </TabsContent>
             </CardContent>
 
             <CardFooter className="border-t pt-4 text-sm text-muted-foreground">
