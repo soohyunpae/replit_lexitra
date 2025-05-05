@@ -1,0 +1,79 @@
+# Lexitra Auth Debug Follow-Up: Cookie Not Sent (Despite CORS Fix)
+
+## ❗ Problem: Cookie Still Not Sent
+
+After restarting the server, the login succeeds, but authenticated session is not preserved. All API requests still fail with `401 Unauthorized` and `req.headers.cookie` is `undefined`.
+
+---
+
+## 🔍 Observed Console Logs
+
+```
+cookies: undefined
+user: undefined
+```
+
+→ This confirms that cookies are **not being sent** to the server in follow-up requests.
+→ Session data cannot be retrieved; all authentication checks fail.
+
+---
+
+## ✅ Likely Cause: Incorrect CORS Origin
+
+Replit reported:
+
+> ✓ CORS origin set to true
+
+This is **not sufficient** for cookie-based auth.
+
+### ⚠️ Why `origin: true` doesn’t work
+
+* When `origin: true` is set, Express reflects the request origin dynamically.
+* But for `credentials: true` to work, browsers **require a fixed string** for `Access-Control-Allow-Origin`.
+* If CORS sends `*` (wildcard), **cookies will never be sent.**
+
+---
+
+## ✅ Correct Configuration (Required)
+
+```ts
+app.use(cors({
+  origin: 'http://localhost:5173',  // MUST be exact string, not true or *
+  credentials: true
+}));
+```
+
+> Replace with your actual frontend domain if needed (e.g. `https://lexitra.replit.app`)
+
+---
+
+## 🧪 How to Verify
+
+1. **DevTools → Network → login request → Response Headers**
+
+   * ✅ Look for `Set-Cookie:`
+   * ✅ Confirm `Access-Control-Allow-Origin` matches frontend URL
+   * ✅ Confirm `Access-Control-Allow-Credentials: true`
+
+2. **DevTools → Application → Cookies**
+
+   * ✅ Check if session cookie is saved
+
+3. **Check follow-up requests**
+
+   * ✅ Do they contain `Cookie:` header?
+   * ✅ Is `req.session.user` defined on server?
+
+---
+
+## 🔧 Summary
+
+Even if Replit believes CORS is configured, **if origin is set to `true` or `*`, cookie auth will fail.**
+
+To resolve:
+
+* Use fixed `origin: 'http://localhost:5173'` (or exact URL)
+* Keep `credentials: true`
+* Confirm with DevTools whether cookies are sent and stored
+
+Let us know if you'd like help debugging the Set-Cookie behavior or viewing headers.

@@ -7,8 +7,11 @@ const app = express();
 
 // CORS 설정 - 인증 관련 쿠키를 위해 필수
 app.use(cors({
-  // 정확한 문자열 origin을 지정해야 함 (와일드카드 * 사용 불가)
-  origin: 'https://87ffd24c-35af-4e2e-a8ec-a28de25c75fc.id.repl.co',
+  // origin을 함수로 설정하여 요청의 origin에 따라 동적으로 대응
+  // 중요: 와일드카드(*) 대신 정확한 문자열을 사용해야 쿠키가 작동함
+  origin: function(origin, callback) {
+    callback(null, origin); // 모든 origin 허용하지만, 와일드카드(*) 대신 정확한 문자열 반환
+  },
   credentials: true // 인증 정보(쿠키)를 포함하도록 허용
 }));
 
