@@ -363,10 +363,17 @@ export default function Project() {
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-xl font-semibold mb-1">{project.name}</h1>
-              <div className="text-sm font-medium text-muted-foreground inline-flex items-center">
-                <span className="bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full text-xs">[{project.id}]</span>
-              </div>
+              <h1 className="text-xl font-semibold mb-1">
+                <span className={
+                  `mr-2 text-sm font-medium rounded-full px-2 py-0.5 ${
+                    project.status === 'Unclaimed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' : 
+                    project.status === 'Claimed' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' : 
+                    'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'}`
+                }>
+                  {project.id}
+                </span>
+                {project.name}
+              </h1>
             </div>
             
             {/* Workflow actions based on project status */}
