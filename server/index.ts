@@ -7,12 +7,12 @@ const app = express();
 
 // CORS 설정 - 인증 관련 쿠키를 위해 필수
 app.use(cors({
-  // CORS 완화: 지정된 도메인만 허용하고 모든 요청에 도메인 정보를 포함하도록 수정
-  origin: true, // 공용 우선시: 모든 요청의 원본 도메인을 그대로 허용
-  credentials: true, // 인증 정보(쿠키)를 포함하도록 허용 - 필수
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'], // 허용할 HTTP 메서드 명시
-  allowedHeaders: ['Content-Type', 'Authorization'], // 허용할 헤더 명시
-  exposedHeaders: ['set-cookie'], // 클라이언트에 노출할 헤더 명시
+  origin: process.env.NODE_ENV === 'development' 
+    ? 'http://localhost:5173'
+    : 'https://' + process.env.REPL_SLUG + '.' + process.env.REPL_OWNER + '.repl.co',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
 }));
 
 // 세션 관리를 위한 헤더 설정 - 중요!

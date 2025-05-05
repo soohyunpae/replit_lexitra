@@ -41,16 +41,16 @@ export function setupAuth(app: Express) {
   const sessionCleanupInterval = 1000 * 60 * 60 * 24;
   
   const sessionSettings: session.SessionOptions = {
-    name: 'lexitra.sid', // 쿠키 이름 명시적 설정
+    name: 'lexitra.sid',
     secret: process.env.SESSION_SECRET || "lexitra-secret-key",
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true, // HTTPS에서만 쿠키 전송
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      httpOnly: true, // JavaScript에서 쿠키 접근 방지
-      sameSite: 'none', // 크로스 사이트 요청 허용 (iframe 등)
-      path: '/', // 모든 경로에서 쿠키 사용 가능
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/',
     },
     store: new PostgresSessionStore({
       pool,
