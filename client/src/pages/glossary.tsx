@@ -26,6 +26,7 @@ const glossaryFormSchema = z.object({
   target: z.string().min(1, { message: "Target term is required" }),
   sourceLanguage: z.string().min(1, { message: "Source language is required" }),
   targetLanguage: z.string().min(1, { message: "Target language is required" }),
+  resourceId: z.number().optional(),
 });
 
 type GlossaryFormValues = z.infer<typeof glossaryFormSchema>;
@@ -46,6 +47,7 @@ export default function GlossaryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>("all_source_languages");
   const [targetLanguageFilter, setTargetLanguageFilter] = useState<string>("all_target_languages");
+  const [resourceFilter, setResourceFilter] = useState<number | undefined>(undefined);
   const [activeTab, setActiveTab] = React.useState<string>("entries");
   const [selectedResourceId, setSelectedResourceId] = React.useState<string>("all_resources");
   const [showResourceDialog, setShowResourceDialog] = React.useState<boolean>(false);
@@ -58,6 +60,7 @@ export default function GlossaryPage() {
       target: "",
       sourceLanguage: "",
       targetLanguage: "",
+      resourceId: undefined,
     },
   });
   

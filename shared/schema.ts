@@ -185,6 +185,7 @@ export const glossaryRelations = relations(glossary, ({ one }) => ({
 export const insertGlossarySchema = createInsertSchema(glossary, {
   source: (schema) => schema.min(1, "Source term is required"),
   target: (schema) => schema.min(1, "Target term is required"),
+  resourceId: (schema) => schema.optional(),
 });
 
 export type InsertGlossary = z.infer<typeof insertGlossarySchema>;
