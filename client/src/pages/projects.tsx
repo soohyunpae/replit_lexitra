@@ -85,10 +85,7 @@ const projectFormSchema = z.object({
   description: z.string().optional(),
   sourceLanguage: z.string().min(1, "Source language is required"),
   targetLanguage: z.string().min(1, "Target language is required"),
-  files: z.instanceof(FileList).or(z.array(z.instanceof(File))).
-    refine(files => files.length > 0, {
-      message: "At least one file is required"
-    }),
+  files: z.instanceof(FileList).or(z.array(z.instanceof(File))).optional(), // 파일은 필수가 아님
   references: z.instanceof(FileList).or(z.array(z.instanceof(File))).optional(),
   notes: z.string().optional(),
 });
