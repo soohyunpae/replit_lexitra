@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useLocation, Link } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,10 @@ import {
   ArrowDown,
   ArrowUp,
   CheckSquare,
-  Filter
+  Filter,
+  Upload,
+  Paperclip,
+  X
 } from "lucide-react";
 import {
   Dialog,
@@ -41,6 +44,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -81,6 +85,12 @@ const projectFormSchema = z.object({
   description: z.string().optional(),
   sourceLanguage: z.string().min(1, "Source language is required"),
   targetLanguage: z.string().min(1, "Target language is required"),
+  files: z.instanceof(FileList).or(z.array(z.instanceof(File))).
+    refine(files => files.length > 0, {
+      message: "At least one file is required"
+    }),
+  references: z.instanceof(FileList).or(z.array(z.instanceof(File))).optional(),
+  notes: z.string().optional(),
 });
 
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
@@ -242,6 +252,9 @@ export default function ProjectsPage() {
       description: "",
       sourceLanguage: "KO",
       targetLanguage: "EN",
+      files: [] as File[],
+      references: [] as File[],
+      notes: "",
     },
   });
 
@@ -404,16 +417,163 @@ export default function ProjectsPage() {
                     )}
                   />
 
+                  {/* File Upload Section */}
                   <FormField
                     control={form.control}
-                    name="description"
+                    name="files"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <FormLabel className="block">Upload Files <span className="text-destructive">*</span></FormLabel>
+                        <FormDescription>
+                          Files must be uploaded during project creation. You won't be able to add or modify work files later.
+                        </FormDescription>
+                        
+                        <FormControl>
+                          <div className="border border-dashed border-border rounded-lg p-4 cursor-pointer hover:border-primary/60 transition-colors"
+                               onClick={() => document.getElementById('file-upload')?.click()}
+                          >
+                            <div className="text-center py-4">
+                              <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                              <p className="text-sm font-medium mb-1">Drag & drop or click to upload</p>
+                              <p className="text-xs text-muted-foreground">PDF, DOCX, TXT or paste text directly</p>
+                            </div>
+                            <input 
+                              id="file-upload"
+                              type="file"
+                              multiple
+                              className="hidden"
+                              onChange={(e) => {
+                                const files = e.target.files;
+                                if (files && files.length > 0) {
+                                  field.onChange(Array.from(files));
+                                }
+                              }}
+                            />
+                          </div>
+                        </FormControl>
+                        
+                        {/* Display selected files */}
+                        {field.value && field.value.length > 0 && (
+                          <div className="mt-2 space-y-2">
+                            <p className="text-sm font-medium">Selected Files:</p>
+                            <div className="space-y-1.5">
+                              {Array.from(field.value).map((file: File, index: number) => (
+                                <div key={index} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
+                                  <div className="flex items-center gap-2">
+                                    <FileText className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-sm">{file.name}</span>
+                                    <span className="text-xs text-muted-foreground ml-2">
+                                      {file.size < 1024 ? `${file.size} B` :
+                                       file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` :
+                                       `${(file.size / (1024 * 1024)).toFixed(1)} MB`}
+                                    </span>
+                                  </div>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8" 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const newFiles = Array.from(field.value as File[]).filter((_, i) => i !== index);
+                                      field.onChange(newFiles);
+                                    }}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {/* References Section */}
+                  <FormField
+                    control={form.control}
+                    name="references"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <FormLabel className="block">Reference Files (Optional)</FormLabel>
+                        <FormDescription>
+                          Upload reference files like glossaries, style guides, etc. Unlike work files, references can be added anytime.
+                        </FormDescription>
+                        
+                        <FormControl>
+                          <div className="border border-dashed border-border rounded-lg p-4 cursor-pointer hover:border-primary/60 transition-colors"
+                               onClick={() => document.getElementById('reference-upload')?.click()}
+                          >
+                            <div className="text-center py-4">
+                              <Paperclip className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                              <p className="text-sm font-medium mb-1">Click to upload reference files</p>
+                              <p className="text-xs text-muted-foreground">PDF, DOCX, Excel, or any reference documents</p>
+                            </div>
+                            <input 
+                              id="reference-upload"
+                              type="file"
+                              multiple
+                              className="hidden"
+                              onChange={(e) => {
+                                const files = e.target.files;
+                                if (files && files.length > 0) {
+                                  field.onChange([...(field.value || []), ...Array.from(files)]);
+                                }
+                              }}
+                            />
+                          </div>
+                        </FormControl>
+                        
+                        {/* Display selected reference files */}
+                        {field.value && field.value.length > 0 && (
+                          <div className="mt-2 space-y-2">
+                            <p className="text-sm font-medium">Selected References:</p>
+                            <div className="space-y-1.5">
+                              {Array.from(field.value).map((file: File, index: number) => (
+                                <div key={index} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
+                                  <div className="flex items-center gap-2">
+                                    <FileText className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-sm">{file.name}</span>
+                                    <span className="text-xs text-muted-foreground ml-2">
+                                      {file.size < 1024 ? `${file.size} B` :
+                                       file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` :
+                                       `${(file.size / (1024 * 1024)).toFixed(1)} MB`}
+                                    </span>
+                                  </div>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8" 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const newFiles = Array.from(field.value as File[]).filter((_, i) => i !== index);
+                                      field.onChange(newFiles);
+                                    }}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {/* Notes Section */}
+                  <FormField
+                    control={form.control}
+                    name="notes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Description (Optional)</FormLabel>
+                        <FormLabel>Notes (Optional)</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Brief description of the project"
-                            className="resize-none"
+                            placeholder="Additional notes or instructions for translators"
+                            className="resize-none min-h-24"
                             {...field}
                           />
                         </FormControl>
