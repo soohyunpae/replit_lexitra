@@ -4,7 +4,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Database, AlignLeft, BarChart3, Book, Settings, Upload, FileHeart, SearchCode, Lock, Loader2 } from "lucide-react";
+import { Database, AlignLeft, FileText, Upload, FileHeart, Lock, Loader2 } from "lucide-react";
 
 interface AdminLink {
   name: string;
@@ -63,7 +63,7 @@ export default function AdminDashboard() {
 
   const adminModules: AdminModule[] = [
     {
-      title: "TM Tools",
+      title: "Translation Memory",
       description: "Manage translation memory resources",
       icon: <Database className="h-6 w-6" />,
       links: [
@@ -73,19 +73,12 @@ export default function AdminDashboard() {
       ],
     },
     {
-      title: "TB Tools",
-      description: "Manage terminology base resources",
-      icon: <Book className="h-6 w-6" />,
+      title: "File Processing",
+      description: "Process and prepare files for translation",
+      icon: <FileText className="h-6 w-6" />,
       links: [
-        { name: "Manage Terms", path: "/admin/tb/manage", icon: <SearchCode className="h-4 w-4" />, disabled: true },
-      ],
-    },
-    {
-      title: "System Settings",
-      description: "Configure application settings",
-      icon: <Settings className="h-6 w-6" />,
-      links: [
-        { name: "General Settings", path: "/admin/settings", icon: <Settings className="h-4 w-4" />, disabled: true },
+        { name: "PDF Processing", path: "/admin/file/pdf", icon: <FileText className="h-4 w-4" /> },
+        { name: "File Format Conversion", path: "/admin/file/conversion", icon: <Upload className="h-4 w-4" /> },
       ],
     },
   ];
@@ -95,8 +88,8 @@ export default function AdminDashboard() {
       <div className="container py-6 space-y-6">
         <h1 className="text-2xl font-bold">Admin Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome to the Lexitra admin dashboard. Here you can manage translation memory resources,
-          terminology bases, and system settings.
+          Welcome to the Lexitra admin dashboard. Here you can manage translation memory resources
+          and process different types of files for translation projects.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
