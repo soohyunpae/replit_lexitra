@@ -81,7 +81,7 @@ export default function TranslationMemoryPage() {
 
   return (
     <MainLayout title="Translation Memory">
-      <div className="container max-w-screen-xl mx-auto p-4">
+      <div className="container max-w-screen-xl mx-auto p-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -210,22 +210,22 @@ export default function TranslationMemoryPage() {
                       <TableCell>
                         <div className="inline-flex px-2 py-1 rounded-full text-xs font-medium">
                           {entry.status === "100%" && (
-                            <span className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full">
+                            <span className="status-badge-100 px-2 py-0.5 rounded-full">
                               100%
                             </span>
                           )}
                           {entry.status === "Fuzzy" && (
-                            <span className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 px-2 py-0.5 rounded-full">
+                            <span className="status-badge-fuzzy px-2 py-0.5 rounded-full">
                               Fuzzy
                             </span>
                           )}
                           {entry.status === "MT" && (
-                            <span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full">
+                            <span className="status-badge-mt px-2 py-0.5 rounded-full">
                               MT
                             </span>
                           )}
                           {entry.status === "Reviewed" && (
-                            <span className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 px-2 py-0.5 rounded-full">
+                            <span className="status-badge-reviewed px-2 py-0.5 rounded-full">
                               Reviewed
                             </span>
                           )}

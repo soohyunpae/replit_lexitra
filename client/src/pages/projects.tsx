@@ -415,7 +415,7 @@ export default function ProjectsPage() {
 
   return (
     <MainLayout title="Projects">
-      <main className="flex-1 container max-w-6xl px-4 py-8">
+      <div className="container max-w-screen-xl mx-auto p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -985,7 +985,7 @@ export default function ProjectsPage() {
             </Table>
           </div>
         )}
-      </main>
+      </div>
     </MainLayout>
   );
 }

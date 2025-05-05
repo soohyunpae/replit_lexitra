@@ -155,7 +155,7 @@ export default function Home() {
   
   return (
     <MainLayout title="Dashboard">
-      <main className="flex-1 container max-w-6xl px-4 py-8">
+      <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Welcome to Lexitra</h1>
@@ -402,10 +402,10 @@ export default function Home() {
                           </div>
                           <div 
                             className={`text-xs px-1.5 py-0.5 rounded-full font-medium 
-                              ${entry.status === "100%" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : ""}
-                              ${entry.status === "Fuzzy" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" : ""}
-                              ${entry.status === "MT" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : ""}
-                              ${entry.status === "Reviewed" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" : ""}
+                              ${entry.status === "100%" ? "status-badge-100" : ""}
+                              ${entry.status === "Fuzzy" ? "status-badge-fuzzy" : ""}
+                              ${entry.status === "MT" ? "status-badge-mt" : ""}
+                              ${entry.status === "Reviewed" ? "status-badge-reviewed" : ""}
                             `}
                           >
                             {entry.status}
@@ -477,7 +477,7 @@ export default function Home() {
             </Card>
           </div>
         </div>
-      </main>
+      </div>
     </MainLayout>
   );
 }

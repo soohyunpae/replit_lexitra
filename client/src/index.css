@@ -154,44 +154,46 @@
 }
 
 @layer components {
+  /* Status badges with light/dark variants */
   .status-badge-mt {
-    @apply bg-yellow-500/20 text-yellow-400;
+    @apply bg-yellow-500/20 text-yellow-600 dark:bg-yellow-500/20 dark:text-yellow-400;
   }
   
   .status-badge-fuzzy {
-    @apply bg-orange-500/20 text-orange-400;
+    @apply bg-orange-500/20 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400;
   }
   
   .status-badge-100 {
-    @apply bg-green-500/20 text-green-400;
+    @apply bg-green-500/20 text-green-600 dark:bg-green-500/20 dark:text-green-400;
   }
   
   .status-badge-reviewed {
-    @apply bg-blue-500/20 text-blue-400;
+    @apply bg-blue-500/20 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400;
   }
   
   .status-badge-untranslated {
-    @apply bg-gray-500/20 text-gray-400;
+    @apply bg-gray-500/20 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400;
   }
   
+  /* Status indicators with light/dark variants */
   .status-indicator-mt {
-    @apply bg-yellow-500;
+    @apply bg-yellow-500 dark:bg-yellow-500;
   }
   
   .status-indicator-fuzzy {
-    @apply bg-orange-500;
+    @apply bg-orange-500 dark:bg-orange-500;
   }
   
   .status-indicator-100 {
-    @apply bg-green-500;
+    @apply bg-green-500 dark:bg-green-500;
   }
   
   .status-indicator-reviewed {
-    @apply bg-blue-500;
+    @apply bg-blue-500 dark:bg-blue-500;
   }
   
   .status-indicator-untranslated {
-    @apply bg-gray-500;
+    @apply bg-gray-500 dark:bg-gray-500;
   }
   
   /* Segment rows for translation alignment */

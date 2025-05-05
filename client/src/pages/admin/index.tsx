@@ -148,7 +148,7 @@ export default function AdminDashboard() {
 
   return (
     <MainLayout title="Admin Tools">
-      <div className="container py-6 space-y-6">
+      <div className="container max-w-screen-xl mx-auto p-6 space-y-6">
         <div className="space-y-2">
           <p className="text-muted-foreground">
             Manage TMs and preprocess files

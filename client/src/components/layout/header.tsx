@@ -91,15 +91,15 @@ export function Header({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>내 계정</DropdownMenuLabel>
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/profile">내 프로필</Link>
+                <Link href="/profile">My Profile</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
                 <LogOut className="h-4 w-4 mr-2" />
-                로그아웃
+                Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -109,7 +109,7 @@ export function Header({
             size="sm"
             onClick={() => navigate("/auth")}
           >
-            로그인
+            Login
           </Button>
         )}
       </div>

@@ -154,7 +154,7 @@ export default function GlossaryPage() {
 
   return (
     <MainLayout title="Terminology Base">
-      <div className="container max-w-screen-xl mx-auto p-4">
+      <div className="container max-w-screen-xl mx-auto p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Add Term Form */}
         <Card>
