@@ -8,7 +8,7 @@ import { fromZodError } from "zod-validation-error";
 import { ZodError } from "zod";
 import { translateWithGPT } from "./openai";
 import { setupAuth } from "./auth";
-import { setupTokenAuth } from "./token-auth";
+import { setupTokenAuth, verifyToken } from "./token-auth";
 import { isAuthenticated, isAdmin, isResourceOwnerOrAdmin, canManageProject, errorHandler } from "./auth-middleware";
 
 // Helper function for calculating text similarity
@@ -78,17 +78,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const apiPrefix = "/api";
   
   // Projects API
-  app.get(`${apiPrefix}/projects`, async (req, res) => {
+  app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
     try {
-      // 간단한 디버깅을 위해 인증 검사 임시 비활성화
       console.log('[PROJECTS API]', {
-        authenticated: req.isAuthenticated(),
-        sessionID: req.sessionID,
-        cookies: req.headers.cookie,
+        tokenAuthenticated: !!req.user,
         user: req.user
       });
       
-      // 모든 프로젝트 반환 (디버깅용 - 임시 해결책)
       const projects = await db.query.projects.findMany({
         orderBy: desc(schema.projects.createdAt),
         with: {
@@ -117,12 +113,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get(`${apiPrefix}/projects/:id`, async (req, res) => {
+  app.get(`${apiPrefix}/projects/:id`, verifyToken, async (req, res) => {
     try {
       console.log('[PROJECT DETAIL]', {
-        authenticated: req.isAuthenticated(),
-        sessionID: req.sessionID,
-        cookies: req.headers.cookie,
+        tokenAuthenticated: !!req.user,
         user: req.user
       });
       
