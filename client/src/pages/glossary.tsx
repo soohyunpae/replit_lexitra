@@ -28,6 +28,17 @@ const glossaryFormSchema = z.object({
 
 type GlossaryFormValues = z.infer<typeof glossaryFormSchema>;
 
+const tbResourceFormSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  description: z.string().optional(),
+  defaultSourceLanguage: z.string().min(2),
+  defaultTargetLanguage: z.string().min(2),
+  domain: z.string().optional(),
+  isActive: z.boolean().default(true),
+});
+
+type TbResourceFormValues = z.infer<typeof tbResourceFormSchema>;
+
 export default function GlossaryPage() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,11 +60,30 @@ export default function GlossaryPage() {
   });
 
   // Get all glossary terms
-  const { data: glossaryData, isLoading } = useQuery({
+  const { data: glossaryData, isLoading, error } = useQuery({
     queryKey: ["/api/glossary/all"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/glossary/all");
-      return res.json();
+      try {
+        const res = await apiRequest("GET", "/api/glossary/all");
+        return res.json();
+      } catch (error) {
+        console.error("Error fetching glossary terms:", error);
+        return []; // 오류 발생 시 빈 배열 반환
+      }
+    },
+  });
+  
+  // Get TB resources
+  const { data: tbResources = [] } = useQuery({
+    queryKey: ["/api/glossary/resources"],
+    queryFn: async () => {
+      try {
+        const res = await apiRequest("GET", "/api/glossary/resources");
+        return res.json();
+      } catch (error) {
+        console.error("Error fetching TB resources:", error);
+        return [];
+      }
     },
   });
 
@@ -433,6 +463,63 @@ export default function GlossaryPage() {
                       </DialogHeader>
                       
                       {/* Resource Form will go here */}
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="name">Resource Name</Label>
+                          <Input id="name" placeholder="Enter TB resource name" />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="description">Description</Label>
+                          <Input id="description" placeholder="Enter description" />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="sourceLanguage">Default Source Language</Label>
+                            <Select>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select language" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="en">English</SelectItem>
+                                <SelectItem value="ko">Korean</SelectItem>
+                                <SelectItem value="ja">Japanese</SelectItem>
+                                <SelectItem value="zh">Chinese</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="targetLanguage">Default Target Language</Label>
+                            <Select>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select language" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="en">English</SelectItem>
+                                <SelectItem value="ko">Korean</SelectItem>
+                                <SelectItem value="ja">Japanese</SelectItem>
+                                <SelectItem value="zh">Chinese</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="domain">Domain</Label>
+                          <Input id="domain" placeholder="e.g., Technical, Legal, Medical" />
+                        </div>
+                      </div>
+                      
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowResourceDialog(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit">
+                          <Save className="w-4 h-4 mr-2" /> Save Resource
+                        </Button>
+                      </DialogFooter>
                     </DialogContent>
                   </Dialog>
                 </div>
@@ -450,11 +537,42 @@ export default function GlossaryPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          No TB resources found
-                        </TableCell>
-                      </TableRow>
+                      {tbResources.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                            No TB resources found
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        tbResources.map((resource: any) => (
+                          <TableRow key={resource.id}>
+                            <TableCell className="font-medium">{resource.name}</TableCell>
+                            <TableCell>{resource.description || '-'}</TableCell>
+                            <TableCell>
+                              <div className="flex flex-col text-xs">
+                                <span>Source: {resource.defaultSourceLanguage || 'Any'}</span>
+                                <span>Target: {resource.defaultTargetLanguage || 'Any'}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>{resource.domain || 'General'}</TableCell>
+                            <TableCell>
+                              <Badge variant={resource.isActive ? "success" : "secondary"}>
+                                {resource.isActive ? 'Active' : 'Inactive'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="icon">
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90 hover:bg-destructive/10">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 </div>
