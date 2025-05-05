@@ -82,8 +82,6 @@ export default function AdminDashboard() {
       links: [
         { name: "PDF Processing", path: "/admin/file/pdf", icon: <FileText className="h-4 w-4" /> },
         { name: "File Format Conversion", path: "/admin/file/conversion", icon: <FileType className="h-4 w-4" /> },
-        { name: "Text Extraction", path: "/admin/file/extract", icon: <FilePlus2 className="h-4 w-4" />, disabled: true },
-        { name: "Segment & Export", path: "/admin/file/segment", icon: <FileOutput className="h-4 w-4" />, disabled: true },
       ],
     },
   ];

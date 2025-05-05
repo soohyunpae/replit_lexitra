@@ -530,13 +530,6 @@ export default function FilePreprocessingPage() {
   return (
     <MainLayout title="File Preprocessing">
       <div className="container py-6 space-y-6">
-        <div className="flex flex-col space-y-2">
-          <h1 className="text-2xl font-bold">File Preprocessing Hub</h1>
-          <p className="text-muted-foreground">
-            Unified workspace for processing and preparing files for translation.
-            Extract text from PDFs, convert between formats, and prepare files for translation.
-          </p>
-        </div>
         
         <Card className="overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

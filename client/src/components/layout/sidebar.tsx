@@ -109,16 +109,8 @@ export function Sidebar() {
       label: "Admin Dashboard",
       href: "/admin"
     },
-    {
-      icon: <FileText className="h-5 w-5" />,
-      label: "File Preprocessing",
-      href: "/admin/file"
-    },
-    {
-      icon: <Database className="h-5 w-5" />,
-      label: "Translation Memory",
-      href: "/admin/tm/upload"
-    },
+    // Removed standalone items per UI review feedback
+    // These features are accessible through the Admin Dashboard
   ];
   
   return (
