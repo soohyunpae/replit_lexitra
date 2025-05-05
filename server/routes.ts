@@ -1584,18 +1584,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching glossary terms:', error);
       return handleApiError(res, error);
-    }Id, resourceId),
-          orderBy: desc(schema.glossary.createdAt)
-        });
-      } else {
-        terms = await db.query.glossary.findMany({
-          orderBy: desc(schema.glossary.createdAt)
-        });
-      }
-      
-      return res.json(terms);
-    } catch (error) {
-      return handleApiError(res, error);
     }
   });
   
