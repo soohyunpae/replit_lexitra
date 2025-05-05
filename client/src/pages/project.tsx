@@ -18,7 +18,7 @@ import {
   CardFooter
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Upload, Download, File, FileText, Paperclip, PlusCircle } from "lucide-react";
+import { Upload, Download, File, FileText, Paperclip, PlusCircle, X, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +33,15 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+
+// Helper function to format file size
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
 
 export default function Project() {
   const [isMatch, params] = useRoute("/projects/:id");
