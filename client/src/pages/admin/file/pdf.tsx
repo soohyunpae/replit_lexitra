@@ -129,7 +129,6 @@ export default function PDFProcessingPage({ embedded = false }: PDFProcessingPro
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <CardHeader className="pb-0">
           <div className="flex items-center justify-between">
-            <CardTitle>PDF Processing Workflow</CardTitle>
             <ProcessingStatusIndicator />
           </div>
           <CardDescription>

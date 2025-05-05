@@ -177,7 +177,6 @@ export default function FileConversionPage({ embedded = false }: FileConversionP
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <CardHeader className="pb-0">
           <div className="flex items-center justify-between">
-            <CardTitle>File Conversion Workflow</CardTitle>
             <ProcessingStatusIndicator />
           </div>
           <CardDescription>
