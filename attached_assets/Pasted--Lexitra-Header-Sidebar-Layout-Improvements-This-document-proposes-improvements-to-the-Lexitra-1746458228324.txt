@@ -1,0 +1,66 @@
+# Lexitra – Header & Sidebar Layout Improvements
+
+This document proposes improvements to the Lexitra layout, focusing on visual clarity and consistency across the header and sidebar. These changes aim to reduce redundancy, improve responsiveness, and streamline navigation.
+
+---
+
+## 🧭 Sidebar Improvements
+
+### ✅ Collapsible Sidebar
+
+* Allow sidebar to collapse to icons only (like Phrase).
+* When collapsed, page titles (e.g. "Projects") should appear in the header to indicate current section.
+
+### ✅ Remove Redundant Divider
+
+* Remove the horizontal divider under the Lexitra logo in the sidebar.
+* This avoids visual misalignment with the top header when sidebar is expanded.
+
+### ✅ Menu Cleanup
+
+* Keep essential items only:
+
+  * Dashboard
+  * Projects
+  * Terminology Base
+  * Translation Memory
+  * Admin Tools (if admin)
+* ❌ Remove "File Preprocessing" and redundant "Translation Memory" entries under Admin Tools (already integrated into TM Management).
+
+### ✅ Settings & Logout Placement
+
+* Keep ⚙️ Settings and 🚪 Logout in the **top-right corner of the app**, not in the sidebar.
+
+---
+
+## 🧱 Header Bar Enhancements
+
+### ✅ Unify Navigation Labeling
+
+* Remove duplicate labels that appear both in the header and in the main content area.
+* For example: The label "Projects" appears in both the header and directly below it in the page content. ✅ Keep it in the **header only**, and remove from main content.
+
+### ✅ Adjust Header Height & Padding
+
+* Ensure the top header and sidebar heights align visually.
+* Reduce padding/margin inconsistencies.
+
+### ✅ Responsive Behavior
+
+* On small screens or when sidebar is collapsed:
+
+  * Show current section (e.g., “Projects”) in the header
+  * Keep user controls (Settings/Logout) accessible via dropdown
+
+---
+
+## 🧠 Design Rationale
+
+* Avoids visual redundancy
+* Keeps layout clean and focused
+* Follows modern app UI patterns (like Phrase, Figma, etc.)
+* Makes the experience more intuitive across screen sizes
+
+---
+
+Once implemented, these changes will result in a more consistent, professional, and user-friendly interface for Lexitra users.
