@@ -26,10 +26,14 @@ export async function apiRequest(
   method: string,
   path: string,
   data?: unknown | undefined,
+  options?: { headers?: Record<string, string> }
 ): Promise<Response> {
   // Create headers including Authorization with token if available
+  const isFormData = data instanceof FormData;
+  
   const headers: Record<string, string> = {
-    "Content-Type": data ? "application/json" : "text/plain",
+    ...options?.headers,
+    ...(isFormData ? {} : { "Content-Type": data ? "application/json" : "text/plain" }),
     "Accept": "application/json"
   };
   
@@ -44,7 +48,7 @@ export async function apiRequest(
     credentials: 'include',  // Still include cookies for backward compatibility
     mode: 'cors',           // Explicitly set CORS mode
     headers,
-    body: data ? JSON.stringify(data) : undefined,
+    body: data ? (isFormData ? data : JSON.stringify(data)) : undefined,
   });
 
   console.log(`API Request to ${method} ${path}:`, {

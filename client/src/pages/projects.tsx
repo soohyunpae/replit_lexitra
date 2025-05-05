@@ -262,7 +262,39 @@ export default function ProjectsPage() {
 
   const createProject = useMutation({
     mutationFn: async (data: ProjectFormValues) => {
-      const response = await apiRequest("POST", "/api/projects", data);
+      // 폼 데이터를 FormData로 변환하여 파일 업로드 처리
+      const formData = new FormData();
+      formData.append("name", data.name);
+      formData.append("sourceLanguage", data.sourceLanguage);
+      formData.append("targetLanguage", data.targetLanguage);
+      
+      if (data.description) {
+        formData.append("description", data.description);
+      }
+      
+      if (data.notes) {
+        formData.append("notes", data.notes);
+      }
+      
+      // 파일 추가
+      if (data.files && data.files.length > 0) {
+        Array.from(data.files).forEach((file: File, index) => {
+          formData.append(`files`, file);
+        });
+      }
+      
+      // 참조 파일 추가
+      if (data.references && data.references.length > 0) {
+        Array.from(data.references).forEach((file: File, index) => {
+          formData.append(`references`, file);
+        });
+      }
+      
+      const response = await apiRequest("POST", "/api/projects", formData, {
+        headers: {
+          // FormData를 사용할 때는 Content-Type 헤더를 설정하지 않음 (브라우저가 자동으로 설정)
+        },
+      });
       return response.json();
     },
     onSuccess: (data) => {
@@ -395,7 +427,7 @@ export default function ProjectsPage() {
                 New Project
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create New Translation Project</DialogTitle>
                 <DialogDescription>
@@ -405,19 +437,77 @@ export default function ProjectsPage() {
 
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Project Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Patent Translation 2023" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Project Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Patent Translation 2023" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <FormField
+                        control={form.control}
+                        name="sourceLanguage"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Source</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Source" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="KO">Korean (KO)</SelectItem>
+                                <SelectItem value="JA">Japanese (JA)</SelectItem>
+                                <SelectItem value="EN">English (EN)</SelectItem>
+                                <SelectItem value="ZH">Chinese (ZH)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="targetLanguage"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Target</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Target" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="EN">English (EN)</SelectItem>
+                                <SelectItem value="KO">Korean (KO)</SelectItem>
+                                <SelectItem value="JA">Japanese (JA)</SelectItem>
+                                <SelectItem value="ZH">Chinese (ZH)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
 
                   {/* File Upload Section */}
                   <FormField
@@ -579,62 +669,6 @@ export default function ProjectsPage() {
                       </FormItem>
                     )}
                   />
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="sourceLanguage"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Source Language</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select language" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="KO">Korean (KO)</SelectItem>
-                              <SelectItem value="JA">Japanese (JA)</SelectItem>
-                              <SelectItem value="EN">English (EN)</SelectItem>
-                              <SelectItem value="ZH">Chinese (ZH)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="targetLanguage"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Target Language</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select language" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="EN">English (EN)</SelectItem>
-                              <SelectItem value="KO">Korean (KO)</SelectItem>
-                              <SelectItem value="JA">Japanese (JA)</SelectItem>
-                              <SelectItem value="ZH">Chinese (ZH)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
 
                   <DialogFooter>
                     <Button
