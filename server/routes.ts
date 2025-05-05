@@ -159,7 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user: req.user
       });
       
-      const { name, sourceLanguage, targetLanguage, description, notes } = req.body;
+      const { name, sourceLanguage, targetLanguage, description, notes, deadline } = req.body;
       
       if (!name || !sourceLanguage || !targetLanguage) {
         return res.status(400).json({ message: 'Required fields missing' });
@@ -172,6 +172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         targetLanguage,
         description: description || null,
         notes: notes || null,
+        deadline: deadline ? new Date(deadline) : null,
         userId: req.user.id,
         status: 'Unclaimed'
       };
@@ -564,9 +565,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'File not found' });
       }
       
-      // Set content disposition header for download
-      res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
-      res.setHeader('Content-Type', 'text/plain');
+      // Set content disposition header for download with double quotes and encoded filename
+      const encodedFilename = encodeURIComponent(file.name);
+      res.setHeader('Content-Disposition', `attachment; filename="${encodedFilename}"; filename*=UTF-8''${encodedFilename}`);
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache');
       
       // Return file content
       return res.send(file.content);

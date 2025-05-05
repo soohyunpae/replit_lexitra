@@ -46,6 +46,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
 
 export const insertProjectSchema = createInsertSchema(projects, {
   name: (schema) => schema.min(3, "Project name must be at least 3 characters"),
+  deadline: (schema) => schema.optional(),
 });
 
 export type InsertProject = z.infer<typeof insertProjectSchema>;

@@ -88,6 +88,7 @@ const projectFormSchema = z.object({
   files: z.instanceof(FileList).or(z.array(z.instanceof(File))).optional(), // 파일은 필수가 아님
   references: z.instanceof(FileList).or(z.array(z.instanceof(File))).optional(),
   notes: z.string().optional(),
+  deadline: z.string().optional(),
 });
 
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
@@ -252,6 +253,7 @@ export default function ProjectsPage() {
       files: [] as File[],
       references: [] as File[],
       notes: "",
+      deadline: "",
     },
   });
   
@@ -271,6 +273,10 @@ export default function ProjectsPage() {
       
       if (data.notes) {
         formData.append("notes", data.notes);
+      }
+      
+      if (data.deadline) {
+        formData.append("deadline", data.deadline);
       }
       
       // 파일 추가
@@ -505,6 +511,24 @@ export default function ProjectsPage() {
                       />
                     </div>
                   </div>
+                  
+                  {/* Deadline Field */}
+                  <FormField
+                    control={form.control}
+                    name="deadline"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Deadline (Optional)</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Set a deadline for this translation project.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   {/* File Upload Section */}
                   <FormField
