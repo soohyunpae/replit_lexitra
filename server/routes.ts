@@ -14,11 +14,9 @@ import { isAdmin, isResourceOwnerOrAdmin, canManageProject, errorHandler } from 
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from 'url';
 
-// ES modules에서는 __dirname이 없으므로 import.meta.url을 사용하여 경로 구성
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// 파일 경로를 위한 변수 설정
+const __dirname = process.cwd();
 
 // 파일 업로드를 위한 multer 설정
 const storage = multer.diskStorage({
@@ -353,7 +351,7 @@ function registerAdminRoutes(app: Express) {
           .slice(0, 100); // Limit number of lines for demonstration
         
         // Further segment into sentences for translation
-        let sentences = [];
+        let sentences: string[] = [];
         for (const line of textLines) {
           const lineSentences = segmentText(line);
           sentences = [...sentences, ...lineSentences];
@@ -426,7 +424,7 @@ function registerAdminRoutes(app: Express) {
         
         // Create aligned pairs (simplified approach)
         const alignedCount = Math.min(sourceLines.length, targetLines.length);
-        const alignedPairs = [];
+        const alignedPairs: { source: string; target: string }[] = [];
         
         for (let i = 0; i < alignedCount; i++) {
           alignedPairs.push({
@@ -478,7 +476,7 @@ function registerAdminRoutes(app: Express) {
       }
       
       // Check if conversion is supported
-      const supportedConversions = {
+      const supportedConversions: Record<string, string[]> = {
         txt: ["txt", "csv", "xliff"],
         docx: ["docx", "csv", "xliff"],
         csv: ["csv", "txt"],
@@ -486,7 +484,7 @@ function registerAdminRoutes(app: Express) {
         pdf: ["docx", "csv", "xliff"]
       };
       
-      if (!supportedConversions[inputFormat]?.includes(outputFormat)) {
+      if (!supportedConversions[inputFormat as keyof typeof supportedConversions]?.includes(outputFormat)) {
         return res.status(400).json({ 
           error: `Conversion from ${inputFormat} to ${outputFormat} is not supported` 
         });
@@ -676,7 +674,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // 파일들을 데이터베이스에 저장
-      let savedFiles = [];
+      let savedFiles: typeof schema.files.$inferSelect[] = [];
       if (files.length > 0) {
         savedFiles = await db.insert(schema.files).values(files).returning();
         
@@ -729,7 +727,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Process each line
             for (const line of contentLines) {
-              const sentences = segmentText(line.trim());
+              const sentences = segmentText(String(line).trim());
               
               // Add each sentence as a separate segment
               segments = [
