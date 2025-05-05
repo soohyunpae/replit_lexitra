@@ -170,11 +170,24 @@ export function setupAuth(app: Express) {
         })
         .returning({ id: users.id, username: users.username, role: users.role });
       
-      // Log the user in
-      req.login(user, (err) => {
-        if (err) return next(err);
-        return res.status(201).json(user);
-      });
+      try {
+        // Generate JWT token for the user
+        const token = generateToken(user);
+        
+        console.log('[REGISTER SUCCESS]', {
+          user,
+          tokenGenerated: true
+        });
+        
+        // Return the token along with user info
+        return res.status(201).json({
+          ...user,
+          token
+        });
+      } catch (tokenErr) {
+        console.error('[TOKEN GENERATION ERROR]', tokenErr);
+        return res.status(500).json({ message: "Failed to generate authentication token" });
+      }
     } catch (error) {
       next(error);
     }
@@ -225,9 +238,15 @@ export function setupAuth(app: Express) {
 
   // Route for logging out
   app.post("/api/logout", (req, res, next) => {
+    // For session-based auth - log out of the session
     req.logout((err) => {
       if (err) return next(err);
-      return res.sendStatus(200);
+      
+      // For token-based auth, we don't need to do anything server-side
+      // The client will remove the token from localStorage
+      
+      console.log('[LOGOUT SUCCESS]');
+      return res.status(200).json({ message: 'Logged out successfully' });
     });
   });
 
