@@ -43,13 +43,14 @@ export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     name: 'lexitra.sid',
     secret: process.env.SESSION_SECRET || "lexitra-secret-key",
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
+    proxy: true,
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
+      secure: false,
       maxAge: 30 * 24 * 60 * 60 * 1000,
       httpOnly: true,
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      sameSite: 'lax',
       path: '/',
     },
     store: new PostgresSessionStore({

@@ -12,10 +12,13 @@ export async function apiRequest(
   path: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const response = await fetch(`/api${path}`, {
+  const response = await fetch(path, {
     method,
     credentials: 'include',
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: {
+      ...(data && { "Content-Type": "application/json" }),
+      "Accept": "application/json"
+    },
     body: data ? JSON.stringify(data) : undefined,
   });
 
