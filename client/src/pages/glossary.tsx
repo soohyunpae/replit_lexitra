@@ -267,7 +267,7 @@ export default function GlossaryPage() {
       <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center gap-2 mb-2">
           <Database className="h-5 w-5" />
-          <h1 className="text-2xl font-bold">Terminology Base</h1>
+          <h2 className="text-3xl font-bold tracking-tight">Terminology Base</h2>
         </div>
         <p className="text-muted-foreground mb-6">
           Manage terminology database and terms

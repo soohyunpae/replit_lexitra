@@ -30,7 +30,8 @@ import {
   Filter,
   Upload,
   Paperclip,
-  X
+  X,
+  FolderClosed
 } from "lucide-react";
 import {
   Dialog,
