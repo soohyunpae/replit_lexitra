@@ -77,7 +77,7 @@ export function EditableSegment({
   
   return (
     <div
-      className={`rounded-md p-3 mb-3 ${isSelected ? "bg-accent/90" : "bg-accent/50"} transition-colors ${!isSource && !segment.target ? "border border-dashed border-yellow-400" : ""}`}
+      className={`rounded-md p-3 mb-3 h-full w-full flex flex-col ${segment.status === "Reviewed" ? "bg-blue-50 dark:bg-blue-950/30" : isSelected ? "bg-accent/90" : "bg-card"} transition-colors ${!isSource && !segment.target ? "border border-dashed border-yellow-400" : ""}`}
       onClick={onSelect}
     >
       <div className="flex justify-between items-start mb-2">
@@ -139,7 +139,7 @@ export function EditableSegment({
           placeholder="Enter translation..."
         />
       ) : (
-        <div className="font-mono text-sm whitespace-pre-wrap break-words">
+        <div className="font-mono text-sm whitespace-pre-wrap break-words min-h-[60px] h-full w-full">
           {value || (
             <span className="text-muted-foreground italic">
               {isSource ? "No source text" : "No translation yet"}
