@@ -60,9 +60,59 @@ export function NewTranslationEditor({
     sourcePanel.addEventListener('scroll', handleSourceScroll);
     targetPanel.addEventListener('scroll', handleTargetScroll);
     
+    // Dummy variable to store timeout ID
+    let syncTimeoutId: NodeJS.Timeout | null = null;
+    
+    // Synchronize heights of corresponding source and target segments
+    const syncSegmentHeights = () => {
+      const sourceDivs = sourcePanel.querySelectorAll<HTMLElement>('.segment-row');
+      const targetDivs = targetPanel.querySelectorAll<HTMLElement>('.segment-row');
+      
+      if (sourceDivs.length !== targetDivs.length) return;
+      
+      for (let i = 0; i < sourceDivs.length; i++) {
+        const sourceSegment = sourceDivs[i];
+        const targetSegment = targetDivs[i];
+        
+        if (sourceSegment && targetSegment) {
+          // Reset heights first to ensure proper measurement
+          sourceSegment.style.height = 'auto';
+          targetSegment.style.height = 'auto';
+          
+          // Get natural heights
+          const sourceHeight = sourceSegment.getBoundingClientRect().height;
+          const targetHeight = targetSegment.getBoundingClientRect().height;
+          
+          // Set both to the maximum height
+          const maxHeight = Math.max(sourceHeight, targetHeight);
+          sourceSegment.style.height = `${maxHeight}px`;
+          targetSegment.style.height = `${maxHeight}px`;
+        }
+      }
+    };
+    
+    // Run once when component mounts and whenever segments change
+    syncSegmentHeights();
+    
+    // Also run after any potential text edits with a delay for reflow
+    const resizeObserver = new ResizeObserver(() => {
+      // Use a debounce technique to avoid excessive calls
+      if (syncTimeoutId) clearTimeout(syncTimeoutId);
+      syncTimeoutId = setTimeout(syncSegmentHeights, 100);
+    });
+    
+    // Observe all segment rows for size changes
+    const sourceElements = sourcePanel.querySelectorAll<HTMLElement>('.segment-row');
+    const targetElements = targetPanel.querySelectorAll<HTMLElement>('.segment-row');
+    
+    sourceElements.forEach(row => resizeObserver.observe(row));
+    targetElements.forEach(row => resizeObserver.observe(row));
+    
     return () => {
       sourcePanel.removeEventListener('scroll', handleSourceScroll);
       targetPanel.removeEventListener('scroll', handleTargetScroll);
+      if (syncTimeoutId) clearTimeout(syncTimeoutId);
+      resizeObserver.disconnect();
     };
   }, [localSegments.length]);
   
