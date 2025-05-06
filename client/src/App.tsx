@@ -12,7 +12,7 @@ import Projects from "@/pages/projects";
 import Project from "@/pages/project";
 import Translation from "@/pages/translation";
 import Glossary from "@/pages/glossary";
-import TM from "@/pages/tm";
+import TM from "@/pages/tm-new";
 import Settings from "@/pages/settings";
 import AuthPage from "@/pages/auth-page";
 import ProfilePage from "@/pages/profile";
