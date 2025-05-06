@@ -555,13 +555,22 @@ export default function Project() {
           
           {/* Project information and settings - 2 column layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {/* Project Info Card (Non-editable) */}
+            {/* Project Info Card (with Edit Toggle) */}
             <Card className="border-border/50">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center">
-                  <span>📋 Project Info</span>
-                </CardTitle>
-                <CardDescription>Basic project information - some fields can be updated</CardDescription>
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-lg flex items-center">
+                    <span>📋 Project Info</span>
+                  </CardTitle>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 px-2 text-xs"
+                    onClick={() => setIsEditing(!isEditing)}
+                  >
+                    {isEditing ? "Cancel" : "Edit"}
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="text-sm space-y-3">
                 <div className="flex flex-col space-y-3">
@@ -595,35 +604,66 @@ export default function Project() {
                   
                   <div className="grid grid-cols-2 gap-1 items-center">
                     <div className="text-muted-foreground">Deadline:</div>
-                    <div>
-                      <Input 
-                        type="date" 
-                        defaultValue={project.deadline ? new Date(project.deadline).toISOString().split('T')[0] : ''}
-                        className="h-8"
-                      />
-                    </div>
+                    {isEditing ? (
+                      <div>
+                        <Input 
+                          type="date" 
+                          value={deadlineInput}
+                          onChange={(e) => setDeadlineInput(e.target.value)}
+                          className="h-8"
+                        />
+                      </div>
+                    ) : (
+                      <div className="font-medium">
+                        {project.deadline ? formatDate(project.deadline) : "Not set"}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-2 gap-1 items-center">
                     <div className="text-muted-foreground">Glossary (TB):</div>
-                    <div>
-                      <select className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors">
-                        <option value="default">Default Glossary</option>
-                        <option value="patents">Patents Glossary</option>
-                        <option value="technical">Technical Glossary</option>
-                      </select>
-                    </div>
+                    {isEditing ? (
+                      <div>
+                        <select 
+                          className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
+                          value={glossaryInput}
+                          onChange={(e) => setGlossaryInput(e.target.value)}
+                        >
+                          <option value="default">Default Glossary</option>
+                          <option value="patents">Patents Glossary</option>
+                          <option value="technical">Technical Glossary</option>
+                        </select>
+                      </div>
+                    ) : (
+                      <div className="font-medium">
+                        {project.glossaryId === "patents" ? "Patents Glossary" : 
+                         project.glossaryId === "technical" ? "Technical Glossary" : 
+                         "Default Glossary"}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-2 gap-1 items-center">
                     <div className="text-muted-foreground">Translation Memory:</div>
-                    <div>
-                      <select className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors">
-                        <option value="default">Default TM</option>
-                        <option value="patents">Patents TM</option>
-                        <option value="technical">Technical TM</option>
-                      </select>
-                    </div>
+                    {isEditing ? (
+                      <div>
+                        <select 
+                          className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
+                          value={tmInput}
+                          onChange={(e) => setTmInput(e.target.value)}
+                        >
+                          <option value="default">Default TM</option>
+                          <option value="patents">Patents TM</option>
+                          <option value="technical">Technical TM</option>
+                        </select>
+                      </div>
+                    ) : (
+                      <div className="font-medium">
+                        {project.tmId === "patents" ? "Patents TM" : 
+                         project.tmId === "technical" ? "Technical TM" : 
+                         "Default TM"}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-2 gap-1">
@@ -633,16 +673,24 @@ export default function Project() {
                     </div>
                   </div>
                 </div>
-                <div className="pt-4 border-t border-border/50 mt-3">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full flex items-center justify-center gap-1"
-                  >
-                    <span>Save Project Info</span>
-                  </Button>
-                </div>
+                {isEditing && (
+                  <div className="pt-4 border-t border-border/50 mt-3">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full flex items-center justify-center gap-1"
+                      onClick={() => saveProjectInfo.mutate({
+                        deadline: deadlineInput || null,
+                        glossaryId: glossaryInput,
+                        tmId: tmInput
+                      })}
+                      disabled={saveProjectInfo.isPending}
+                    >
+                      <span>{saveProjectInfo.isPending ? "Saving..." : "Save Project Info"}</span>
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
             
