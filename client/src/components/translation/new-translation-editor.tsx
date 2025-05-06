@@ -40,25 +40,12 @@ export function NewTranslationEditor({
     setLocalSegments(segments);
   }, [segments]);
   
-  // Synchronize scroll between source and target panels
+  // Synchronize heights for source and target panels
   useEffect(() => {
     const sourcePanel = document.getElementById('source-panel');
     const targetPanel = document.getElementById('target-panel');
     
     if (!sourcePanel || !targetPanel) return;
-    
-    // Synchronize source panel scroll to target panel
-    const handleSourceScroll = () => {
-      targetPanel.scrollTop = sourcePanel.scrollTop;
-    };
-    
-    // Synchronize target panel scroll to source panel
-    const handleTargetScroll = () => {
-      sourcePanel.scrollTop = targetPanel.scrollTop;
-    };
-    
-    sourcePanel.addEventListener('scroll', handleSourceScroll);
-    targetPanel.addEventListener('scroll', handleTargetScroll);
     
     // Dummy variable to store timeout ID
     let syncTimeoutId: NodeJS.Timeout | null = null;
@@ -87,6 +74,10 @@ export function NewTranslationEditor({
           const maxHeight = Math.max(sourceHeight, targetHeight);
           sourceSegment.style.height = `${maxHeight}px`;
           targetSegment.style.height = `${maxHeight}px`;
+          
+          // Make both segments have equal width within their containers
+          sourceSegment.style.minWidth = '100%';
+          targetSegment.style.minWidth = '100%';
         }
       }
     };
@@ -109,8 +100,6 @@ export function NewTranslationEditor({
     targetElements.forEach(row => resizeObserver.observe(row));
     
     return () => {
-      sourcePanel.removeEventListener('scroll', handleSourceScroll);
-      targetPanel.removeEventListener('scroll', handleTargetScroll);
       if (syncTimeoutId) clearTimeout(syncTimeoutId);
       resizeObserver.disconnect();
     };
@@ -405,44 +394,49 @@ export function NewTranslationEditor({
       
       {/* Main content area */}
       <div className="flex-1 overflow-hidden flex">
-        {/* Source and Target panels */}
-        <div className="flex-1 overflow-hidden flex">
-          {/* Source panel */}
-          <div className="w-1/2 overflow-y-auto" id="source-panel">
-            <div className="px-4 py-3">
-              {localSegments.map((segment, index) => (
-                <div key={segment.id} className="segment-row" data-segment-id={segment.id}>
-                  <EditableSegment
-                    segment={segment}
-                    index={index + 1}
-                    isSource={true}
-                    onSelect={() => handleSegmentSelect(segment.id)}
-                    isSelected={selectedSegmentId === segment.id}
-                  />
+        {/* Source and Target panels with single scrollbar */}
+        <div className="flex-1 overflow-hidden flex relative">
+          {/* Container with single scrollbar */}
+          <div className="flex-1 overflow-y-auto" id="main-scroll-container">
+            <div className="flex w-full">
+              {/* Source panel - no individual scrollbar */}
+              <div className="w-1/2 overflow-hidden" id="source-panel">
+                <div className="px-4 py-3">
+                  {localSegments.map((segment, index) => (
+                    <div key={segment.id} className="segment-row" data-segment-id={segment.id}>
+                      <EditableSegment
+                        segment={segment}
+                        index={index + 1}
+                        isSource={true}
+                        onSelect={() => handleSegmentSelect(segment.id)}
+                        isSelected={selectedSegmentId === segment.id}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-          
-          {/* Divider */}
-          <div className="border-l border-border w-1 cursor-col-resize"></div>
-          
-          {/* Target panel */}
-          <div className="w-1/2 overflow-y-auto" id="target-panel">
-            <div className="px-4 py-3">
-              {localSegments.map((segment, index) => (
-                <div key={segment.id} className="segment-row" data-segment-id={segment.id}>
-                  <EditableSegment
-                    segment={segment}
-                    index={index + 1}
-                    isSource={false}
-                    onSelect={() => handleSegmentSelect(segment.id)}
-                    onUpdate={(target, status) => handleSegmentUpdate(segment.id, target, status)}
-                    onTranslateWithGPT={() => handleTranslateWithGPT(segment.id)}
-                    isSelected={selectedSegmentId === segment.id}
-                  />
+              </div>
+              
+              {/* Divider */}
+              <div className="border-l border-border sticky top-0 h-full cursor-col-resize"></div>
+              
+              {/* Target panel - no individual scrollbar */}
+              <div className="w-1/2 overflow-hidden" id="target-panel">
+                <div className="px-4 py-3">
+                  {localSegments.map((segment, index) => (
+                    <div key={segment.id} className="segment-row" data-segment-id={segment.id}>
+                      <EditableSegment
+                        segment={segment}
+                        index={index + 1}
+                        isSource={false}
+                        onSelect={() => handleSegmentSelect(segment.id)}
+                        onUpdate={(target, status) => handleSegmentUpdate(segment.id, target, status)}
+                        onTranslateWithGPT={() => handleTranslateWithGPT(segment.id)}
+                        isSelected={selectedSegmentId === segment.id}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>
