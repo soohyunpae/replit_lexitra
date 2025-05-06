@@ -521,9 +521,9 @@ export default function Project() {
             <Card className="border-border/50">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
-                  <span>🔒 Project Info</span>
+                  <span>📋 Project Info</span>
                 </CardTitle>
-                <CardDescription>These fields are fixed upon project creation and cannot be edited</CardDescription>
+                <CardDescription>Basic project information - some fields can be updated</CardDescription>
               </CardHeader>
               <CardContent className="text-sm space-y-3">
                 <div className="flex flex-col space-y-3">
@@ -555,17 +555,36 @@ export default function Project() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">Glossary:</div>
-                    <div className="font-medium">
-                      <span>Default Glossary</span>
+                  <div className="grid grid-cols-2 gap-1 items-center">
+                    <div className="text-muted-foreground">Deadline:</div>
+                    <div>
+                      <Input 
+                        type="date" 
+                        defaultValue={project.deadline ? new Date(project.deadline).toISOString().split('T')[0] : ''}
+                        className="h-8"
+                      />
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">TM Used:</div>
-                    <div className="font-medium">
-                      <span>Default TM</span>
+                  <div className="grid grid-cols-2 gap-1 items-center">
+                    <div className="text-muted-foreground">Glossary (TB):</div>
+                    <div>
+                      <select className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors">
+                        <option value="default">Default Glossary</option>
+                        <option value="patents">Patents Glossary</option>
+                        <option value="technical">Technical Glossary</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-1 items-center">
+                    <div className="text-muted-foreground">Translation Memory:</div>
+                    <div>
+                      <select className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors">
+                        <option value="default">Default TM</option>
+                        <option value="patents">Patents TM</option>
+                        <option value="technical">Technical TM</option>
+                      </select>
                     </div>
                   </div>
                   
@@ -575,6 +594,16 @@ export default function Project() {
                       <span>{workFiles?.length || 0} file(s)</span>
                     </div>
                   </div>
+                </div>
+                <div className="pt-4 border-t border-border/50 mt-3">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full flex items-center justify-center gap-1"
+                  >
+                    <span>Save Project Info</span>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -589,41 +618,6 @@ export default function Project() {
               </CardHeader>
               <CardContent className="text-sm space-y-4">
                 <div className="flex flex-col space-y-5">
-                  {/* Deadline setting */}
-                  <div className="grid grid-cols-3 gap-2 items-center">
-                    <div className="text-muted-foreground">Deadline:</div>
-                    <div className="col-span-2">
-                      <Input 
-                        type="date" 
-                        defaultValue={project.deadline ? new Date(project.deadline).toISOString().split('T')[0] : ''}
-                        className="h-8"
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Glossary (TB) setting */}
-                  <div className="grid grid-cols-3 gap-2 items-center">
-                    <div className="text-muted-foreground">Glossary (TB):</div>
-                    <div className="col-span-2">
-                      <select className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors">
-                        <option value="default">Default Glossary</option>
-                        <option value="patents">Patents Glossary</option>
-                        <option value="technical">Technical Glossary</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  {/* Translation Memory setting */}
-                  <div className="grid grid-cols-3 gap-2 items-center">
-                    <div className="text-muted-foreground">Translation Memory:</div>
-                    <div className="col-span-2">
-                      <select className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors">
-                        <option value="default">Default TM</option>
-                        <option value="patents">Patents TM</option>
-                        <option value="technical">Technical TM</option>
-                      </select>
-                    </div>
-                  </div>
                   
                   {/* Reference files section incorporated into Settings */}
                   <div className="border-t border-border/50 pt-3 mt-2">
@@ -810,204 +804,7 @@ export default function Project() {
           
           {/* Work files section deleted as requested - it's duplicate of Files section below */}
           
-          {/* References Section */}
-          <Card className="mb-6">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">
-                References
-              </CardTitle>
-              <CardDescription>
-                Upload reference files (glossaries, guides, etc.) to help with translation - unlike work files, reference files can be added anytime
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col space-y-4">
-                {/* Display saved reference files (from files table with type='reference') */}
-                {referenceFiles.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium">Reference Files</h3>
-                    {referenceFiles.map((file: FileType, index: number) => (
-                      <div key={`file-ref-${index}`} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <button
-                            onClick={() => {
-                              const token = localStorage.getItem('auth_token');
-                              const downloadFile = async () => {
-                                try {
-                                  const response = await fetch(`/api/files/${file.id}/download`, {
-                                    method: 'GET',
-                                    headers: {
-                                      'Authorization': `Bearer ${token}`
-                                    }
-                                  });
-                                  
-                                  if (!response.ok) {
-                                    throw new Error(`Download failed: ${response.status}`);
-                                  }
-                                  
-                                  const blob = await response.blob();
-                                  const url = window.URL.createObjectURL(blob);
-                                  const a = document.createElement('a');
-                                  a.style.display = 'none';
-                                  a.href = url;
-                                  a.download = file.name;
-                                  document.body.appendChild(a);
-                                  a.click();
-                                  window.URL.revokeObjectURL(url);
-                                  document.body.removeChild(a);
-                                  
-                                  toast({
-                                    title: "Download started",
-                                    description: `File ${file.name} is being downloaded.`
-                                  });
-                                } catch (error) {
-                                  console.error('Download error:', error);
-                                  toast({
-                                    title: "Download failed",
-                                    description: error instanceof Error ? error.message : 'Unknown error',
-                                    variant: "destructive"
-                                  });
-                                }
-                              };
-                              
-                              downloadFile();
-                            }}
-                            className="text-sm text-primary hover:underline cursor-pointer text-left flex items-center gap-2"
-                          >
-                            <FileDownIcon className="h-3.5 w-3.5" />
-                            {file.name}
-                          </button>
-                        </div>
-                        <div className="flex items-center">
-                          <span className="text-xs text-muted-foreground mr-2">
-                            {new Date(file.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {/* Display legacy saved references from JSON field (for backward compatibility) */}
-                {savedReferences.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium">Legacy References</h3>
-                    {savedReferences.map((file: SavedReference, index: number) => (
-                      <div key={`saved-${index}`} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">{file.name}</span>
-                          <span className="text-xs text-muted-foreground ml-2">
-                            {formatFileSize(file.size)}
-                          </span>
-                          <span className="text-xs text-amber-500 ml-2">(레거시 형식 - 다운로드 불가)</span>
-                        </div>
-                        <div className="flex items-center">
-                          <span className="text-xs text-muted-foreground mr-2">
-                            {new Date(file.addedAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {/* Display new references being uploaded */}
-                {references.length > 0 ? (
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium">New References</h3>
-                    {references.map((file: File, index: number) => (
-                      <div key={`new-${index}`} className="flex items-center justify-between py-2 px-3 border border-border rounded-md">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{file.name}</span>
-                          <span className="text-xs text-muted-foreground ml-2">
-                            {formatFileSize(file.size)}
-                          </span>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8" 
-                          onClick={() => {
-                            setReferences(references.filter((_, i) => i !== index));
-                          }}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                    
-                    <div className="flex justify-end">
-                      <Button 
-                        variant="outline"
-                        className="gap-2"
-                        onClick={() => {
-                          if (references.length > 0) {
-                            uploadReferences.mutate(references);
-                          }
-                        }}
-                        disabled={uploadReferences.isPending}
-                      >
-                        {uploadReferences.isPending ? "Uploading..." : "Upload"}
-                      </Button>
-                    </div>
-                  </div>
-                ) : savedReferences.length === 0 && (
-                  <div 
-                    className="text-center py-6 border border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors"
-                    onClick={() => fileInputRef.current?.click()}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        fileInputRef.current?.click();
-                      }
-                    }}
-                  >
-                    <div className="mx-auto h-10 w-10 rounded-full bg-accent flex items-center justify-center mb-3">
-                      <Paperclip className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-md font-medium mb-1">No reference files</h3>
-                    <p className="text-sm text-muted-foreground max-w-md mx-auto mb-2">
-                      Click to upload reference files (glossaries, style guides, etc.)
-                    </p>
-                  </div>
-                )}
-                
-                {/* Add more references button when there are already references */}
-                {(savedReferences.length > 0 && references.length === 0) && (
-                  <Button 
-                    variant="outline" 
-                    className="gap-2"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add References
-                  </Button>
-                )}
-                
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  style={{ display: 'none' }}
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files.length > 0) {
-                      const newFiles = Array.from(e.target.files);
-                      setReferences([...references, ...newFiles]);
-                      
-                      // Reset input field after selection
-                      if (fileInputRef.current) {
-                        fileInputRef.current.value = '';
-                      }
-                    }
-                  }}
-                  multiple
-                />
-              </div>
-            </CardContent>
-          </Card>
+          {/* References section removed as it's duplicated in the Project Settings */}
           
           {/* Notes Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
