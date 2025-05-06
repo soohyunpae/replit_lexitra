@@ -130,7 +130,7 @@ export function EditableSegment({
           ref={textareaRef}
           value={value}
           onChange={handleTextareaChange}
-          className="min-h-[60px] font-mono resize-none focus-visible:ring-offset-0 focus-visible:ring-1"
+          className="min-h-[60px] font-mono resize-none focus-visible:ring-offset-0 focus-visible:ring-1 overflow-hidden no-scrollbar"
           placeholder="Enter translation..."
         />
       ) : (
