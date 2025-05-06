@@ -1,17 +1,15 @@
-import React from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Database, ChevronRight, FileText, Tag, ListFilter } from "lucide-react";
+import { Search, Database, ChevronRight, FileText, Tag } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-
 import { formatDate } from "@/lib/utils";
+import { Link, useLocation } from "wouter";
 
 export default function TranslationMemoryPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -107,270 +105,272 @@ export default function TranslationMemoryPage() {
   return (
     <MainLayout title="Translation Memory">
       <div className="container max-w-screen-xl mx-auto p-6">
-        <Card className="shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              Translation Memory Database
-            </CardTitle>
-            <CardDescription>
-              View and manage your translation memory database
-            </CardDescription>
-          </CardHeader>
+        <div className="flex items-center gap-2 mb-4">
+          <Database className="h-5 w-5" />
+          <h2 className="text-3xl font-bold tracking-tight">Translation Memory</h2>
+        </div>
+        <p className="text-muted-foreground mb-6">
+          View and manage your translation memory database
+        </p>
           
-          <CardContent>
-            <Tabs defaultValue="entries" value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="entries" className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  TM Entries
-                </TabsTrigger>
-                <TabsTrigger value="resources" className="flex items-center gap-2">
-                  <Database className="h-4 w-4" />
-                  TM Resources
-                </TabsTrigger>
-              </TabsList>
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-4">
+            <Link href="/tm">
+              <Button variant={activeTab === "entries" ? "default" : "outline"} className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                TM Entries
+              </Button>
+            </Link>
+            <Link href="/tm/resources">
+              <Button variant={activeTab === "resources" ? "default" : "outline"} className="flex items-center gap-2">
+                <Database className="h-4 w-4" />
+                TM Resources
+              </Button>
+            </Link>
+          </div>
+        </div>
               
-              <TabsContent value="entries">
-                <div className="grid gap-4 md:grid-cols-4 grid-cols-1 mb-4">
-                  {/* Search */}
-                  <div className="relative md:col-span-2">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search in Translation Memory..."
-                      className="pl-8"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  
-                  {/* Source Language Filter */}
-                  <Select
-                    value={sourceLanguageFilter}
-                    onValueChange={setSourceLanguageFilter}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Source language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all_source_languages">All languages</SelectItem>
-                      {filters.source.map((lang) => (
-                        <SelectItem key={lang} value={lang}>{lang}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  {/* Target Language Filter */}
-                  <Select
-                    value={targetLanguageFilter}
-                    onValueChange={setTargetLanguageFilter}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Target language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all_target_languages">All languages</SelectItem>
-                      {filters.target.map((lang) => (
-                        <SelectItem key={lang} value={lang}>{lang}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="grid gap-4 md:grid-cols-4 grid-cols-1 mb-4">
-                  {/* Status Filter */}
-                  <div className="md:col-span-1">
-                    <Select
-                      value={statusFilter}
-                      onValueChange={setStatusFilter}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all_statuses">All statuses</SelectItem>
-                        {filters.statuses.map((status) => (
-                          <SelectItem key={status} value={status}>{status}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* Resource Filter */}
-                  <div className="md:col-span-1">
-                    <Select
-                      value={selectedResourceId}
-                      onValueChange={setSelectedResourceId}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="TM Resource" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all_resources">All resources</SelectItem>
-                        {tmResources?.map((resource: any) => (
-                          <SelectItem key={resource.id} value={String(resource.id)}>{resource.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* Stats Summary */}
-                  <div className="md:col-span-2 flex flex-wrap gap-3 items-center">
-                    <div className="px-3 py-1 bg-muted rounded-md text-sm">
-                      <span className="font-medium">{tmData ? tmData.length : 0}</span> total entries
-                    </div>
-                    <div className="px-3 py-1 bg-muted rounded-md text-sm">
-                      <span className="font-medium">{filters.source.length}</span> source langs
-                    </div>
-                    <div className="px-3 py-1 bg-muted rounded-md text-sm">
-                      <span className="font-medium">{filters.target.length}</span> target langs
-                    </div>
-                  </div>
-                </div>
-                
-                <Separator className="my-4" />
-                
-                <div className="rounded-md border overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Source</TableHead>
-                        <TableHead>Target</TableHead>
-                        <TableHead>Languages</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Added</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {isLoadingEntries ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                            Loading...
-                          </TableCell>
-                        </TableRow>
-                      ) : filteredTM.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                            No translation memory entries found
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredTM.map((entry: any) => (
-                          <TableRow key={entry.id}>
-                            <TableCell className="max-w-xs truncate font-medium">{entry.source}</TableCell>
-                            <TableCell className="max-w-xs truncate">{entry.target}</TableCell>
-                            <TableCell>
-                              <div className="flex flex-col">
-                                <span className="text-xs text-muted-foreground">Source: {entry.sourceLanguage}</span>
-                                <span className="text-xs text-muted-foreground">Target: {entry.targetLanguage}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="inline-flex px-2 py-1 rounded-full text-xs font-medium">
-                                {entry.status === "100%" && (
-                                  <span className="status-badge-100 px-2 py-0.5 rounded-full">
-                                    100%
-                                  </span>
-                                )}
-                                {entry.status === "Fuzzy" && (
-                                  <span className="status-badge-fuzzy px-2 py-0.5 rounded-full">
-                                    Fuzzy
-                                  </span>
-                                )}
-                                {entry.status === "MT" && (
-                                  <span className="status-badge-mt px-2 py-0.5 rounded-full">
-                                    MT
-                                  </span>
-                                )}
-                                {entry.status === "Reviewed" && (
-                                  <span className="status-badge-reviewed px-2 py-0.5 rounded-full">
-                                    Reviewed
-                                  </span>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                              {formatDate(entry.createdAt)}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
+        {activeTab === "entries" && (
+          <>
+            <div className="grid gap-4 md:grid-cols-4 grid-cols-1 mb-4">
+              {/* Search */}
+              <div className="relative md:col-span-2">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search in Translation Memory..."
+                  className="pl-8"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
               
-              <TabsContent value="resources">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium">Translation Memory Resources</h3>
-                  <Button size="sm">
-                    <Tag className="h-4 w-4 mr-2" /> Add New Resource
-                  </Button>
+              {/* Source Language Filter */}
+              <Select
+                value={sourceLanguageFilter}
+                onValueChange={setSourceLanguageFilter}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Source language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all_source_languages">All languages</SelectItem>
+                  {filters.source.map((lang) => (
+                    <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {/* Target Language Filter */}
+              <Select
+                value={targetLanguageFilter}
+                onValueChange={setTargetLanguageFilter}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Target language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all_target_languages">All languages</SelectItem>
+                  {filters.target.map((lang) => (
+                    <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid gap-4 md:grid-cols-4 grid-cols-1 mb-4">
+              {/* Status Filter */}
+              <div className="md:col-span-1">
+                <Select
+                  value={statusFilter}
+                  onValueChange={setStatusFilter}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all_statuses">All statuses</SelectItem>
+                    {filters.statuses.map((status) => (
+                      <SelectItem key={status} value={status}>{status}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Resource Filter */}
+              <div className="md:col-span-1">
+                <Select
+                  value={selectedResourceId}
+                  onValueChange={setSelectedResourceId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="TM Resource" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all_resources">All resources</SelectItem>
+                    {tmResources?.map((resource: any) => (
+                      <SelectItem key={resource.id} value={String(resource.id)}>{resource.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Stats Summary */}
+              <div className="md:col-span-2 flex flex-wrap gap-3 items-center">
+                <div className="px-3 py-1 bg-muted rounded-md text-sm">
+                  <span className="font-medium">{tmData ? tmData.length : 0}</span> total entries
                 </div>
-                
-                <div className="rounded-md border overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Languages</TableHead>
-                        <TableHead>Domain</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
+                <div className="px-3 py-1 bg-muted rounded-md text-sm">
+                  <span className="font-medium">{filters.source.length}</span> source langs
+                </div>
+                <div className="px-3 py-1 bg-muted rounded-md text-sm">
+                  <span className="font-medium">{filters.target.length}</span> target langs
+                </div>
+              </div>
+            </div>
+            
+            <Separator className="my-4" />
+            
+            <div className="rounded-md border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Source</TableHead>
+                    <TableHead>Target</TableHead>
+                    <TableHead>Languages</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Added</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoadingEntries ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        Loading...
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredTM.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        No translation memory entries found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredTM.map((entry: any) => (
+                      <TableRow key={entry.id}>
+                        <TableCell className="max-w-xs truncate font-medium">{entry.source}</TableCell>
+                        <TableCell className="max-w-xs truncate">{entry.target}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="text-xs text-muted-foreground">Source: {entry.sourceLanguage}</span>
+                            <span className="text-xs text-muted-foreground">Target: {entry.targetLanguage}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="inline-flex px-2 py-1 rounded-full text-xs font-medium">
+                            {entry.status === "100%" && (
+                              <span className="status-badge-100 px-2 py-0.5 rounded-full">
+                                100%
+                              </span>
+                            )}
+                            {entry.status === "Fuzzy" && (
+                              <span className="status-badge-fuzzy px-2 py-0.5 rounded-full">
+                                Fuzzy
+                              </span>
+                            )}
+                            {entry.status === "MT" && (
+                              <span className="status-badge-mt px-2 py-0.5 rounded-full">
+                                MT
+                              </span>
+                            )}
+                            {entry.status === "Reviewed" && (
+                              <span className="status-badge-reviewed px-2 py-0.5 rounded-full">
+                                Reviewed
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {formatDate(entry.createdAt)}
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {isLoadingResources ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                            Loading...
-                          </TableCell>
-                        </TableRow>
-                      ) : !tmResources || tmResources.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                            No TM resources found
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        tmResources.map((resource: any) => (
-                          <TableRow key={resource.id}>
-                            <TableCell className="font-medium">{resource.name}</TableCell>
-                            <TableCell className="max-w-xs truncate">{resource.description}</TableCell>
-                            <TableCell>
-                              <div className="flex flex-col">
-                                <span className="text-xs text-muted-foreground">Source: {resource.defaultSourceLanguage}</span>
-                                <span className="text-xs text-muted-foreground">Target: {resource.defaultTargetLanguage}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>{resource.domain || 'General'}</TableCell>
-                            <TableCell>
-                              {resource.isActive ? (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
-                                  Active
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-                                  Inactive
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <Button variant="ghost" size="sm">
-                                <ChevronRight className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </>
+        )}
+          
+        {activeTab === "resources" && (
+          <>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Translation Memory Resources</h3>
+              <Button size="sm">
+                <Tag className="h-4 w-4 mr-2" /> Add New Resource
+              </Button>
+            </div>
+            
+            <div className="rounded-md border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Languages</TableHead>
+                    <TableHead>Domain</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoadingResources ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        Loading...
+                      </TableCell>
+                    </TableRow>
+                  ) : !tmResources || tmResources.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        No TM resources found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    tmResources.map((resource: any) => (
+                      <TableRow key={resource.id}>
+                        <TableCell className="font-medium">{resource.name}</TableCell>
+                        <TableCell className="max-w-xs truncate">{resource.description}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="text-xs text-muted-foreground">Source: {resource.defaultSourceLanguage}</span>
+                            <span className="text-xs text-muted-foreground">Target: {resource.defaultTargetLanguage}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{resource.domain || 'General'}</TableCell>
+                        <TableCell>
+                          {resource.isActive ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                              Active
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                              Inactive
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm">
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </>
+        )}
       </div>
     </MainLayout>
   );
