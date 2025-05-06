@@ -417,10 +417,13 @@ export default function ProjectsPage() {
     <MainLayout title="Projects">
       <div className="container max-w-screen-xl mx-auto p-6">
         {/* Header */}
+        <div className="flex items-center gap-2 mb-2">
+          <FolderClosed className="h-5 w-5" />
+          <h2 className="text-3xl font-bold tracking-tight">Projects</h2>
+        </div>
+        <p className="text-muted-foreground mb-6">Manage your translation projects</p>
+        
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-muted-foreground mt-1">Manage your translation projects</p>
-          </div>
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
