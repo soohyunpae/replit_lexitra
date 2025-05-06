@@ -79,7 +79,12 @@ const tbResourceFormSchema = z.object({
 
 type TbResourceFormValues = z.infer<typeof tbResourceFormSchema>;
 
+import { useEffect } from 'react';
+import { useLocation } from 'wouter';
+
+// This page serves as a redirector to /termbases/entries
 export default function GlossaryPage() {
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>(

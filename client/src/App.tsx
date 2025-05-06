@@ -55,7 +55,7 @@ function Router() {
       <ProtectedRoute path="/projects" component={Projects} />
       <ProtectedRoute path="/projects/:id" component={Project} />
       <ProtectedRoute path="/translation/:fileId" component={Translation} />
-      <ProtectedRoute path="/glossary" component={Glossary} />
+      <ProtectedRoute path="/termbases" component={Glossary} />
       <ProtectedRoute path="/tm" component={TM} />
       <ProtectedRoute path="/settings" component={Settings} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
