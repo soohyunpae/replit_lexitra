@@ -3,10 +3,37 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,7 +47,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 
-// Form schema for TM resources
+// Form schema for TMs
 const tmResourceFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   description: z.string().optional(),
@@ -37,8 +64,8 @@ export default function TranslationMemoryResourcesPage() {
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("resources");
   const [showResourceDialog, setShowResourceDialog] = useState<boolean>(false);
-  
-  // Get all TM resources
+
+  // Get all TMs
   const { data: tmResources = [], isLoading } = useQuery({
     queryKey: ["/api/tm/resources"],
     queryFn: async () => {
@@ -46,13 +73,13 @@ export default function TranslationMemoryResourcesPage() {
         const res = await apiRequest("GET", "/api/tm/resources");
         return res.json();
       } catch (error) {
-        console.error("Error fetching TM resources:", error);
+        console.error("Error fetching TMs:", error);
         return [];
       }
     },
   });
 
-  // TM Resource form setup
+  // TM form setup
   const resourceForm = useForm<TmResourceFormValues>({
     resolver: zodResolver(tmResourceFormSchema),
     defaultValues: {
@@ -64,8 +91,8 @@ export default function TranslationMemoryResourcesPage() {
       isActive: true,
     },
   });
-  
-  // Add TM resource mutation
+
+  // Add TM mutation
   const addResourceMutation = useMutation({
     mutationFn: async (data: TmResourceFormValues) => {
       const response = await apiRequest("POST", "/api/tm/resource", data);
@@ -76,33 +103,31 @@ export default function TranslationMemoryResourcesPage() {
       resourceForm.reset();
       setShowResourceDialog(false);
       toast({
-        title: "TM Resource added",
-        description: "The translation memory resource has been added successfully.",
+        title: "TM added",
+        description:
+          "The translation memory resource has been added successfully.",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to add TM resource",
+        description: error.message || "Failed to add TM",
         variant: "destructive",
       });
     },
   });
-  
-  // Delete TM resource mutation
+
+  // Delete TM mutation
   const deleteResourceMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest(
-        "DELETE",
-        `/api/tm/resource/${id}`,
-      );
+      const response = await apiRequest("DELETE", `/api/tm/resource/${id}`);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tm/resources"] });
       toast({
         title: "Resource deleted",
-        description: "The TM resource has been deleted successfully.",
+        description: "The TM has been deleted successfully.",
       });
     },
     onError: (error: any) => {
@@ -113,11 +138,11 @@ export default function TranslationMemoryResourcesPage() {
       });
     },
   });
-  
+
   function onResourceSubmit(data: TmResourceFormValues) {
     addResourceMutation.mutate(data);
   }
-  
+
   function handleDeleteResource(id: number) {
     if (window.confirm("Are you sure you want to delete this resource?")) {
       deleteResourceMutation.mutate(id);
@@ -132,38 +157,37 @@ export default function TranslationMemoryResourcesPage() {
       navigate("/tm/resources");
     }
   };
-  
+
   return (
-    <MainLayout title="TM Resources">
+    <MainLayout title="TMs">
       <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center gap-2 mb-4">
           <Database className="h-5 w-5" />
-          <h2 className="text-3xl font-bold tracking-tight">Translation Memory</h2>
+          <h2 className="text-3xl font-bold tracking-tight">
+            Translation Memory
+          </h2>
         </div>
         <p className="text-muted-foreground mb-6">
           View and manage your translation memory database
         </p>
-        
-        <Tabs defaultValue="resources" value={activeTab} onValueChange={handleTabChange} className="w-full">
+
+        <Tabs
+          defaultValue="resources"
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="w-full"
+        >
           <TabsList className="mb-6">
             <TabsTrigger value="entries" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              TM Entries
+              Search in TMs
             </TabsTrigger>
             <TabsTrigger value="resources" className="flex items-center gap-2">
               <Database className="h-4 w-4" />
-              TM Resources
+              TM List
             </TabsTrigger>
           </TabsList>
-          
           <TabsContent value="resources" className="mt-0">
-            <div className="flex justify-end mb-6">
-              <Button onClick={() => setShowResourceDialog(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Resource
-              </Button>
-            </div>
-            
             {/* Resources Table */}
             {isLoading ? (
               <div className="flex justify-center p-8">
@@ -172,7 +196,8 @@ export default function TranslationMemoryResourcesPage() {
             ) : tmResources.length === 0 ? (
               <div className="flex justify-center items-center p-8 border rounded-md">
                 <p className="text-muted-foreground">
-                  No translation memory resources found. Create your first resource!
+                  No translation memory resources found. Create your first
+                  resource!
                 </p>
               </div>
             ) : (
@@ -195,7 +220,10 @@ export default function TranslationMemoryResourcesPage() {
                           <div className="flex items-center gap-2">
                             {resource.name}
                             {resource.isActive && (
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                              <Badge
+                                variant="outline"
+                                className="bg-green-50 text-green-700 border-green-200"
+                              >
                                 Active
                               </Badge>
                             )}
@@ -204,16 +232,20 @@ export default function TranslationMemoryResourcesPage() {
                         <TableCell>{resource.description || "-"}</TableCell>
                         <TableCell>
                           <span className="font-medium">
-                            {resource.defaultSourceLanguage?.toUpperCase() || "-"}
+                            {resource.defaultSourceLanguage?.toUpperCase() ||
+                              "-"}
                           </span>{" "}
                           &rarr;{" "}
                           <span className="font-medium">
-                            {resource.defaultTargetLanguage?.toUpperCase() || "-"}
+                            {resource.defaultTargetLanguage?.toUpperCase() ||
+                              "-"}
                           </span>
                         </TableCell>
                         <TableCell>{resource.domain || "-"}</TableCell>
                         <TableCell>
-                          {resource.createdAt ? formatDate(resource.createdAt) : "-"}
+                          {resource.createdAt
+                            ? formatDate(resource.createdAt)
+                            : "-"}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
@@ -232,17 +264,18 @@ export default function TranslationMemoryResourcesPage() {
             )}
           </TabsContent>
         </Tabs>
-        
+
         {/* Add Resource Dialog */}
         <Dialog open={showResourceDialog} onOpenChange={setShowResourceDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New TM Resource</DialogTitle>
+              <DialogTitle>Add New TM</DialogTitle>
               <DialogDescription>
-                Create a new translation memory resource to organize your TM data.
+                Create a new translation memory resource to organize your TM
+                data.
               </DialogDescription>
             </DialogHeader>
-            
+
             <Form {...resourceForm}>
               <form
                 onSubmit={resourceForm.handleSubmit(onResourceSubmit)}
@@ -261,7 +294,7 @@ export default function TranslationMemoryResourcesPage() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={resourceForm.control}
                   name="description"
@@ -279,7 +312,7 @@ export default function TranslationMemoryResourcesPage() {
                     </FormItem>
                   )}
                 />
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={resourceForm.control}
@@ -310,7 +343,7 @@ export default function TranslationMemoryResourcesPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={resourceForm.control}
                     name="defaultTargetLanguage"
@@ -341,7 +374,7 @@ export default function TranslationMemoryResourcesPage() {
                     )}
                   />
                 </div>
-                
+
                 <FormField
                   control={resourceForm.control}
                   name="domain"
@@ -359,7 +392,7 @@ export default function TranslationMemoryResourcesPage() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={resourceForm.control}
                   name="isActive"
@@ -378,14 +411,12 @@ export default function TranslationMemoryResourcesPage() {
                         </div>
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel>
-                          Set as an active resource
-                        </FormLabel>
+                        <FormLabel>Set as an active resource</FormLabel>
                       </div>
                     </FormItem>
                   )}
                 />
-                
+
                 <DialogFooter>
                   <Button
                     type="button"
@@ -398,7 +429,9 @@ export default function TranslationMemoryResourcesPage() {
                     type="submit"
                     disabled={addResourceMutation.isPending}
                   >
-                    {addResourceMutation.isPending ? "Adding..." : "Add Resource"}
+                    {addResourceMutation.isPending
+                      ? "Adding..."
+                      : "Add Resource"}
                   </Button>
                 </DialogFooter>
               </form>
