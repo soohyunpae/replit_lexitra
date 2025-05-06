@@ -104,8 +104,7 @@ export default function TranslationMemoryResourcesPage() {
       setShowTmDialog(false);
       toast({
         title: "TM added",
-        description:
-          "The translation memory has been added successfully.",
+        description: "The translation memory has been added successfully.",
       });
     },
     onError: (error: any) => {
@@ -177,10 +176,10 @@ export default function TranslationMemoryResourcesPage() {
           onValueChange={handleTabChange}
           className="w-full"
         >
-          <TabsList className="mb-6">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="entries" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Search in TMs
+              TM Entries
             </TabsTrigger>
             <TabsTrigger value="resources" className="flex items-center gap-2">
               <Database className="h-4 w-4" />
@@ -202,8 +201,7 @@ export default function TranslationMemoryResourcesPage() {
             ) : tmResources.length === 0 ? (
               <div className="flex justify-center items-center p-8 border rounded-md">
                 <p className="text-muted-foreground">
-                  No translation memories found. Create your first
-                  TM!
+                  No translation memories found. Create your first TM!
                 </p>
               </div>
             ) : (
@@ -238,20 +236,16 @@ export default function TranslationMemoryResourcesPage() {
                         <TableCell>{tm.description || "-"}</TableCell>
                         <TableCell>
                           <span className="font-medium">
-                            {tm.defaultSourceLanguage?.toUpperCase() ||
-                              "-"}
+                            {tm.defaultSourceLanguage?.toUpperCase() || "-"}
                           </span>{" "}
                           &rarr;{" "}
                           <span className="font-medium">
-                            {tm.defaultTargetLanguage?.toUpperCase() ||
-                              "-"}
+                            {tm.defaultTargetLanguage?.toUpperCase() || "-"}
                           </span>
                         </TableCell>
                         <TableCell>{tm.domain || "-"}</TableCell>
                         <TableCell>
-                          {tm.createdAt
-                            ? formatDate(tm.createdAt)
-                            : "-"}
+                          {tm.createdAt ? formatDate(tm.createdAt) : "-"}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
@@ -277,8 +271,7 @@ export default function TranslationMemoryResourcesPage() {
             <DialogHeader>
               <DialogTitle>Add New TM</DialogTitle>
               <DialogDescription>
-                Create a new translation memory to organize your TM
-                data.
+                Create a new translation memory to organize your TM data.
               </DialogDescription>
             </DialogHeader>
 
@@ -431,13 +424,8 @@ export default function TranslationMemoryResourcesPage() {
                   >
                     Cancel
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={addTmMutation.isPending}
-                  >
-                    {addTmMutation.isPending
-                      ? "Adding..."
-                      : "Add TM"}
+                  <Button type="submit" disabled={addTmMutation.isPending}>
+                    {addTmMutation.isPending ? "Adding..." : "Add TM"}
                   </Button>
                 </DialogFooter>
               </form>

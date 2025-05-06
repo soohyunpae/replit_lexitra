@@ -29,7 +29,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Save, Trash2, Search, FileText, Book, BookMarked } from "lucide-react";
+import {
+  Plus,
+  Save,
+  Trash2,
+  Search,
+  FileText,
+  Book,
+  BookMarked,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -240,21 +248,18 @@ export default function GlossaryEntriesPage() {
       <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center gap-2 mb-4">
           <BookMarked className="h-5 w-5" />
-          <h2 className="text-3xl font-bold tracking-tight">
-            Termbases
-          </h2>
+          <h2 className="text-3xl font-bold tracking-tight">Termbases</h2>
         </div>
         <p className="text-muted-foreground mb-6">
-          Manage your terminology resources and glossary entries
+          Manage termbases and glossary entries
         </p>
-        
         <Tabs
           defaultValue="entries"
           value={activeTab}
           onValueChange={handleTabChange}
           className="w-full"
         >
-          <TabsList className="mb-6">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="entries" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Glossary Entries
@@ -265,7 +270,6 @@ export default function GlossaryEntriesPage() {
             </TabsTrigger>
           </TabsList>
         </Tabs>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Add Term Form */}
           <div>

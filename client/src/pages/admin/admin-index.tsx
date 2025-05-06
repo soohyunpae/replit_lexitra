@@ -102,8 +102,7 @@ export default function AdminDashboard() {
   const adminModules: AdminModule[] = [
     {
       title: "TM Management",
-      description:
-        "Manage Translation Memory (TM) assets, align files, clean duplicates",
+      description: "Manage TM assets, align files, clean duplicates",
       icon: <Database className="h-6 w-6" />,
       links: [
         {
@@ -158,7 +157,11 @@ export default function AdminDashboard() {
           Manage TMs and preprocess files
         </p>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger
               value="translation-memory"
@@ -181,9 +184,7 @@ export default function AdminDashboard() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 {adminModules[0].icon}
-                <h3 className="text-lg font-medium">
-                  {adminModules[0].title}
-                </h3>
+                <h3 className="text-lg font-medium">{adminModules[0].title}</h3>
               </div>
               <p className="text-sm text-muted-foreground">
                 {adminModules[0].description}
@@ -205,9 +206,7 @@ export default function AdminDashboard() {
                 <AccordionTrigger className="py-4">
                   <div className="flex items-center gap-2">
                     <Upload className="h-5 w-5" />
-                    <span className="text-lg font-medium">
-                      TM Upload
-                    </span>
+                    <span className="text-lg font-medium">TM Upload</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-2 pb-6">
@@ -280,9 +279,7 @@ export default function AdminDashboard() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 {adminModules[1].icon}
-                <h3 className="text-lg font-medium">
-                  {adminModules[1].title}
-                </h3>
+                <h3 className="text-lg font-medium">{adminModules[1].title}</h3>
               </div>
               <p className="text-sm text-muted-foreground">
                 {adminModules[1].description}
@@ -304,9 +301,7 @@ export default function AdminDashboard() {
                 <AccordionTrigger className="py-4">
                   <div className="flex items-center gap-2">
                     <FileType className="h-5 w-5" />
-                    <span className="text-lg font-medium">
-                      PDF Processing
-                    </span>
+                    <span className="text-lg font-medium">PDF Processing</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-2 pb-6">
@@ -349,7 +344,7 @@ export default function AdminDashboard() {
               </AccordionItem>
             </Accordion>
           </TabsContent>
-          
+
           <div className="text-sm text-muted-foreground mt-6 pt-4 border-t">
             Access additional tools and features from the sidebar menu
           </div>

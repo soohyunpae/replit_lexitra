@@ -29,7 +29,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Save, Trash2, Search, Database, FileText, BookMarked } from "lucide-react";
+import {
+  Plus,
+  Save,
+  Trash2,
+  Search,
+  Database,
+  FileText,
+  BookMarked,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -170,7 +178,7 @@ export default function TermbaseResourcesPage() {
           <h2 className="text-3xl font-bold tracking-tight">Termbases</h2>
         </div>
         <p className="text-muted-foreground mb-6">
-          Manage your terminology resources and glossary entries
+          Manage termbases and glossary entries
         </p>
 
         <Tabs
@@ -179,7 +187,7 @@ export default function TermbaseResourcesPage() {
           onValueChange={handleTabChange}
           className="w-full"
         >
-          <TabsList className="mb-6">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="entries" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Glossary Entries
@@ -194,7 +202,7 @@ export default function TermbaseResourcesPage() {
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <Database size={18} />
-            <h2 className="text-lg font-medium">Termbases List</h2>
+            <h2 className="text-lg font-medium">Termbases</h2>
           </div>
           <div className="flex gap-2">
             <Button onClick={() => setShowResourceDialog(true)}>
