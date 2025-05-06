@@ -246,7 +246,7 @@ export default function GlossaryEntriesPage() {
   return (
     <MainLayout title="Glossary Entries">
       <div className="container max-w-screen-xl mx-auto p-6">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-2">
           <BookMarked className="h-5 w-5" />
           <h2 className="text-3xl font-bold tracking-tight">Termbases</h2>
         </div>
