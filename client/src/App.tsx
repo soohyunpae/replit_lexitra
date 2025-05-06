@@ -58,9 +58,9 @@ function Router() {
       <ProtectedRoute path="/projects" component={Projects} />
       <ProtectedRoute path="/projects/:id" component={Project} />
       <ProtectedRoute path="/translation/:fileId" component={Translation} />
-      <ProtectedRoute path="/termbases" component={() => import('./pages/termbases/index').then(m => React.createElement(m.default))} />
-      <ProtectedRoute path="/termbases/entries" component={() => import('./pages/termbases/entries').then(m => React.createElement(m.default))} />
-      <ProtectedRoute path="/termbases/resources" component={() => import('./pages/termbases/resources').then(m => React.createElement(m.default))} />
+      <ProtectedRoute path="/termbases" component={TermbasesIndex} />
+      <ProtectedRoute path="/termbases/entries" component={TermbasesEntries} />
+      <ProtectedRoute path="/termbases/resources" component={TermbasesResources} />
       <ProtectedRoute path="/tm" component={TM} />
       <ProtectedRoute path="/settings" component={Settings} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
