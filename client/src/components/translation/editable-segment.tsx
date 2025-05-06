@@ -23,7 +23,8 @@ export function EditableSegment({
   onUpdate,
   onTranslateWithGPT
 }: EditableSegmentProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  // Source is not editable, target is always editable
+  const [isEditing, setIsEditing] = useState(!isSource);
   const [value, setValue] = useState(isSource ? segment.source : segment.target || "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
@@ -58,6 +59,17 @@ export function EditableSegment({
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   };
+  
+  // Update textarea height when segment target changes or on mount
+  useEffect(() => {
+    if (!isSource && textareaRef.current) {
+      // Use setTimeout to ensure DOM is ready
+      setTimeout(() => {
+        textareaRef.current!.style.height = 'auto';
+        textareaRef.current!.style.height = `${textareaRef.current!.scrollHeight}px`;
+      }, 0);
+    }
+  }, [segment.target, isSource]);
   
   // Get status badge color based on status
   const getStatusColor = (status: string): string => {
@@ -105,7 +117,7 @@ export function EditableSegment({
         
         {!isSource && (
           <div className="flex space-x-1">
-            {isEditing ? (
+            {isEditing && (
               <>
                 <Button variant="ghost" size="sm" onClick={handleSave} className="h-7 w-7 p-0">
                   <Check className="h-4 w-4" />
@@ -114,17 +126,11 @@ export function EditableSegment({
                   <X className="h-4 w-4" />
                 </Button>
               </>
-            ) : (
-              <>
-                <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)} className="h-7 w-7 p-0">
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                {onTranslateWithGPT && !segment.target && (
-                  <Button variant="ghost" size="sm" onClick={onTranslateWithGPT} className="h-7 w-7 p-0">
-                    <Languages className="h-4 w-4" />
-                  </Button>
-                )}
-              </>
+            )}
+            {!isEditing && onTranslateWithGPT && !segment.target && (
+              <Button variant="ghost" size="sm" onClick={onTranslateWithGPT} className="h-7 w-7 p-0">
+                <Languages className="h-4 w-4" />
+              </Button>
             )}
           </div>
         )}
