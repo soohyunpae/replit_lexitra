@@ -1205,6 +1205,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // 프로젝트 정보 업데이트 API
+  app.patch(`${apiPrefix}/projects/:id`, verifyToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { deadline, glossaryId, tmId, name, description } = req.body;
+      
+      // 프로젝트가 존재하는지 확인
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, id)
+      });
+      
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      // 프로젝트 정보 업데이트
+      const [updatedProject] = await db
+        .update(schema.projects)
+        .set({
+          ...(deadline !== undefined && { deadline }),
+          ...(glossaryId !== undefined && { glossaryId }),
+          ...(tmId !== undefined && { tmId }),
+          ...(name !== undefined && { name }),
+          ...(description !== undefined && { description }),
+          updatedAt: new Date()
+        })
+        .where(eq(schema.projects.id, id))
+        .returning();
+     
+      return res.json({ success: true, project: updatedProject });
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
   // 프로젝트 노트 저장 API
   app.post(`${apiPrefix}/projects/:id/notes`, verifyToken, async (req, res) => {
     try {
