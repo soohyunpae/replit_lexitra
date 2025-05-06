@@ -149,16 +149,16 @@ export default function AdminDashboard() {
   return (
     <MainLayout title="Admin Tools">
       <div className="container max-w-screen-xl mx-auto p-6 space-y-6">
-        <div className="space-y-2">
+        <div className="flex flex-col space-y-2">
+          <h1 className="text-2xl font-bold">Admin Tools</h1>
           <p className="text-muted-foreground">
             Manage TMs and preprocess files
           </p>
         </div>
 
-        <Card className="overflow-hidden">
+        <div className="bg-background">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <CardHeader className="pb-0">
-              <TabsList className="mt-4 grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger
                   value="translation-memory"
                   className="flex items-center gap-2"
@@ -174,9 +174,9 @@ export default function AdminDashboard() {
                   <span>File Processing</span>
                 </TabsTrigger>
               </TabsList>
-            </CardHeader>
+            </TabsList>
 
-            <CardContent className="pt-6 pb-4">
+            <div className="py-6">
               {/* Translation Memory Tab Content */}
               <TabsContent value="translation-memory" className="m-0 space-y-4">
                 <div>
@@ -350,11 +350,9 @@ export default function AdminDashboard() {
                   </AccordionItem>
                 </Accordion>
               </TabsContent>
-            </CardContent>
-
-
+            </div>
           </Tabs>
-        </Card>
+        </div>
       </div>
     </MainLayout>
   );
