@@ -114,7 +114,6 @@ export function Header({
               </div>
             </Link>
           )}
-          <span className="text-xs bg-accent px-2 py-1 rounded text-muted-foreground">1.0.0</span>
         </div>
       
         <div className="flex items-center space-x-3">
