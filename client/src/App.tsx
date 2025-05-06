@@ -17,7 +17,7 @@ import Settings from "@/pages/settings";
 import AuthPage from "@/pages/auth-page";
 import ProfilePage from "@/pages/profile";
 import AuthDebugPage from "@/pages/auth-debug";
-import AdminDashboard from "@/pages/admin/new-index";
+import AdminDashboard from "@/pages/admin/index";
 import TMUpload from "@/pages/admin/tm/upload";
 import TMAlignment from "@/pages/admin/tm/alignment";
 import TMCleanup from "@/pages/admin/tm/cleanup";
