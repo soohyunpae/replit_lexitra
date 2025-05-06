@@ -106,9 +106,9 @@ export function EditableSegment({
                     e.stopPropagation();
                     onUpdate(segment.target || "", "Reviewed");
                   }}
-                  className="ml-2 text-xs px-1.5 py-0.5 rounded-md bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 transition-colors"
+                  className="ml-2 text-xs text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded-md bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 transition-colors"
                 >
-                  {segment.status === "Reviewed" ? "Reviewed" : "✓"}
+                  Mark as Reviewed
                 </button>
               )}
             </div>
