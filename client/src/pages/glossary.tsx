@@ -3,12 +3,42 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Save, Trash2, Search, Database, FileText, Tag, Pencil } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Plus,
+  Save,
+  Trash2,
+  Search,
+  Database,
+  FileText,
+  Book,
+  Pencil,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -16,7 +46,14 @@ import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { formatDate } from "@/lib/utils";
 
 // Form schema for adding/editing glossary terms
@@ -44,12 +81,20 @@ type TbResourceFormValues = z.infer<typeof tbResourceFormSchema>;
 export default function GlossaryPage() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>("all_source_languages");
-  const [targetLanguageFilter, setTargetLanguageFilter] = useState<string>("all_target_languages");
-  const [resourceFilter, setResourceFilter] = useState<number | undefined>(undefined);
+  const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>(
+    "all_source_languages",
+  );
+  const [targetLanguageFilter, setTargetLanguageFilter] = useState<string>(
+    "all_target_languages",
+  );
+  const [resourceFilter, setResourceFilter] = useState<number | undefined>(
+    undefined,
+  );
   const [activeTab, setActiveTab] = React.useState<string>("entries");
-  const [selectedResourceId, setSelectedResourceId] = React.useState<string>("all_resources");
-  const [showResourceDialog, setShowResourceDialog] = React.useState<boolean>(false);
+  const [selectedResourceId, setSelectedResourceId] =
+    React.useState<string>("all_resources");
+  const [showResourceDialog, setShowResourceDialog] =
+    React.useState<boolean>(false);
 
   // Glossary form setup
   const form = useForm<GlossaryFormValues>({
@@ -77,7 +122,11 @@ export default function GlossaryPage() {
   });
 
   // Get all glossary terms
-  const { data: glossaryData, isLoading, error } = useQuery({
+  const {
+    data: glossaryData,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["/api/glossary/all", resourceFilter],
     queryFn: async () => {
       try {
@@ -114,12 +163,16 @@ export default function GlossaryPage() {
 
     // Get unique source languages
     const sourceLanguagesSet = new Set<string>();
-    glossaryData.forEach((item: any) => sourceLanguagesSet.add(item.sourceLanguage));
+    glossaryData.forEach((item: any) =>
+      sourceLanguagesSet.add(item.sourceLanguage),
+    );
     const sourceLanguages = Array.from(sourceLanguagesSet);
 
     // Get unique target languages
     const targetLanguagesSet = new Set<string>();
-    glossaryData.forEach((item: any) => targetLanguagesSet.add(item.targetLanguage));
+    glossaryData.forEach((item: any) =>
+      targetLanguagesSet.add(item.targetLanguage),
+    );
     const targetLanguages = Array.from(targetLanguagesSet);
 
     return {
@@ -138,13 +191,15 @@ export default function GlossaryPage() {
           term.target.toLowerCase().includes(searchQuery.toLowerCase())
         : true;
 
-      const matchesSourceLang = sourceLanguageFilter && sourceLanguageFilter !== "all_source_languages"
-        ? term.sourceLanguage === sourceLanguageFilter
-        : true;
+      const matchesSourceLang =
+        sourceLanguageFilter && sourceLanguageFilter !== "all_source_languages"
+          ? term.sourceLanguage === sourceLanguageFilter
+          : true;
 
-      const matchesTargetLang = targetLanguageFilter && targetLanguageFilter !== "all_target_languages"
-        ? term.targetLanguage === targetLanguageFilter
-        : true;
+      const matchesTargetLang =
+        targetLanguageFilter && targetLanguageFilter !== "all_target_languages"
+          ? term.targetLanguage === targetLanguageFilter
+          : true;
 
       return matchesSearch && matchesSourceLang && matchesTargetLang;
     });
@@ -207,7 +262,8 @@ export default function GlossaryPage() {
       setShowResourceDialog(false);
       toast({
         title: "TB Resource added",
-        description: "The terminology base resource has been added successfully.",
+        description:
+          "The terminology base resource has been added successfully.",
       });
     },
     onError: (error: any) => {
@@ -222,7 +278,10 @@ export default function GlossaryPage() {
   // Delete TB resource mutation
   const deleteResourceMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest("DELETE", `/api/glossary/resource/${id}`);
+      const response = await apiRequest(
+        "DELETE",
+        `/api/glossary/resource/${id}`,
+      );
       return response.json();
     },
     onSuccess: () => {
@@ -266,21 +325,21 @@ export default function GlossaryPage() {
     <MainLayout title="Terminology Base">
       <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center gap-2 mb-2">
-          <Database className="h-5 w-5" />
+          <Book className="h-5 w-5" />
           <h1 className="text-2xl font-bold">Terminology Base</h1>
         </div>
         <p className="text-muted-foreground mb-6">
-          Manage terminology database and terms
+          View and manage terminology database
         </p>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full md:w-[400px] grid-cols-2">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="entries" className="flex items-center gap-1">
               <FileText className="h-4 w-4" />
-              Glossary Entries
+              TB Entries
             </TabsTrigger>
             <TabsTrigger value="resources" className="flex items-center gap-1">
-              <Tag className="h-4 w-4" />
+              <Book className="h-4 w-4" />
               TB Resources
             </TabsTrigger>
           </TabsList>
@@ -293,9 +352,14 @@ export default function GlossaryPage() {
                   <Plus size={18} />
                   <h2 className="text-lg font-medium">Add New Term</h2>
                 </div>
-                <p className="text-muted-foreground mb-4">Add a new term to the terminology base</p>
+                <p className="text-muted-foreground mb-4">
+                  Add a new term to the terminology base
+                </p>
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-4"
+                  >
                     <FormField
                       control={form.control}
                       name="sourceLanguage"
@@ -364,7 +428,9 @@ export default function GlossaryPage() {
                           <FormLabel>TB Resource</FormLabel>
                           <Select
                             onValueChange={(value) => {
-                              field.onChange(value === "none" ? undefined : Number(value))
+                              field.onChange(
+                                value === "none" ? undefined : Number(value),
+                              );
                             }}
                             value={field.value ? String(field.value) : "none"}
                           >
@@ -376,7 +442,10 @@ export default function GlossaryPage() {
                             <SelectContent>
                               <SelectItem value="none">None</SelectItem>
                               {tbResources.map((resource: any) => (
-                                <SelectItem key={resource.id} value={String(resource.id)}>
+                                <SelectItem
+                                  key={resource.id}
+                                  value={String(resource.id)}
+                                >
                                   {resource.name}
                                 </SelectItem>
                               ))}
@@ -432,7 +501,9 @@ export default function GlossaryPage() {
                 <div className="flex items-center gap-2 mb-2">
                   <h2 className="text-lg font-medium">Terminology Entries</h2>
                 </div>
-                <p className="text-muted-foreground mb-4">Manage your terminology entries</p>
+                <p className="text-muted-foreground mb-4">
+                  Manage your terminology entries
+                </p>
 
                 <div className="mt-4 space-y-4">
                   {/* Search and Filter */}
@@ -455,9 +526,13 @@ export default function GlossaryPage() {
                         <SelectValue placeholder="Source language" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all_source_languages">All languages</SelectItem>
+                        <SelectItem value="all_source_languages">
+                          All languages
+                        </SelectItem>
                         {languages.source.map((lang) => (
-                          <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                          <SelectItem key={lang} value={lang}>
+                            {lang}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -470,26 +545,43 @@ export default function GlossaryPage() {
                         <SelectValue placeholder="Target language" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all_target_languages">All languages</SelectItem>
+                        <SelectItem value="all_target_languages">
+                          All languages
+                        </SelectItem>
                         {languages.target.map((lang) => (
-                          <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                          <SelectItem key={lang} value={lang}>
+                            {lang}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
 
                     <Select
-                      value={resourceFilter ? String(resourceFilter) : "all_resources"}
-                      onValueChange={(value) => setResourceFilter(
-                        value === "all_resources" ? undefined : Number(value)
-                      )}
+                      value={
+                        resourceFilter
+                          ? String(resourceFilter)
+                          : "all_resources"
+                      }
+                      onValueChange={(value) =>
+                        setResourceFilter(
+                          value === "all_resources" ? undefined : Number(value),
+                        )
+                      }
                     >
                       <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="TB Resource" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all_resources">All resources</SelectItem>
+                        <SelectItem value="all_resources">
+                          All resources
+                        </SelectItem>
                         {tbResources.map((resource: any) => (
-                          <SelectItem key={resource.id} value={String(resource.id)}>{resource.name}</SelectItem>
+                          <SelectItem
+                            key={resource.id}
+                            value={String(resource.id)}
+                          >
+                            {resource.name}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -512,25 +604,37 @@ export default function GlossaryPage() {
                     <TableBody>
                       {isLoading ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          <TableCell
+                            colSpan={5}
+                            className="text-center py-8 text-muted-foreground"
+                          >
                             Loading...
                           </TableCell>
                         </TableRow>
                       ) : filteredGlossary.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          <TableCell
+                            colSpan={5}
+                            className="text-center py-8 text-muted-foreground"
+                          >
                             No terminology terms found
                           </TableCell>
                         </TableRow>
                       ) : (
                         filteredGlossary.map((term: any) => (
                           <TableRow key={term.id}>
-                            <TableCell className="font-medium">{term.source}</TableCell>
+                            <TableCell className="font-medium">
+                              {term.source}
+                            </TableCell>
                             <TableCell>{term.target}</TableCell>
                             <TableCell>
                               <div className="flex flex-col">
-                                <span className="text-xs text-muted-foreground">Source: {term.sourceLanguage}</span>
-                                <span className="text-xs text-muted-foreground">Target: {term.targetLanguage}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  Source: {term.sourceLanguage}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  Target: {term.targetLanguage}
+                                </span>
                               </div>
                             </TableCell>
                             <TableCell className="text-sm text-muted-foreground">
@@ -558,8 +662,13 @@ export default function GlossaryPage() {
 
           <TabsContent value="resources" className="mt-4">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">Terminology Base Resources</h3>
-              <Dialog open={showResourceDialog} onOpenChange={setShowResourceDialog}>
+              <h3 className="text-lg font-medium">
+                Terminology Base Resources
+              </h3>
+              <Dialog
+                open={showResourceDialog}
+                onOpenChange={setShowResourceDialog}
+              >
                 <DialogTrigger asChild>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" /> Add New Resource
@@ -569,13 +678,17 @@ export default function GlossaryPage() {
                   <DialogHeader>
                     <DialogTitle>Add New TB Resource</DialogTitle>
                     <DialogDescription>
-                      Create a new terminology base resource for managing glossary entries.
+                      Create a new terminology base resource for managing
+                      glossary entries.
                     </DialogDescription>
                   </DialogHeader>
 
                   {/* TB Resource Form */}
                   <Form {...resourceForm}>
-                    <form onSubmit={resourceForm.handleSubmit(onResourceSubmit)} className="space-y-4 py-4">
+                    <form
+                      onSubmit={resourceForm.handleSubmit(onResourceSubmit)}
+                      className="space-y-4 py-4"
+                    >
                       <FormField
                         control={resourceForm.control}
                         name="name"
@@ -583,7 +696,10 @@ export default function GlossaryPage() {
                           <FormItem>
                             <FormLabel>Resource Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter TB resource name" {...field} />
+                              <Input
+                                placeholder="Enter TB resource name"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -597,7 +713,10 @@ export default function GlossaryPage() {
                           <FormItem>
                             <FormLabel>Description</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter description" {...field} />
+                              <Input
+                                placeholder="Enter description"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -667,7 +786,10 @@ export default function GlossaryPage() {
                           <FormItem>
                             <FormLabel>Domain</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., Technical, Legal, Medical" {...field} />
+                              <Input
+                                placeholder="e.g., Technical, Legal, Medical"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -675,10 +797,17 @@ export default function GlossaryPage() {
                       />
 
                       <DialogFooter className="mt-6">
-                        <Button variant="outline" onClick={() => setShowResourceDialog(false)} type="button">
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowResourceDialog(false)}
+                          type="button"
+                        >
                           Cancel
                         </Button>
-                        <Button type="submit" disabled={addResourceMutation.isPending}>
+                        <Button
+                          type="submit"
+                          disabled={addResourceMutation.isPending}
+                        >
                           <Save className="w-4 h-4 mr-2" /> Save Resource
                         </Button>
                       </DialogFooter>
@@ -703,25 +832,40 @@ export default function GlossaryPage() {
                 <TableBody>
                   {tbResources.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell
+                        colSpan={6}
+                        className="text-center py-8 text-muted-foreground"
+                      >
                         No TB resources found
                       </TableCell>
                     </TableRow>
                   ) : (
                     tbResources.map((resource: any) => (
                       <TableRow key={resource.id}>
-                        <TableCell className="font-medium">{resource.name}</TableCell>
-                        <TableCell>{resource.description || '-'}</TableCell>
+                        <TableCell className="font-medium">
+                          {resource.name}
+                        </TableCell>
+                        <TableCell>{resource.description || "-"}</TableCell>
                         <TableCell>
                           <div className="flex flex-col text-xs">
-                            <span>Source: {resource.defaultSourceLanguage || 'Any'}</span>
-                            <span>Target: {resource.defaultTargetLanguage || 'Any'}</span>
+                            <span>
+                              Source: {resource.defaultSourceLanguage || "Any"}
+                            </span>
+                            <span>
+                              Target: {resource.defaultTargetLanguage || "Any"}
+                            </span>
                           </div>
                         </TableCell>
-                        <TableCell>{resource.domain || 'General'}</TableCell>
+                        <TableCell>{resource.domain || "General"}</TableCell>
                         <TableCell>
-                          <Badge className={resource.isActive ? "bg-green-500 hover:bg-green-600" : "bg-gray-400 hover:bg-gray-500"}>
-                            {resource.isActive ? 'Active' : 'Inactive'}
+                          <Badge
+                            className={
+                              resource.isActive
+                                ? "bg-green-500 hover:bg-green-600"
+                                : "bg-gray-400 hover:bg-gray-500"
+                            }
+                          >
+                            {resource.isActive ? "Active" : "Inactive"}
                           </Badge>
                         </TableCell>
                         <TableCell>
