@@ -3,6 +3,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -28,7 +29,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Save, Trash2, Search, Database, Tag, Book } from "lucide-react";
+import { Plus, Save, Trash2, Search, Database, FileText, BookMarked } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -45,7 +46,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { formatDate } from "@/lib/utils";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 // Form schema for TB resources
 const tbResourceFormSchema = z.object({
@@ -61,6 +62,8 @@ type TbResourceFormValues = z.infer<typeof tbResourceFormSchema>;
 
 export default function TermbaseResourcesPage() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const [activeTab, setActiveTab] = useState<string>("resources");
   const [showResourceDialog, setShowResourceDialog] =
     React.useState<boolean>(false);
 
@@ -150,28 +153,54 @@ export default function TermbaseResourcesPage() {
     }
   }
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === "entries") {
+      navigate("/termbases/entries");
+    } else {
+      navigate("/termbases/resources");
+    }
+  };
+
   return (
     <MainLayout title="Termbases">
       <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Database className="h-5 w-5" />
+          <BookMarked className="h-5 w-5" />
           <h2 className="text-3xl font-bold tracking-tight">Termbases</h2>
         </div>
-        <p className="text-muted-foreground mb-6">Manage termbases</p>
+        <p className="text-muted-foreground mb-6">
+          Manage your terminology resources and glossary entries
+        </p>
+
+        <Tabs
+          defaultValue="resources"
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="w-full"
+        >
+          <TabsList className="mb-6">
+            <TabsTrigger value="entries" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Glossary Entries
+            </TabsTrigger>
+            <TabsTrigger value="resources" className="flex items-center gap-2">
+              <BookMarked className="h-4 w-4" />
+              Termbases
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <Database size={18} />
-            <h2 className="text-lg font-medium">Termbases</h2>
+            <h2 className="text-lg font-medium">Termbases List</h2>
           </div>
           <div className="flex gap-2">
             <Button onClick={() => setShowResourceDialog(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Add Termbase
             </Button>
-            <Link href="/termbases/entries">
-              <Button variant="outline">Manage Entries</Button>
-            </Link>
           </div>
         </div>
 
