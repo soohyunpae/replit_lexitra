@@ -321,21 +321,21 @@ export default function GlossaryPage() {
   }
 
   return (
-    <MainLayout title="Termbase">
+    <MainLayout title="Termbases">
       <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center gap-2 mb-2">
-          <Database className="h-5 w-5" />
-          <h2 className="text-3xl font-bold tracking-tight">Termbase</h2>
+          <Book className="h-5 w-5" />
+          <h2 className="text-3xl font-bold tracking-tight">Termbases</h2>
         </div>
         <p className="text-muted-foreground mb-6">
-          Manage terminology databases and terms
+          Manage terminology databases and glossary entries
         </p>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full md:w-[400px] grid-cols-2">
             <TabsTrigger value="entries" className="flex items-center gap-1">
               <FileText className="h-4 w-4" />
-              Termbase Entries
+              Glossary Entries
             </TabsTrigger>
             <TabsTrigger value="resources" className="flex items-center gap-1">
               <Tag className="h-4 w-4" />

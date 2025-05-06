@@ -26,93 +26,166 @@ interface HeaderProps {
   showSidebarTrigger?: boolean;
 }
 
+interface Breadcrumb {
+  label: string;
+  href: string;
+  active?: boolean;
+}
+
 export function Header({ 
   title = "Lexitra", 
   showSidebarTrigger = true
 }: HeaderProps) {
   const { toggleTheme, isDarkMode, mounted } = useThemeToggle();
   const { user, logoutMutation } = useAuth();
-  const [_, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const { isCollapsed, getCurrentSectionTitle } = useContext(SidebarContext);
 
-  return (
-    <header className="bg-card border-b border-border py-2 px-4 flex items-center justify-between">
-      <div className="flex items-center space-x-2">
-        {showSidebarTrigger && (
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="p-0">
-              <Sidebar />
-            </SheetContent>
-          </Sheet>
-        )}
+  // Generate breadcrumbs based on current location
+  const getBreadcrumbs = (): Breadcrumb[] | null => {
+    // If we're on homepage, don't show breadcrumbs
+    if (location === "/") return null;
 
-        <Link href="/">
-          <div className="flex items-center cursor-pointer">
-            <h1 className="text-xl font-semibold">
-              {isCollapsed ? getCurrentSectionTitle() : title}
-            </h1>
-          </div>
-        </Link>
-        <span className="text-xs bg-accent px-2 py-1 rounded text-muted-foreground">1.0.0</span>
+    const paths = location.split("/").filter(Boolean);
+    const breadcrumbs: Breadcrumb[] = [];
+
+    // Add home as first breadcrumb
+    breadcrumbs.push({
+      label: "Home",
+      href: "/",
+    });
+
+    // Build path progressively
+    let currentPath = "";
+    paths.forEach((path, index) => {
+      currentPath += `/${path}`;
+      
+      // Check if this is a project ID
+      const isProjectId = /^\d+$/.test(path) && paths[index-1] === "projects";
+      // Check if this is a file ID
+      const isFileId = /^\d+$/.test(path) && paths[index-1] === "translation";
+      
+      // Skip numeric IDs in the breadcrumb labels
+      let label = path;
+      if (isProjectId) {
+        label = "Project Details";
+      } else if (isFileId) {
+        label = "Translation Editor";
+      } else {
+        // Capitalize first letter
+        label = path.charAt(0).toUpperCase() + path.slice(1);
+      }
+      
+      breadcrumbs.push({
+        label,
+        href: currentPath,
+        active: index === paths.length - 1
+      });
+    });
+
+    return breadcrumbs;
+  };
+  
+  const breadcrumbs = getBreadcrumbs();
+
+  return (
+    <header className="bg-card border-b border-border py-2 px-4 flex flex-col space-y-2">
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center space-x-2">
+          {showSidebarTrigger && (
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0">
+                <Sidebar />
+              </SheetContent>
+            </Sheet>
+          )}
+
+          <Link href="/">
+            <div className="flex items-center cursor-pointer">
+              <h1 className="text-xl font-semibold">
+                {isCollapsed ? getCurrentSectionTitle() : title}
+              </h1>
+            </div>
+          </Link>
+          <span className="text-xs bg-accent px-2 py-1 rounded text-muted-foreground">1.0.0</span>
+        </div>
+      
+        <div className="flex items-center space-x-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+          >
+            {mounted && isDarkMode ? (
+              <Moon className="h-5 w-5" />
+            ) : (
+              <Sun className="h-5 w-5" />
+            )}
+          </Button>
+          
+          <Link href="/settings">
+            <Button variant="ghost" size="icon" aria-label="Settings">
+              <Settings className="h-5 w-5" />
+            </Button>
+          </Link>
+          
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative p-1 rounded-full">
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-medium text-sm">
+                    {user.username.charAt(0).toUpperCase()}
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/profile">My Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/auth")}
+            >
+              Login
+            </Button>
+          )}
+        </div>
       </div>
       
-      <div className="flex items-center space-x-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleTheme}
-          aria-label="Toggle theme"
-        >
-          {mounted && isDarkMode ? (
-            <Moon className="h-5 w-5" />
-          ) : (
-            <Sun className="h-5 w-5" />
-          )}
-        </Button>
-        
-        <Link href="/settings">
-          <Button variant="ghost" size="icon" aria-label="Settings">
-            <Settings className="h-5 w-5" />
-          </Button>
-        </Link>
-        
-        {user ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative p-1 rounded-full">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-medium text-sm">
-                  {user.username.charAt(0).toUpperCase()}
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/profile">My Profile</Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate("/auth")}
-          >
-            Login
-          </Button>
-        )}
-      </div>
+      {breadcrumbs && (
+        <div className="flex items-center text-sm text-muted-foreground">
+          {breadcrumbs.map((item, index) => (
+            <React.Fragment key={item.href}>
+              <Link 
+                href={item.href}
+                className={`hover:text-foreground ${item.active ? 'font-medium text-foreground' : ''}`}
+              >
+                {item.label}
+              </Link>
+              {index < breadcrumbs.length - 1 && (
+                <ChevronRight className="h-4 w-4 mx-2" />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      )}
     </header>
   );
 }

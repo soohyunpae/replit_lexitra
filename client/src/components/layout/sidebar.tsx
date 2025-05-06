@@ -111,7 +111,7 @@ export function Sidebar() {
     },
     {
       icon: <Book className="h-5 w-5" />,
-      label: "Terminology Base",
+      label: "Termbases",
       href: "/glossary"
     },
     {
@@ -141,7 +141,7 @@ export function Sidebar() {
   const getCurrentSectionTitle = () => {
     if (location === "/") return "Dashboard";
     if (location.startsWith("/projects")) return "Projects";
-    if (location === "/glossary") return "Terminology Base";
+    if (location === "/glossary") return "Termbases";
     if (location === "/tm") return "Translation Memory";
     if (location.startsWith("/admin")) return "Admin Tools";
     return "Lexitra";
@@ -196,8 +196,8 @@ export function Sidebar() {
                       // Projects menu: active on projects list or project detail page or translation page
                       (item.label === "Projects" && (location === "/projects" || /^\/projects\/\d+$/.test(location) || /^\/translation\/\d+$/.test(location))) ||
                       
-                      // Terminology Base: active on glossary page
-                      (item.label === "Terminology Base" && location === "/glossary") ||
+                      // Termbases: active on glossary page
+                      (item.label === "Termbases" && location === "/glossary") ||
                       
                       // Translation Memory: active on TM page
                       (item.label === "Translation Memory" && location === "/tm")
