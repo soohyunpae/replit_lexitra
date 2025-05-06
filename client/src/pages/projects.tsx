@@ -416,7 +416,7 @@ export default function ProjectsPage() {
   return (
     <MainLayout title="Projects">
       <div className="container max-w-screen-xl mx-auto p-6">
-        {/* Header */} 
+        {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-muted-foreground mt-1">Manage your translation projects</p>

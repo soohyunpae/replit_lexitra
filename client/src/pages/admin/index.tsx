@@ -102,7 +102,7 @@ export default function AdminDashboard() {
     {
       title: "TM Management",
       description:
-        "Manage TM assets, align files, clean duplicates",
+        "Manage Translation Memory (TM) assets, align files, clean duplicates",
       icon: <Database className="h-6 w-6" />,
       links: [
         {
@@ -352,7 +352,9 @@ export default function AdminDashboard() {
               </TabsContent>
             </CardContent>
 
-
+            <CardFooter className="border-t pt-4 text-sm text-muted-foreground">
+              Access additional tools and features from the sidebar menu
+            </CardFooter>
           </Tabs>
         </Card>
       </div>

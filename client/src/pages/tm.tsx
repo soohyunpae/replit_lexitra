@@ -177,7 +177,7 @@ export default function TranslationMemoryPage() {
           <h1 className="text-2xl font-bold">Translation Memory Database</h1>
         </div>
         <p className="text-muted-foreground mb-6">
-          View and manage translation memory database
+          View and manage your translation memory database
         </p>
 
         <Tabs defaultValue="entries" value={activeTab} onValueChange={setActiveTab}>
