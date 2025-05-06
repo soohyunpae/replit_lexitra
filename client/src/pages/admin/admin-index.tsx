@@ -148,7 +148,7 @@ export default function AdminDashboard() {
 
   return (
     <MainLayout title="Admin Tools">
-      <div className="container max-w-screen-xl mx-auto p-6 space-y-6">
+      <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center gap-2 mb-2">
           <Settings className="h-5 w-5" />
           <h2 className="text-3xl font-bold tracking-tight">Admin Tools</h2>

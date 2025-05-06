@@ -187,7 +187,7 @@ export default function TermbaseResourcesPage() {
           onValueChange={handleTabChange}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="entries" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Glossary Entries
