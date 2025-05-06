@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -28,14 +29,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Plus,
-  Save,
-  Trash2,
-  Search,
-  FileText,
-  Book,
-} from "lucide-react";
+import { Plus, Save, Trash2, Search, FileText, Book, BookMarked } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -52,7 +46,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { formatDate } from "@/lib/utils";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 // Form schema for adding/editing glossary terms
 const glossaryFormSchema = z.object({
@@ -67,6 +61,8 @@ type GlossaryFormValues = z.infer<typeof glossaryFormSchema>;
 
 export default function GlossaryEntriesPage() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const [activeTab, setActiveTab] = useState<string>("entries");
   const [searchQuery, setSearchQuery] = useState("");
   const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>(
     "all_source_languages",
@@ -230,16 +226,45 @@ export default function GlossaryEntriesPage() {
     }
   }
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === "resources") {
+      navigate("/termbases/resources");
+    } else {
+      navigate("/termbases/entries");
+    }
+  };
+
   return (
     <MainLayout title="Glossary Entries">
       <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Book className="h-5 w-5" />
-          <h2 className="text-3xl font-bold tracking-tight">Glossary Entries</h2>
+          <BookMarked className="h-5 w-5" />
+          <h2 className="text-3xl font-bold tracking-tight">
+            Termbases
+          </h2>
         </div>
         <p className="text-muted-foreground mb-6">
-          Manage terminology entries and definitions
+          Manage your terminology resources and glossary entries
         </p>
+        
+        <Tabs
+          defaultValue="entries"
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="w-full"
+        >
+          <TabsList className="mb-6">
+            <TabsTrigger value="entries" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Glossary Entries
+            </TabsTrigger>
+            <TabsTrigger value="resources" className="flex items-center gap-2">
+              <BookMarked className="h-4 w-4" />
+              Termbases
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Add Term Form */}
@@ -318,7 +343,7 @@ export default function GlossaryEntriesPage() {
                   name="resourceId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>TB Resource</FormLabel>
+                      <FormLabel>Termbase</FormLabel>
                       <Select
                         onValueChange={(value) => {
                           field.onChange(
@@ -329,13 +354,16 @@ export default function GlossaryEntriesPage() {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select TB Resource" />
+                            <SelectValue placeholder="Select TB" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="none">No Resource</SelectItem>
+                          <SelectItem value="none">No termbase</SelectItem>
                           {tbResources.map((resource: any) => (
-                            <SelectItem key={resource.id} value={resource.id.toString()}>
+                            <SelectItem
+                              key={resource.id}
+                              value={resource.id.toString()}
+                            >
                               {resource.name}
                             </SelectItem>
                           ))}
@@ -391,12 +419,7 @@ export default function GlossaryEntriesPage() {
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-2">
                 <FileText size={18} />
-                <h2 className="text-lg font-medium">Glossary Entries</h2>
-              </div>
-              <div className="flex gap-2">
-                <Link href="/termbases/resources">
-                  <Button variant="outline" size="sm">Manage Resources</Button>
-                </Link>
+                <h2 className="text-lg font-medium">Entries List</h2>
               </div>
             </div>
 
@@ -456,12 +479,15 @@ export default function GlossaryEntriesPage() {
                 }
               >
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="TB Resource" />
+                  <SelectValue placeholder="TB" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all_resources">All Resources</SelectItem>
                   {tbResources.map((resource: any) => (
-                    <SelectItem key={resource.id} value={resource.id.toString()}>
+                    <SelectItem
+                      key={resource.id}
+                      value={resource.id.toString()}
+                    >
                       {resource.name}
                     </SelectItem>
                   ))}
@@ -480,9 +506,7 @@ export default function GlossaryEntriesPage() {
               </div>
             ) : filteredGlossary.length === 0 ? (
               <div className="flex justify-center items-center p-8 border rounded-md">
-                <p className="text-muted-foreground">
-                  No glossary terms found. Add your first term using the form!
-                </p>
+                <p className="text-muted-foreground">No terms found.</p>
               </div>
             ) : (
               <div className="border rounded-md overflow-hidden">

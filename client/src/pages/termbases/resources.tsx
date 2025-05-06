@@ -28,15 +28,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Plus,
-  Save,
-  Trash2,
-  Search,
-  Database,
-  Tag,
-  Book,
-} from "lucide-react";
+import { Plus, Save, Trash2, Search, Database, Tag, Book } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -69,7 +61,8 @@ type TbResourceFormValues = z.infer<typeof tbResourceFormSchema>;
 
 export default function TermbaseResourcesPage() {
   const { toast } = useToast();
-  const [showResourceDialog, setShowResourceDialog] = React.useState<boolean>(false);
+  const [showResourceDialog, setShowResourceDialog] =
+    React.useState<boolean>(false);
 
   // TB Resource form setup
   const resourceForm = useForm<TbResourceFormValues>({
@@ -92,7 +85,7 @@ export default function TermbaseResourcesPage() {
         const res = await apiRequest("GET", "/api/glossary/resources");
         return res.json();
       } catch (error) {
-        console.error("Error fetching TB resources:", error);
+        console.error("Error fetching TBs:", error);
         return [];
       }
     },
@@ -109,14 +102,14 @@ export default function TermbaseResourcesPage() {
       resourceForm.reset();
       setShowResourceDialog(false);
       toast({
-        title: "TB Resource added",
+        title: "TB added",
         description: "The termbase has been added successfully.",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to add TB resource",
+        description: error.message || "Failed to add TB",
         variant: "destructive",
       });
     },
@@ -135,13 +128,13 @@ export default function TermbaseResourcesPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/glossary/resources"] });
       toast({
         title: "Resource deleted",
-        description: "The TB resource has been deleted successfully.",
+        description: "The TB has been deleted successfully.",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to delete resource",
+        description: error.message || "Failed to delete termbase",
         variant: "destructive",
       });
     },
@@ -152,31 +145,29 @@ export default function TermbaseResourcesPage() {
   }
 
   function handleDeleteResource(id: number) {
-    if (window.confirm("Are you sure you want to delete this resource?")) {
+    if (window.confirm("Are you sure you want to delete this termbase?")) {
       deleteResourceMutation.mutate(id);
     }
   }
 
   return (
-    <MainLayout title="TB Resources">
+    <MainLayout title="Termbases">
       <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center gap-2 mb-4">
           <Database className="h-5 w-5" />
-          <h2 className="text-3xl font-bold tracking-tight">TB Resources</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Termbases</h2>
         </div>
-        <p className="text-muted-foreground mb-6">
-          Manage terminology base resources
-        </p>
+        <p className="text-muted-foreground mb-6">Manage termbases</p>
 
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <Database size={18} />
-            <h2 className="text-lg font-medium">TB Resources</h2>
+            <h2 className="text-lg font-medium">Termbases</h2>
           </div>
           <div className="flex gap-2">
             <Button onClick={() => setShowResourceDialog(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Resource
+              Add Termbase
             </Button>
             <Link href="/termbases/entries">
               <Button variant="outline">Manage Entries</Button>
@@ -187,13 +178,11 @@ export default function TermbaseResourcesPage() {
         {/* Resources Table */}
         {isLoading ? (
           <div className="flex justify-center p-8">
-            <p>Loading resources...</p>
+            <p>Loading termbases...</p>
           </div>
         ) : tbResources.length === 0 ? (
           <div className="flex justify-center items-center p-8 border rounded-md">
-            <p className="text-muted-foreground">
-              No termbase resources found. Create your first resource!
-            </p>
+            <p className="text-muted-foreground">No termbases found.</p>
           </div>
         ) : (
           <div className="border rounded-md overflow-hidden">
@@ -215,7 +204,10 @@ export default function TermbaseResourcesPage() {
                       <div className="flex items-center gap-2">
                         {resource.name}
                         {resource.isActive && (
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          <Badge
+                            variant="outline"
+                            className="bg-green-50 text-green-700 border-green-200"
+                          >
                             Active
                           </Badge>
                         )}
@@ -233,7 +225,9 @@ export default function TermbaseResourcesPage() {
                     </TableCell>
                     <TableCell>{resource.domain || "-"}</TableCell>
                     <TableCell>
-                      {resource.createdAt ? formatDate(resource.createdAt) : "-"}
+                      {resource.createdAt
+                        ? formatDate(resource.createdAt)
+                        : "-"}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -255,9 +249,9 @@ export default function TermbaseResourcesPage() {
         <Dialog open={showResourceDialog} onOpenChange={setShowResourceDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New TB Resource</DialogTitle>
+              <DialogTitle>Add New Termbase</DialogTitle>
               <DialogDescription>
-                Create a new termbase resource to organize your glossary.
+                Create a new termbase to organize your glossary.
               </DialogDescription>
             </DialogHeader>
 
@@ -273,7 +267,7 @@ export default function TermbaseResourcesPage() {
                     <FormItem>
                       <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter resource name" {...field} />
+                        <Input placeholder="Enter termbase name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -396,9 +390,7 @@ export default function TermbaseResourcesPage() {
                         </div>
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel>
-                          Set as an active resource
-                        </FormLabel>
+                        <FormLabel>Set as an active termbase</FormLabel>
                       </div>
                     </FormItem>
                   )}
@@ -416,7 +408,9 @@ export default function TermbaseResourcesPage() {
                     type="submit"
                     disabled={addResourceMutation.isPending}
                   >
-                    {addResourceMutation.isPending ? "Adding..." : "Add Resource"}
+                    {addResourceMutation.isPending
+                      ? "Adding..."
+                      : "Add Termbase"}
                   </Button>
                 </DialogFooter>
               </form>

@@ -9,9 +9,9 @@ import { Link } from "wouter";
 export default function TermbasesIndexPage() {
   // Navigate to entries by default
   const [, navigate] = useLocation();
-  
+
   useEffect(() => {
-    navigate('/termbases/entries');
+    navigate("/termbases/entries");
   }, [navigate]);
 
   return (
@@ -22,7 +22,7 @@ export default function TermbasesIndexPage() {
           <h2 className="text-3xl font-bold tracking-tight">Termbases</h2>
         </div>
         <p className="text-muted-foreground mb-6">
-          Manage terminology databases and glossary entries
+          Manage termbases and glossary entries
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -32,27 +32,27 @@ export default function TermbasesIndexPage() {
               <h3 className="text-xl font-semibold">Glossary Entries</h3>
             </div>
             <p className="text-muted-foreground mb-4">
-              Manage terminology entries, source and target terms, and translations
+              Manage glossary entries, source and target terms
             </p>
             <Link href="/termbases/entries">
               <Button className="w-full">Go to Glossary Entries</Button>
             </Link>
           </div>
-          
+
           <div className="border rounded-lg p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-3">
               <Tag className="h-5 w-5" />
-              <h3 className="text-xl font-semibold">TB Resources</h3>
+              <h3 className="text-xl font-semibold">Termbases</h3>
             </div>
             <p className="text-muted-foreground mb-4">
-              Manage termbase resources, domains, and language pairs
+              Manage termbases, domains, and language pairs
             </p>
             <Link href="/termbases/resources">
-              <Button className="w-full">Go to TB Resources</Button>
+              <Button className="w-full">Go to Termbases</Button>
             </Link>
           </div>
         </div>
-        
+
         <div className="mt-8">
           <div className="text-sm text-muted-foreground">
             Redirecting to Glossary Entries...
