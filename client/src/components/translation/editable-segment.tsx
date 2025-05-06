@@ -23,10 +23,19 @@ export function EditableSegment({
   onUpdate,
   onTranslateWithGPT
 }: EditableSegmentProps) {
-  // Source is not editable, target is always editable
-  const [isEditing, setIsEditing] = useState(!isSource);
+  // Source is not editable, target is editable unless reviewed
+  const [isEditing, setIsEditing] = useState(!isSource && segment.status !== "Reviewed");
   const [value, setValue] = useState(isSource ? segment.source : segment.target || "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Allow unlocking reviewed segments
+  const handleUnlock = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onUpdate && segment.status === "Reviewed") {
+      onUpdate(segment.target || "", "MT");
+      setIsEditing(true);
+    }
+  };
   
   // Auto-focus textarea when editing starts
   useEffect(() => {
@@ -100,16 +109,25 @@ export function EditableSegment({
               <span className={`text-xs px-1.5 py-0.5 rounded-md ${getStatusColor(segment.status)}`}>
                 {segment.status}
               </span>
-              {segment.target && segment.status !== "Reviewed" && onUpdate && (
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onUpdate(segment.target || "", "Reviewed");
-                  }}
-                  className="ml-2 text-xs text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded-md bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 transition-colors"
-                >
-                  Mark as Reviewed
-                </button>
+              {segment.target && onUpdate && (
+                segment.status === "Reviewed" ? (
+                  <button 
+                    onClick={handleUnlock}
+                    className="ml-2 text-xs text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded-md bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 transition-colors"
+                  >
+                    Unlock
+                  </button>
+                ) : (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUpdate(segment.target || "", "Reviewed");
+                    }}
+                    className="ml-2 text-xs text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded-md bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 transition-colors"
+                  >
+                    Mark as Reviewed
+                  </button>
+                )
               )}
             </div>
           )}
