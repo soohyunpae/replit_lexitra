@@ -1,0 +1,135 @@
+# Lexitra Navigation Structure & UI Title Simplification
+
+This document outlines proposed improvements to Lexitra's page navigation and menu title structure for better usability and clarity.
+
+---
+
+## ✅ Problems Identified
+
+### 1. Header Click Misrouting
+
+* Clicking the top header title (e.g., "Termbase") redirects to the Dashboard, not the logical parent section.
+* This occurs even when the user is deep within a subpage (e.g., inside a specific Project).
+
+### 2. Redundant Title Usage
+
+* The same title is repeated in:
+
+  * Sidebar (e.g., "Projects")
+  * Header (e.g., "Projects")
+  * Page content title (e.g., "Projects")
+
+### 3. Lack of Visual Hierarchy
+
+* No breadcrumb or parent-child page relationship visible
+* Users can’t tell which glossary or project they are viewing from the top layout alone
+
+---
+
+## ✅ Proposed Solutions
+
+### 1. Header: Implement Breadcrumb Navigation (Replace Tabs with Routes)
+
+To improve clarity and navigability across Lexitra pages, we propose replacing header titles and internal tabs with a breadcrumb-based navigation structure paired with distinct page routes.
+
+#### Why Breadcrumbs?
+* Show user's current location in a hierarchical path (e.g., `Termbase > Termbase Entries`)
+* Help users easily move back to parent pages
+* Reflect true navigation context — prevents confusion with top-level headers like “Termbase”
+
+#### Why Remove Tabs in Body Content?
+Currently, Termbase and Admin Tools use tab-style components in the content area (e.g., “Glossary Entries” / “TB Resources”). However, this pattern:
+* Obscures navigation context (URL doesn't reflect the current view)
+* Limits browser features (no back button, no bookmarkable views)
+* Makes it hard to scale when tab content grows or diverges in complexity
+
+#### Recommended Change:
+* Use breadcrumb-based header:
+  - Example: `Termbase > Termbase Entries`
+  - All segments are clickable
+* Each sub-view (like "Glossary Entries", "TB Resources", etc.) becomes a **separate route**
+  - e.g., `/termbase/entries`, `/termbase/resources`
+  - Each route has its own page layout and URL
+* Remove tab UI in page body to reduce confusion
+
+#### Benefits:
+* Consistent URL-based navigation
+* Easily shareable links and better browser compatibility
+* Clearer mental model for users
+* Easier to manage routing logic in frontend frameworks like Next.js
+
+### 2. Page Title Redundancy Cleanup
+
+* Remove or minimize repeated page titles in the main content area
+* Use contextual subheaders instead:
+
+  * e.g., "Glossary Entries" under breadcrumb
+
+
+---
+
+## ✅ Resulting Benefits
+
+* Improves clarity of user’s current location
+* Prevents accidental Dashboard redirection
+* Removes visual clutter from duplicate labels
+* Aligns with common UX patterns in translation/localization tools
+
+---
+
+These changes aim to create a more intuitive, scalable navigation structure for Lexitra’s users across different workflows.
+
+---
+
+## ✅ Glossary vs Termbase Usage
+
+Many users are confused between "glossary" and "termbase." While these terms are often used interchangeably, they have distinct meanings in the context of localization tools:
+
+| Term         | Description                                          | Typical Usage                          |
+|--------------|------------------------------------------------------|----------------------------------------|
+| **Glossary** | A list of key terms and their approved translations | Simple format, often shown in UI       |
+| **Termbase** | A structured terminology database                   | Includes metadata, used in backend     |
+
+**Glossary** is typically a UI-facing concept — a simple bilingual term list.
+**Termbase** (TB), on the other hand, refers to the backend structure that supports rich metadata (e.g., domain, language pair, status, definitions, notes).
+
+### Lexitra Usage
+
+- **Termbase** is the container (e.g., `Default TB`)
+- **Glossary Entries** are individual terms (source ↔ target) managed within each termbase
+
+Thus, it's valid to use both terms:
+- Use **"Glossary"** in UI for familiarity
+- Use **"Termbase"** in structural or admin settings
+
+This dual usage is intentional and mirrors industry standards found in CAT tools like SDL Trados or memoQ.
+
+
+---
+
+## ✅ Termbase Navigation & Page Simplification
+
+### Context
+Previously, Lexitra used the term **"TB Resource"** for the page that lists all termbases and allows creation or deletion of them.
+
+However, the term **"Resource"** is too generic and unclear for users, especially in a translation/localization context.
+
+### Decision
+We will stop using the word "Resource" and adopt clearer, task-oriented names.
+
+### Updated Navigation & Naming
+
+- The page showing the **list of termbases** should be called **"Termbases"**.
+- That page should:
+  - Show all termbases available to the user
+  - Allow users (admin only, if needed) to create or delete termbases
+- Each termbase item in the list links to its entries:
+  - Path: `/termbase/[tbId]/entries`
+  - Page title: "Glossary Entries"
+
+### Optional Future Refinement
+If the list of termbases grows large in the future or requires metadata filtering, we may split the view:
+- `/termbase` for overview
+- `/termbase/[tbId]/entries` for entries
+
+For now, keep them within the same section and simplify the UI.

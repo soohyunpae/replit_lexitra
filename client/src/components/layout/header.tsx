@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useThemeToggle } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
-import { Moon, Sun, Search, Settings, Menu, UserCircle, LogOut } from "lucide-react";
+import { Moon, Sun, Search, Settings, Menu, UserCircle, LogOut, ChevronRight } from "lucide-react";
 import { SidebarContext } from "./sidebar";
 import {
   DropdownMenu,
