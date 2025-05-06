@@ -99,7 +99,7 @@ export const insertTranslationUnitSchema = createInsertSchema(translationUnits, 
 export type InsertTranslationUnit = z.infer<typeof insertTranslationUnitSchema>;
 export type TranslationUnit = typeof translationUnits.$inferSelect;
 
-// Translation Memory Resources model
+// Translation Memories model
 export const tmResources = pgTable("tm_resources", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -112,7 +112,7 @@ export const tmResources = pgTable("tm_resources", {
 });
 
 export const insertTmResourceSchema = createInsertSchema(tmResources, {
-  name: (schema) => schema.min(1, "TM Resource name is required"),
+  name: (schema) => schema.min(1, "TM name is required"),
 });
 
 export type InsertTmResource = z.infer<typeof insertTmResourceSchema>;

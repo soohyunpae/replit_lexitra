@@ -48,7 +48,7 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 
 // Form schema for TMs
-const tmResourceFormSchema = z.object({
+const tmFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   description: z.string().optional(),
   defaultSourceLanguage: z.string().min(2),
@@ -57,7 +57,7 @@ const tmResourceFormSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-type TmResourceFormValues = z.infer<typeof tmResourceFormSchema>;
+type TmFormValues = z.infer<typeof tmFormSchema>;
 
 export default function TranslationMemoryResourcesPage() {
   const { toast } = useToast();
@@ -80,8 +80,8 @@ export default function TranslationMemoryResourcesPage() {
   });
 
   // TM form setup
-  const resourceForm = useForm<TmResourceFormValues>({
-    resolver: zodResolver(tmResourceFormSchema),
+  const tmForm = useForm<TmFormValues>({
+    resolver: zodResolver(tmFormSchema),
     defaultValues: {
       name: "",
       description: "",

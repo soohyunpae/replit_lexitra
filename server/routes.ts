@@ -1695,7 +1695,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Translation Memory API
-  // Get all TM resources
+  // Get all TMs
   app.get(`${apiPrefix}/tm/resources`, verifyToken, async (req, res) => {
     try {
       const tmResources = await db.query.tmResources.findMany({
@@ -1708,7 +1708,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Add new TM resource
+  // Add new TM
   app.post(`${apiPrefix}/tm/resources`, verifyToken, async (req, res) => {
     try {
       const resourceSchema = z.object({
@@ -1761,7 +1761,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get a specific TM resource and its entries
+  // Get a specific TM and its entries
   app.get(`${apiPrefix}/tm/resource/:id`, verifyToken, async (req, res) => {
     try {
       const resourceId = parseInt(req.params.id);
@@ -1771,7 +1771,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       if (!resource) {
-        return res.status(404).json({ message: 'TM resource not found' });
+        return res.status(404).json({ message: 'TM not found' });
       }
       
       const entries = await db.query.translationMemory.findMany({
