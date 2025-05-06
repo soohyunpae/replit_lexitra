@@ -770,9 +770,7 @@ export default function Project() {
                 <CardTitle className="text-lg flex items-center">
                   <span>📂 Reference Files</span>
                 </CardTitle>
-                <CardDescription>
-                  Upload reference files to help with translation (terminology guides, original source files, etc.)
-                </CardDescription>
+                <CardDescription />
               </CardHeader>
               <CardContent>
                 {/* Reference files list */}
@@ -911,9 +909,7 @@ export default function Project() {
                 <CardTitle className="text-lg flex items-center">
                   <span>📝 Project Notes</span>
                 </CardTitle>
-                <CardDescription>
-                  Record notes, instructions, or special requirements for this project
-                </CardDescription>
+                <CardDescription />
               </CardHeader>
               <CardContent>
                 <Textarea
@@ -942,9 +938,7 @@ export default function Project() {
               <CardTitle className="text-lg">
                 Files
               </CardTitle>
-              <CardDescription>
-                Files for translation (cannot be modified after project creation)
-              </CardDescription>
+              <CardDescription />
             </CardHeader>
             <CardContent>
               {workFiles && workFiles.length > 0 ? (
