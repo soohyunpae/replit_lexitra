@@ -30,6 +30,7 @@ import {
   FileType,
   FilePlus2,
   FileOutput,
+  Settings,
 } from "lucide-react";
 
 interface AdminLink {
@@ -149,11 +150,13 @@ export default function AdminDashboard() {
   return (
     <MainLayout title="Admin Tools">
       <div className="container max-w-screen-xl mx-auto p-6 space-y-6">
-        <div className="space-y-2">
-          <p className="text-muted-foreground">
-            Manage TMs and preprocess files
-          </p>
+        <div className="flex items-center gap-2 mb-2">
+          <Settings className="h-5 w-5" />
+          <h2 className="text-3xl font-bold tracking-tight">Admin Tools</h2>
         </div>
+        <p className="text-muted-foreground mb-6">
+          Manage TMs and preprocess files
+        </p>
 
         <Card className="overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
