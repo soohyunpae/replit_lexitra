@@ -105,7 +105,7 @@ export default function TranslationMemoryResourcesPage() {
       toast({
         title: "TM added",
         description:
-          "The translation memory resource has been added successfully.",
+          "The translation memory has been added successfully.",
       });
     },
     onError: (error: any) => {
@@ -196,8 +196,8 @@ export default function TranslationMemoryResourcesPage() {
             ) : tmResources.length === 0 ? (
               <div className="flex justify-center items-center p-8 border rounded-md">
                 <p className="text-muted-foreground">
-                  No translation memory resources found. Create your first
-                  resource!
+                  No translation memories found. Create your first
+                  TM!
                 </p>
               </div>
             ) : (
@@ -271,7 +271,7 @@ export default function TranslationMemoryResourcesPage() {
             <DialogHeader>
               <DialogTitle>Add New TM</DialogTitle>
               <DialogDescription>
-                Create a new translation memory resource to organize your TM
+                Create a new translation memory to organize your TM
                 data.
               </DialogDescription>
             </DialogHeader>
@@ -288,7 +288,7 @@ export default function TranslationMemoryResourcesPage() {
                     <FormItem>
                       <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter resource name" {...field} />
+                        <Input placeholder="Enter TM name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -411,7 +411,7 @@ export default function TranslationMemoryResourcesPage() {
                         </div>
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel>Set as an active resource</FormLabel>
+                        <FormLabel>Set as an active TM</FormLabel>
                       </div>
                     </FormItem>
                   )}
@@ -431,7 +431,7 @@ export default function TranslationMemoryResourcesPage() {
                   >
                     {addResourceMutation.isPending
                       ? "Adding..."
-                      : "Add Resource"}
+                      : "Add TM"}
                   </Button>
                 </DialogFooter>
               </form>
