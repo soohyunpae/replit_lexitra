@@ -362,17 +362,21 @@ export default function Project() {
       <main className="flex-1 p-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-xl font-semibold mb-1">
-                <span className={
-                  `mr-2 text-sm font-medium rounded-full px-2 py-0.5 ${
-                    project.status === 'Unclaimed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' : 
-                    project.status === 'Claimed' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' : 
-                    'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'}`
-                }>
-                  {project.id}
+            <div className="flex items-center">
+              <h1 className="text-xl font-semibold mb-1 flex items-center">
+                <span className="mr-2 text-sm font-medium text-muted-foreground">
+                  #{project.id}
                 </span>
                 {project.name}
+                <span className={
+                  `ml-3 text-sm font-medium rounded-md px-2 py-0.5 ${
+                    project.status === 'Unclaimed' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' : 
+                    project.status === 'Claimed' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 
+                    project.status === 'Completed' ? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' :
+                    'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'}`
+                }>
+                  {project.status}
+                </span>
               </h1>
             </div>
             
@@ -511,14 +515,15 @@ export default function Project() {
           
           <Separator className="mb-6" />
           
-          {/* Project information and summary - 2 column layout */}
+          {/* Project information and settings - 2 column layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {/* Project Info Card */}
-            <Card>
+            {/* Project Info Card (Non-editable) */}
+            <Card className="border-border/50">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg">
-                  Project Info
+                <CardTitle className="text-lg flex items-center">
+                  <span>🔒 Project Info</span>
                 </CardTitle>
+                <CardDescription>These fields are fixed upon project creation and cannot be edited</CardDescription>
               </CardHeader>
               <CardContent className="text-sm space-y-3">
                 <div className="flex flex-col space-y-3">
@@ -547,13 +552,6 @@ export default function Project() {
                     <div className="text-muted-foreground">Last Updated:</div>
                     <div className="font-medium">
                       <span>{formatDate(project.updatedAt || project.createdAt)}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">Deadline:</div>
-                    <div className="font-medium">
-                      <span>{project.deadline ? formatDate(project.deadline) : 'Not set'}</span>
                     </div>
                   </div>
                   
