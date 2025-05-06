@@ -9,10 +9,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Database, FileText, ChevronRight, Tag, Plus, Trash2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Database, FileText, Plus, Trash2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { formatDate } from "@/lib/utils";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -33,6 +34,8 @@ type TmResourceFormValues = z.infer<typeof tmResourceFormSchema>;
 
 export default function TranslationMemoryResourcesPage() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const [activeTab, setActiveTab] = useState<string>("resources");
   const [showResourceDialog, setShowResourceDialog] = useState<boolean>(false);
   
   // Get all TM resources
@@ -120,105 +123,115 @@ export default function TranslationMemoryResourcesPage() {
       deleteResourceMutation.mutate(id);
     }
   }
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === "entries") {
+      navigate("/tm");
+    } else {
+      navigate("/tm/resources");
+    }
+  };
   
   return (
     <MainLayout title="TM Resources">
       <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center gap-2 mb-4">
           <Database className="h-5 w-5" />
-          <h2 className="text-3xl font-bold tracking-tight">TM Resources</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Translation Memory</h2>
         </div>
         <p className="text-muted-foreground mb-6">
-          Manage translation memory resources
+          View and manage your translation memory database
         </p>
         
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-4">
-            <Link href="/tm">
-              <Button variant="outline" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                TM Entries
+        <Tabs defaultValue="resources" value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="entries" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              TM Entries
+            </TabsTrigger>
+            <TabsTrigger value="resources" className="flex items-center gap-2">
+              <Database className="h-4 w-4" />
+              TM Resources
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="resources" className="mt-0">
+            <div className="flex justify-end mb-6">
+              <Button onClick={() => setShowResourceDialog(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Resource
               </Button>
-            </Link>
-            <Link href="/tm/resources">
-              <Button variant="default" className="flex items-center gap-2">
-                <Database className="h-4 w-4" />
-                TM Resources
-              </Button>
-            </Link>
-          </div>
-          <Button onClick={() => setShowResourceDialog(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Resource
-          </Button>
-        </div>
-        
-        {/* Resources Table */}
-        {isLoading ? (
-          <div className="flex justify-center p-8">
-            <p>Loading resources...</p>
-          </div>
-        ) : tmResources.length === 0 ? (
-          <div className="flex justify-center items-center p-8 border rounded-md">
-            <p className="text-muted-foreground">
-              No translation memory resources found. Create your first resource!
-            </p>
-          </div>
-        ) : (
-          <div className="border rounded-md overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Default Languages</TableHead>
-                  <TableHead>Domain</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tmResources.map((resource: any) => (
-                  <TableRow key={resource.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {resource.name}
-                        {resource.isActive && (
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                            Active
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>{resource.description || "-"}</TableCell>
-                    <TableCell>
-                      <span className="font-medium">
-                        {resource.defaultSourceLanguage?.toUpperCase() || "-"}
-                      </span>{" "}
-                      &rarr;{" "}
-                      <span className="font-medium">
-                        {resource.defaultTargetLanguage?.toUpperCase() || "-"}
-                      </span>
-                    </TableCell>
-                    <TableCell>{resource.domain || "-"}</TableCell>
-                    <TableCell>
-                      {resource.createdAt ? formatDate(resource.createdAt) : "-"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteResource(resource.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+            </div>
+            
+            {/* Resources Table */}
+            {isLoading ? (
+              <div className="flex justify-center p-8">
+                <p>Loading resources...</p>
+              </div>
+            ) : tmResources.length === 0 ? (
+              <div className="flex justify-center items-center p-8 border rounded-md">
+                <p className="text-muted-foreground">
+                  No translation memory resources found. Create your first resource!
+                </p>
+              </div>
+            ) : (
+              <div className="border rounded-md overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Default Languages</TableHead>
+                      <TableHead>Domain</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tmResources.map((resource: any) => (
+                      <TableRow key={resource.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {resource.name}
+                            {resource.isActive && (
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                Active
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{resource.description || "-"}</TableCell>
+                        <TableCell>
+                          <span className="font-medium">
+                            {resource.defaultSourceLanguage?.toUpperCase() || "-"}
+                          </span>{" "}
+                          &rarr;{" "}
+                          <span className="font-medium">
+                            {resource.defaultTargetLanguage?.toUpperCase() || "-"}
+                          </span>
+                        </TableCell>
+                        <TableCell>{resource.domain || "-"}</TableCell>
+                        <TableCell>
+                          {resource.createdAt ? formatDate(resource.createdAt) : "-"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteResource(resource.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
         
         {/* Add Resource Dialog */}
         <Dialog open={showResourceDialog} onOpenChange={setShowResourceDialog}>
