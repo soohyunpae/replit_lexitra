@@ -1,62 +1,56 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Progress } from "@/components/ui/progress";
-import { countWords } from "@/lib/utils";
-import { type TranslationUnit } from "@/types";
+import { type TranslationUnit, type StatusType } from "@/types";
 
 interface ProgressBarProps {
   percentage: number;
   completed: number;
   total: number;
   statusCounts: Record<string, number>;
-  segments?: TranslationUnit[];
+  segments: TranslationUnit[];
 }
 
 export function ProgressBar({
   percentage,
   completed,
   total,
-  statusCounts,
-  segments = []
+  statusCounts
 }: ProgressBarProps) {
-  // 전체 단어 수 계산 (원문만 계산)
-  const totalWords = useMemo(() => {
-    if (segments.length === 0) return 0;
-    
-    return segments.reduce((total, segment) => {
-      return total + countWords(segment.source);
-    }, 0);
-  }, [segments]);
+  // Get status counts with default values for all possible statuses
+  const mtCount = statusCounts["MT"] || 0;
+  const fuzzyCount = statusCounts["Fuzzy"] || 0;
+  const fullMatchCount = statusCounts["100%"] || 0;
+  const reviewedCount = statusCounts["Reviewed"] || 0;
   
   return (
-    <div className="bg-card px-4 py-2 border-b border-border">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-medium">Translation Progress</h2>
-        <div className="text-xs text-muted-foreground">{completed} of {total} segments completed</div>
-      </div>
-      
-      <Progress value={percentage} className="h-2" />
-      
-      <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-        <div className="flex flex-wrap gap-4">
-          <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full status-indicator-mt mr-1.5"></div>
-            <span>MT: {statusCounts["MT"] || 0}</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full status-indicator-fuzzy mr-1.5"></div>
-            <span>Fuzzy: {statusCounts["Fuzzy"] || 0}</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full status-indicator-100 mr-1.5"></div>
-            <span>100%: {statusCounts["100%"] || 0}</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full status-indicator-reviewed mr-1.5"></div>
-            <span>Reviewed: {statusCounts["Reviewed"] || 0}</span>
-          </div>
+    <div className="bg-card border-b border-border py-2 px-4">
+      <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4 justify-between items-center">
+        <div className="w-full sm:w-1/2">
+          <Progress value={percentage} className="h-2" />
         </div>
-        <div>
-          <span>Total words: {totalWords.toLocaleString()}</span>
+        
+        <div className="flex space-x-2 text-xs items-center self-end sm:self-auto">
+          <div className="flex items-center">
+            <span className="font-medium">{completed}</span>
+            <span className="text-muted-foreground">&nbsp;/&nbsp;{total}</span>
+          </div>
+          
+          <div className="w-px h-4 bg-border"></div>
+          
+          <div className="flex space-x-2">
+            <div className="px-1.5 py-0.5 rounded-sm bg-yellow-200 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+              MT: {mtCount}
+            </div>
+            <div className="px-1.5 py-0.5 rounded-sm bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+              Fuzzy: {fuzzyCount}
+            </div>
+            <div className="px-1.5 py-0.5 rounded-sm bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-200">
+              100%: {fullMatchCount}
+            </div>
+            <div className="px-1.5 py-0.5 rounded-sm bg-blue-200 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+              Reviewed: {reviewedCount}
+            </div>
+          </div>
         </div>
       </div>
     </div>

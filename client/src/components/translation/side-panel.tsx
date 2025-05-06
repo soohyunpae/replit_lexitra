@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { Search, X, Database, Lightbulb, MessageSquare, History } from "lucide-react";
-import { TmMatch } from "./tm-match";
 import { type TranslationMemory, type Glossary, type TranslationUnit } from "@/types";
 
 interface SidePanelProps {
@@ -12,6 +10,37 @@ interface SidePanelProps {
   glossaryTerms: Glossary[];
   selectedSegment: TranslationUnit | null | undefined;
   onUseTranslation: (translation: string) => void;
+}
+
+interface TmMatchProps {
+  match: TranslationMemory;
+  onUse: (translation: string) => void;
+  sourceSimilarity: number;
+}
+
+// TM Match Component
+function TmMatch({ match, onUse, sourceSimilarity }: TmMatchProps) {
+  return (
+    <div className="bg-accent/50 rounded-md p-3">
+      <div className="flex justify-between items-center mb-1">
+        <div className="font-mono font-medium">{match.source}</div>
+        <div className="text-xs text-muted-foreground">
+          <span className="font-semibold">{sourceSimilarity}%</span> · {match.sourceLanguage} → {match.targetLanguage}
+        </div>
+      </div>
+      <div className="flex justify-between items-center">
+        <div className="font-mono text-muted-foreground">{match.target}</div>
+        <Button 
+          size="sm" 
+          variant="ghost" 
+          className="h-6 text-xs" 
+          onClick={() => onUse(match.target)}
+        >
+          Use Translation
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 export function SidePanel({
@@ -26,44 +55,42 @@ export function SidePanel({
   
   return (
     <aside className="w-80 border-l border-border bg-card overflow-hidden flex flex-col">
-      {/* Tab navigation */}
-      <div className="px-4 py-3 border-b border-border">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs defaultValue="tm" value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
+        <div className="px-4 py-3 border-b border-border">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="tm" className="flex items-center justify-center">
               <Database className="h-4 w-4 mr-1.5" />
               <span className="hidden sm:inline">TM</span>
             </TabsTrigger>
+            
             <TabsTrigger value="tb" className="flex items-center justify-center">
               <Lightbulb className="h-4 w-4 mr-1.5" />
               <span className="hidden sm:inline">Terms</span>
             </TabsTrigger>
+            
             <TabsTrigger value="comments" className="flex items-center justify-center">
               <MessageSquare className="h-4 w-4 mr-1.5" />
               <span className="hidden sm:inline">Comments</span>
             </TabsTrigger>
+            
             <TabsTrigger value="history" className="flex items-center justify-center">
               <History className="h-4 w-4 mr-1.5" />
               <span className="hidden sm:inline">History</span>
             </TabsTrigger>
           </TabsList>
-        </Tabs>
-      </div>
-
-      <div className="flex-1 overflow-y-auto">
-        {/* TM Matches Tab Content */}
-        <TabsContent value="tm" className="h-full overflow-y-auto m-0 p-0">
+        </div>
+        
+        <TabsContent value="tm" className="flex-1 overflow-auto">
           <div className="p-4">
             <div className="text-sm font-medium mb-2">Translation Memory</div>
             
-            {/* TM Search */}
             <div className="mb-4">
               <div className="relative">
                 <Input
                   placeholder="Search translation memory..."
                   className="pr-10"
                   value={tmSearchQuery}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTmSearchQuery(e.target.value)}
+                  onChange={(e) => setTmSearchQuery(e.target.value)}
                 />
                 <button 
                   className="absolute right-2 top-2 text-muted-foreground hover:text-foreground transition-colors"
@@ -74,7 +101,6 @@ export function SidePanel({
               </div>
             </div>
             
-            {/* Selected segment info */}
             {selectedSegment && (
               <div className="mb-4">
                 <div className="text-xs font-semibold mb-1 text-muted-foreground">Active Segment</div>
@@ -110,20 +136,18 @@ export function SidePanel({
             )}
           </div>
         </TabsContent>
-
-        {/* Glossary Tab Content */}
-        <TabsContent value="tb" className="h-full overflow-y-auto m-0 p-0">
+        
+        <TabsContent value="tb" className="flex-1 overflow-auto">
           <div className="p-4">
             <div className="text-sm font-medium mb-2">Terminology Base</div>
             
-            {/* TB Search */}
             <div className="mb-4">
               <div className="relative">
                 <Input
                   placeholder="Search terminology..."
                   className="pr-10"
                   value={tbSearchQuery}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTbSearchQuery(e.target.value)}
+                  onChange={(e) => setTbSearchQuery(e.target.value)}
                 />
                 <button 
                   className="absolute right-2 top-2 text-muted-foreground hover:text-foreground transition-colors"
@@ -133,8 +157,7 @@ export function SidePanel({
                 </button>
               </div>
             </div>
-
-            {/* Selected segment info */}
+            
             {selectedSegment && !tbSearchQuery && (
               <div className="mb-4">
                 <div className="text-xs font-semibold mb-1 text-muted-foreground">Active Segment</div>
@@ -181,9 +204,8 @@ export function SidePanel({
             )}
           </div>
         </TabsContent>
-
-        {/* Comments Tab Content */}
-        <TabsContent value="comments" className="h-full overflow-y-auto m-0 p-0">
+        
+        <TabsContent value="comments" className="flex-1 overflow-auto">
           <div className="p-4">
             <div className="text-sm font-medium mb-2">Comments</div>
             
@@ -194,15 +216,13 @@ export function SidePanel({
               </div>
             )}
             
-            {/* Future: Comment input and list */}
             <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center">
               No comments available for this segment.
             </div>
           </div>
         </TabsContent>
-
-        {/* History Tab Content */}
-        <TabsContent value="history" className="h-full overflow-y-auto m-0 p-0">
+        
+        <TabsContent value="history" className="flex-1 overflow-auto">
           <div className="p-4">
             <div className="text-sm font-medium mb-2">Revision History</div>
             
@@ -213,13 +233,12 @@ export function SidePanel({
               </div>
             )}
             
-            {/* Future: History list */}
             <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center">
               No revision history available for this segment.
             </div>
           </div>
         </TabsContent>
-      </div>
+      </Tabs>
     </aside>
   );
 }
