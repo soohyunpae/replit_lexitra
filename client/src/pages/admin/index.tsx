@@ -2,7 +2,14 @@ import React, { useState } from "react";
 import { useLocation, Link, Redirect } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/use-auth";
-
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -142,16 +149,16 @@ export default function AdminDashboard() {
   return (
     <MainLayout title="Admin Tools">
       <div className="container max-w-screen-xl mx-auto p-6 space-y-6">
-        <div className="flex flex-col space-y-2">
-          <h1 className="text-2xl font-bold">Admin Tools</h1>
+        <div className="space-y-2">
           <p className="text-muted-foreground">
             Manage TMs and preprocess files
           </p>
         </div>
 
-        <div className="bg-background">
+        <Card className="overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <CardHeader className="pb-0">
+              <TabsList className="mt-4 grid w-full grid-cols-2">
                 <TabsTrigger
                   value="translation-memory"
                   className="flex items-center gap-2"
@@ -169,7 +176,7 @@ export default function AdminDashboard() {
               </TabsList>
             </CardHeader>
 
-            <div className="py-6">
+            <CardContent className="pt-6 pb-4">
               {/* Translation Memory Tab Content */}
               <TabsContent value="translation-memory" className="m-0 space-y-4">
                 <div>
@@ -343,9 +350,11 @@ export default function AdminDashboard() {
                   </AccordionItem>
                 </Accordion>
               </TabsContent>
-            </div>
+            </CardContent>
+
+
           </Tabs>
-        </div>
+        </Card>
       </div>
     </MainLayout>
   );
