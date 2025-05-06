@@ -70,6 +70,10 @@ export default function Project() {
   const [note, setNote] = useState("");
   const [references, setReferences] = useState<File[]>([]);
   const [savedReferences, setSavedReferences] = useState<SavedReference[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [deadlineInput, setDeadlineInput] = useState("");
+  const [glossaryInput, setGlossaryInput] = useState("default");
+  const [tmInput, setTmInput] = useState("default");
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Get project ID from URL params
@@ -108,6 +112,17 @@ export default function Project() {
       // 노트 가져오기
       if (project.notes) {
         setNote(project.notes);
+      }
+      
+      // Form fields 초기화
+      if (project.deadline) {
+        setDeadlineInput(new Date(project.deadline).toISOString().split('T')[0]);
+      }
+      if (project.glossaryId) {
+        setGlossaryInput(project.glossaryId);
+      }
+      if (project.tmId) {
+        setTmInput(project.tmId);
       }
       
       // 참조파일 가져오기 (기존 JSON 참조 방식)
@@ -313,6 +328,29 @@ export default function Project() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
+    }
+  });
+  
+  // Project Info update mutation
+  const saveProjectInfo = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("PATCH", `/api/projects/${projectId}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Project info saved",
+        description: "Project information has been updated successfully."
+      });
+      setIsEditing(false);
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update project information. Please try again.",
+        variant: "destructive"
+      });
     }
   });
 
@@ -617,8 +655,65 @@ export default function Project() {
                 <CardDescription>Settings can be edited by project owner or admin</CardDescription>
               </CardHeader>
               <CardContent className="text-sm space-y-4">
+                {projectStats ? (
+                  <>
+                    <div className="space-y-2">
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <div className="text-muted-foreground">Completion:</div>
+                          <div className="font-medium">
+                            {projectStats.completedSegments} / {projectStats.totalSegments} segments
+                            <span className="ml-1 text-primary">
+                              ({projectStats.completionPercentage}%)
+                            </span>
+                          </div>
+                        </div>
+                        <Progress value={projectStats.completionPercentage} className="h-2" />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 mt-4">
+                      <div className="text-muted-foreground">TM Match Breakdown:</div>
+                      <div>
+                        <div className="flex items-center gap-1 mb-1">
+                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                          <span>100% Match:</span>
+                          <span className="font-medium ml-auto">{projectStats.statusCounts["100%"]}</span>
+                        </div>
+                        <div className="flex items-center gap-1 mb-1">
+                          <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                          <span>Fuzzy Match:</span>
+                          <span className="font-medium ml-auto">{projectStats.statusCounts["Fuzzy"]}</span>
+                        </div>
+                        <div className="flex items-center gap-1 mb-1">
+                          <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                          <span>MT:</span>
+                          <span className="font-medium ml-auto">{projectStats.statusCounts["MT"]}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                          <span>Reviewed:</span>
+                          <span className="font-medium ml-auto">{projectStats.statusCounts["Reviewed"]}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-1 mt-2">
+                      <div className="text-muted-foreground">Glossary Usage:</div>
+                      <div className="font-medium">
+                        {projectStats.glossaryMatchCount} term matches
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="animate-pulse space-y-2 py-2">
+                    <div className="h-4 bg-accent rounded w-full"></div>
+                    <div className="h-4 bg-accent rounded w-3/4"></div>
+                    <div className="h-4 bg-accent rounded w-1/2"></div>
+                  </div>
+                )}
+                
                 <div className="flex flex-col space-y-5">
-                  
                   {/* Reference files section incorporated into Settings */}
                   <div className="border-t border-border/50 pt-3 mt-2">
                     <div className="mb-2">
@@ -733,73 +828,7 @@ export default function Project() {
               </CardContent>
             </Card>
             
-            {/* Translation Summary Card */}
-            <Card className="md:col-span-2">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">
-                  Translation Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm space-y-3 pt-1">
-                {projectStats ? (
-                  <>
-                    <div className="space-y-2">
-                      <div>
-                        <div className="flex justify-between items-center mb-1">
-                          <div className="text-muted-foreground">Completion:</div>
-                          <div className="font-medium">
-                            {projectStats.completedSegments} / {projectStats.totalSegments} segments
-                            <span className="ml-1 text-primary">
-                              ({projectStats.completionPercentage}%)
-                            </span>
-                          </div>
-                        </div>
-                        <Progress value={projectStats.completionPercentage} className="h-2" />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-2 mt-4">
-                      <div className="text-muted-foreground">TM Match Breakdown:</div>
-                      <div>
-                        <div className="flex items-center gap-1 mb-1">
-                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                          <span>100% Match:</span>
-                          <span className="font-medium ml-auto">{projectStats.statusCounts["100%"]}</span>
-                        </div>
-                        <div className="flex items-center gap-1 mb-1">
-                          <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                          <span>Fuzzy Match:</span>
-                          <span className="font-medium ml-auto">{projectStats.statusCounts["Fuzzy"]}</span>
-                        </div>
-                        <div className="flex items-center gap-1 mb-1">
-                          <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                          <span>MT:</span>
-                          <span className="font-medium ml-auto">{projectStats.statusCounts["MT"]}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                          <span>Reviewed:</span>
-                          <span className="font-medium ml-auto">{projectStats.statusCounts["Reviewed"]}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-1 mt-2">
-                      <div className="text-muted-foreground">Glossary Usage:</div>
-                      <div className="font-medium">
-                        {projectStats.glossaryMatchCount} term matches
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="animate-pulse space-y-2 py-2">
-                    <div className="h-4 bg-accent rounded w-full"></div>
-                    <div className="h-4 bg-accent rounded w-3/4"></div>
-                    <div className="h-4 bg-accent rounded w-1/2"></div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* Translation Summary Card moved to Project Settings */}
           </div>
           
           {/* Work files section deleted as requested - it's duplicate of Files section below */}
