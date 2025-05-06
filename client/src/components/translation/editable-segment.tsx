@@ -84,9 +84,22 @@ export function EditableSegment({
         <div className="flex items-center">
           <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded-md mr-2">{index}</span>
           {!isSource && (
-            <span className={`text-xs px-1.5 py-0.5 rounded-md ${getStatusColor(segment.status)}`}>
-              {segment.status}
-            </span>
+            <div className="flex items-center">
+              <span className={`text-xs px-1.5 py-0.5 rounded-md ${getStatusColor(segment.status)}`}>
+                {segment.status}
+              </span>
+              {segment.target && segment.status !== "Reviewed" && onUpdate && (
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUpdate(segment.target || "", "Reviewed");
+                  }}
+                  className="ml-2 text-xs text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded-md bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 transition-colors"
+                >
+                  Mark as Reviewed
+                </button>
+              )}
+            </div>
           )}
         </div>
         

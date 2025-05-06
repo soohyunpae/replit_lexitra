@@ -229,6 +229,9 @@ export function NewTranslationEditor({
     setTranslatedCount(0);
     setTotalToTranslate(untranslatedSegments.length);
     
+    // Create a new array for updates
+    const updatedSegments = [...localSegments];
+    
     // Translate segments sequentially to avoid overloading the API
     for (let i = 0; i < untranslatedSegments.length; i++) {
       const segment = untranslatedSegments[i];
@@ -246,8 +249,26 @@ export function NewTranslationEditor({
         const data = await response.json();
         
         if (data.target) {
-          await handleSegmentUpdate(segment.id, data.target, "MT");
+          // Update the segment in the database
+          await apiRequest(
+            "PATCH", 
+            `/api/segments/${segment.id}`, 
+            { target: data.target, status: "MT" }
+          );
+          
+          // Update our local copy
+          const segmentIndex = updatedSegments.findIndex(s => s.id === segment.id);
+          if (segmentIndex !== -1) {
+            updatedSegments[segmentIndex] = {
+              ...updatedSegments[segmentIndex],
+              target: data.target,
+              status: "MT"
+            };
+          }
+          
+          // Update the counter and refresh the UI
           setTranslatedCount(i + 1);
+          setLocalSegments([...updatedSegments]);
         }
       } catch (error) {
         console.error(`Error translating segment ${segment.id}:`, error);
@@ -290,7 +311,7 @@ export function NewTranslationEditor({
             <Languages className="h-4 w-4 mr-1" />
             {isTranslatingAll 
               ? `Translating ${translatedCount}/${totalToTranslate}...` 
-              : "Translate File with GPT"}
+              : "Translate all with AI"}
           </Button>
           <Button 
             variant="outline" 
