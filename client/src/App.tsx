@@ -15,7 +15,8 @@ import Translation from "@/pages/translation";
 import TermbasesIndex from "@/pages/termbases";
 import TermbasesEntries from "@/pages/termbases/entries";
 import TermbasesResources from "@/pages/termbases/resources";
-import TM from "@/pages/tm";
+import TM from "@/pages/tm/index";
+import TMResources from "@/pages/tm/resources";
 import Settings from "@/pages/settings";
 import AuthPage from "@/pages/auth-page";
 import ProfilePage from "@/pages/profile";
@@ -62,6 +63,7 @@ function Router() {
       <ProtectedRoute path="/termbases/entries" component={TermbasesEntries} />
       <ProtectedRoute path="/termbases/resources" component={TermbasesResources} />
       <ProtectedRoute path="/tm" component={TM} />
+      <ProtectedRoute path="/tm/resources" component={TMResources} />
       <ProtectedRoute path="/settings" component={Settings} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <Route path="/admin">
