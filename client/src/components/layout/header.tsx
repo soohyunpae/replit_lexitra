@@ -105,13 +105,15 @@ export function Header({
             </Sheet>
           )}
 
-          <Link href="/">
-            <div className="flex items-center cursor-pointer">
-              <h1 className="text-xl font-semibold">
-                {isCollapsed ? getCurrentSectionTitle() : title}
-              </h1>
-            </div>
-          </Link>
+          {!breadcrumbs && (
+            <Link href="/">
+              <div className="flex items-center cursor-pointer">
+                <h1 className="text-xl font-semibold">
+                  {isCollapsed ? getCurrentSectionTitle() : title}
+                </h1>
+              </div>
+            </Link>
+          )}
           <span className="text-xs bg-accent px-2 py-1 rounded text-muted-foreground">1.0.0</span>
         </div>
       
@@ -169,9 +171,9 @@ export function Header({
         </div>
       </div>
       
-      {breadcrumbs && (
-        <div className="flex items-center text-sm text-muted-foreground">
-          {breadcrumbs.map((item, index) => (
+      <div className="flex items-center text-sm text-muted-foreground">
+        {breadcrumbs ? (
+          breadcrumbs.map((item, index) => (
             <React.Fragment key={item.href}>
               <Link 
                 href={item.href}
@@ -183,9 +185,13 @@ export function Header({
                 <ChevronRight className="h-4 w-4 mx-2" />
               )}
             </React.Fragment>
-          ))}
-        </div>
-      )}
+          ))
+        ) : (
+          <Link href="/" className="hover:text-foreground">
+            Lexitra
+          </Link>
+        )}
+      </div>
     </header>
   );
 }

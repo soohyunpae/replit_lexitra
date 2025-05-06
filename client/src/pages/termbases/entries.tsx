@@ -233,16 +233,9 @@ export default function GlossaryEntriesPage() {
   return (
     <MainLayout title="Glossary Entries">
       <div className="container max-w-screen-xl mx-auto p-6">
-        <div className="flex flex-col gap-2 mb-4">
-          <div className="flex items-center gap-2">
-            <Book className="h-5 w-5" />
-            <h2 className="text-3xl font-bold tracking-tight">Termbases</h2>
-          </div>
-          <div className="flex items-center">
-            <Link href="/termbases" className="text-blue-500 hover:underline">Termbases</Link>
-            <span className="mx-2">&gt;</span>
-            <span>Glossary Entries</span>
-          </div>
+        <div className="flex items-center gap-2 mb-4">
+          <Book className="h-5 w-5" />
+          <h2 className="text-3xl font-bold tracking-tight">Glossary Entries</h2>
         </div>
         <p className="text-muted-foreground mb-6">
           Manage terminology entries and definitions
