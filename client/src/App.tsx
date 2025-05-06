@@ -1,3 +1,4 @@
+import React from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -11,7 +12,9 @@ import Home from "@/pages/home";
 import Projects from "@/pages/projects";
 import Project from "@/pages/project";
 import Translation from "@/pages/translation";
-import Glossary from "@/pages/glossary";
+import TermbasesIndex from "@/pages/termbases";
+import TermbasesEntries from "@/pages/termbases/entries";
+import TermbasesResources from "@/pages/termbases/resources";
 import TM from "@/pages/tm";
 import Settings from "@/pages/settings";
 import AuthPage from "@/pages/auth-page";
@@ -55,7 +58,9 @@ function Router() {
       <ProtectedRoute path="/projects" component={Projects} />
       <ProtectedRoute path="/projects/:id" component={Project} />
       <ProtectedRoute path="/translation/:fileId" component={Translation} />
-      <ProtectedRoute path="/termbases" component={Glossary} />
+      <ProtectedRoute path="/termbases" component={() => import('./pages/termbases/index').then(m => React.createElement(m.default))} />
+      <ProtectedRoute path="/termbases/entries" component={() => import('./pages/termbases/entries').then(m => React.createElement(m.default))} />
+      <ProtectedRoute path="/termbases/resources" component={() => import('./pages/termbases/resources').then(m => React.createElement(m.default))} />
       <ProtectedRoute path="/tm" component={TM} />
       <ProtectedRoute path="/settings" component={Settings} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
