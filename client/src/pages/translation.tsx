@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
-import { RightPanel } from "@/components/layout/right-panel";
-import { TranslationEditor } from "@/components/translation/translation-editor";
+import { NewTranslationEditor } from "@/components/translation/new-translation-editor";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
@@ -255,24 +254,13 @@ export default function Translation() {
   return (
     <MainLayout title={`Translating: ${file.name}`}>
       <div className="flex h-full overflow-hidden">
-        <TranslationEditor
+        <NewTranslationEditor
           fileName={file.name}
           sourceLanguage={project.sourceLanguage}
           targetLanguage={project.targetLanguage}
           segments={(file as ExtendedFile).segments || []}
           onSave={() => saveProject.mutate()}
           onExport={() => exportProject.mutate()}
-        />
-        <RightPanel
-          tmMatches={tmMatches}
-          glossaryTerms={glossaryTerms || []}
-          selectedSegment={selectedSegment || undefined}
-          onUseTranslation={(translation) => {
-            if (selectedSegment) {
-              // This would update the segment in the editor
-              console.log(`Using translation: ${translation} for segment ID: ${selectedSegment.id}`);
-            }
-          }}
         />
       </div>
     </MainLayout>

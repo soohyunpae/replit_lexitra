@@ -10,7 +10,7 @@ import { type TranslationMemory, type Glossary, type TranslationUnit } from "@/t
 interface SidePanelProps {
   tmMatches: TranslationMemory[];
   glossaryTerms: Glossary[];
-  selectedSegment: TranslationUnit | null;
+  selectedSegment: TranslationUnit | null | undefined;
   onUseTranslation: (translation: string) => void;
 }
 

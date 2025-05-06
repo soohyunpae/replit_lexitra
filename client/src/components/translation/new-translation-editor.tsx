@@ -381,7 +381,7 @@ export function NewTranslationEditor({
           tmMatches={tmMatches}
           glossaryTerms={glossaryTerms}
           selectedSegment={selectedSegment}
-          onUseTranslation={(translation) => {
+          onUseTranslation={(translation: string) => {
             if (selectedSegmentId) {
               handleSegmentUpdate(selectedSegmentId, translation, "MT");
             }
