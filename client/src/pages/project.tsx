@@ -694,13 +694,12 @@ export default function Project() {
               </CardContent>
             </Card>
             
-            {/* Project Settings Card (Editable) */}
+            {/* Translation Summary Card */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
-                  <span>⚙️ Project Settings</span>
+                  <span>📊 Translation Summary</span>
                 </CardTitle>
-                <CardDescription>Settings can be edited by project owner or admin</CardDescription>
               </CardHeader>
               <CardContent className="text-sm space-y-4">
                 {projectStats ? (
@@ -760,128 +759,150 @@ export default function Project() {
                     <div className="h-4 bg-accent rounded w-1/2"></div>
                   </div>
                 )}
-                
-                <div className="flex flex-col space-y-5">
-                  {/* Reference files section incorporated into Settings */}
-                  <div className="border-t border-border/50 pt-3 mt-2">
-                    <div className="mb-2">
-                      <h3 className="font-medium text-sm">Reference Files</h3>
-                      <p className="text-xs text-muted-foreground mb-2">Add reference files to help with translation</p>
-                    </div>
-                    
-                    {/* Reference files list - compact version */}
-                    {referenceFiles.length > 0 && (
-                      <div className="space-y-1.5 mb-3">
-                        {referenceFiles.map((file: FileType, index: number) => (
-                          <div key={`file-ref-${index}`} className="flex items-center justify-between py-1.5 px-2 border border-border/70 rounded-md text-sm hover:bg-accent/20 transition-colors">
-                            <div className="flex items-center gap-1.5 truncate">
-                              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                              <button
-                                onClick={() => {
-                                  const token = localStorage.getItem('auth_token');
-                                  const downloadFile = async () => {
-                                    try {
-                                      const response = await fetch(`/api/files/${file.id}/download`, {
-                                        method: 'GET',
-                                        headers: {
-                                          'Authorization': `Bearer ${token}`
-                                        }
-                                      });
-                                      
-                                      if (!response.ok) {
-                                        throw new Error(`Download failed: ${response.status}`);
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Reference Files Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <Card className="md:col-span-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center">
+                  <span>📂 Reference Files</span>
+                </CardTitle>
+                <CardDescription>
+                  Upload reference files to help with translation (terminology guides, original source files, etc.)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* Reference files list */}
+                {referenceFiles.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+                    {referenceFiles.map((file: FileType, index: number) => (
+                      <div key={`file-ref-${index}`} className="flex items-center justify-between border border-border/70 rounded-md p-3 hover:border-primary/60 transition-colors">
+                        <div className="flex items-center gap-2 truncate mr-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <div className="truncate">
+                            <button
+                              onClick={() => {
+                                const token = localStorage.getItem('auth_token');
+                                const downloadFile = async () => {
+                                  try {
+                                    const response = await fetch(`/api/files/${file.id}/download`, {
+                                      method: 'GET',
+                                      headers: {
+                                        'Authorization': `Bearer ${token}`
                                       }
-                                      
-                                      const blob = await response.blob();
-                                      const url = window.URL.createObjectURL(blob);
-                                      const a = document.createElement('a');
-                                      a.style.display = 'none';
-                                      a.href = url;
-                                      a.download = file.name;
-                                      document.body.appendChild(a);
-                                      a.click();
-                                      window.URL.revokeObjectURL(url);
-                                      document.body.removeChild(a);
-                                      
-                                      toast({
-                                        title: "Download started",
-                                        description: `File ${file.name} is being downloaded.`
-                                      });
-                                    } catch (error) {
-                                      console.error('Download error:', error);
-                                      toast({
-                                        title: "Download failed",
-                                        description: error instanceof Error ? error.message : 'Unknown error',
-                                        variant: "destructive"
-                                      });
+                                    });
+                                    
+                                    if (!response.ok) {
+                                      throw new Error(`Download failed: ${response.status}`);
                                     }
-                                  };
-                                  
-                                  downloadFile();
-                                }}
-                                className="text-xs text-primary hover:underline cursor-pointer truncate"
-                              >
-                                {file.name}
-                              </button>
+                                    
+                                    const blob = await response.blob();
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.style.display = 'none';
+                                    a.href = url;
+                                    a.download = file.name;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    window.URL.revokeObjectURL(url);
+                                    document.body.removeChild(a);
+                                    
+                                    toast({
+                                      title: "Download started",
+                                      description: `File ${file.name} is being downloaded.`
+                                    });
+                                  } catch (error) {
+                                    console.error('Download error:', error);
+                                    toast({
+                                      title: "Download failed",
+                                      description: error instanceof Error ? error.message : 'Unknown error',
+                                      variant: "destructive"
+                                    });
+                                  }
+                                };
+                                
+                                downloadFile();
+                              }}
+                              className="text-sm text-primary hover:underline cursor-pointer truncate"
+                            >
+                              {file.name}
+                            </button>
+                            <div className="text-xs text-muted-foreground">
+                              Added {formatDate(file.createdAt)}
                             </div>
                           </div>
-                        ))}
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-7 w-7"
+                          onClick={() => {
+                            // TODO: Implement delete reference file
+                            toast({
+                              title: "Not implemented",
+                              description: "Delete reference file functionality is not yet implemented."
+                            });
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
                       </div>
-                    )}
-                    
-                    {/* Add references button */}
-                    <div className="flex items-center">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="gap-1 text-xs"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        Add Reference
-                      </Button>
-                      
-                      {/* Hidden file input */}
-                      <input 
-                        type="file" 
-                        multiple 
-                        ref={fileInputRef} 
-                        className="hidden" 
-                        onChange={(e) => {
-                          if (e.target.files && e.target.files.length > 0) {
-                            const newFiles = Array.from(e.target.files);
-                            setReferences([...references, ...newFiles]);
-                            
-                            // Reset input field after selection
-                            if (fileInputRef.current) {
-                              fileInputRef.current.value = '';
-                            }
-                          }
-                        }}
-                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 border border-dashed border-border rounded-lg mb-4">
+                    <div className="mx-auto h-10 w-10 rounded-full bg-accent flex items-center justify-center mb-3">
+                      <Paperclip className="h-5 w-5 text-muted-foreground" />
                     </div>
+                    <h3 className="text-sm font-medium mb-1">No reference files</h3>
+                    <p className="text-muted-foreground text-xs max-w-md mx-auto mb-4">
+                      Upload reference files to help translators understand context and terminology
+                    </p>
                   </div>
+                )}
+                
+                {/* Add references button */}
+                <div className="flex items-center justify-end">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="gap-1"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Reference Files
+                  </Button>
                   
-                  <div className="pt-2">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full flex items-center justify-center gap-1"
-                    >
-                      <span>Save Settings</span>
-                    </Button>
-                  </div>
+                  {/* Hidden file input */}
+                  <input 
+                    type="file" 
+                    multiple 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        const newFiles = Array.from(e.target.files);
+                        setReferences([...references, ...newFiles]);
+                        
+                        // Reset input field after selection
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = '';
+                        }
+                        
+                        // If there are files, upload them
+                        if (newFiles.length > 0) {
+                          uploadReferences.mutate(newFiles);
+                        }
+                      }
+                    }}
+                  />
                 </div>
               </CardContent>
             </Card>
-            
-            {/* Translation Summary Card moved to Project Settings */}
           </div>
-          
-          {/* Work files section deleted as requested - it's duplicate of Files section below */}
-          
-          {/* References section removed as it's duplicated in the Project Settings */}
           
           {/* Notes Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
