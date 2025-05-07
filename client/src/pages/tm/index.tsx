@@ -19,8 +19,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Search, Database, FileText } from "lucide-react";
+import { Search, Database, FileText, Plus, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDate } from "@/lib/utils";
 import { useLocation } from "wouter";
@@ -366,7 +367,86 @@ export default function TranslationMemoryPage() {
           </TabsContent>
           
           <TabsContent value="resources" className="mt-0">
-            {/* Placeholder to enable tab switching without page navigation */}
+            {/* TMs Table */}
+            <div className="flex justify-between mb-4">
+              <div></div>
+              <Button onClick={() => navigate("/tm/resources")}>
+                <Plus className="h-4 w-4 mr-2" /> Add TM
+              </Button>
+            </div>
+            {isLoadingResources ? (
+              <div className="flex justify-center p-8">
+                <p>Loading TMs...</p>
+              </div>
+            ) : tmResources.length === 0 ? (
+              <div className="flex justify-center items-center p-8 border rounded-md">
+                <p className="text-muted-foreground">
+                  No translation memories found. Create your first TM!
+                </p>
+              </div>
+            ) : (
+              <div className="border rounded-md overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Default Languages</TableHead>
+                      <TableHead>Domain</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tmResources.map((tm: any) => (
+                      <TableRow key={tm.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {tm.name}
+                            {tm.isActive && (
+                              <Badge
+                                variant="outline"
+                                className="bg-green-50 text-green-700 border-green-200"
+                              >
+                                Active
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{tm.description || "-"}</TableCell>
+                        <TableCell>
+                          <span className="font-medium">
+                            {tm.defaultSourceLanguage?.toUpperCase() || "-"}
+                          </span>{" "}
+                          &rarr;{" "}
+                          <span className="font-medium">
+                            {tm.defaultTargetLanguage?.toUpperCase() || "-"}
+                          </span>
+                        </TableCell>
+                        <TableCell>{tm.domain || "-"}</TableCell>
+                        <TableCell>
+                          {tm.createdAt ? formatDate(tm.createdAt) : "-"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              if (window.confirm("Are you sure you want to delete this TM?")) {
+                                // 여기에 삭제 로직이 들어갈 수 있습니다.
+                                // 현재는 탭 전환 방식으로만 표시합니다.
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
