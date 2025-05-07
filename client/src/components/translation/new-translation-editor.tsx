@@ -612,8 +612,8 @@ export function NewTranslationEditor({
       
       {/* Progress bar with integrated controls */}
       <div className="bg-card border-b border-border py-2 px-4">
-        <div className="flex justify-between items-center">
-          <div className="flex flex-col space-y-1 w-full max-w-md">
+        <div className="flex justify-between items-center gap-4">
+          <div className="flex flex-col space-y-1 w-full">
             <div className="flex justify-between text-xs mb-1">
               <span>Progress</span>
               <span className="font-medium">{progressPercentage}% ({completedSegments}/{localSegments.length})</span>
@@ -621,7 +621,7 @@ export function NewTranslationEditor({
             <Progress value={progressPercentage} className="h-2" />
           </div>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 flex-shrink-0">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="h-8 w-[140px]">
                 <SelectValue placeholder="All Statuses" />
@@ -634,49 +634,14 @@ export function NewTranslationEditor({
               </SelectContent>
             </Select>
             
-            <Select
-              onValueChange={(value) => {
-                if (value !== "none") {
-                  toast({
-                    title: "Confirm Bulk Action",
-                    description: `Are you sure you want to set all segments to "${value}"?`,
-                    action: (
-                      <div className="flex space-x-2 mt-2">
-                        <Button 
-                          variant="default" 
-                          size="sm" 
-                          onClick={() => {
-                            setBulkActionMode(true);
-                            handleSelectAll();
-                            handleBulkStatusUpdate(value);
-                            document.querySelector('[role="dialog"]')?.remove();
-                          }}
-                        >
-                          Confirm
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => document.querySelector('[role="dialog"]')?.remove()}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    ),
-                  });
-                }
-              }}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => setBulkActionMode(!bulkActionMode)}
             >
-              <SelectTrigger className="h-8 w-[160px]">
-                <SelectValue placeholder="Bulk Actions" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Select Action</SelectItem>
-                <SelectItem value="Draft">Set All as Draft</SelectItem>
-                <SelectItem value="Reviewed">Set All as Reviewed</SelectItem>
-                <SelectItem value="Rejected">Set All as Rejected</SelectItem>
-              </SelectContent>
-            </Select>
+              {bulkActionMode ? "Exit Bulk Mode" : "Select Segments"}
+            </Button>
           </div>
         </div>
       </div>
