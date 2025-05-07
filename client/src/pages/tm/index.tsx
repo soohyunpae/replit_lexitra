@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useContext, useEffect } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import { Search, Database, FileText, Plus, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDate } from "@/lib/utils";
 import { useLocation } from "wouter";
+import { SidebarContext } from "@/components/layout/sidebar";
 
 export default function TranslationMemoryPage() {
   const [, navigate] = useLocation();
@@ -135,8 +136,18 @@ export default function TranslationMemoryPage() {
     statusFilter,
   ]);
 
+  // 브레드크럼을 업데이트하기 위한 상태 변수
+  const [activeTabLabel, setActiveTabLabel] = useState<string>("TM Entries");
+
+  // 탭 변경 시 브레드크럼 업데이트
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+    // 선택된 탭에 따라 적절한 라벨 설정
+    if (value === "entries") {
+      setActiveTabLabel("TM Entries");
+    } else if (value === "resources") {
+      setActiveTabLabel("TM List");
+    }
   };
 
   return (

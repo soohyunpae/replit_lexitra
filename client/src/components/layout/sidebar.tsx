@@ -43,13 +43,17 @@ type SidebarContextType = {
   isCollapsed: boolean;
   toggleSidebar: () => void;
   getCurrentSectionTitle: () => string;
+  setActiveSubSection: (section: string) => void;
+  activeSubSection: string | null;
 };
 
 // Create a context to share sidebar state
 export const SidebarContext = React.createContext<SidebarContextType>({
   isCollapsed: false,
   toggleSidebar: () => {},
-  getCurrentSectionTitle: () => ""
+  getCurrentSectionTitle: () => "",
+  setActiveSubSection: () => {},
+  activeSubSection: null
 });
 
 export function Sidebar() {
@@ -58,6 +62,7 @@ export function Sidebar() {
   const [isProjectOpen, setIsProjectOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [activeSubSection, setActiveSubSection] = useState<string | null>(null);
   
   // State for language direction
   const [sourceLanguage, setSourceLanguage] = useState("KO");
@@ -151,7 +156,9 @@ export function Sidebar() {
     <SidebarContext.Provider value={{
       isCollapsed,
       toggleSidebar,
-      getCurrentSectionTitle
+      getCurrentSectionTitle,
+      setActiveSubSection,
+      activeSubSection
     }}>
     <aside className={cn(
       "border-r border-border flex flex-col bg-sidebar h-screen overflow-y-auto transition-all duration-300",

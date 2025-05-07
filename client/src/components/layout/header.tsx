@@ -39,7 +39,7 @@ export function Header({
   const { toggleTheme, isDarkMode, mounted } = useThemeToggle();
   const { user, logoutMutation } = useAuth();
   const [location, navigate] = useLocation();
-  const { isCollapsed, getCurrentSectionTitle } = useContext(SidebarContext);
+  const { isCollapsed, getCurrentSectionTitle, activeSubSection } = useContext(SidebarContext);
 
   // Generate breadcrumbs based on current location
   const getBreadcrumbs = (): Breadcrumb[] | null => {
@@ -72,8 +72,13 @@ export function Header({
       } else if (isFileId) {
         label = "Translation Editor";
       } else {
-        // Capitalize first letter
-        label = path.charAt(0).toUpperCase() + path.slice(1);
+        // 활성화된 부제목이 있으면 표시
+        if (index === paths.length - 1 && activeSubSection && paths[index] === "tm") {
+          label = activeSubSection;
+        } else {
+          // Capitalize first letter
+          label = path.charAt(0).toUpperCase() + path.slice(1);
+        }
       }
       
       breadcrumbs.push({
