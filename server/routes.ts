@@ -1006,8 +1006,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // 프로젝트 삭제하기
-  app.delete(`${apiPrefix}/projects/:id`, isAdmin, async (req, res) => {
+  app.delete(`${apiPrefix}/projects/:id`, verifyToken, async (req, res) => {
     try {
+      // 관리자 권한 확인
+      if (req.user?.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin privileges required' });
+      }
       
       const id = parseInt(req.params.id);
       
@@ -1020,10 +1024,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Project not found' });
       }
       
-      // 프로젝트가 Completed 상태인지 확인
-      if (project.status !== 'Completed') {
-        return res.status(400).json({ message: 'Only completed projects can be deleted' });
-      }
+      // 관리자는 모든 상태의 프로젝트를 삭제할 수 있도록 수정
       
       // 먼저 연관된 모든 파일의 segments를 삭제
       const files = await db.query.files.findMany({

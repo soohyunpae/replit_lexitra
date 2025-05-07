@@ -912,9 +912,9 @@ export default function ProjectsPage() {
           </Dialog>
         </div>
 
-        {/* Admin Actions Toolbar */}
+        {/* Admin Selection Info */}
         {isAdmin && selectedProjects.length > 0 && (
-          <div className="mb-4 p-3 border rounded-md bg-muted/30 flex flex-wrap items-center gap-3">
+          <div className="mb-4 p-3 border rounded-md bg-muted/30 flex items-center justify-between">
             <div className="flex items-center">
               <span className="font-medium mr-2">
                 {selectedProjects.length} project(s) selected
@@ -927,45 +927,6 @@ export default function ProjectsPage() {
               >
                 <X className="h-4 w-4 mr-1" />
                 Clear
-              </Button>
-            </div>
-            <div className="flex-grow"></div>
-            <div className="flex items-center gap-2">
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={bulkClaimProjects}
-                className="h-8"
-              >
-                <CheckSquare className="h-4 w-4 mr-1" />
-                Claim
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={bulkCompleteProjects}
-                className="h-8"
-              >
-                <CheckSquare className="h-4 w-4 mr-1" />
-                Complete
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={bulkArchiveProjects}
-                className="h-8"
-              >
-                <FolderClosed className="h-4 w-4 mr-1" />
-                Archive
-              </Button>
-              <Button 
-                size="sm" 
-                variant="destructive" 
-                onClick={bulkDeleteProjects}
-                className="h-8"
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Delete
               </Button>
             </div>
           </div>
@@ -1005,6 +966,7 @@ export default function ProjectsPage() {
                 </Button>
               </div>
             </div>
+            
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Filter by status" />
@@ -1017,6 +979,56 @@ export default function ProjectsPage() {
                 <SelectItem value="Completed">Completed</SelectItem>
               </SelectContent>
             </Select>
+            
+            {/* Admin Bulk Actions Dropdown */}
+            {isAdmin && selectedProjects.length > 0 && (
+              <Select onValueChange={(action) => {
+                switch (action) {
+                  case "claim":
+                    bulkClaimProjects();
+                    break;
+                  case "complete":
+                    bulkCompleteProjects();
+                    break;
+                  case "archive":
+                    bulkArchiveProjects();
+                    break;
+                  case "delete":
+                    bulkDeleteProjects();
+                    break;
+                }
+              }}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Bulk Actions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="claim">
+                    <div className="flex items-center">
+                      <CheckSquare className="h-4 w-4 mr-2" />
+                      <span>Claim Projects</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="complete">
+                    <div className="flex items-center">
+                      <CheckSquare className="h-4 w-4 mr-2" />
+                      <span>Mark as Completed</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="archive">
+                    <div className="flex items-center">
+                      <FolderClosed className="h-4 w-4 mr-2" />
+                      <span>Archive Projects</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="delete" className="text-destructive">
+                    <div className="flex items-center">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      <span>Delete Projects</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </div>
 
