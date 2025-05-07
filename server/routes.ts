@@ -1392,10 +1392,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         where: and(
           eq(schema.translationMemory.sourceLanguage, sourceLanguage),
           eq(schema.translationMemory.targetLanguage, targetLanguage),
+          eq(schema.translationMemory.status, 'Reviewed'), // Only use Reviewed TM entries
           like(schema.translationMemory.source, `%${source}%`)
         ),
         orderBy: [
-          desc(schema.translationMemory.status),
+          // Prioritize human translations (HT) over automatic ones
+          desc(schema.translationMemory.origin),
+          // Then sort by recency
           desc(schema.translationMemory.updatedAt)
         ],
         limit: 5
@@ -1473,25 +1476,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         source: z.string(),
         sourceLanguage: z.string(),
         targetLanguage: z.string(),
-        limit: z.number().optional()
+        limit: z.number().optional(),
+        includeAllStatuses: z.boolean().optional().default(false) // Optional flag to include all statuses
       });
       
-      const { source, sourceLanguage, targetLanguage, limit = 5 } = searchSchema.parse(req.body);
+      const { source, sourceLanguage, targetLanguage, limit = 5, includeAllStatuses } = searchSchema.parse(req.body);
+      
+      // Build the where clause
+      let whereConditions = [
+        eq(schema.translationMemory.sourceLanguage, sourceLanguage),
+        eq(schema.translationMemory.targetLanguage, targetLanguage),
+        like(schema.translationMemory.source, `%${source}%`)
+      ];
+      
+      // Only include 'Reviewed' status entries by default (unless includeAllStatuses is true)
+      if (!includeAllStatuses) {
+        whereConditions.push(eq(schema.translationMemory.status, 'Reviewed'));
+      }
       
       const tmMatches = await db.query.translationMemory.findMany({
-        where: and(
-          eq(schema.translationMemory.sourceLanguage, sourceLanguage),
-          eq(schema.translationMemory.targetLanguage, targetLanguage),
-          like(schema.translationMemory.source, `%${source}%`)
-        ),
+        where: and(...whereConditions),
         orderBy: [
+          // If we're including all statuses, prioritize Reviewed ones
           desc(schema.translationMemory.status),
+          // Then prioritize human translations (HT) over automatic ones
+          desc(schema.translationMemory.origin),
+          // Finally, sort by recency
           desc(schema.translationMemory.updatedAt)
         ],
         limit
       });
       
-      return res.json(tmMatches);
+      // Calculate similarity scores and sort by similarity (descending)
+      const scoredMatches = tmMatches.map(match => ({
+        ...match,
+        similarity: calculateSimilarity(source, match.source)
+      })).sort((a, b) => b.similarity - a.similarity);
+      
+      return res.json(scoredMatches);
     } catch (error) {
       return handleApiError(res, error);
     }
