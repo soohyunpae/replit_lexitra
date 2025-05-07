@@ -30,6 +30,7 @@ import { SidebarContext } from "@/components/layout/sidebar";
 export default function TranslationMemoryPage() {
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("entries");
+  const { setActiveSubSection } = useContext(SidebarContext);
   const [searchQuery, setSearchQuery] = useState("");
   const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>(
     "all_source_languages",
@@ -149,6 +150,11 @@ export default function TranslationMemoryPage() {
       setActiveTabLabel("TM List");
     }
   };
+  
+  // 활성화된 탭이 변경될 때마다 SidebarContext 업데이트
+  useEffect(() => {
+    setActiveSubSection(activeTabLabel);
+  }, [activeTabLabel, setActiveSubSection]);
 
   return (
     <MainLayout title="Translation Memory">
