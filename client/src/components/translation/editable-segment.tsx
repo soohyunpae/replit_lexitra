@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Pencil, Check, X, Languages } from "lucide-react";
-import { TranslationUnit } from "@/types";
+import { TranslationUnit, StatusType, OriginType } from "@/types";
 
 interface EditableSegmentProps {
   segment: TranslationUnit;
@@ -23,7 +24,9 @@ export function EditableSegment({
   isSelected,
   onSelect,
   onUpdate,
-  onTranslateWithGPT
+  onTranslateWithGPT,
+  isChecked,
+  onCheckChange
 }: EditableSegmentProps) {
   // Source is not editable, target is always editable
   const [isEditing, setIsEditing] = useState(!isSource);
@@ -38,10 +41,11 @@ export function EditableSegment({
     }
   }, [isEditing]);
   
-  // Handle edit completion and set as Reviewed
+  // Handle edit completion and set as Reviewed with HT (Human Translation) origin
   const handleSave = () => {
     if (!isSource && onUpdate) {
-      onUpdate(value, "Reviewed"); // Mark as Reviewed when saving
+      // Mark as Reviewed and set origin to HT when saving after human edit
+      onUpdate(value, "Reviewed", isModified ? "HT" : segment.origin);
     }
     setIsEditing(false);
   };
@@ -112,6 +116,14 @@ export function EditableSegment({
     }
   };
   
+  // Handle checkbox click without triggering segment selection
+  const handleCheckboxClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onCheckChange) {
+      onCheckChange(!isChecked);
+    }
+  };
+
   return (
     <div
       className={`rounded-md p-3 mb-3 h-full w-full flex flex-col ${segment.status === "Reviewed" ? "bg-blue-50 dark:bg-blue-950/30" : isSelected ? "bg-accent/90" : "bg-card"} transition-colors ${!isSource && !segment.target ? "border border-dashed border-yellow-400" : ""}`}
@@ -119,6 +131,15 @@ export function EditableSegment({
     >
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center">
+          {!isSource && onCheckChange && (
+            <div className="mr-2" onClick={handleCheckboxClick}>
+              <Checkbox 
+                checked={isChecked} 
+                onCheckedChange={onCheckChange}
+                className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+              />
+            </div>
+          )}
           <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded-md mr-2">{index}</span>
           {!isSource && (
             <div className="flex items-center space-x-1.5">

@@ -35,11 +35,13 @@ export interface TranslationUnit {
   id: number;
   source: string;
   target?: string;
-  status: string; // 'MT', 'Fuzzy', '100%', 'Reviewed'
+  status: string; // 'Draft', 'Reviewed', 'Rejected'
+  origin?: string; // 'MT', 'Fuzzy', '100%', 'HT'
   comment?: string;
   fileId: number;
   createdAt: string;
   updatedAt: string;
+  modified?: boolean;
 }
 
 // Translation Memory Type
@@ -67,4 +69,7 @@ export interface Glossary {
 }
 
 // Status for translation segments
-export type StatusType = 'MT' | 'Fuzzy' | '100%' | 'Reviewed';
+export type StatusType = 'Draft' | 'Reviewed' | 'Rejected';
+
+// Origin for translation sources
+export type OriginType = 'MT' | 'Fuzzy' | '100%' | 'HT';
