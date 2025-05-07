@@ -905,8 +905,9 @@ export default function ProjectsPage() {
                               onChange={(e) => {
                                 const files = e.target.files;
                                 if (files && files.length > 0) {
+                                  const currentFiles = field.value ? (Array.isArray(field.value) ? field.value : Array.from(field.value)) : [];
                                   field.onChange([
-                                    ...(field.value || []),
+                                    ...currentFiles,
                                     ...Array.from(files),
                                   ]);
                                 }
