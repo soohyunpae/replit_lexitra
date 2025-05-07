@@ -136,11 +136,6 @@ export default function TranslationMemoryPage() {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    if (value === "resources") {
-      navigate("/tm/resources");
-    } else {
-      navigate("/tm");
-    }
   };
 
   return (
@@ -368,6 +363,10 @@ export default function TranslationMemoryPage() {
                 </TableBody>
               </Table>
             </div>
+          </TabsContent>
+          
+          <TabsContent value="resources" className="mt-0">
+            {/* Placeholder to enable tab switching without page navigation */}
           </TabsContent>
         </Tabs>
       </div>

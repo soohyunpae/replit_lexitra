@@ -59,7 +59,17 @@ const tmFormSchema = z.object({
 
 type TmFormValues = z.infer<typeof tmFormSchema>;
 
+// Redirect to the main TM page with resources tab selected
 export default function TranslationMemoryResourcesPage() {
+  // Use useEffect to redirect to the main page
+  React.useEffect(() => {
+    // Use a small timeout to ensure smooth transition
+    const redirectTimeout = setTimeout(() => {
+      window.location.href = '/tm';
+    }, 100);
+    
+    return () => clearTimeout(redirectTimeout);
+  }, []);
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("resources");
@@ -150,11 +160,6 @@ export default function TranslationMemoryResourcesPage() {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    if (value === "entries") {
-      navigate("/tm");
-    } else {
-      navigate("/tm/resources");
-    }
   };
 
   return (
@@ -186,6 +191,11 @@ export default function TranslationMemoryResourcesPage() {
               TM List
             </TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="entries" className="mt-0">
+            {/* Placeholder to enable tab switching without page navigation */}
+          </TabsContent>
+          
           <TabsContent value="resources" className="mt-0">
             {/* TMs Table */}
             <div className="flex justify-between mb-4">
