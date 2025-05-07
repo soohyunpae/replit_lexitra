@@ -60,7 +60,54 @@ export function Header({
       href: "/",
     });
 
-    // Build path progressively
+    // Special handling for tabbed pages
+    if (paths[0] === "tm") {
+      breadcrumbs.push({
+        label: "Translation Memory",
+        href: "/tm",
+        active: paths.length === 1,
+      });
+
+      if (paths[1] === "resources") {
+        breadcrumbs.push({
+          label: "TM List",
+          href: "/tm/resources",
+          active: true,
+        });
+      } else if (paths.length === 1) {
+        breadcrumbs.push({
+          label: "TM Entries",
+          href: "/tm",
+          active: true,
+        });
+      }
+      return breadcrumbs;
+    }
+
+    if (paths[0] === "termbases") {
+      breadcrumbs.push({
+        label: "Termbases",
+        href: "/termbases",
+        active: paths.length === 1,
+      });
+
+      if (paths[1] === "resources") {
+        breadcrumbs.push({
+          label: "Termbase List",
+          href: "/termbases/resources",
+          active: true,
+        });
+      } else if (paths[1] === "entries") {
+        breadcrumbs.push({
+          label: "Glossary Entries",
+          href: "/termbases/entries",
+          active: true,
+        });
+      }
+      return breadcrumbs;
+    }
+
+    // Build path progressively for other pages
     let currentPath = "";
     paths.forEach((path, index) => {
       currentPath += `/${path}`;
