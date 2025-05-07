@@ -622,6 +622,42 @@ export function NewTranslationEditor({
             <Filter className="h-3.5 w-3.5 mr-1" />
             Filters {showFilterPanel ? "▲" : "▼"}
           </Button>
+          
+          <div className="flex items-center space-x-2 border-l border-border pl-4">
+            <span className="text-xs text-muted-foreground">Display Mode:</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`text-xs px-2 h-7 ${paginationMode === "infinite" ? "bg-primary/10 text-primary" : ""}`}
+              onClick={() => setPaginationMode("infinite")}
+            >
+              Infinite Scroll
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`text-xs px-2 h-7 ${paginationMode === "pagination" ? "bg-primary/10 text-primary" : ""}`}
+              onClick={() => setPaginationMode("pagination")}
+            >
+              Pagination
+            </Button>
+            
+            {paginationMode === "pagination" && (
+              <Select 
+                value={segmentsPerPage.toString()} 
+                onValueChange={(value) => setSegmentsPerPage(Number(value))}
+              >
+                <SelectTrigger className="h-7 w-[80px] text-xs">
+                  <SelectValue placeholder="20" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10 per page</SelectItem>
+                  <SelectItem value="20">20 per page</SelectItem>
+                  <SelectItem value="50">50 per page</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </div>
         
         <div className="flex items-center space-x-2">
@@ -704,41 +740,6 @@ export function NewTranslationEditor({
               </SelectContent>
             </Select>
           </div>
-          
-          <div className="flex items-center space-x-2">
-            <span className="text-sm">Display:</span>
-            <Select 
-              value={paginationMode} 
-              onValueChange={(value) => setPaginationMode(value as "pagination" | "infinite")}
-            >
-              <SelectTrigger className="h-8 w-[140px]">
-                <SelectValue placeholder="Infinite Scroll" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="infinite">Infinite Scroll</SelectItem>
-                <SelectItem value="pagination">Pagination</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {paginationMode === "pagination" && (
-            <div className="flex items-center space-x-2">
-              <span className="text-sm">Items per page:</span>
-              <Select 
-                value={segmentsPerPage.toString()} 
-                onValueChange={(value) => setSegmentsPerPage(Number(value))}
-              >
-                <SelectTrigger className="h-8 w-[80px]">
-                  <SelectValue placeholder="20" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
           
           <Button 
             variant="outline" 
