@@ -263,7 +263,7 @@ export function NewTranslationEditor({
       const data = await response.json();
       
       if (data.target) {
-        await handleSegmentUpdate(id, data.target, "MT");
+        await handleSegmentUpdate(id, data.target, "MT", "MT");
         toast({
           title: "Translation Complete",
           description: "Segment translated with GPT"
@@ -320,7 +320,7 @@ export function NewTranslationEditor({
           await apiRequest(
             "PATCH", 
             `/api/segments/${segment.id}`, 
-            { target: data.target, status: "MT" }
+            { target: data.target, status: "MT", origin: "MT" }
           );
           
           // Update our local copy
@@ -329,7 +329,8 @@ export function NewTranslationEditor({
             updatedSegments[segmentIndex] = {
               ...updatedSegments[segmentIndex],
               target: data.target,
-              status: "MT"
+              status: "MT",
+              origin: "MT"
             };
           }
           
@@ -658,7 +659,7 @@ export function NewTranslationEditor({
           selectedSegment={selectedSegment}
           onUseTranslation={(translation: string) => {
             if (selectedSegmentId) {
-              handleSegmentUpdate(selectedSegmentId, translation, "MT");
+              handleSegmentUpdate(selectedSegmentId, translation, "MT", "MT");
             }
           }}
         />
