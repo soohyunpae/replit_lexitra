@@ -37,6 +37,7 @@ import {
   FileText,
   Upload,
   ChevronRight,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -294,19 +295,290 @@ export default function UnifiedTranslationMemoryPage() {
   function onSubmitResource(data: TmResourceFormValues) {
     addResourceMutation.mutate(data);
   }
+  
+  // Handle TM resource click for filtering
+  function handleResourceClick(resourceId: string) {
+    setResourceFilter(resourceId);
+  }
 
   return (
     <MainLayout title="Translation Memory">
       <div className="container max-w-screen-xl mx-auto p-6">
         {/* Removed breadcrumb navigation per UI update */}
 
-        <div className="flex items-center gap-2 mb-2">
-          <Database className="h-5 w-5" />
-          <h2 className="text-3xl font-bold tracking-tight">Translation Memory</h2>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            <h2 className="text-3xl font-bold tracking-tight">Translation Memory</h2>
+          </div>
+          {isAdmin && (
+            <div className="flex gap-2">
+              <Dialog open={addEntryDialogOpen} onOpenChange={setAddEntryDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add TM Entry
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New TM Entry</DialogTitle>
+                    <DialogDescription>
+                      Add a new entry to your translation memory database.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Form {...entryForm}>
+                    <form onSubmit={entryForm.handleSubmit(onSubmitEntry)} className="space-y-4">
+                      <FormField
+                        control={entryForm.control}
+                        name="sourceLanguage"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Source Language</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select source language" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="en">English</SelectItem>
+                                <SelectItem value="ko">Korean</SelectItem>
+                                <SelectItem value="ja">Japanese</SelectItem>
+                                <SelectItem value="zh">Chinese</SelectItem>
+                                <SelectItem value="es">Spanish</SelectItem>
+                                <SelectItem value="fr">French</SelectItem>
+                                <SelectItem value="de">German</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={entryForm.control}
+                        name="targetLanguage"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Target Language</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select target language" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="en">English</SelectItem>
+                                <SelectItem value="ko">Korean</SelectItem>
+                                <SelectItem value="ja">Japanese</SelectItem>
+                                <SelectItem value="zh">Chinese</SelectItem>
+                                <SelectItem value="es">Spanish</SelectItem>
+                                <SelectItem value="fr">French</SelectItem>
+                                <SelectItem value="de">German</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={entryForm.control}
+                        name="source"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Source Text</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter source text" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={entryForm.control}
+                        name="target"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Target Text</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter target text" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={entryForm.control}
+                        name="resourceId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>TM Resource</FormLabel>
+                            <Select
+                              onValueChange={(value) => field.onChange(Number(value))}
+                              defaultValue={field.value?.toString()}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select TM resource" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {tmResources.map((resource: any) => (
+                                  <SelectItem key={resource.id} value={resource.id.toString()}>
+                                    {resource.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={entryForm.control}
+                        name="status"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Status</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="100%">100%</SelectItem>
+                                <SelectItem value="Fuzzy">Fuzzy</SelectItem>
+                                <SelectItem value="MT">MT</SelectItem>
+                                <SelectItem value="Reviewed">Reviewed</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <DialogFooter>
+                        <Button
+                          type="submit"
+                          disabled={addEntryMutation.isPending}
+                        >
+                          {addEntryMutation.isPending ? "Adding..." : "Add Entry"}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+
+              <Button variant="outline">
+                <Upload className="mr-2 h-4 w-4" />
+                Upload TM File
+              </Button>
+            </div>
+          )}
         </div>
         <p className="text-muted-foreground mb-6">
           Search and manage your translation memory database
         </p>
+
+        {/* TM Resources Section */}
+        <div className="bg-card border rounded-lg p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Database className="h-5 w-5" />
+              <h3 className="text-xl font-semibold">TM List</h3>
+            </div>
+          </div>
+
+          {/* TM Resources Table */}
+          <div className="rounded-md border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Default Languages</TableHead>
+                  <TableHead>Entries</TableHead>
+                  <TableHead>Created</TableHead>
+                  {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoadingResources ? (
+                  <TableRow>
+                    <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
+                      Loading TM resources...
+                    </TableCell>
+                  </TableRow>
+                ) : tmResources.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
+                      No translation memory resources found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  tmResources.map((resource: any) => (
+                    <TableRow key={resource.id}>
+                      <TableCell className="font-medium">
+                        <button 
+                          className="text-left hover:underline cursor-pointer"
+                          onClick={() => handleResourceClick(String(resource.id))}
+                        >
+                          {resource.name}
+                        </button>
+                      </TableCell>
+                      <TableCell>{resource.description || "—"}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-muted-foreground">
+                            Source: {resource.defaultSourceLanguage.toUpperCase()}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            Target: {resource.defaultTargetLanguage.toUpperCase()}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {tmData
+                          ? tmData.filter((entry: any) => entry.resourceId === resource.id).length
+                          : 0}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {formatDate(resource.createdAt)}
+                      </TableCell>
+                      {isAdmin && (
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteResource(resource.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
 
         {/* Search TM Entries Section */}
         <div className="bg-card border rounded-lg p-6 mb-8">
