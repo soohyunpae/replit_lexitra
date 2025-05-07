@@ -51,7 +51,7 @@ const tmFormSchema = z.object({
 
 type TmFormValues = z.infer<typeof tmFormSchema>;
 
-export default function TranslationMemoryResourcesPage() {
+export function TMResourcesPage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [showTmDialog, setShowTmDialog] = useState<boolean>(false);

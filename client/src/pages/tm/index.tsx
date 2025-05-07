@@ -1,8 +1,6 @@
-
 import React, { useState, useMemo } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -24,9 +22,11 @@ import { Separator } from "@/components/ui/separator";
 import { Search, Database, FileText } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDate } from "@/lib/utils";
-import { TMResources } from "./resources";
+import { TMResourcesPage } from "./resources";
+import { useLocation } from "wouter";
 
 export default function TranslationMemoryPage() {
+  const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("entries");
   const [searchQuery, setSearchQuery] = useState("");
   const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>(
@@ -134,8 +134,17 @@ export default function TranslationMemoryPage() {
     statusFilter,
   ]);
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === "entries") {
+      navigate("/tm");
+    } else {
+      navigate("/tm/resources");
+    }
+  };
+
   return (
-    <MainLayout title="Translation Memory">
+    <MainLayout title="TMs">
       <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center gap-2 mb-2">
           <Database className="h-5 w-5" />
@@ -148,19 +157,14 @@ export default function TranslationMemoryPage() {
         </p>
 
         <Tabs
+          defaultValue="entries"
           value={activeTab}
-          onValueChange={setActiveTab}
+          onValueChange={handleTabChange}
           className="w-full"
         >
           <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="entries" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              TM Entries
-            </TabsTrigger>
-            <TabsTrigger value="resources" className="flex items-center gap-2">
-              <Database className="h-4 w-4" />
-              TM List
-            </TabsTrigger>
+            <TabsTrigger value="entries">TM Entries</TabsTrigger>
+            <TabsTrigger value="resources">TM List</TabsTrigger>
           </TabsList>
 
           <TabsContent value="entries" className="mt-0">
@@ -360,8 +364,8 @@ export default function TranslationMemoryPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="resources">
-            <TMResources />
+          <TabsContent value="resources" className="mt-0">
+            <TMResourcesPage />
           </TabsContent>
         </Tabs>
       </div>
