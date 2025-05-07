@@ -10,8 +10,10 @@ interface EditableSegmentProps {
   isSource: boolean;
   isSelected: boolean;
   onSelect: () => void;
-  onUpdate?: (target: string, status?: string) => void;
+  onUpdate?: (target: string, status?: string, origin?: string) => void;
   onTranslateWithGPT?: () => void;
+  isChecked?: boolean;
+  onCheckChange?: (checked: boolean) => void;
 }
 
 export function EditableSegment({
@@ -26,6 +28,7 @@ export function EditableSegment({
   // Source is not editable, target is always editable
   const [isEditing, setIsEditing] = useState(!isSource);
   const [value, setValue] = useState(isSource ? segment.source : segment.target || "");
+  const [isModified, setIsModified] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // Auto-focus textarea when editing starts
@@ -49,9 +52,17 @@ export function EditableSegment({
     setIsEditing(false);
   };
   
-  // Auto-resize textarea as content grows
+  // Auto-resize textarea as content grows and track modifications
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setValue(e.target.value);
+    const newValue = e.target.value;
+    setValue(newValue);
+    
+    // Check if translation has been modified from its original state
+    if (segment.target && newValue !== segment.target) {
+      setIsModified(true);
+    } else {
+      setIsModified(false);
+    }
     
     // Resize textarea to fit content
     if (textareaRef.current) {
@@ -74,14 +85,28 @@ export function EditableSegment({
   // Get status badge color based on status
   const getStatusColor = (status: string): string => {
     switch (status) {
-      case "MT":
+      case "Draft":
         return "bg-yellow-200 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      case "Reviewed":
+        return "bg-blue-200 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+      case "Rejected":
+        return "bg-red-200 text-red-800 dark:bg-red-900 dark:text-red-200";
+      default:
+        return "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+    }
+  };
+  
+  // Get origin badge color based on origin
+  const getOriginColor = (origin: string): string => {
+    switch (origin) {
+      case "MT":
+        return "bg-purple-200 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
       case "Fuzzy":
         return "bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
       case "100%":
         return "bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-200";
-      case "Reviewed":
-        return "bg-blue-200 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+      case "HT":
+        return "bg-indigo-200 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200";
       default:
         return "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
     }
@@ -96,10 +121,20 @@ export function EditableSegment({
         <div className="flex items-center">
           <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded-md mr-2">{index}</span>
           {!isSource && (
-            <div className="flex items-center">
+            <div className="flex items-center space-x-1.5">
               <span className={`text-xs px-1.5 py-0.5 rounded-md ${getStatusColor(segment.status)}`}>
                 {segment.status}
               </span>
+              {segment.origin && (
+                <span className={`text-xs px-1.5 py-0.5 rounded-md ${getOriginColor(segment.origin)}`}>
+                  {segment.origin}
+                </span>
+              )}
+              {isModified && (
+                <span className="text-xs px-1.5 py-0.5 rounded-md bg-amber-200 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                  Modified
+                </span>
+              )}
             </div>
           )}
         </div>
