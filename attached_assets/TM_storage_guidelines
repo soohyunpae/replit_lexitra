@@ -1,0 +1,143 @@
+# Lexitra TM Management Guidelines
+
+This document defines the recommended approach to storing and managing Translation Memory (TM) entries within the Lexitra platform.
+
+---
+
+## ✅ TM Entry Status vs Origin
+
+In Lexitra, a TM entry has two distinct attributes:
+
+- **Status**: Indicates the review state of a segment.
+  - `Draft`: Unreviewed translation, either AI-generated or human input
+  - `Reviewed`: Confirmed by human reviewer
+  - `Rejected`: Explicitly marked as incorrect; excluded from TM matching
+
+- **Origin**: Indicates how the translation was originally generated.
+  - `MT`: Machine Translation (e.g., GPT)
+  - `100%`: Exact match from TM
+  - `Fuzzy`: Partial match from TM
+  - `HT`: Human-translated or human-edited
+
+> Only entries with `Reviewed` status are used for TM matching.  
+> `Origin` helps explain how the translation was initially produced.
+
+### Status Table
+
+| Status     | Description                                              | Stored in TM  | Default Visibility |
+| ---------- | -------------------------------------------------------- | ------------- | ------------------ |
+| `Draft`    | Unreviewed; may be machine-generated or manually written | ✅            | ❌                  |
+| `Reviewed` | Confirmed by reviewer; used for TM matching              | ✅            | ✅                  |
+| `Rejected` | Marked as invalid; excluded from matching                | ✅            | ❌                  |
+
+> When a segment is reviewed and saved, the `origin` is updated to `HT` if modified by a human.
+
+---
+
+## ✅ TM Save Conditions
+
+| Condition             | Save to TM? | Status     |
+| --------------------- | ----------- | ---------- |
+| Reviewed by human     | ✅ Yes      | `Reviewed` (origin set to `HT` if edited; otherwise retains original) |
+
+* Only `Reviewed` entries are stored in the TM. Unreviewed (Draft) or Rejected segments are excluded.
+
+---
+
+## ✅ Editor to TM Workflow
+
+This section clarifies how a segment’s `status` and `origin` evolve during translation and how that affects TM storage and retrieval.
+
+### Editor View (During Translation)
+
+| Action in Editor                            | Status in Editor | Origin in Editor |
+| ------------------------------------------- | ---------------- | ---------------- |
+| GPT translation inserted                    | `Draft`          | `MT`             |
+| 100% TM match inserted                      | `Draft`          | `100%`           |
+| Fuzzy TM match inserted                     | `Draft`          | `Fuzzy`          |
+| Human manually writes translation           | `Draft`          | `HT`             |
+| Human edits GPT/TM match                    | `Draft`          | `HT`             |
+| Human confirms translation (clicks Review)  | `Reviewed`       | See below        |
+
+- When a segment is **marked as Reviewed**:
+  - If the segment was **edited by a human**, `origin` is updated to `HT`.
+  - If not edited, original `origin` (e.g., `MT`, `100%`, `Fuzzy`) is retained.
+
+### TM Storage (After Review)
+
+- Only `Reviewed` segments are stored in TM.
+- In TM:
+  - `origin` reflects how the translation originated (or `HT` if edited).
+  - `status` is always `Reviewed`.
+
+This ensures TM only contains verified, high-quality translations while preserving origin context.
+---
+
+## ✅ TM Deduplication Logic
+
+To prevent multiple identical TM entries from being stored:
+
+### 🔍 Deduplication Key:
+
+* `source` + `target`
+
+### 🛠 Behavior:
+
+* On save, check if same `source` + `target` exists:
+
+  * ✅ If exists with same status → **skip**
+  * ✅ If exists with different status → **update status**
+  * ❌ If not exists → **insert new entry**
+
+---
+
+## ✅ Handling of TM "Use" Action
+
+When user clicks "Use" on a TM suggestion:
+
+* System should **check if entry already exists** (same source/target)
+
+  * If it exists → **do not add duplicate**
+  * Optionally update `status` to `Reviewed`
+
+---
+
+## ✅ Fuzzy Match Handling
+
+Fuzzy matches refer to TM suggestions that are **partially matched** to the source segment:
+
+| Scenario                      | TM Status Change                  | Notes                       |
+| ----------------------------- | --------------------------------- | --------------------------- |
+| Fuzzy match auto-suggested    | No immediate TM change            | Used for suggestion only    |
+| Human accepts/edits & reviews | Update or create `Reviewed` entry | Saved as new reviewed match |
+
+* Fuzzy matches **do not automatically enter TM**.
+* If a fuzzy match is edited and marked as reviewed, a `Reviewed` entry is stored in the TM. The origin remains `Fuzzy` unless the system or user updates it. No unreviewed fuzzy entries are stored.
+
+---
+
+## ✅ Rejected Status Handling
+
+If a TM entry is marked as `Rejected`, it is not used for matching or suggestions. However, to support flexible review workflows, the system should allow manual restoration:
+
+- Provide a **"Restore"** action on `Rejected` entries.
+- Allow user to select which status to restore to:
+  - `Draft` (if further revision is needed)
+  - `Reviewed` (if rejection was a mistake)
+
+This allows reviewers to recover or reclassify rejected translations efficiently.
+
+---
+
+## ✅ Summary
+
+* Use `MT`, `Draft`, `Reviewed` as standard TM statuses.
+* Only `Reviewed` is shown and used by default.
+* Avoid duplicates by checking source/target combinations.
+* Fuzzy suggestions are never stored in TM unless reviewed.
+* Consider upserting TM entries based on status updates.
+* When reviewed, segments edited by a human are marked with origin `HT`. If not edited, original origin is retained.
+
+---
+
+These TM practices help maintain quality, reduce noise, and ensure consistent reuse of trusted translations within Lexitra.

@@ -81,7 +81,8 @@ export const translationUnits = pgTable("translation_units", {
   id: serial("id").primaryKey(),
   source: text("source").notNull(),
   target: text("target"),
-  status: text("status").notNull().default("MT"),
+  status: text("status").notNull().default("Draft"),
+  origin: text("origin").notNull().default("MT"),
   comment: text("comment"),
   fileId: integer("file_id").references(() => files.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -123,7 +124,8 @@ export const translationMemory = pgTable("translation_memory", {
   id: serial("id").primaryKey(),
   source: text("source").notNull(),
   target: text("target").notNull(),
-  status: text("status").notNull().default("MT"),
+  status: text("status").notNull().default("Draft"),
+  origin: text("origin").notNull().default("100%"),
   context: text("context"),
   sourceLanguage: text("source_language").notNull(),
   targetLanguage: text("target_language").notNull(),
@@ -191,9 +193,13 @@ export const insertGlossarySchema = createInsertSchema(glossary, {
 export type InsertGlossary = z.infer<typeof insertGlossarySchema>;
 export type Glossary = typeof glossary.$inferSelect;
 
-// Status Types Enum 
-export const StatusTypes = z.enum(['MT', 'Fuzzy', '100%', 'Reviewed']);
+// Status Types Enum - For Translation Memory entries
+export const StatusTypes = z.enum(['Draft', 'Reviewed', 'Rejected']);
 export type StatusType = z.infer<typeof StatusTypes>;
+
+// Origin Types Enum - Source of the translation
+export const OriginTypes = z.enum(['MT', 'Fuzzy', '100%', 'HT']);
+export type OriginType = z.infer<typeof OriginTypes>;
 
 // Project Status Types Enum - 프로젝트 실제 상태값
 export const ProjectStatusTypes = z.enum(['Unclaimed', 'Claimed', 'Completed']);
