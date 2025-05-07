@@ -156,7 +156,9 @@ export default function GlossaryResourcesPage() {
   }
 
   function handleDeleteResource(id: number) {
-    if (window.confirm("Are you sure you want to delete this glossary resource?")) {
+    if (
+      window.confirm("Are you sure you want to delete this glossary resource?")
+    ) {
       deleteResourceMutation.mutate(id);
     }
   }
@@ -178,7 +180,7 @@ export default function GlossaryResourcesPage() {
           <h2 className="text-3xl font-bold tracking-tight">Glossaries</h2>
         </div>
         <p className="text-muted-foreground mb-6">
-          Manage glossary entries and terminology resources
+          Search and manage glossary entries and terminology resources
         </p>
 
         <Tabs
@@ -190,11 +192,11 @@ export default function GlossaryResourcesPage() {
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="entries" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Glossary Entries
+              Glossary Search
             </TabsTrigger>
             <TabsTrigger value="resources" className="flex items-center gap-2">
               <BookMarked className="h-4 w-4" />
-              Glossary Resources
+              Glossary List
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -202,12 +204,12 @@ export default function GlossaryResourcesPage() {
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <Database size={18} />
-            <h2 className="text-lg font-medium">Glossary Resources</h2>
+            <h2 className="text-lg font-medium">Glossary List</h2>
           </div>
           <div className="flex gap-2">
             <Button onClick={() => setShowResourceDialog(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Glossary Resource
+              Import Glossary
             </Button>
           </div>
         </div>
@@ -215,11 +217,11 @@ export default function GlossaryResourcesPage() {
         {/* Resources Table */}
         {isLoading ? (
           <div className="flex justify-center p-8">
-            <p>Loading glossary resources...</p>
+            <p>Loading glossary list...</p>
           </div>
         ) : glossaryResources.length === 0 ? (
           <div className="flex justify-center items-center p-8 border rounded-md">
-            <p className="text-muted-foreground">No glossary resources found.</p>
+            <p className="text-muted-foreground">No glossaries found.</p>
           </div>
         ) : (
           <div className="border rounded-md overflow-hidden">
@@ -286,9 +288,9 @@ export default function GlossaryResourcesPage() {
         <Dialog open={showResourceDialog} onOpenChange={setShowResourceDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New Glossary Resource</DialogTitle>
+              <DialogTitle>Create New Glossary</DialogTitle>
               <DialogDescription>
-                Create a new glossary resource to organize your terminology.
+                Create a new glossary to organize your terminology.
               </DialogDescription>
             </DialogHeader>
 
@@ -304,7 +306,7 @@ export default function GlossaryResourcesPage() {
                     <FormItem>
                       <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter glossary resource name" {...field} />
+                        <Input placeholder="Enter glossary name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -427,7 +429,7 @@ export default function GlossaryResourcesPage() {
                         </div>
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel>Set as an active glossary resource</FormLabel>
+                        <FormLabel>Set as an active glossary</FormLabel>
                       </div>
                     </FormItem>
                   )}
@@ -447,7 +449,7 @@ export default function GlossaryResourcesPage() {
                   >
                     {addResourceMutation.isPending
                       ? "Adding..."
-                      : "Add Glossary Resource"}
+                      : "Add Glossary"}
                   </Button>
                 </DialogFooter>
               </form>

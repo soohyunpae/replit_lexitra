@@ -248,10 +248,10 @@ export default function GlossaryEntriesPage() {
       <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center gap-2 mb-2">
           <BookMarked className="h-5 w-5" />
-          <h2 className="text-3xl font-bold tracking-tight">Glossaries</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Glossary</h2>
         </div>
         <p className="text-muted-foreground mb-6">
-          Manage glossary entries and terminology resources
+          View and manage terms and glossaries
         </p>
         <Tabs
           defaultValue="entries"
@@ -262,11 +262,11 @@ export default function GlossaryEntriesPage() {
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="entries" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Glossary Entries
+              Glossary Search
             </TabsTrigger>
             <TabsTrigger value="resources" className="flex items-center gap-2">
               <BookMarked className="h-4 w-4" />
-              Glossary Resources
+              Glossary List
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -347,7 +347,7 @@ export default function GlossaryEntriesPage() {
                   name="resourceId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Glossary Resource</FormLabel>
+                      <FormLabel>Glossary</FormLabel>
                       <Select
                         onValueChange={(value) => {
                           field.onChange(
@@ -358,11 +358,11 @@ export default function GlossaryEntriesPage() {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select Glossary Resource" />
+                            <SelectValue placeholder="Select Glossary" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="none">No glossary resource</SelectItem>
+                          <SelectItem value="none">No glossary</SelectItem>
                           {glossaryResources.map((resource: any) => (
                             <SelectItem
                               key={resource.id}
@@ -423,7 +423,7 @@ export default function GlossaryEntriesPage() {
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-2">
                 <FileText size={18} />
-                <h2 className="text-lg font-medium">Entries List</h2>
+                <h2 className="text-lg font-medium">Search Terms</h2>
               </div>
             </div>
 
@@ -483,10 +483,10 @@ export default function GlossaryEntriesPage() {
                 }
               >
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Glossary Resource" />
+                  <SelectValue placeholder="Glossary" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all_resources">All Resources</SelectItem>
+                  <SelectItem value="all_resources">All Glossaries</SelectItem>
                   {glossaryResources.map((resource: any) => (
                     <SelectItem
                       key={resource.id}
