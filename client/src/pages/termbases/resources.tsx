@@ -89,7 +89,7 @@ export default function GlossaryResourcesPage() {
   });
 
   // Get Glossary resources
-  const { data: tbResources = [], isLoading } = useQuery({
+  const { data: glossaryResources = [], isLoading } = useQuery({
     queryKey: ["/api/glossary/resources"],
     queryFn: async () => {
       try {
@@ -217,7 +217,7 @@ export default function GlossaryResourcesPage() {
           <div className="flex justify-center p-8">
             <p>Loading glossary resources...</p>
           </div>
-        ) : tbResources.length === 0 ? (
+        ) : glossaryResources.length === 0 ? (
           <div className="flex justify-center items-center p-8 border rounded-md">
             <p className="text-muted-foreground">No glossary resources found.</p>
           </div>
@@ -235,7 +235,7 @@ export default function GlossaryResourcesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tbResources.map((resource: any) => (
+                {glossaryResources.map((resource: any) => (
                   <TableRow key={resource.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
