@@ -88,7 +88,7 @@ export default function GlossaryResourcesPage() {
     },
   });
 
-  // Get TB resources
+  // Get Glossary resources
   const { data: tbResources = [], isLoading } = useQuery({
     queryKey: ["/api/glossary/resources"],
     queryFn: async () => {
@@ -96,7 +96,7 @@ export default function GlossaryResourcesPage() {
         const res = await apiRequest("GET", "/api/glossary/resources");
         return res.json();
       } catch (error) {
-        console.error("Error fetching TBs:", error);
+        console.error("Error fetching Glossary Resources:", error);
         return [];
       }
     },
@@ -113,20 +113,20 @@ export default function GlossaryResourcesPage() {
       resourceForm.reset();
       setShowResourceDialog(false);
       toast({
-        title: "TB added",
-        description: "The termbase has been added successfully.",
+        title: "Glossary Resource Added",
+        description: "The glossary resource has been added successfully.",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to add TB",
+        description: error.message || "Failed to add glossary resource",
         variant: "destructive",
       });
     },
   });
 
-  // Delete TB resource mutation
+  // Delete Glossary resource mutation
   const deleteResourceMutation = useMutation({
     mutationFn: async (id: number) => {
       const response = await apiRequest(
@@ -138,14 +138,14 @@ export default function GlossaryResourcesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/glossary/resources"] });
       toast({
-        title: "Resource deleted",
-        description: "The TB has been deleted successfully.",
+        title: "Glossary Resource Deleted",
+        description: "The glossary resource has been deleted successfully.",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to delete termbase",
+        description: error.message || "Failed to delete glossary resource",
         variant: "destructive",
       });
     },
@@ -156,7 +156,7 @@ export default function GlossaryResourcesPage() {
   }
 
   function handleDeleteResource(id: number) {
-    if (window.confirm("Are you sure you want to delete this termbase?")) {
+    if (window.confirm("Are you sure you want to delete this glossary resource?")) {
       deleteResourceMutation.mutate(id);
     }
   }
