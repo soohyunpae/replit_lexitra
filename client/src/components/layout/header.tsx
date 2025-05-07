@@ -96,8 +96,8 @@ export function Header({
   const breadcrumbs = getBreadcrumbs();
 
   return (
-    <header className="bg-card border-b border-border py-2 px-4 flex flex-col space-y-2">
-      <div className="flex items-center justify-between w-full">
+    <header className="bg-card border-b border-border py-1 px-4">
+      <div className="flex items-center justify-between w-full h-10">
         <div className="flex items-center space-x-2">
           {showSidebarTrigger && (
             <Sheet>
@@ -111,16 +111,6 @@ export function Header({
               </SheetContent>
             </Sheet>
           )}
-
-          {!breadcrumbs && (
-            <Link href="/">
-              <div className="flex items-center cursor-pointer">
-                <h1 className="text-xl font-semibold">
-                  {isCollapsed ? getCurrentSectionTitle() : title}
-                </h1>
-              </div>
-            </Link>
-          )}
         </div>
       
         <div className="flex items-center space-x-3">
@@ -129,25 +119,26 @@ export function Header({
             size="icon"
             onClick={toggleTheme}
             aria-label="Toggle theme"
+            className="h-8 w-8"
           >
             {mounted && isDarkMode ? (
-              <Moon className="h-5 w-5" />
+              <Moon className="h-4 w-4" />
             ) : (
-              <Sun className="h-5 w-5" />
+              <Sun className="h-4 w-4" />
             )}
           </Button>
           
           <Link href="/settings">
-            <Button variant="ghost" size="icon" aria-label="Settings">
-              <Settings className="h-5 w-5" />
+            <Button variant="ghost" size="icon" aria-label="Settings" className="h-8 w-8">
+              <Settings className="h-4 w-4" />
             </Button>
           </Link>
           
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative p-1 rounded-full">
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-medium text-sm">
+                <Button variant="ghost" className="relative p-1 rounded-full h-8 w-8">
+                  <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-white font-medium text-sm">
                     {user.username.charAt(0).toUpperCase()}
                   </div>
                 </Button>
@@ -175,28 +166,6 @@ export function Header({
             </Button>
           )}
         </div>
-      </div>
-      
-      <div className="flex items-center text-sm text-muted-foreground">
-        {breadcrumbs ? (
-          breadcrumbs.map((item, index) => (
-            <React.Fragment key={item.href}>
-              <Link 
-                href={item.href}
-                className={`hover:text-foreground ${item.active ? 'font-medium text-foreground' : ''}`}
-              >
-                {item.label}
-              </Link>
-              {index < breadcrumbs.length - 1 && (
-                <ChevronRight className="h-4 w-4 mx-2" />
-              )}
-            </React.Fragment>
-          ))
-        ) : (
-          <Link href="/" className="hover:text-foreground">
-            Lexitra
-          </Link>
-        )}
       </div>
     </header>
   );
