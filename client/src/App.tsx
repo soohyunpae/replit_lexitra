@@ -13,11 +13,9 @@ import Projects from "@/pages/projects";
 import Project from "@/pages/project";
 import Translation from "@/pages/translation";
 import GlossariesIndex from "@/pages/glossaries";
-import GlossariesEntries from "@/pages/glossaries/entries";
-import GlossariesResources from "@/pages/glossaries/resources";
+// Removed import for entries page
+// Removed import for resources page
 import GlossariesUnified from "@/pages/glossaries/unified";
-import TM from "@/pages/tm/index";
-import TMResources from "@/pages/tm/resources";
 import TMUnified from "@/pages/tm/unified";
 import Settings from "@/pages/settings";
 import AuthPage from "@/pages/auth-page";
@@ -65,18 +63,11 @@ function Router() {
       {/* New unified glossary page */}
       <ProtectedRoute path="/glossaries" component={GlossariesUnified} />
       
-      {/* Keep old routes for backward compatibility */}
-      <ProtectedRoute path="/glossaries/entries" component={GlossariesEntries} />
-      <ProtectedRoute path="/glossaries/resources" component={GlossariesResources} />
+      {/* Redirect old routes to the unified page */}
       <ProtectedRoute path="/termbases" component={GlossariesUnified} />
-      <ProtectedRoute path="/termbases/entries" component={GlossariesEntries} />
-      <ProtectedRoute path="/termbases/resources" component={GlossariesResources} />
       
-      {/* New unified TM page */}
+      {/* TM page */}
       <ProtectedRoute path="/tm" component={TMUnified} />
-      
-      {/* Keep old routes for backward compatibility */}
-      <ProtectedRoute path="/tm/resources" component={TMResources} />
       
       <ProtectedRoute path="/settings" component={Settings} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
