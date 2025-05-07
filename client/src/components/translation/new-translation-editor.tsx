@@ -7,7 +7,7 @@ import {
   Filter, ChevronLeft, ChevronRight, ArrowDown, ListFilter
 } from "lucide-react";
 import { EditableSegment } from "./editable-segment";
-import { ProgressBar } from "./progress-bar";
+import { Progress } from "@/components/ui/progress";
 import { SidePanel } from "./side-panel";
 import { apiRequest } from "@/lib/queryClient";
 import { saveToTM } from "@/lib/api";
@@ -610,14 +610,21 @@ export function NewTranslationEditor({
         </div>
       </div>
       
-      {/* Editor Controls */}
-      <div className="bg-card/50 border-b border-border px-4 py-2 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      {/* Progress bar with integrated controls */}
+      <div className="bg-card border-b border-border py-2 px-4">
+        <div className="flex justify-between items-center">
+          <div className="flex flex-col space-y-1 w-full max-w-md">
+            <div className="flex justify-between text-xs mb-1">
+              <span>Progress</span>
+              <span className="font-medium">{progressPercentage}% ({completedSegments}/{localSegments.length})</span>
+            </div>
+            <Progress value={progressPercentage} className="h-2" />
+          </div>
+          
           <div className="flex items-center space-x-2">
-            <span className="text-sm">Status:</span>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="h-8 w-[140px]">
-                <SelectValue placeholder="All" />
+                <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
@@ -626,76 +633,53 @@ export function NewTranslationEditor({
                 <SelectItem value="Rejected">Rejected ({statusCounts["Rejected"] || 0})</SelectItem>
               </SelectContent>
             </Select>
+            
+            <Select
+              onValueChange={(value) => {
+                if (value !== "none") {
+                  toast({
+                    title: "Confirm Bulk Action",
+                    description: `Are you sure you want to set all segments to "${value}"?`,
+                    action: (
+                      <div className="flex space-x-2 mt-2">
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          onClick={() => {
+                            setBulkActionMode(true);
+                            handleSelectAll();
+                            handleBulkStatusUpdate(value);
+                            document.querySelector('[role="dialog"]')?.remove();
+                          }}
+                        >
+                          Confirm
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => document.querySelector('[role="dialog"]')?.remove()}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ),
+                  });
+                }
+              }}
+            >
+              <SelectTrigger className="h-8 w-[160px]">
+                <SelectValue placeholder="Bulk Actions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Select Action</SelectItem>
+                <SelectItem value="Draft">Set All as Draft</SelectItem>
+                <SelectItem value="Reviewed">Set All as Reviewed</SelectItem>
+                <SelectItem value="Rejected">Set All as Rejected</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-xs h-8"
-            onClick={() => {
-              setStatusFilter("all");
-              setOriginFilter("all");
-            }}
-          >
-            Reset
-          </Button>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <Select
-            onValueChange={(value) => {
-              if (value !== "none") {
-                toast({
-                  title: "Confirm Bulk Action",
-                  description: `Are you sure you want to set all segments to "${value}"?`,
-                  action: (
-                    <div className="flex space-x-2 mt-2">
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        onClick={() => {
-                          setBulkActionMode(true);
-                          handleSelectAll();
-                          handleBulkStatusUpdate(value);
-                          document.querySelector('[role="dialog"]')?.remove();
-                        }}
-                      >
-                        Confirm
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => document.querySelector('[role="dialog"]')?.remove()}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  ),
-                });
-              }
-            }}
-          >
-            <SelectTrigger className="h-8 w-[160px]">
-              <SelectValue placeholder="Bulk Actions" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Select Action</SelectItem>
-              <SelectItem value="Draft">Set All as Draft</SelectItem>
-              <SelectItem value="Reviewed">Set All as Reviewed</SelectItem>
-              <SelectItem value="Rejected">Set All as Rejected</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
-      
-      {/* Progress bar */}
-      <ProgressBar 
-        percentage={progressPercentage}
-        completed={completedSegments}
-        total={localSegments.length}
-        statusCounts={statusCounts}
-        segments={localSegments}
-      />
       
       {/* Warning for batch translation */}
       {isTranslatingAll && (
