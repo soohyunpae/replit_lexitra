@@ -1337,6 +1337,7 @@ export default function ProjectsPage() {
                       {renderSortButton("name", "Project Name")}
                     </TableHead>
                     <TableHead className="w-[120px]">Language Pair</TableHead>
+                    <TableHead className="w-[80px]">Files</TableHead>
                     <TableHead className="w-[120px]">
                       {renderSortButton("status", "Status")}
                     </TableHead>
@@ -1448,6 +1449,14 @@ export default function ProjectsPage() {
                             <ArrowRight className="h-3 w-3" />
                             <span className="font-medium">
                               {project.targetLanguage}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-sm font-medium">
+                              {project.files?.length || 0}
                             </span>
                           </div>
                         </TableCell>
