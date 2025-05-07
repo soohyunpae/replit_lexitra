@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Save, Download, Languages, AlertCircle, Check, X, FileCheck, 
-  Filter, ChevronLeft, ChevronRight 
+  Filter, ChevronLeft, ChevronRight, ArrowDown, ListFilter
 } from "lucide-react";
 import { EditableSegment } from "./editable-segment";
 import { ProgressBar } from "./progress-bar";
@@ -622,42 +622,6 @@ export function NewTranslationEditor({
             <Filter className="h-3.5 w-3.5 mr-1" />
             Filters {showFilterPanel ? "▲" : "▼"}
           </Button>
-          
-          <div className="flex items-center space-x-2 border-l border-border pl-4">
-            <span className="text-xs text-muted-foreground">Display Mode:</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`text-xs px-2 h-7 ${paginationMode === "infinite" ? "bg-primary/10 text-primary" : ""}`}
-              onClick={() => setPaginationMode("infinite")}
-            >
-              Infinite Scroll
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`text-xs px-2 h-7 ${paginationMode === "pagination" ? "bg-primary/10 text-primary" : ""}`}
-              onClick={() => setPaginationMode("pagination")}
-            >
-              Pagination
-            </Button>
-            
-            {paginationMode === "pagination" && (
-              <Select 
-                value={segmentsPerPage.toString()} 
-                onValueChange={(value) => setSegmentsPerPage(Number(value))}
-              >
-                <SelectTrigger className="h-7 w-[80px] text-xs">
-                  <SelectValue placeholder="20" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10 per page</SelectItem>
-                  <SelectItem value="20">20 per page</SelectItem>
-                  <SelectItem value="50">50 per page</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          </div>
         </div>
         
         <div className="flex items-center space-x-2">
@@ -890,9 +854,9 @@ export function NewTranslationEditor({
               </div>
             </div>
             
-            {/* Pagination controls */}
-            {paginationMode === "pagination" && filteredSegments.length > 0 && (
-              <div className="flex items-center justify-center py-4 border-t border-border">
+            {/* Pagination controls or infinite scroll toggle */}
+            <div className="flex items-center justify-center py-4 border-t border-border">
+              {paginationMode === "pagination" && filteredSegments.length > 0 ? (
                 <div className="flex items-center space-x-2">
                   <Button
                     variant="outline"
@@ -937,9 +901,35 @@ export function NewTranslationEditor({
                     <ChevronRight className="h-4 w-4" />
                     <ChevronRight className="h-4 w-4 -ml-2" />
                   </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="ml-4 text-xs h-8"
+                    onClick={() => {
+                      setPaginationMode("infinite");
+                      setSegmentsPerPage(20);
+                    }}
+                  >
+                    <ArrowDown className="h-3.5 w-3.5 mr-1" />
+                    Switch to Infinite Scroll
+                  </Button>
                 </div>
-              </div>
-            )}
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs h-8"
+                  onClick={() => {
+                    setPaginationMode("pagination");
+                    setSegmentsPerPage(20);
+                  }}
+                >
+                  <ListFilter className="h-3.5 w-3.5 mr-1" />
+                  Switch to Pagination (20 per page)
+                </Button>
+              )}
+            </div>
             
             {/* Filtered segments count */}
             {(statusFilter !== "all" || originFilter !== "all") && (
