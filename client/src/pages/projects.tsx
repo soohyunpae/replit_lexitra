@@ -64,6 +64,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { CombinedProgress } from "@/components/ui/combined-progress";
@@ -76,6 +77,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { formatDate, formatFileSize } from "@/lib/utils";
 
 // Define a type for sorting direction
@@ -108,7 +110,12 @@ export default function ProjectsPage() {
   const [sortField, setSortField] = useState<string>("updatedAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [statusFilter, setStatusFilter] = useState<string>("all"); // Added status filter
+  const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
   const { user } = useAuth();
+  const { toast } = useToast();
+  
+  // Check if user is admin
+  const isAdmin = user?.role === "admin";
 
   type Project = {
     id: number;
@@ -392,8 +399,115 @@ export default function ProjectsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      setSelectedProjects([]);
     },
   });
+  
+  // 프로젝트 아카이브 mutation (여기서는 삭제와 동일하게 구현)
+  const archiveProject = useMutation({
+    mutationFn: async (projectId: number) => {
+      // 실제 아카이브 엔드포인트 구현 필요
+      const response = await apiRequest("POST", `/api/projects/${projectId}/archive`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      setSelectedProjects([]);
+    },
+  });
+  
+  // 선택된 프로젝트 일괄 삭제
+  const bulkDeleteProjects = async () => {
+    if (selectedProjects.length === 0) return;
+    
+    // 확인 대화상자
+    if (!window.confirm(`Are you sure you want to delete ${selectedProjects.length} project(s)?`)) {
+      return;
+    }
+    
+    try {
+      for (const projectId of selectedProjects) {
+        await deleteProject.mutateAsync(projectId);
+      }
+      toast({
+        title: "Success",
+        description: `${selectedProjects.length} project(s) deleted successfully.`,
+      });
+      setSelectedProjects([]);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to delete projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // 선택된 프로젝트 일괄 클레임
+  const bulkClaimProjects = async () => {
+    if (selectedProjects.length === 0) return;
+    
+    try {
+      for (const projectId of selectedProjects) {
+        await claimProject.mutateAsync(projectId);
+      }
+      toast({
+        title: "Success",
+        description: `${selectedProjects.length} project(s) claimed successfully.`,
+      });
+      setSelectedProjects([]);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to claim projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // 선택된 프로젝트 일괄 완료 처리
+  const bulkCompleteProjects = async () => {
+    if (selectedProjects.length === 0) return;
+    
+    try {
+      for (const projectId of selectedProjects) {
+        await completeProject.mutateAsync(projectId);
+      }
+      toast({
+        title: "Success",
+        description: `${selectedProjects.length} project(s) marked as completed.`,
+      });
+      setSelectedProjects([]);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to complete projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // 선택된 프로젝트 일괄 아카이브
+  const bulkArchiveProjects = async () => {
+    if (selectedProjects.length === 0) return;
+    
+    try {
+      for (const projectId of selectedProjects) {
+        await archiveProject.mutateAsync(projectId);
+      }
+      toast({
+        title: "Success",
+        description: `${selectedProjects.length} project(s) archived successfully.`,
+      });
+      setSelectedProjects([]);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to archive projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  };
 
   function onSubmit(data: ProjectFormValues) {
     createProject.mutate(data);
@@ -798,6 +912,65 @@ export default function ProjectsPage() {
           </Dialog>
         </div>
 
+        {/* Admin Actions Toolbar */}
+        {isAdmin && selectedProjects.length > 0 && (
+          <div className="mb-4 p-3 border rounded-md bg-muted/30 flex flex-wrap items-center gap-3">
+            <div className="flex items-center">
+              <span className="font-medium mr-2">
+                {selectedProjects.length} project(s) selected
+              </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setSelectedProjects([])}
+                className="text-muted-foreground h-7 px-2"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Clear
+              </Button>
+            </div>
+            <div className="flex-grow"></div>
+            <div className="flex items-center gap-2">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={bulkClaimProjects}
+                className="h-8"
+              >
+                <CheckSquare className="h-4 w-4 mr-1" />
+                Claim
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={bulkCompleteProjects}
+                className="h-8"
+              >
+                <CheckSquare className="h-4 w-4 mr-1" />
+                Complete
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={bulkArchiveProjects}
+                className="h-8"
+              >
+                <FolderClosed className="h-4 w-4 mr-1" />
+                Archive
+              </Button>
+              <Button 
+                size="sm" 
+                variant="destructive" 
+                onClick={bulkDeleteProjects}
+                className="h-8"
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Search and Filters */}
         <div className="flex flex-col gap-4 sm:flex-row justify-between items-center mb-6">
           <div className="relative w-full max-w-md">
@@ -1029,6 +1202,20 @@ export default function ProjectsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    {isAdmin && (
+                      <TableHead className="w-[50px]">
+                        <Checkbox 
+                          checked={selectedProjects.length === filteredAndSortedProjects.length && filteredAndSortedProjects.length > 0}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedProjects(filteredAndSortedProjects.map(p => p.id));
+                            } else {
+                              setSelectedProjects([]);
+                            }
+                          }}
+                        />
+                      </TableHead>
+                    )}
                     <TableHead className="w-[80px]">
                       {renderSortButton("id", "Project ID")}
                     </TableHead>
@@ -1107,8 +1294,32 @@ export default function ProjectsPage() {
                       <TableRow
                         key={project.id}
                         className="group hover:bg-muted/40 cursor-pointer"
-                        onClick={() => navigate(`/projects/${project.id}`)}
+                        onClick={(e) => {
+                          // 체크박스를 클릭했을 때는 페이지 이동 방지
+                          if (e.target instanceof HTMLInputElement && e.target.type === 'checkbox') {
+                            e.stopPropagation();
+                            return;
+                          }
+                          navigate(`/projects/${project.id}`);
+                        }}
                       >
+                        {isAdmin && (
+                          <TableCell 
+                            className="w-[50px]"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Checkbox 
+                              checked={selectedProjects.includes(project.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedProjects(prev => [...prev, project.id]);
+                                } else {
+                                  setSelectedProjects(prev => prev.filter(id => id !== project.id));
+                                }
+                              }}
+                            />
+                          </TableCell>
+                        )}
                         <TableCell className="font-medium">
                           {project.id}
                         </TableCell>
