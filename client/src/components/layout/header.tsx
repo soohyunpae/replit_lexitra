@@ -1,10 +1,9 @@
-import React, { useState, useContext } from "react";
+import React, { useContext } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useThemeToggle } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
-import { Moon, Sun, Search, Settings, Menu, UserCircle, LogOut, ChevronRight } from "lucide-react";
+import { Moon, Sun, Settings, Menu, LogOut } from "lucide-react";
 import { SidebarContext } from "./sidebar";
 import {
   DropdownMenu,
@@ -24,85 +23,30 @@ import { Sidebar } from "./sidebar";
 interface HeaderProps {
   title?: string;
   showSidebarTrigger?: boolean;
-}
-
-interface Breadcrumb {
-  label: string;
-  href: string;
-  active?: boolean;
+  children?: React.ReactNode;
 }
 
 export function Header({ 
   title = "Lexitra", 
-  showSidebarTrigger = true
+  showSidebarTrigger = true,
+  children
 }: HeaderProps) {
   const { toggleTheme, isDarkMode, mounted } = useThemeToggle();
   const { user, logoutMutation } = useAuth();
   const [location, navigate] = useLocation();
-  const { isCollapsed, getCurrentSectionTitle, activeSubSection } = useContext(SidebarContext);
+  const { isCollapsed, getCurrentSectionTitle } = useContext(SidebarContext);
 
-  // Generate breadcrumbs based on current location
-  const getBreadcrumbs = (): Breadcrumb[] | null => {
-    // If we're on homepage, don't show breadcrumbs
-    if (location === "/") return null;
-
-    const paths = location.split("/").filter(Boolean);
-    const breadcrumbs: Breadcrumb[] = [];
-
-    // Add home as first breadcrumb
-    breadcrumbs.push({
-      label: "Home",
-      href: "/",
-    });
-
-    // Build path progressively
-    let currentPath = "";
-    paths.forEach((path, index) => {
-      currentPath += `/${path}`;
-      
-      // Check if this is a project ID
-      const isProjectId = /^\d+$/.test(path) && paths[index-1] === "projects";
-      // Check if this is a file ID
-      const isFileId = /^\d+$/.test(path) && paths[index-1] === "translation";
-      
-      // Skip numeric IDs in the breadcrumb labels
-      let label = path;
-      if (isProjectId) {
-        label = "Project Details";
-      } else if (isFileId) {
-        label = "Translation Editor";
-      } else {
-        // 활성화된 부제목이 있으면 표시 (TM, Admin, Glossaries 섹션)
-        if (index === paths.length - 1 && activeSubSection && 
-            (paths[index] === "tm" || paths[index] === "admin" || 
-             paths[index] === "termbases" || paths[index] === "glossaries")) {
-          label = activeSubSection;
-        } else {
-          // Capitalize first letter
-          label = path.charAt(0).toUpperCase() + path.slice(1);
-        }
-      }
-      
-      breadcrumbs.push({
-        label,
-        href: currentPath,
-        active: index === paths.length - 1
-      });
-    });
-
-    return breadcrumbs;
-  };
-  
-  const breadcrumbs = getBreadcrumbs();
+  // Get page title from current section if collapsed
+  const displayTitle = isCollapsed ? getCurrentSectionTitle() : title;
 
   return (
-    <header className="bg-card border-b border-border py-2 px-4 flex flex-col space-y-2">
+    <header className="bg-card border-b border-border py-4 px-4">
       <div className="flex items-center justify-between w-full">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
           {showSidebarTrigger && (
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
+                <Button variant="ghost" size="icon" className="md:hidden mr-2">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
@@ -112,91 +56,74 @@ export function Header({
             </Sheet>
           )}
 
-          {!breadcrumbs && (
-            <Link href="/">
-              <div className="flex items-center cursor-pointer">
-                <h1 className="text-xl font-semibold">
-                  {isCollapsed ? getCurrentSectionTitle() : title}
-                </h1>
-              </div>
-            </Link>
-          )}
+          {/* Page Title - Always shown and positioned on the left */}
+          <h1 className="text-xl font-semibold">
+            {displayTitle}
+          </h1>
         </div>
       
-        <div className="flex items-center space-x-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-          >
-            {mounted && isDarkMode ? (
-              <Moon className="h-5 w-5" />
-            ) : (
-              <Sun className="h-5 w-5" />
-            )}
-          </Button>
+        <div className="flex items-center">
+          {/* Action Buttons (Passed as children) */}
+          {children && (
+            <div className="mr-6">
+              {children}
+            </div>
+          )}
           
-          <Link href="/settings">
-            <Button variant="ghost" size="icon" aria-label="Settings">
-              <Settings className="h-5 w-5" />
-            </Button>
-          </Link>
-          
-          {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative p-1 rounded-full">
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-medium text-sm">
-                    {user.username.charAt(0).toUpperCase()}
-                  </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/profile">My Profile</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
+          {/* Global Actions (Theme, Settings, Account) */}
+          <div className="flex items-center space-x-3">
             <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/auth")}
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
             >
-              Login
-            </Button>
-          )}
-        </div>
-      </div>
-      
-      <div className="flex items-center text-sm text-muted-foreground">
-        {breadcrumbs ? (
-          breadcrumbs.map((item, index) => (
-            <React.Fragment key={item.href}>
-              <Link 
-                href={item.href}
-                className={`hover:text-foreground ${item.active ? 'font-medium text-foreground' : ''}`}
-              >
-                {item.label}
-              </Link>
-              {index < breadcrumbs.length - 1 && (
-                <ChevronRight className="h-4 w-4 mx-2" />
+              {mounted && isDarkMode ? (
+                <Moon className="h-5 w-5" />
+              ) : (
+                <Sun className="h-5 w-5" />
               )}
-            </React.Fragment>
-          ))
-        ) : (
-          <Link href="/" className="hover:text-foreground">
-            Lexitra
-          </Link>
-        )}
+            </Button>
+            
+            <Link href="/settings">
+              <Button variant="ghost" size="icon" aria-label="Settings">
+                <Settings className="h-5 w-5" />
+              </Button>
+            </Link>
+            
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative p-1 rounded-full">
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-medium text-sm">
+                      {user.username.charAt(0).toUpperCase()}
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile">My Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/auth")}
+              >
+                Login
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
     </header>
   );

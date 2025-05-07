@@ -6,12 +6,14 @@ interface MainLayoutProps {
   children: React.ReactNode;
   title?: string;
   showSidebarTrigger?: boolean;
+  headerContent?: React.ReactNode;
 }
 
 export function MainLayout({ 
   children, 
   title = "Lexitra", 
-  showSidebarTrigger = false 
+  showSidebarTrigger = false,
+  headerContent 
 }: MainLayoutProps) {
 
   return (
@@ -24,7 +26,9 @@ export function MainLayout({
         <Header 
           title={title} 
           showSidebarTrigger={showSidebarTrigger}
-        />
+        >
+          {headerContent}
+        </Header>
         
         {/* Page Content */}
         <div className="flex-1 overflow-auto p-6">
