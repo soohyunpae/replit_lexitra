@@ -62,6 +62,26 @@ export function NewTranslationEditor({
     setLocalSegments(segments);
   }, [segments]);
   
+  // Apply filters and update filtered segments
+  useEffect(() => {
+    let filtered = [...localSegments];
+    
+    // Apply status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(segment => segment.status === statusFilter);
+    }
+    
+    // Apply origin filter
+    if (originFilter !== "all") {
+      filtered = filtered.filter(segment => segment.origin === originFilter);
+    }
+    
+    setFilteredSegments(filtered);
+    
+    // Reset to page 1 when filters change
+    setCurrentPage(1);
+  }, [localSegments, statusFilter, originFilter]);
+  
   // Synchronize heights for source and target panels
   useEffect(() => {
     const sourcePanel = document.getElementById('source-panel');
@@ -471,6 +491,38 @@ export function NewTranslationEditor({
   // Get count of checked segments
   const checkedCount = Object.values(checkedSegments).filter(Boolean).length;
   
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredSegments.length / segmentsPerPage);
+  const startIndex = (currentPage - 1) * segmentsPerPage;
+  const endIndex = paginationMode === "pagination" 
+    ? Math.min(startIndex + segmentsPerPage, filteredSegments.length) 
+    : filteredSegments.length;
+  
+  // Get current page segments
+  const currentSegments = filteredSegments.slice(
+    0, 
+    paginationMode === "pagination" ? endIndex : undefined
+  );
+  
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+  
+  // Toggle pagination mode
+  const togglePaginationMode = () => {
+    setPaginationMode(prev => prev === "pagination" ? "infinite" : "pagination");
+    setCurrentPage(1);
+  };
+  
+  // Count by origin
+  const originCounts = localSegments.reduce((acc, segment) => {
+    if (segment.origin) {
+      acc[segment.origin] = (acc[segment.origin] || 0) + 1;
+    }
+    return acc;
+  }, {} as Record<string, number>);
+  
   return (
     <main className="flex-1 overflow-hidden flex flex-col">
       {/* Toolbar */}
@@ -486,6 +538,16 @@ export function NewTranslationEditor({
             <span className="mr-2 text-muted-foreground">Target:</span>
             <span>{targetLanguage}</span>
           </div>
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex items-center text-xs"
+            onClick={() => setShowFilterPanel(!showFilterPanel)}
+          >
+            <Filter className="h-3.5 w-3.5 mr-1" />
+            Filters {showFilterPanel ? "▲" : "▼"}
+          </Button>
         </div>
         
         <div className="flex items-center space-x-2">
@@ -521,6 +583,89 @@ export function NewTranslationEditor({
           </Button>
         </div>
       </div>
+      
+      {/* Filter panel */}
+      {showFilterPanel && (
+        <div className="bg-card/50 border-b border-border px-4 py-2 flex flex-wrap items-center gap-4">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm">Status:</span>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-8 w-[140px]">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="Draft">Draft ({statusCounts["Draft"] || 0})</SelectItem>
+                <SelectItem value="Reviewed">Reviewed ({statusCounts["Reviewed"] || 0})</SelectItem>
+                <SelectItem value="Rejected">Rejected ({statusCounts["Rejected"] || 0})</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <span className="text-sm">Origin:</span>
+            <Select value={originFilter} onValueChange={setOriginFilter}>
+              <SelectTrigger className="h-8 w-[140px]">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Origins</SelectItem>
+                <SelectItem value="MT">MT ({originCounts["MT"] || 0})</SelectItem>
+                <SelectItem value="Fuzzy">Fuzzy ({originCounts["Fuzzy"] || 0})</SelectItem>
+                <SelectItem value="100%">100% ({originCounts["100%"] || 0})</SelectItem>
+                <SelectItem value="HT">HT ({originCounts["HT"] || 0})</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <span className="text-sm">Display:</span>
+            <Select 
+              value={paginationMode} 
+              onValueChange={(value) => setPaginationMode(value as "pagination" | "infinite")}
+            >
+              <SelectTrigger className="h-8 w-[140px]">
+                <SelectValue placeholder="Infinite Scroll" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="infinite">Infinite Scroll</SelectItem>
+                <SelectItem value="pagination">Pagination</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {paginationMode === "pagination" && (
+            <div className="flex items-center space-x-2">
+              <span className="text-sm">Items per page:</span>
+              <Select 
+                value={segmentsPerPage.toString()} 
+                onValueChange={(value) => setSegmentsPerPage(Number(value))}
+              >
+                <SelectTrigger className="h-8 w-[80px]">
+                  <SelectValue placeholder="20" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-xs h-8"
+            onClick={() => {
+              setStatusFilter("all");
+              setOriginFilter("all");
+            }}
+          >
+            Reset Filters
+          </Button>
+        </div>
+      )}
       
       {/* Progress bar */}
       <ProgressBar 
@@ -630,7 +775,7 @@ export function NewTranslationEditor({
               {/* Source panel - no individual scrollbar */}
               <div className="w-1/2 overflow-hidden" id="source-panel">
                 <div className="px-4 py-3">
-                  {localSegments.map((segment, index) => (
+                  {currentSegments.map((segment, index) => (
                     <div key={segment.id} className="segment-row" data-segment-id={segment.id}>
                       <EditableSegment
                         segment={segment}
@@ -650,7 +795,7 @@ export function NewTranslationEditor({
               {/* Target panel - no individual scrollbar */}
               <div className="w-1/2 overflow-hidden" id="target-panel">
                 <div className="px-4 py-3">
-                  {localSegments.map((segment, index) => (
+                  {currentSegments.map((segment, index) => (
                     <div key={segment.id} className="segment-row" data-segment-id={segment.id}>
                       <EditableSegment
                         segment={segment}
@@ -668,6 +813,67 @@ export function NewTranslationEditor({
                 </div>
               </div>
             </div>
+            
+            {/* Pagination controls */}
+            {paginationMode === "pagination" && filteredSegments.length > 0 && (
+              <div className="flex items-center justify-center py-4 border-t border-border">
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft className="h-4 w-4 -ml-2" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  <span className="text-sm px-2">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4 -ml-2" />
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {/* Filtered segments count */}
+            {(statusFilter !== "all" || originFilter !== "all") && (
+              <div className="px-4 py-2 text-sm text-muted-foreground text-center border-t border-border bg-muted/20">
+                Showing {filteredSegments.length} of {localSegments.length} segments
+                {statusFilter !== "all" && ` with status "${statusFilter}"`}
+                {originFilter !== "all" && statusFilter !== "all" && " and"}
+                {originFilter !== "all" && ` with origin "${originFilter}"`}
+              </div>
+            )}
           </div>
         </div>
         
