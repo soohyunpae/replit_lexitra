@@ -12,9 +12,9 @@ import Home from "@/pages/home";
 import Projects from "@/pages/projects";
 import Project from "@/pages/project";
 import Translation from "@/pages/translation";
-import TermbasesIndex from "@/pages/termbases";
-import TermbasesEntries from "@/pages/termbases/entries";
-import TermbasesResources from "@/pages/termbases/resources";
+import GlossariesIndex from "@/pages/termbases";
+import GlossariesEntries from "@/pages/termbases/entries";
+import GlossariesResources from "@/pages/termbases/resources";
 import TM from "@/pages/tm/index";
 import TMResources from "@/pages/tm/resources";
 import Settings from "@/pages/settings";
@@ -59,9 +59,13 @@ function Router() {
       <ProtectedRoute path="/projects" component={Projects} />
       <ProtectedRoute path="/projects/:id" component={Project} />
       <ProtectedRoute path="/translation/:fileId" component={Translation} />
-      <ProtectedRoute path="/termbases" component={TermbasesIndex} />
-      <ProtectedRoute path="/termbases/entries" component={TermbasesEntries} />
-      <ProtectedRoute path="/termbases/resources" component={TermbasesResources} />
+      <ProtectedRoute path="/glossaries" component={GlossariesIndex} />
+      <ProtectedRoute path="/glossaries/entries" component={GlossariesEntries} />
+      <ProtectedRoute path="/glossaries/resources" component={GlossariesResources} />
+      {/* 이전 경로는 호환성을 위해 유지합니다 */}
+      <ProtectedRoute path="/termbases" component={GlossariesIndex} />
+      <ProtectedRoute path="/termbases/entries" component={GlossariesEntries} />
+      <ProtectedRoute path="/termbases/resources" component={GlossariesResources} />
       <ProtectedRoute path="/tm" component={TM} />
       <ProtectedRoute path="/tm/resources" component={TMResources} />
       <ProtectedRoute path="/settings" component={Settings} />

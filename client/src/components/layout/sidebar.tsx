@@ -146,8 +146,8 @@ export function Sidebar() {
   const getCurrentSectionTitle = () => {
     if (location === "/") return "Dashboard";
     if (location.startsWith("/projects")) return "Projects";
-    if (location.startsWith("/termbases")) return "Termbases";
-    if (location === "/tm") return "Translation Memory";
+    if (location.startsWith("/termbases") || location.startsWith("/glossaries")) return "Glossaries";
+    if (location.startsWith("/tm")) return "Translation Memory";
     if (location.startsWith("/admin")) return "Admin Tools";
     return "Lexitra";
   };
@@ -203,8 +203,8 @@ export function Sidebar() {
                       // Projects menu: active on projects list or project detail page or translation page
                       (item.label === "Projects" && (location === "/projects" || /^\/projects\/\d+$/.test(location) || /^\/translation\/\d+$/.test(location))) ||
                       
-                      // Termbases: active on termbases pages
-                      (item.label === "Termbases" && location.startsWith("/termbases")) ||
+                      // Glossaries: active on glossaries or termbases pages
+                      (item.label === "Glossaries" && (location.startsWith("/glossaries") || location.startsWith("/termbases"))) ||
                       
                       // Translation Memory: active on TM page
                       (item.label === "Translation Memory" && location === "/tm")
