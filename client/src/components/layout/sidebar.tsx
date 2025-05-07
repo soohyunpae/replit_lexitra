@@ -116,8 +116,8 @@ export function Sidebar() {
     },
     {
       icon: <Book className="h-5 w-5" />,
-      label: "Termbases",
-      href: "/termbases"
+      label: "Glossaries",
+      href: "/glossaries"
     },
     {
       icon: <Database className="h-5 w-5" />,
