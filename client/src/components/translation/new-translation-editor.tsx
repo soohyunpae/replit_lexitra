@@ -2,13 +2,23 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Save, Download, Languages, AlertCircle, Check, X, FileCheck } from "lucide-react";
+import { 
+  Save, Download, Languages, AlertCircle, Check, X, FileCheck, 
+  Filter, ChevronLeft, ChevronRight 
+} from "lucide-react";
 import { EditableSegment } from "./editable-segment";
 import { ProgressBar } from "./progress-bar";
 import { SidePanel } from "./side-panel";
 import { apiRequest } from "@/lib/queryClient";
 import { type TranslationUnit, type TranslationMemory, type Glossary } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface TranslationEditorProps {
   fileName: string;
@@ -29,6 +39,7 @@ export function NewTranslationEditor({
 }: TranslationEditorProps) {
   const { toast } = useToast();
   const [localSegments, setLocalSegments] = useState<TranslationUnit[]>(segments);
+  const [filteredSegments, setFilteredSegments] = useState<TranslationUnit[]>(segments);
   const [selectedSegmentId, setSelectedSegmentId] = useState<number | null>(null);
   const [tmMatches, setTmMatches] = useState<TranslationMemory[]>([]);
   const [glossaryTerms, setGlossaryTerms] = useState<Glossary[]>([]);
@@ -37,6 +48,14 @@ export function NewTranslationEditor({
   const [totalToTranslate, setTotalToTranslate] = useState(0);
   const [checkedSegments, setCheckedSegments] = useState<Record<number, boolean>>({});
   const [bulkActionMode, setBulkActionMode] = useState(false);
+  
+  // Filter and pagination states
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [originFilter, setOriginFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [segmentsPerPage, setSegmentsPerPage] = useState<number>(20);
+  const [paginationMode, setPaginationMode] = useState<"pagination" | "infinite">("infinite");
+  const [showFilterPanel, setShowFilterPanel] = useState<boolean>(false);
   
   // Update local segments when props change
   useEffect(() => {

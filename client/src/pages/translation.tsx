@@ -156,6 +156,119 @@ export default function Translation() {
       });
     }
   }, [fileId]);
+  
+  // Auto-translation on file load
+  const [autoTranslationDone, setAutoTranslationDone] = useState(false);
+  
+  useEffect(() => {
+    const performAutoTranslation = async () => {
+      if (!file || !file.segments || file.segments.length === 0 || !project || autoTranslationDone) {
+        return;
+      }
+      
+      const untranslatedSegments = file.segments.filter(s => !s.target || s.target.trim() === "");
+      if (untranslatedSegments.length === 0) {
+        setAutoTranslationDone(true);
+        return;
+      }
+      
+      toast({
+        title: "Auto-translation",
+        description: `Applying TM matches and machine translation to ${untranslatedSegments.length} segments...`,
+      });
+      
+      // Create a copy of all segments
+      const updatedSegments = [...file.segments];
+      
+      // Process each untranslated segment
+      for (const segment of untranslatedSegments) {
+        try {
+          // First check TM for matches
+          const tmResponse = await apiRequest(
+            "POST", 
+            "/api/search_tm", 
+            {
+              source: segment.source,
+              sourceLanguage: project.sourceLanguage,
+              targetLanguage: project.targetLanguage,
+              limit: 1 // Just need the best match
+            }
+          );
+          
+          const tmMatches = await tmResponse.json();
+          let targetText = "";
+          let status = "Draft";
+          let origin = "";
+          
+          // If we have a 100% match from TM
+          if (tmMatches && tmMatches.length > 0 && tmMatches[0].similarity === 1) {
+            targetText = tmMatches[0].target;
+            origin = "100%";
+          } 
+          // If we have a fuzzy match from TM (similarity > 0.7)
+          else if (tmMatches && tmMatches.length > 0 && tmMatches[0].similarity > 0.7) {
+            targetText = tmMatches[0].target;
+            origin = "Fuzzy";
+          }
+          // No good TM match, try GPT
+          else {
+            // Translate with GPT
+            const response = await apiRequest(
+              "POST", 
+              "/api/translate", 
+              {
+                source: segment.source,
+                sourceLanguage: project.sourceLanguage,
+                targetLanguage: project.targetLanguage
+              }
+            );
+            
+            const data = await response.json();
+            if (data.target) {
+              targetText = data.target;
+              origin = "MT";
+            }
+          }
+          
+          // If we have a translation, update the segment
+          if (targetText) {
+            await apiRequest(
+              "PATCH", 
+              `/api/segments/${segment.id}`, 
+              { target: targetText, status, origin }
+            );
+            
+            // Update our local copy
+            const index = updatedSegments.findIndex(s => s.id === segment.id);
+            if (index !== -1) {
+              updatedSegments[index] = {
+                ...updatedSegments[index],
+                target: targetText,
+                status,
+                origin
+              };
+            }
+          }
+        } catch (error) {
+          console.error(`Error auto-translating segment ${segment.id}:`, error);
+          // Continue with next segment even if one fails
+        }
+      }
+      
+      // Refresh data after processing all segments
+      queryClient.invalidateQueries({
+        queryKey: [`/api/files/${fileId}`],
+      });
+      
+      setAutoTranslationDone(true);
+      toast({
+        title: "Auto-translation complete",
+        description: `Applied translations to ${untranslatedSegments.length} segments`,
+      });
+    };
+    
+    performAutoTranslation();
+  }, [file, project, fileId, autoTranslationDone, toast]);
 
   // Handle segment selection
   useEffect(() => {
