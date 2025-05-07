@@ -298,20 +298,7 @@ export default function UnifiedTranslationMemoryPage() {
   return (
     <MainLayout title="Translation Memory">
       <div className="container max-w-screen-xl mx-auto p-6">
-        {/* Breadcrumb navigation */}
-        <Breadcrumb className="mb-6">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/">Home</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator>
-              <ChevronRight className="h-4 w-4" />
-            </BreadcrumbSeparator>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/tm">Translation Memory</BreadcrumbLink>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        {/* Removed breadcrumb navigation per UI update */}
 
         <div className="flex items-center gap-2 mb-2">
           <Database className="h-5 w-5" />
@@ -323,9 +310,22 @@ export default function UnifiedTranslationMemoryPage() {
 
         {/* Search TM Entries Section */}
         <div className="bg-card border rounded-lg p-6 mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <Search className="h-5 w-5" />
-            <h3 className="text-xl font-semibold">Search TM Entries</h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Search className="h-5 w-5" />
+              <h3 className="text-xl font-semibold">Search TM Entries</h3>
+              
+              {resourceFilter !== "all_resources" && (
+                <Badge 
+                  variant="secondary" 
+                  className="ml-3 py-1 px-3 cursor-pointer hover:bg-muted/70 flex items-center gap-1"
+                  onClick={() => setResourceFilter("all_resources")}
+                >
+                  {tmResources.find((r: any) => String(r.id) === resourceFilter)?.name}
+                  <X className="h-3.5 w-3.5 ml-1" />
+                </Badge>
+              )}
+            </div>
           </div>
 
           <div className="grid gap-4 grid-cols-1 md:grid-cols-4 mb-6">
