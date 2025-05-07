@@ -347,7 +347,7 @@ export default function GlossaryEntriesPage() {
                   name="resourceId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Termbase</FormLabel>
+                      <FormLabel>Glossary Resource</FormLabel>
                       <Select
                         onValueChange={(value) => {
                           field.onChange(
@@ -358,11 +358,11 @@ export default function GlossaryEntriesPage() {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select TB" />
+                            <SelectValue placeholder="Select Glossary Resource" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="none">No termbase</SelectItem>
+                          <SelectItem value="none">No glossary resource</SelectItem>
                           {glossaryResources.map((resource: any) => (
                             <SelectItem
                               key={resource.id}
@@ -483,7 +483,7 @@ export default function GlossaryEntriesPage() {
                 }
               >
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="TB" />
+                  <SelectValue placeholder="Glossary Resource" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all_resources">All Resources</SelectItem>
