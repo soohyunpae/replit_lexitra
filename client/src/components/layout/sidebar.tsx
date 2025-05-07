@@ -206,8 +206,8 @@ export function Sidebar() {
                       // Glossaries: active on glossaries or termbases pages
                       (item.label === "Glossaries" && (location.startsWith("/glossaries") || location.startsWith("/termbases"))) ||
                       
-                      // Translation Memory: active on TM page
-                      (item.label === "Translation Memory" && location === "/tm")
+                      // Translation Memory: active on any TM page
+                      (item.label === "Translation Memory" && location.startsWith("/tm"))
                   }
                 )}>
                   <span className="flex-shrink-0">{item.icon}</span>
