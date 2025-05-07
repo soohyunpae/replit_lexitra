@@ -151,7 +151,7 @@ export default function GlossaryResourcesPage() {
     },
   });
 
-  function onResourceSubmit(data: TbResourceFormValues) {
+  function onResourceSubmit(data: GlossaryResourceFormValues) {
     addResourceMutation.mutate(data);
   }
 
@@ -164,21 +164,21 @@ export default function GlossaryResourcesPage() {
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     if (value === "entries") {
-      navigate("/termbases/entries");
+      navigate("/glossaries/entries");
     } else {
-      navigate("/termbases/resources");
+      navigate("/glossaries/resources");
     }
   };
 
   return (
-    <MainLayout title="Termbases">
+    <MainLayout title="Glossary Resources">
       <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center gap-2 mb-2">
           <BookMarked className="h-5 w-5" />
-          <h2 className="text-3xl font-bold tracking-tight">Termbases</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Glossaries</h2>
         </div>
         <p className="text-muted-foreground mb-6">
-          Manage termbases and glossary entries
+          Manage glossary entries and terminology resources
         </p>
 
         <Tabs
@@ -194,7 +194,7 @@ export default function GlossaryResourcesPage() {
             </TabsTrigger>
             <TabsTrigger value="resources" className="flex items-center gap-2">
               <BookMarked className="h-4 w-4" />
-              Termbases
+              Glossary Resources
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -202,12 +202,12 @@ export default function GlossaryResourcesPage() {
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <Database size={18} />
-            <h2 className="text-lg font-medium">Termbases</h2>
+            <h2 className="text-lg font-medium">Glossary Resources</h2>
           </div>
           <div className="flex gap-2">
             <Button onClick={() => setShowResourceDialog(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Termbase
+              Add Glossary Resource
             </Button>
           </div>
         </div>
@@ -215,11 +215,11 @@ export default function GlossaryResourcesPage() {
         {/* Resources Table */}
         {isLoading ? (
           <div className="flex justify-center p-8">
-            <p>Loading termbases...</p>
+            <p>Loading glossary resources...</p>
           </div>
         ) : tbResources.length === 0 ? (
           <div className="flex justify-center items-center p-8 border rounded-md">
-            <p className="text-muted-foreground">No termbases found.</p>
+            <p className="text-muted-foreground">No glossary resources found.</p>
           </div>
         ) : (
           <div className="border rounded-md overflow-hidden">
@@ -286,9 +286,9 @@ export default function GlossaryResourcesPage() {
         <Dialog open={showResourceDialog} onOpenChange={setShowResourceDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New Termbase</DialogTitle>
+              <DialogTitle>Add New Glossary Resource</DialogTitle>
               <DialogDescription>
-                Create a new termbase to organize your glossary.
+                Create a new glossary resource to organize your terminology.
               </DialogDescription>
             </DialogHeader>
 
@@ -304,7 +304,7 @@ export default function GlossaryResourcesPage() {
                     <FormItem>
                       <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter termbase name" {...field} />
+                        <Input placeholder="Enter glossary resource name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -427,7 +427,7 @@ export default function GlossaryResourcesPage() {
                         </div>
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel>Set as an active termbase</FormLabel>
+                        <FormLabel>Set as an active glossary resource</FormLabel>
                       </div>
                     </FormItem>
                   )}
@@ -447,7 +447,7 @@ export default function GlossaryResourcesPage() {
                   >
                     {addResourceMutation.isPending
                       ? "Adding..."
-                      : "Add Termbase"}
+                      : "Add Glossary Resource"}
                   </Button>
                 </DialogFooter>
               </form>
