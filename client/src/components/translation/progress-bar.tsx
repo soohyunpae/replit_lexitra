@@ -38,15 +38,6 @@ export function ProgressBar({
           <div className="w-px h-4 bg-border"></div>
           
           <div className="flex space-x-2">
-            <div className="px-1.5 py-0.5 rounded-sm bg-yellow-200 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-              MT: {mtCount}
-            </div>
-            <div className="px-1.5 py-0.5 rounded-sm bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-              Fuzzy: {fuzzyCount}
-            </div>
-            <div className="px-1.5 py-0.5 rounded-sm bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-200">
-              100%: {fullMatchCount}
-            </div>
             <div className="px-1.5 py-0.5 rounded-sm bg-blue-200 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
               Reviewed: {reviewedCount}
             </div>

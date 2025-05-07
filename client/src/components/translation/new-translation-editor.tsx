@@ -613,14 +613,31 @@ export function NewTranslationEditor({
       {/* Editor Controls */}
       <div className="bg-card/50 border-b border-border px-4 py-2 flex items-center justify-between">
         <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm">Status:</span>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-8 w-[140px]">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="Draft">Draft ({statusCounts["Draft"] || 0})</SelectItem>
+                <SelectItem value="Reviewed">Reviewed ({statusCounts["Reviewed"] || 0})</SelectItem>
+                <SelectItem value="Rejected">Rejected ({statusCounts["Rejected"] || 0})</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
           <Button 
-            variant="ghost" 
+            variant="outline" 
             size="sm" 
-            className="flex items-center text-xs"
-            onClick={() => setShowFilterPanel(!showFilterPanel)}
+            className="text-xs h-8"
+            onClick={() => {
+              setStatusFilter("all");
+              setOriginFilter("all");
+            }}
           >
-            <Filter className="h-3.5 w-3.5 mr-1" />
-            Filters {showFilterPanel ? "▲" : "▼"}
+            Reset
           </Button>
         </div>
         
@@ -670,54 +687,6 @@ export function NewTranslationEditor({
           </Select>
         </div>
       </div>
-      
-      {/* Filter panel */}
-      {showFilterPanel && (
-        <div className="bg-card/50 border-b border-border px-4 py-2 flex flex-wrap items-center gap-4">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm">Status:</span>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-8 w-[140px]">
-                <SelectValue placeholder="All" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="Draft">Draft ({statusCounts["Draft"] || 0})</SelectItem>
-                <SelectItem value="Reviewed">Reviewed ({statusCounts["Reviewed"] || 0})</SelectItem>
-                <SelectItem value="Rejected">Rejected ({statusCounts["Rejected"] || 0})</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <span className="text-sm">Origin:</span>
-            <Select value={originFilter} onValueChange={setOriginFilter}>
-              <SelectTrigger className="h-8 w-[140px]">
-                <SelectValue placeholder="All" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Origins</SelectItem>
-                <SelectItem value="MT">MT ({originCounts["MT"] || 0})</SelectItem>
-                <SelectItem value="Fuzzy">Fuzzy ({originCounts["Fuzzy"] || 0})</SelectItem>
-                <SelectItem value="100%">100% ({originCounts["100%"] || 0})</SelectItem>
-                <SelectItem value="HT">HT ({originCounts["HT"] || 0})</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-xs h-8"
-            onClick={() => {
-              setStatusFilter("all");
-              setOriginFilter("all");
-            }}
-          >
-            Reset Filters
-          </Button>
-        </div>
-      )}
       
       {/* Progress bar */}
       <ProgressBar 
@@ -932,12 +901,9 @@ export function NewTranslationEditor({
             </div>
             
             {/* Filtered segments count */}
-            {(statusFilter !== "all" || originFilter !== "all") && (
+            {(statusFilter !== "all") && (
               <div className="px-4 py-2 text-sm text-muted-foreground text-center border-t border-border bg-muted/20">
-                Showing {filteredSegments.length} of {localSegments.length} segments
-                {statusFilter !== "all" && ` with status "${statusFilter}"`}
-                {originFilter !== "all" && statusFilter !== "all" && " and"}
-                {originFilter !== "all" && ` with origin "${originFilter}"`}
+                Showing {filteredSegments.length} of {localSegments.length} segments with status "{statusFilter}"
               </div>
             )}
           </div>
