@@ -404,13 +404,7 @@ export default function Home() {
             </CardContent>
             <CardFooter className="pt-0">
               {getRecentProjects().length > 0 && (
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(true)}
-                >
-                  <Plus className="h-4 w-4 mr-1" /> New Project
-                </Button>
+                
               )}
             </CardFooter>
           </Card>
