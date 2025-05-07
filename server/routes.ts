@@ -1828,16 +1828,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get(`${apiPrefix}/tm/all`, verifyToken, async (req, res) => {
     try {
       const resourceId = req.query.resourceId ? parseInt(req.query.resourceId as string) : undefined;
+      const showAllStatuses = req.query.showAllStatuses === 'true';
       
-      let tmEntries;
+      // Build where conditions based on parameters
+      let whereConditions = [];
+      
+      // Filter by resource ID if provided
       if (resourceId) {
+        whereConditions.push(eq(schema.translationMemory.resourceId, resourceId));
+      }
+      
+      // Only include 'Reviewed' status entries by default
+      if (!showAllStatuses) {
+        whereConditions.push(eq(schema.translationMemory.status, 'Reviewed'));
+      }
+      
+      // Execute query with appropriate conditions
+      let tmEntries;
+      if (whereConditions.length > 0) {
         tmEntries = await db.query.translationMemory.findMany({
-          where: eq(schema.translationMemory.resourceId, resourceId),
-          orderBy: desc(schema.translationMemory.createdAt)
+          where: and(...whereConditions),
+          orderBy: [
+            // If showing all statuses, prioritize Reviewed ones
+            desc(schema.translationMemory.status),
+            // Then prioritize human translations (HT) over automatic ones  
+            desc(schema.translationMemory.origin),
+            // Then sort by creation date
+            desc(schema.translationMemory.createdAt)
+          ]
         });
       } else {
+        // No filters, but still apply the sort order
         tmEntries = await db.query.translationMemory.findMany({
-          orderBy: desc(schema.translationMemory.createdAt)
+          orderBy: [
+            desc(schema.translationMemory.status),
+            desc(schema.translationMemory.origin),
+            desc(schema.translationMemory.createdAt)
+          ]
         });
       }
       
@@ -1860,9 +1887,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'TM not found' });
       }
       
+      const showAllStatuses = req.query.showAllStatuses === 'true';
+      
+      // Build where conditions
+      let whereConditions = [
+        eq(schema.translationMemory.resourceId, resourceId)
+      ];
+      
+      // Only include 'Reviewed' status entries by default
+      if (!showAllStatuses) {
+        whereConditions.push(eq(schema.translationMemory.status, 'Reviewed'));
+      }
+      
       const entries = await db.query.translationMemory.findMany({
-        where: eq(schema.translationMemory.resourceId, resourceId),
-        orderBy: desc(schema.translationMemory.createdAt)
+        where: and(...whereConditions),
+        orderBy: [
+          desc(schema.translationMemory.status),
+          desc(schema.translationMemory.origin),
+          desc(schema.translationMemory.createdAt)
+        ]
       });
       
       return res.json({
@@ -1879,16 +1922,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const sourceLanguage = req.query.sourceLanguage as string;
       const targetLanguage = req.query.targetLanguage as string;
+      const showAllStatuses = req.query.showAllStatuses === 'true';
       
       if (!sourceLanguage || !targetLanguage) {
         return res.status(400).json({ message: 'Source and target languages are required' });
       }
       
+      // Build where conditions
+      let whereConditions = [
+        eq(schema.translationMemory.sourceLanguage, sourceLanguage),
+        eq(schema.translationMemory.targetLanguage, targetLanguage)
+      ];
+      
+      // Only include 'Reviewed' status entries by default
+      if (!showAllStatuses) {
+        whereConditions.push(eq(schema.translationMemory.status, 'Reviewed'));
+      }
+      
       const tmEntries = await db.query.translationMemory.findMany({
-        where: and(
-          eq(schema.translationMemory.sourceLanguage, sourceLanguage),
-          eq(schema.translationMemory.targetLanguage, targetLanguage)
-        )
+        where: and(...whereConditions),
+        orderBy: [
+          // If showing all statuses, prioritize Reviewed ones
+          desc(schema.translationMemory.status),
+          // Then prioritize human translations (HT) over automatic ones
+          desc(schema.translationMemory.origin),
+          // Then by recency
+          desc(schema.translationMemory.updatedAt)
+        ]
       });
       
       return res.json(tmEntries);
@@ -1904,17 +1964,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         text: z.string(),
         sourceLanguage: z.string(),
         targetLanguage: z.string(),
-        threshold: z.number().optional().default(0.7)
+        threshold: z.number().optional().default(0.7),
+        showAllStatuses: z.boolean().optional().default(false)
       });
       
-      const { text, sourceLanguage, targetLanguage, threshold } = searchSchema.parse(req.body);
+      const { text, sourceLanguage, targetLanguage, threshold, showAllStatuses } = searchSchema.parse(req.body);
       
-      // Get all TM entries for the language pair
+      // Build where conditions
+      let whereConditions = [
+        eq(schema.translationMemory.sourceLanguage, sourceLanguage),
+        eq(schema.translationMemory.targetLanguage, targetLanguage)
+      ];
+      
+      // Only include 'Reviewed' status entries by default
+      if (!showAllStatuses) {
+        whereConditions.push(eq(schema.translationMemory.status, 'Reviewed'));
+      }
+      
+      // Get filtered TM entries for the language pair
       const allEntries = await db.query.translationMemory.findMany({
-        where: and(
-          eq(schema.translationMemory.sourceLanguage, sourceLanguage),
-          eq(schema.translationMemory.targetLanguage, targetLanguage)
-        )
+        where: and(...whereConditions),
+        orderBy: [
+          desc(schema.translationMemory.status),
+          desc(schema.translationMemory.origin)
+        ]
       });
       
       // Find fuzzy matches based on similarity
