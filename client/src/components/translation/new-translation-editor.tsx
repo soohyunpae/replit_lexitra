@@ -400,9 +400,9 @@ export function NewTranslationEditor({
           "PATCH", 
           `/api/segments/${segment.id}`, 
           { 
-            target: segment.target,
+            target: segment.target || "",
             status: segment.status,
-            origin: segment.origin 
+            origin: segment.origin || "MT" 
           }
         );
       });
