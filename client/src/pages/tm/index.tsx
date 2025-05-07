@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useQuery } from "@tanstack/react-query";
@@ -23,10 +24,9 @@ import { Separator } from "@/components/ui/separator";
 import { Search, Database, FileText } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDate } from "@/lib/utils";
-import { useLocation } from "wouter";
+import { TMResources } from "./resources";
 
 export default function TranslationMemoryPage() {
-  const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("entries");
   const [searchQuery, setSearchQuery] = useState("");
   const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>(
@@ -134,15 +134,6 @@ export default function TranslationMemoryPage() {
     statusFilter,
   ]);
 
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    if (value === "resources") {
-      navigate("/tm/resources");
-    } else {
-      navigate("/tm");
-    }
-  };
-
   return (
     <MainLayout title="Translation Memory">
       <div className="container max-w-screen-xl mx-auto p-6">
@@ -157,9 +148,8 @@ export default function TranslationMemoryPage() {
         </p>
 
         <Tabs
-          defaultValue="entries"
           value={activeTab}
-          onValueChange={handleTabChange}
+          onValueChange={setActiveTab}
           className="w-full"
         >
           <TabsList className="grid w-full grid-cols-2 mb-6">
@@ -368,6 +358,10 @@ export default function TranslationMemoryPage() {
                 </TableBody>
               </Table>
             </div>
+          </TabsContent>
+
+          <TabsContent value="resources">
+            <TMResources />
           </TabsContent>
         </Tabs>
       </div>

@@ -436,3 +436,320 @@ export default function TranslationMemoryResourcesPage() {
     </MainLayout>
   );
 }
+import React, { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { formatDate } from "@/lib/utils";
+import { apiRequest } from "@/lib/queryClient";
+import { Database, Trash2, Plus } from "lucide-react";
+
+const tmFormSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string(),
+  defaultSourceLanguage: z.string(),
+  defaultTargetLanguage: z.string(),
+  domain: z.string(),
+  isActive: z.boolean(),
+});
+
+export function TMResources() {
+  const [showTmDialog, setShowTmDialog] = useState<boolean>(false);
+
+  // Get all TMs
+  const { data: tmResources = [], isLoading } = useQuery({
+    queryKey: ["/api/tm/resources"],
+    queryFn: async () => {
+      try {
+        const res = await apiRequest("GET", "/api/tm/resources");
+        return res.json();
+      } catch (error) {
+        console.error("Error fetching TMs:", error);
+        return [];
+      }
+    },
+  });
+
+  // TM form setup
+  const tmForm = useForm<z.infer<typeof tmFormSchema>>({
+    resolver: zodResolver(tmFormSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      defaultSourceLanguage: "",
+      defaultTargetLanguage: "",
+      domain: "",
+      isActive: true,
+    },
+  });
+
+  // Add new TM
+  const addTmMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof tmFormSchema>) => {
+      const res = await apiRequest("POST", "/api/tm/resources", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      setShowTmDialog(false);
+      tmForm.reset();
+    },
+  });
+
+  // Delete TM
+  const deleteTmMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/tm/resources/${id}`);
+    },
+  });
+
+  const onTmSubmit = (data: z.infer<typeof tmFormSchema>) => {
+    addTmMutation.mutate(data);
+  };
+
+  function handleDeleteTm(id: number) {
+    if (window.confirm("Are you sure you want to delete this TM?")) {
+      deleteTmMutation.mutate(id);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-xl font-semibold tracking-tight mb-2">
+            Translation Memory Resources
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Manage translation memory resources and their settings
+          </p>
+        </div>
+
+        <Dialog open={showTmDialog} onOpenChange={setShowTmDialog}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add New TM
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Translation Memory</DialogTitle>
+              <DialogDescription>
+                Create a new translation memory resource
+              </DialogDescription>
+            </DialogHeader>
+
+            <Form {...tmForm}>
+              <form
+                onSubmit={tmForm.handleSubmit(onTmSubmit)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={tmForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="TM name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={tmForm.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Input placeholder="TM description" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={tmForm.control}
+                    name="defaultSourceLanguage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Source Language</FormLabel>
+                        <FormControl>
+                          <Input placeholder="en" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={tmForm.control}
+                    name="defaultTargetLanguage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Target Language</FormLabel>
+                        <FormControl>
+                          <Input placeholder="ko" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={tmForm.control}
+                  name="domain"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Domain</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Domain" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowTmDialog(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    {addTmMutation.isPending ? "Adding..." : "Add TM"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Languages</TableHead>
+              <TableHead>Domain</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="text-center py-8 text-muted-foreground"
+                >
+                  Loading...
+                </TableCell>
+              </TableRow>
+            ) : tmResources.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="text-center py-8 text-muted-foreground"
+                >
+                  No translation memories found
+                </TableCell>
+              </TableRow>
+            ) : (
+              tmResources.map((resource: any) => (
+                <TableRow key={resource.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Database className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <div className="font-medium">{resource.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {resource.description}
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col text-sm">
+                      <span>Source: {resource.defaultSourceLanguage}</span>
+                      <span>Target: {resource.defaultTargetLanguage}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{resource.domain}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {formatDate(resource.createdAt)}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteTm(resource.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+export default function TranslationMemoryResourcesPage() {
+  return (
+    <MainLayout title="TMs">
+      <div className="container max-w-screen-xl mx-auto p-6">
+        <div className="flex items-center gap-2 mb-2">
+          <Database className="h-5 w-5" />
+          <h2 className="text-3xl font-bold tracking-tight">
+            Translation Memory
+          </h2>
+        </div>
+        <p className="text-muted-foreground mb-6">
+          View and manage your translation memory database
+        </p>
+
+        <TMResources />
+      </div>
+    </MainLayout>
+  );
+}
