@@ -391,6 +391,63 @@ export function NewTranslationEditor({
     });
   };
   
+  // Implement save file function with TM update for reviewed segments
+  const handleSaveFile = async () => {
+    try {
+      // Save all segments to database first
+      const savePromises = localSegments.map(segment => {
+        return apiRequest(
+          "PATCH", 
+          `/api/segments/${segment.id}`, 
+          { 
+            target: segment.target,
+            status: segment.status,
+            origin: segment.origin 
+          }
+        );
+      });
+      
+      await Promise.all(savePromises);
+      
+      // Find all reviewed segments to save to TM
+      const reviewedSegments = localSegments.filter(
+        segment => segment.status === "Reviewed" && segment.target && segment.target.trim() !== ""
+      );
+      
+      // Save reviewed segments to translation memory
+      const tmPromises = reviewedSegments.map(segment => {
+        return saveToTM(
+          segment.source,
+          segment.target || "",
+          segment.status,
+          sourceLanguage,
+          targetLanguage,
+          fileName // File name as context
+        );
+      });
+      
+      await Promise.all(tmPromises);
+      
+      // Call the onSave prop if provided
+      if (onSave) {
+        onSave();
+      }
+      
+      toast({
+        title: "Save Complete",
+        description: `Saved ${localSegments.length} segments. ${reviewedSegments.length} reviewed segments stored to TM.`,
+      });
+      
+    } catch (error) {
+      console.error("Error saving file:", error);
+      toast({
+        title: "Save Error",
+        description: "Failed to save file. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+  
   // Handle checkbox change for a segment
   const handleCheckboxChange = (id: number, checked: boolean) => {
     setCheckedSegments(prev => ({
@@ -545,7 +602,7 @@ export function NewTranslationEditor({
             variant="default" 
             size="sm" 
             className="flex items-center"
-            onClick={onSave}
+            onClick={handleSaveFile}
           >
             <Save className="h-4 w-4 mr-1" />
             Save
