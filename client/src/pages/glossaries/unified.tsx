@@ -361,57 +361,58 @@ export default function UnifiedGlossaryPage() {
     },
   });
 
-  // Header content
-  const headerContent = isAdmin && (
-    <div className="flex gap-2">
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) {
-            const formData = new FormData();
-            formData.append('file', file);
-            uploadFileMutation.mutate(formData);
-          }
-        }}
-        className="hidden"
-        accept=".xlsx,.xls,.csv,.tmx,.tbx"
-      />
-      <Button 
-        variant="outline" 
-        onClick={() => fileInputRef.current?.click()}
-        disabled={isUploading}
-      >
-        {isUploading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Uploading...
-          </>
-        ) : (
-          <>
-            <Upload className="mr-2 h-4 w-4" />
-            Upload Glossary File
-          </>
-        )}
-      </Button>
-      <Dialog open={addTermDialogOpen} onOpenChange={setAddTermDialogOpen}>
-        <DialogTrigger asChild>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Term
-          </Button>
-        </DialogTrigger>
-      </Dialog>
-    </div>
-  );
-
   return (
-    <MainLayout 
-      title="Glossary" 
-      headerContent={headerContent}
-    >
-      <div className="container max-w-screen-xl mx-auto p-6">
+    <MainLayout title="Glossary">
+      <div className="container max-w-screen-xl mx-auto">
+        {/* Page title and action buttons moved to content area */}
+        <div className="flex justify-between items-center mb-6 mt-2">
+          <h2 className="text-2xl font-bold">Glossary</h2>
+          
+          {isAdmin && (
+            <div className="flex gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    uploadFileMutation.mutate(formData);
+                  }
+                }}
+                className="hidden"
+                accept=".xlsx,.xls,.csv,.tmx,.tbx"
+              />
+              <Button 
+                variant="outline" 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Glossary File
+                  </>
+                )}
+              </Button>
+              <Dialog open={addTermDialogOpen} onOpenChange={setAddTermDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Term
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
+            </div>
+          )}
+        </div>
+        
         <p className="text-muted-foreground mb-6">
           Search and manage glossary terms
         </p>

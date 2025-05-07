@@ -40,14 +40,14 @@ export function Header({
   const displayTitle = isCollapsed ? getCurrentSectionTitle() : title;
 
   return (
-    <header className="bg-card border-b border-border py-4 px-4">
+    <header className="bg-card border-b border-border py-2 px-4">
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center space-x-4">
           {showSidebarTrigger && (
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden mr-2">
-                  <Menu className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="md:hidden mr-2 h-8 w-8">
+                  <Menu className="h-4 w-4" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="p-0">
@@ -57,21 +57,14 @@ export function Header({
           )}
 
           {/* Page Title - Always shown and positioned on the left */}
-          <h1 className="text-xl font-semibold">
+          <h1 className="text-base font-semibold">
             {displayTitle}
           </h1>
         </div>
       
         <div className="flex items-center">
-          {/* Action Buttons (Passed as children) */}
-          {children && (
-            <div className="mr-6">
-              {children}
-            </div>
-          )}
-          
-          {/* Global Actions (Theme, Settings, Account) */}
-          <div className="flex items-center space-x-3">
+          {/* Global Actions (Theme, Settings, Account) - Only these icons in header */}
+          <div className="flex items-center space-x-1">
             <Button
               variant="ghost"
               size="icon"
