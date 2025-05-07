@@ -613,15 +613,6 @@ export function NewTranslationEditor({
       {/* Editor Controls */}
       <div className="bg-card/50 border-b border-border px-4 py-2 flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <div className="text-sm flex items-center">
-            <span className="mr-2 text-muted-foreground">Source:</span>
-            <span>{sourceLanguage}</span>
-          </div>
-          <div className="text-sm flex items-center">
-            <span className="mr-2 text-muted-foreground">Target:</span>
-            <span>{targetLanguage}</span>
-          </div>
-          
           <Button 
             variant="ghost" 
             size="sm" 
@@ -634,27 +625,49 @@ export function NewTranslationEditor({
         </div>
         
         <div className="flex items-center space-x-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center"
-            onClick={handleBatchTranslation}
-            disabled={isTranslatingAll}
+          <Select
+            onValueChange={(value) => {
+              if (value !== "none") {
+                toast({
+                  title: "Confirm Bulk Action",
+                  description: `Are you sure you want to set all segments to "${value}"?`,
+                  action: (
+                    <div className="flex space-x-2 mt-2">
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        onClick={() => {
+                          setBulkActionMode(true);
+                          handleSelectAll();
+                          handleBulkStatusUpdate(value);
+                          document.querySelector('[role="dialog"]')?.remove();
+                        }}
+                      >
+                        Confirm
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => document.querySelector('[role="dialog"]')?.remove()}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ),
+                });
+              }
+            }}
           >
-            <Languages className="h-4 w-4 mr-1" />
-            {isTranslatingAll 
-              ? `Translating ${translatedCount}/${totalToTranslate}...` 
-              : "Translate with AI"}
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center"
-            onClick={onExport}
-          >
-            <Download className="h-4 w-4 mr-1" />
-            Export
-          </Button>
+            <SelectTrigger className="h-8 w-[160px]">
+              <SelectValue placeholder="Bulk Actions" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Select Action</SelectItem>
+              <SelectItem value="Draft">Set All as Draft</SelectItem>
+              <SelectItem value="Reviewed">Set All as Reviewed</SelectItem>
+              <SelectItem value="Rejected">Set All as Rejected</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       
@@ -825,19 +838,7 @@ export function NewTranslationEditor({
         </div>
       )}
       
-      {/* Bulk mode toggle */}
-      {!bulkActionMode && !isTranslatingAll && (
-        <div className="border-y border-border px-4 py-1.5 flex items-center justify-end">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setBulkActionMode(true)}
-            className="h-7 text-xs"
-          >
-            Enable Bulk Selection Mode
-          </Button>
-        </div>
-      )}
+{/* Removed Bulk mode toggle */}
       
       {/* Main content area */}
       <div className="flex-1 overflow-hidden flex">
