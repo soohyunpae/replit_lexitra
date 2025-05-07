@@ -1499,10 +1499,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post(`${apiPrefix}/update_tm`, verifyToken, async (req, res) => {
     try {
-      const data = schema.insertTranslationMemorySchema.parse(req.body);
-      const [tmEntry] = await db.insert(schema.translationMemory).values(data).returning();
+      const data = z.object({
+        source: z.string().min(1, "Source text is required"),
+        target: z.string().min(1, "Target text is required"),
+        status: z.enum(['Draft', 'Reviewed', 'Rejected']).default('Reviewed'),
+        origin: z.enum(['MT', 'Fuzzy', '100%', 'HT']).default('HT'),
+        sourceLanguage: z.string().min(2),
+        targetLanguage: z.string().min(2),
+        context: z.string().optional(),
+        resourceId: z.number().default(1)
+      }).parse(req.body);
       
-      return res.status(201).json(tmEntry);
+      // Only store segments with 'Reviewed' status
+      if (data.status !== 'Reviewed') {
+        return res.status(200).json({
+          message: "Only Reviewed segments are stored in TM",
+          stored: false
+        });
+      }
+      
+      // Check if a duplicate (same source + target) exists
+      const existingEntry = await db.query.translationMemory.findFirst({
+        where: and(
+          eq(schema.translationMemory.source, data.source),
+          eq(schema.translationMemory.target, data.target),
+          eq(schema.translationMemory.sourceLanguage, data.sourceLanguage),
+          eq(schema.translationMemory.targetLanguage, data.targetLanguage)
+        )
+      });
+      
+      let tmEntry;
+      
+      if (existingEntry) {
+        // Update existing entry
+        const [updatedEntry] = await db
+          .update(schema.translationMemory)
+          .set({
+            status: data.status,
+            origin: data.origin,
+            context: data.context,
+            resourceId: data.resourceId,
+            updatedAt: new Date()
+          })
+          .where(eq(schema.translationMemory.id, existingEntry.id))
+          .returning();
+          
+        tmEntry = updatedEntry;
+        
+        return res.status(200).json({
+          ...tmEntry,
+          message: "Updated existing TM entry",
+          updated: true
+        });
+      } else {
+        // Insert new entry
+        const [newEntry] = await db.insert(schema.translationMemory).values({
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }).returning();
+        
+        tmEntry = newEntry;
+        
+        return res.status(201).json({
+          ...tmEntry,
+          message: "Created new TM entry",
+          created: true
+        });
+      }
     } catch (error) {
       return handleApiError(res, error);
     }
