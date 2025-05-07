@@ -487,9 +487,16 @@ export default function ProjectsPage() {
     }
   };
   
+  // 선택된 프로젝트 일괄 해제 및 재오픈을 위한 bulkReleaseProjects, bulkReopenProjects 함수는 아래에서 정의합니다.
+  
   // 선택된 프로젝트 일괄 아카이브
   const bulkArchiveProjects = async () => {
     if (selectedProjects.length === 0) return;
+    
+    // 확인 대화상자
+    if (!window.confirm(`Are you sure you want to archive ${selectedProjects.length} project(s)?`)) {
+      return;
+    }
     
     try {
       for (const projectId of selectedProjects) {
@@ -504,6 +511,60 @@ export default function ProjectsPage() {
       toast({
         title: "Error",
         description: `Failed to archive projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // 선택된 프로젝트 일괄 해제(Release)
+  const bulkReleaseProjects = async () => {
+    if (selectedProjects.length === 0) return;
+    
+    // 확인 대화상자
+    if (!window.confirm(`Are you sure you want to release ${selectedProjects.length} project(s)?`)) {
+      return;
+    }
+    
+    try {
+      for (const projectId of selectedProjects) {
+        await releaseProject.mutateAsync(projectId);
+      }
+      toast({
+        title: "Success",
+        description: `${selectedProjects.length} project(s) released successfully.`,
+      });
+      setSelectedProjects([]);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to release projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // 선택된 프로젝트 일괄 재오픈(Reopen)
+  const bulkReopenProjects = async () => {
+    if (selectedProjects.length === 0) return;
+    
+    // 확인 대화상자
+    if (!window.confirm(`Are you sure you want to reopen ${selectedProjects.length} project(s)?`)) {
+      return;
+    }
+    
+    try {
+      for (const projectId of selectedProjects) {
+        await reopenProject.mutateAsync(projectId);
+      }
+      toast({
+        title: "Success",
+        description: `${selectedProjects.length} project(s) reopened successfully.`,
+      });
+      setSelectedProjects([]);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to reopen projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     }
@@ -987,8 +1048,14 @@ export default function ProjectsPage() {
                   case "claim":
                     bulkClaimProjects();
                     break;
+                  case "release":
+                    bulkReleaseProjects();
+                    break;
                   case "complete":
                     bulkCompleteProjects();
+                    break;
+                  case "reopen":
+                    bulkReopenProjects();
                     break;
                   case "archive":
                     bulkArchiveProjects();
@@ -1008,15 +1075,27 @@ export default function ProjectsPage() {
                       <span>Claim Projects</span>
                     </div>
                   </SelectItem>
+                  <SelectItem value="release">
+                    <div className="flex items-center">
+                      <Unlock className="h-4 w-4 mr-2" />
+                      <span>Release Projects</span>
+                    </div>
+                  </SelectItem>
                   <SelectItem value="complete">
                     <div className="flex items-center">
-                      <CheckSquare className="h-4 w-4 mr-2" />
+                      <CheckCircle className="h-4 w-4 mr-2" />
                       <span>Mark as Completed</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="reopen">
+                    <div className="flex items-center">
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      <span>Reopen Projects</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="archive">
                     <div className="flex items-center">
-                      <FolderClosed className="h-4 w-4 mr-2" />
+                      <Archive className="h-4 w-4 mr-2" />
                       <span>Archive Projects</span>
                     </div>
                   </SelectItem>
