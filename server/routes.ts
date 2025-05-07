@@ -1531,20 +1531,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all TB resources
+  // Get all Glossary resources
   app.get(`${apiPrefix}/glossary/resources`, verifyToken, async (req, res) => {
     try {
-      const tbResources = await db.query.tbResources.findMany({
+      const glossaryResources = await db.query.tbResources.findMany({
         orderBy: desc(schema.tbResources.createdAt)
       });
       
-      return res.json(tbResources);
+      return res.json(glossaryResources);
     } catch (error) {
       return handleApiError(res, error);
     }
   });
   
-  // Add new TB resource
+  // Add new Glossary resource
   app.post(`${apiPrefix}/glossary/resource`, verifyToken, async (req, res) => {
     try {
       const resourceSchema = z.object({
@@ -1575,7 +1575,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Delete TB resource
+  // Delete Glossary resource
   app.delete(`${apiPrefix}/glossary/resource/:id`, verifyToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1586,13 +1586,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       if (!resource) {
-        return res.status(404).json({ message: 'TB resource not found' });
+        return res.status(404).json({ message: 'Glossary resource not found' });
       }
       
       // Delete the resource
       await db.delete(schema.tbResources).where(eq(schema.tbResources.id, id));
       
-      return res.json({ message: 'TB resource deleted successfully' });
+      return res.json({ message: 'Glossary resource deleted successfully' });
     } catch (error) {
       return handleApiError(res, error);
     }
@@ -1645,19 +1645,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       if (!term) {
-        return res.status(404).json({ message: 'Terminology term not found' });
+        return res.status(404).json({ message: 'Glossary term not found' });
       }
       
       // Delete the term
       await db.delete(schema.glossary).where(eq(schema.glossary.id, id));
       
-      return res.json({ message: 'Terminology term deleted successfully' });
+      return res.json({ message: 'Glossary term deleted successfully' });
     } catch (error) {
       return handleApiError(res, error);
     }
   });
   
-  // Search glossary terms (TB search)
+  // Search glossary terms
   app.post(`${apiPrefix}/glossary/search`, verifyToken, async (req, res) => {
     try {
       const searchSchema = z.object({
