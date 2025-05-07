@@ -365,20 +365,7 @@ export default function UnifiedGlossaryPage() {
   return (
     <MainLayout title="Glossary">
       <div className="container max-w-screen-xl mx-auto p-6">
-        {/* Breadcrumb navigation */}
-        <Breadcrumb className="mb-6">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/">Home</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator>
-              <ChevronRight className="h-4 w-4" />
-            </BreadcrumbSeparator>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/glossaries">Glossary</BreadcrumbLink>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        {/* No breadcrumb - already in header */}
 
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-2">
@@ -661,17 +648,18 @@ export default function UnifiedGlossaryPage() {
             <div className="flex items-center gap-2">
               <Search className="h-5 w-5" />
               <h3 className="text-xl font-semibold">Search Terms</h3>
+              
+              {resourceFilter !== undefined && (
+                <Badge 
+                  variant="secondary" 
+                  className="ml-3 py-1 px-3 cursor-pointer hover:bg-muted/70 flex items-center gap-1"
+                  onClick={() => setResourceFilter(undefined)}
+                >
+                  {glossaryResources.find((r: any) => r.id === resourceFilter)?.name}
+                  <X className="h-3.5 w-3.5 ml-1" />
+                </Badge>
+              )}
             </div>
-            {resourceFilter !== undefined && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setResourceFilter(undefined)}
-              >
-                <X className="h-4 w-4 mr-1" />
-                Clear Glossary Filter
-              </Button>
-            )}
           </div>
 
           <div className="flex flex-col md:flex-row gap-4 mb-6">
