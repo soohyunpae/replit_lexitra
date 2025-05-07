@@ -322,6 +322,38 @@ export default function UnifiedGlossaryPage() {
       deleteResourceMutation.mutate(id);
     }
   }
+  
+  // Handle file upload for glossary
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  
+  const uploadFileMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      setIsUploading(true);
+      // Use the admin route for glossary file upload
+      const response = await apiRequest("POST", "/api/admin/tb/upload", formData, {
+        // Let the browser set the content type with proper boundary for FormData
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/glossary/all"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/glossary/resources"] });
+      toast({
+        title: "File uploaded",
+        description: "The glossary file has been uploaded and processed successfully.",
+      });
+      setIsUploading(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload glossary file",
+        variant: "destructive",
+      });
+      setIsUploading(false);
+    },
+  });
 
   return (
     <MainLayout title="Glossary">
@@ -651,138 +683,6 @@ export default function UnifiedGlossaryPage() {
               <BookMarked className="h-5 w-5" />
               <h3 className="text-xl font-semibold">Glossary List</h3>
             </div>
-            {isAdmin && (
-              <Dialog open={addResourceDialogOpen} onOpenChange={setAddResourceDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Glossary
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Glossary Resource</DialogTitle>
-                    <DialogDescription>
-                      Create a new glossary resource for organizing your terms.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <Form {...resourceForm}>
-                    <form onSubmit={resourceForm.handleSubmit(onSubmitResource)} className="space-y-4">
-                      <FormField
-                        control={resourceForm.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter glossary name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={resourceForm.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Description</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter description (optional)" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={resourceForm.control}
-                        name="defaultSourceLanguage"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Default Source Language</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select source language" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="en">English</SelectItem>
-                                <SelectItem value="ko">Korean</SelectItem>
-                                <SelectItem value="ja">Japanese</SelectItem>
-                                <SelectItem value="zh">Chinese</SelectItem>
-                                <SelectItem value="es">Spanish</SelectItem>
-                                <SelectItem value="fr">French</SelectItem>
-                                <SelectItem value="de">German</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={resourceForm.control}
-                        name="defaultTargetLanguage"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Default Target Language</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select target language" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="en">English</SelectItem>
-                                <SelectItem value="ko">Korean</SelectItem>
-                                <SelectItem value="ja">Japanese</SelectItem>
-                                <SelectItem value="zh">Chinese</SelectItem>
-                                <SelectItem value="es">Spanish</SelectItem>
-                                <SelectItem value="fr">French</SelectItem>
-                                <SelectItem value="de">German</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={resourceForm.control}
-                        name="domain"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Domain</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter domain (optional)" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <DialogFooter>
-                        <Button
-                          type="submit"
-                          disabled={addResourceMutation.isPending}
-                        >
-                          {addResourceMutation.isPending ? "Adding..." : "Add Glossary"}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
-            )}
           </div>
 
           <div className="rounded-md border overflow-hidden">
@@ -852,9 +752,34 @@ export default function UnifiedGlossaryPage() {
           {/* Admin file upload option */}
           {isAdmin && (
             <div className="mt-4 flex justify-end">
-              <Button variant="outline" className="mr-2">
-                <Upload className="mr-2 h-4 w-4" />
-                Upload Glossary File
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    uploadFileMutation.mutate(formData);
+                  }
+                }}
+                className="hidden"
+                accept=".xlsx,.xls,.csv,.tmx,.tbx"
+              />
+              <Button 
+                variant="outline" 
+                className="mr-2"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <>Uploading...</>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Glossary File
+                  </>
+                )}
               </Button>
             </div>
           )}
