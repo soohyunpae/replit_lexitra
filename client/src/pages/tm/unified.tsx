@@ -485,10 +485,51 @@ export default function UnifiedTranslationMemoryPage() {
                 </DialogContent>
               </Dialog>
 
-              <Button variant="outline">
-                <Upload className="mr-2 h-4 w-4" />
-                Upload TM File
-              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload TM File
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Upload TM File</DialogTitle>
+                    <DialogDescription>
+                      Upload a translation memory file to import entries.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="tmFile" className="text-right">
+                        File
+                      </Label>
+                      <Input id="tmFile" type="file" className="col-span-3" accept=".tmx,.xlsx,.csv" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="tmResource" className="text-right">
+                        TM Resource
+                      </Label>
+                      <Select defaultValue="none">
+                        <SelectTrigger className="col-span-3" id="tmResource">
+                          <SelectValue placeholder="Select TM Resource" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None (Create New)</SelectItem>
+                          {tmResources.map((resource: any) => (
+                            <SelectItem key={resource.id} value={resource.id.toString()}>
+                              {resource.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit">Upload</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           )}
         </div>
@@ -704,22 +745,23 @@ export default function UnifiedTranslationMemoryPage() {
                 <TableRow>
                   <TableHead>Source</TableHead>
                   <TableHead>Target</TableHead>
-                  <TableHead>Languages</TableHead>
+                  <TableHead>Project</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Added</TableHead>
+                  <TableHead>Modified by</TableHead>
                   {isAdmin && <TableHead className="text-right">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoadingEntries ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-8 text-muted-foreground">
                       Loading TM entries...
                     </TableCell>
                   </TableRow>
                 ) : filteredTM.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-8 text-muted-foreground">
                       No translation memory entries found
                     </TableCell>
                   </TableRow>
@@ -733,14 +775,7 @@ export default function UnifiedTranslationMemoryPage() {
                         {entry.target}
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-col">
-                          <span className="text-xs text-muted-foreground">
-                            Source: {entry.sourceLanguage}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            Target: {entry.targetLanguage}
-                          </span>
-                        </div>
+                        {entry.projectName || "—"}
                       </TableCell>
                       <TableCell>
                         <div className="inline-flex px-2 py-1 rounded-full text-xs font-medium">
@@ -768,6 +803,9 @@ export default function UnifiedTranslationMemoryPage() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {formatDate(entry.createdAt)}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {entry.modifiedBy || "—"}
                       </TableCell>
                       {isAdmin && (
                         <TableCell className="text-right">
