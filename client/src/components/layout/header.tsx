@@ -72,8 +72,9 @@ export function Header({
       } else if (isFileId) {
         label = "Translation Editor";
       } else {
-        // 활성화된 부제목이 있으면 표시
-        if (index === paths.length - 1 && activeSubSection && paths[index] === "tm") {
+        // 활성화된 부제목이 있으면 표시 (TM, Admin, Termbases 섹션)
+        if (index === paths.length - 1 && activeSubSection && 
+            (paths[index] === "tm" || paths[index] === "admin" || paths[index] === "termbases")) {
           label = activeSubSection;
         } else {
           // Capitalize first letter

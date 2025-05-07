@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useLocation, Link, Redirect } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/use-auth";
+import { SidebarContext } from "@/components/layout/sidebar";
 import {
   Card,
   CardContent,
@@ -51,6 +52,26 @@ export default function AdminDashboard() {
   const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("translation-memory");
+  const { setActiveSubSection } = useContext(SidebarContext);
+  
+  // 활성 탭 변경 시 SidebarContext 업데이트
+  const [activeTabLabel, setActiveTabLabel] = useState<string>("TM Management");
+  
+  // 탭 변경 핸들러
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    // 선택된 탭에 따라 적절한 라벨 설정
+    if (value === "translation-memory") {
+      setActiveTabLabel("TM Management");
+    } else if (value === "file-preprocessing") {
+      setActiveTabLabel("File Processing");
+    }
+  };
+  
+  // 활성화된 탭이 변경될 때마다 SidebarContext 업데이트
+  useEffect(() => {
+    setActiveSubSection(activeTabLabel);
+  }, [activeTabLabel, setActiveSubSection]);
 
   // Show loading state
   if (isLoading) {
@@ -159,7 +180,7 @@ export default function AdminDashboard() {
 
         <Tabs
           value={activeTab}
-          onValueChange={setActiveTab}
+          onValueChange={handleTabChange}
           className="space-y-6"
         >
           <TabsList className="grid w-full grid-cols-2">
