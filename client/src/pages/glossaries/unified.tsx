@@ -38,6 +38,8 @@ import {
   BookMarked,
   Upload,
   ChevronRight,
+  X,
+  Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -205,10 +207,15 @@ export default function UnifiedGlossaryPage() {
         targetLanguageFilter && targetLanguageFilter !== "all_target_languages"
           ? term.targetLanguage === targetLanguageFilter
           : true;
+          
+      const matchesResource = 
+        resourceFilter !== undefined
+          ? term.resourceId === resourceFilter
+          : true;
 
-      return matchesSearch && matchesSourceLang && matchesTargetLang;
+      return matchesSearch && matchesSourceLang && matchesTargetLang && matchesResource;
     });
-  }, [glossaryData, searchQuery, sourceLanguageFilter, targetLanguageFilter]);
+  }, [glossaryData, searchQuery, sourceLanguageFilter, targetLanguageFilter, resourceFilter]);
 
   // Add new glossary term
   const addGlossaryMutation = useMutation({
@@ -373,19 +380,298 @@ export default function UnifiedGlossaryPage() {
           </BreadcrumbList>
         </Breadcrumb>
 
-        <div className="flex items-center gap-2 mb-2">
-          <BookMarked className="h-5 w-5" />
-          <h2 className="text-3xl font-bold tracking-tight">Glossary</h2>
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-2">
+            <BookMarked className="h-5 w-5" />
+            <h2 className="text-3xl font-bold tracking-tight">Glossary</h2>
+          </div>
+          {isAdmin && (
+            <div className="flex gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    uploadFileMutation.mutate(formData);
+                  }
+                }}
+                className="hidden"
+                accept=".xlsx,.xls,.csv,.tmx,.tbx"
+              />
+              <Dialog open={addTermDialogOpen} onOpenChange={setAddTermDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Term
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Glossary Term</DialogTitle>
+                    <DialogDescription>
+                      Add a new term to your glossary database.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Form {...termForm}>
+                    <form onSubmit={termForm.handleSubmit(onSubmitTerm)} className="space-y-4">
+                      <FormField
+                        control={termForm.control}
+                        name="sourceLanguage"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Source Language</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select source language" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="en">English</SelectItem>
+                                <SelectItem value="ko">Korean</SelectItem>
+                                <SelectItem value="ja">Japanese</SelectItem>
+                                <SelectItem value="zh">Chinese</SelectItem>
+                                <SelectItem value="es">Spanish</SelectItem>
+                                <SelectItem value="fr">French</SelectItem>
+                                <SelectItem value="de">German</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={termForm.control}
+                        name="targetLanguage"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Target Language</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select target language" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="en">English</SelectItem>
+                                <SelectItem value="ko">Korean</SelectItem>
+                                <SelectItem value="ja">Japanese</SelectItem>
+                                <SelectItem value="zh">Chinese</SelectItem>
+                                <SelectItem value="es">Spanish</SelectItem>
+                                <SelectItem value="fr">French</SelectItem>
+                                <SelectItem value="de">German</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={termForm.control}
+                        name="resourceId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Glossary</FormLabel>
+                            <Select
+                              onValueChange={(value) => {
+                                field.onChange(
+                                  value === "none" ? undefined : parseInt(value),
+                                );
+                              }}
+                              defaultValue={field.value?.toString() || "none"}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select Glossary" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="none">No glossary</SelectItem>
+                                {glossaryResources.map((resource: any) => (
+                                  <SelectItem
+                                    key={resource.id}
+                                    value={resource.id.toString()}
+                                  >
+                                    {resource.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={termForm.control}
+                        name="source"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Source Term</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter source term" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={termForm.control}
+                        name="target"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Target Term</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter target term" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <DialogFooter>
+                        <Button
+                          type="submit"
+                          disabled={addGlossaryMutation.isPending}
+                        >
+                          {addGlossaryMutation.isPending ? "Adding..." : "Add Term"}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+              <Button 
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <>Uploading...</>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Glossary File
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
         <p className="text-muted-foreground mb-6">
           Search and manage glossary terms and resources
         </p>
-
-        {/* Search Section */}
+        
+        {/* Glossary List Section - Now moved to the top */}
         <div className="bg-card border rounded-lg p-6 mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <Search className="h-5 w-5" />
-            <h3 className="text-xl font-semibold">Search Terms</h3>
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-2">
+              <BookMarked className="h-5 w-5" />
+              <h3 className="text-xl font-semibold">Glossary List</h3>
+            </div>
+          </div>
+
+          <div className="rounded-md border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Default Languages</TableHead>
+                  <TableHead>Domain</TableHead>
+                  <TableHead>Terms</TableHead>
+                  {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoadingResources ? (
+                  <TableRow>
+                    <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
+                      Loading glossary resources...
+                    </TableCell>
+                  </TableRow>
+                ) : glossaryResources.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
+                      No glossary resources found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  glossaryResources.map((resource: any) => (
+                    <TableRow 
+                      key={resource.id} 
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => setResourceFilter(resource.id)}
+                    >
+                      <TableCell className="font-medium">{resource.name}</TableCell>
+                      <TableCell>{resource.description || "—"}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-muted-foreground">
+                            Source: {resource.defaultSourceLanguage.toUpperCase()}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            Target: {resource.defaultTargetLanguage.toUpperCase()}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{resource.domain || "—"}</TableCell>
+                      <TableCell>
+                        {glossaryData
+                          ? glossaryData.filter((term: any) => term.resourceId === resource.id).length
+                          : 0}
+                      </TableCell>
+                      {isAdmin && (
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteResource(resource.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+
+        {/* Search Section - Now moved below Glossary List */}
+        <div className="bg-card border rounded-lg p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Search className="h-5 w-5" />
+              <h3 className="text-xl font-semibold">Search Terms</h3>
+            </div>
+            {resourceFilter !== undefined && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setResourceFilter(undefined)}
+              >
+                <X className="h-4 w-4 mr-1" />
+                Clear Glossary Filter
+              </Button>
+            )}
           </div>
 
           <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -430,22 +716,6 @@ export default function UnifiedGlossaryPage() {
                 {languages.target.map((lang) => (
                   <SelectItem key={lang} value={lang}>
                     {lang.toUpperCase()}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={resourceFilter?.toString() || "all_resources"}
-              onValueChange={(value) => setResourceFilter(value === "all_resources" ? undefined : parseInt(value))}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Glossary" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all_resources">All Glossaries</SelectItem>
-                {glossaryResources.map((resource: any) => (
-                  <SelectItem key={resource.id} value={resource.id.toString()}>
-                    {resource.name}
                   </SelectItem>
                 ))}
               </SelectContent>
