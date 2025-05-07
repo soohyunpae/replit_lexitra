@@ -10,6 +10,7 @@ import { EditableSegment } from "./editable-segment";
 import { ProgressBar } from "./progress-bar";
 import { SidePanel } from "./side-panel";
 import { apiRequest } from "@/lib/queryClient";
+import { saveToTM } from "@/lib/api";
 import { type TranslationUnit, type TranslationMemory, type Glossary } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -525,11 +526,36 @@ export function NewTranslationEditor({
   
   return (
     <main className="flex-1 overflow-hidden flex flex-col">
-      {/* Toolbar */}
+      {/* Breadcrumb Navigation */}
       <div className="bg-card border-b border-border px-4 py-2 flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <a href="/projects" className="text-sm hover:text-primary transition-colors">
+            Projects
+          </a>
+          <span className="text-muted-foreground">/</span>
+          <a href="/project" className="text-sm hover:text-primary transition-colors">
+            Project: {fileName.split('_')[0]} - {sourceLanguage} to {targetLanguage}
+          </a>
+          <span className="text-muted-foreground">/</span>
+          <span className="text-sm font-medium">{fileName}</span>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="flex items-center"
+            onClick={onSave}
+          >
+            <Save className="h-4 w-4 mr-1" />
+            Save
+          </Button>
+        </div>
+      </div>
+      
+      {/* Editor Controls */}
+      <div className="bg-card/50 border-b border-border px-4 py-2 flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <div className="text-sm text-muted-foreground">{fileName}</div>
-          <Separator orientation="vertical" className="h-4" />
           <div className="text-sm flex items-center">
             <span className="mr-2 text-muted-foreground">Source:</span>
             <span>{sourceLanguage}</span>
@@ -561,7 +587,7 @@ export function NewTranslationEditor({
             <Languages className="h-4 w-4 mr-1" />
             {isTranslatingAll 
               ? `Translating ${translatedCount}/${totalToTranslate}...` 
-              : "Translate all with AI"}
+              : "Translate with AI"}
           </Button>
           <Button 
             variant="outline" 
@@ -571,15 +597,6 @@ export function NewTranslationEditor({
           >
             <Download className="h-4 w-4 mr-1" />
             Export
-          </Button>
-          <Button 
-            variant="default" 
-            size="sm" 
-            className="flex items-center"
-            onClick={onSave}
-          >
-            <Save className="h-4 w-4 mr-1" />
-            Save Project
           </Button>
         </div>
       </div>
