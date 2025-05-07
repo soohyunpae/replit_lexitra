@@ -14,6 +14,10 @@ import {
 } from "@/components/ui/card";
 import {
   Archive,
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  ArrowUpDown,
   Calendar,
   CheckCircle,
   CheckSquare,
@@ -22,10 +26,6 @@ import {
   FileText,
   Filter,
   FolderClosed,
-  ArrowDown,
-  ArrowRight,
-  ArrowUp,
-  ArrowUpDown,
   LayoutGrid,
   List,
   Paperclip,
@@ -312,14 +312,24 @@ export default function ProjectsPage() {
 
       // 파일 추가
       if (data.files && data.files.length > 0) {
-        Array.from(data.files).forEach((file: File, index) => {
+        // FileList를 배열로 변환
+        const filesArray = data.files instanceof FileList 
+          ? Array.from(data.files)
+          : data.files;
+          
+        filesArray.forEach((file: File) => {
           formData.append(`files`, file);
         });
       }
 
       // 참조 파일 추가
       if (data.references && data.references.length > 0) {
-        Array.from(data.references).forEach((file: File, index) => {
+        // FileList를 배열로 변환
+        const referencesArray = data.references instanceof FileList 
+          ? Array.from(data.references)
+          : data.references;
+          
+        referencesArray.forEach((file: File) => {
           formData.append(`references`, file);
         });
       }
@@ -410,9 +420,9 @@ export default function ProjectsPage() {
   // 프로젝트 아카이브 mutation (여기서는 삭제와 동일하게 구현)
   const archiveProject = useMutation({
     mutationFn: async (projectId: number) => {
-      // 실제 아카이브 엔드포인트 구현 필요
-      const response = await apiRequest("POST", `/api/projects/${projectId}/archive`);
-      return response.json();
+      // 실제 아카이브 엔드포인트 구현 필요 (현재는 삭제와 동일하게 처리)
+      const response = await apiRequest("DELETE", `/api/projects/${projectId}`);
+      return response.status === 204 ? {} : response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
