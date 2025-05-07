@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Save, Download, Languages, AlertCircle } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Save, Download, Languages, AlertCircle, Check, X, FileCheck } from "lucide-react";
 import { EditableSegment } from "./editable-segment";
 import { ProgressBar } from "./progress-bar";
 import { SidePanel } from "./side-panel";
@@ -34,6 +35,8 @@ export function NewTranslationEditor({
   const [isTranslatingAll, setIsTranslatingAll] = useState(false);
   const [translatedCount, setTranslatedCount] = useState(0);
   const [totalToTranslate, setTotalToTranslate] = useState(0);
+  const [checkedSegments, setCheckedSegments] = useState<Record<number, boolean>>({});
+  const [bulkActionMode, setBulkActionMode] = useState(false);
   
   // Update local segments when props change
   useEffect(() => {
@@ -186,13 +189,32 @@ export function NewTranslationEditor({
   };
   
   // Handle segment update
-  const handleSegmentUpdate = async (id: number, target: string, status = "MT") => {
+  const handleSegmentUpdate = async (id: number, target: string, status = "MT", origin?: string) => {
     // Update segment in database
     try {
+      // Find current segment to check if it was modified
+      const currentSegment = localSegments.find(s => s.id === id);
+      const wasModified = currentSegment && currentSegment.target !== target;
+      
+      // Set origin to HT if this is a human edit and it's marked as Reviewed
+      // Only update origin if explicitly provided or if it's a human edit
+      let updatedOrigin = origin;
+      if (!updatedOrigin && wasModified) {
+        // If segment was manually edited, set origin to HT
+        updatedOrigin = (status === "Reviewed" || (currentSegment?.status === "Reviewed" && status === undefined)) 
+          ? "HT" 
+          : currentSegment?.origin;
+      }
+      
+      const payload: any = { target, status };
+      if (updatedOrigin) {
+        payload.origin = updatedOrigin;
+      }
+      
       const response = await apiRequest(
         "PATCH", 
         `/api/segments/${id}`, 
-        { target, status }
+        payload
       );
       
       const updatedSegment = await response.json();
@@ -200,7 +222,13 @@ export function NewTranslationEditor({
       // Update local state
       setLocalSegments(prev => 
         prev.map(segment => 
-          segment.id === id ? { ...segment, target, status } : segment
+          segment.id === id ? { 
+            ...segment, 
+            target, 
+            status,
+            origin: updatedOrigin || segment.origin,
+            modified: true // Mark as modified
+          } : segment
         )
       );
       
@@ -322,6 +350,107 @@ export function NewTranslationEditor({
     });
   };
   
+  // Handle checkbox change for a segment
+  const handleCheckboxChange = (id: number, checked: boolean) => {
+    setCheckedSegments(prev => ({
+      ...prev,
+      [id]: checked
+    }));
+  };
+  
+  // Handle "Select All" for segments
+  const handleSelectAll = () => {
+    const newCheckedState: Record<number, boolean> = {};
+    localSegments.forEach(segment => {
+      newCheckedState[segment.id] = true;
+    });
+    setCheckedSegments(newCheckedState);
+  };
+  
+  // Handle "Unselect All" for segments
+  const handleUnselectAll = () => {
+    setCheckedSegments({});
+  };
+  
+  // Handle bulk status update
+  const handleBulkStatusUpdate = async (status: string) => {
+    // Get all checked segments
+    const checkedIds = Object.entries(checkedSegments)
+      .filter(([_, isChecked]) => isChecked)
+      .map(([id]) => parseInt(id));
+      
+    if (checkedIds.length === 0) {
+      toast({
+        title: "No segments selected",
+        description: "Please select segments to update"
+      });
+      return;
+    }
+    
+    // Update segments in parallel
+    try {
+      const promises = checkedIds.map(id => {
+        const segment = localSegments.find(s => s.id === id);
+        if (!segment) return Promise.resolve();
+        
+        // Keep target text, just update status
+        return apiRequest(
+          "PATCH", 
+          `/api/segments/${id}`, 
+          { 
+            target: segment.target || "", 
+            status,
+            // If status is Reviewed and origin isn't already set to HT, 
+            // and the segment has been modified, set it to HT
+            origin: (status === "Reviewed" && segment.target && segment.origin !== "HT") 
+              ? "HT" 
+              : segment.origin
+          }
+        );
+      });
+      
+      await Promise.all(promises);
+      
+      // Update local state
+      const updatedSegments = [...localSegments];
+      checkedIds.forEach(id => {
+        const index = updatedSegments.findIndex(s => s.id === id);
+        if (index !== -1) {
+          const origin = (status === "Reviewed" && updatedSegments[index].target && updatedSegments[index].origin !== "HT") 
+            ? "HT" 
+            : updatedSegments[index].origin;
+            
+          updatedSegments[index] = {
+            ...updatedSegments[index],
+            status,
+            origin
+          };
+        }
+      });
+      
+      setLocalSegments(updatedSegments);
+      
+      toast({
+        title: "Status Update Complete",
+        description: `Updated ${checkedIds.length} segments to ${status}`
+      });
+      
+      // Clear selection after successful update
+      setCheckedSegments({});
+      setBulkActionMode(false);
+    } catch (error) {
+      console.error("Error updating segment statuses:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update segment statuses",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Get count of checked segments
+  const checkedCount = Object.values(checkedSegments).filter(Boolean).length;
+  
   return (
     <main className="flex-1 overflow-hidden flex flex-col">
       {/* Toolbar */}
@@ -392,6 +521,85 @@ export function NewTranslationEditor({
         </div>
       )}
       
+      {/* Bulk action panel */}
+      {bulkActionMode && (
+        <div className="bg-primary/10 border-y border-primary/20 px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center">
+            <FileCheck className="h-4 w-4 text-primary mr-2" />
+            <span className="text-sm">
+              Bulk action mode: {checkedCount} segments selected
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleSelectAll}
+              className="h-8 text-xs"
+            >
+              Select All
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleUnselectAll}
+              className="h-8 text-xs"
+            >
+              Deselect All
+            </Button>
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={() => handleBulkStatusUpdate("Draft")}
+              className="h-8 text-xs"
+              disabled={checkedCount === 0}
+            >
+              Set as Draft
+            </Button>
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={() => handleBulkStatusUpdate("Reviewed")}
+              className="h-8 text-xs"
+              disabled={checkedCount === 0}
+            >
+              Set as Reviewed
+            </Button>
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={() => handleBulkStatusUpdate("Rejected")}
+              className="h-8 text-xs"
+              disabled={checkedCount === 0}
+            >
+              Set as Rejected
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setBulkActionMode(false)}
+              className="h-8"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {/* Bulk mode toggle */}
+      {!bulkActionMode && !isTranslatingAll && (
+        <div className="border-y border-border px-4 py-1.5 flex items-center justify-end">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setBulkActionMode(true)}
+            className="h-7 text-xs"
+          >
+            Enable Bulk Selection Mode
+          </Button>
+        </div>
+      )}
+      
       {/* Main content area */}
       <div className="flex-1 overflow-hidden flex">
         {/* Source and Target panels with single scrollbar */}
@@ -429,9 +637,11 @@ export function NewTranslationEditor({
                         index={index + 1}
                         isSource={false}
                         onSelect={() => handleSegmentSelect(segment.id)}
-                        onUpdate={(target, status) => handleSegmentUpdate(segment.id, target, status)}
+                        onUpdate={(target, status, origin) => handleSegmentUpdate(segment.id, target, status, origin)}
                         onTranslateWithGPT={() => handleTranslateWithGPT(segment.id)}
                         isSelected={selectedSegmentId === segment.id}
+                        isChecked={bulkActionMode ? !!checkedSegments[segment.id] : undefined}
+                        onCheckChange={bulkActionMode ? (checked) => handleCheckboxChange(segment.id, checked) : undefined}
                       />
                     </div>
                   ))}
