@@ -1,17 +1,15 @@
 import React, { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { MainLayout } from "@/components/layout/main-layout";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -21,6 +19,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Form,
   FormControl,
   FormField,
@@ -28,18 +34,20 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { formatDate } from "@/lib/utils";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Database, Trash2, Plus } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { MainLayout } from "@/components/layout/main-layout";
-import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Database, FileText, Plus, Trash2 } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { formatDate } from "@/lib/utils";
+import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { useMutation } from "@tanstack/react-query";
 
+// Form schema for TMs
 const tmFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   description: z.string().optional(),
@@ -51,11 +59,11 @@ const tmFormSchema = z.object({
 
 type TmFormValues = z.infer<typeof tmFormSchema>;
 
-export function TMResourcesPage() {
+export default function TranslationMemoryResourcesPage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
-  const [showTmDialog, setShowTmDialog] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>("resources");
+  const [showTmDialog, setShowTmDialog] = useState<boolean>(false);
 
   // Get all TMs
   const { data: tmResources = [], isLoading } = useQuery({
@@ -169,10 +177,12 @@ export function TMResourcesPage() {
           className="w-full"
         >
           <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="entries">
+            <TabsTrigger value="entries" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
               TM Entries
             </TabsTrigger>
-            <TabsTrigger value="resources">
+            <TabsTrigger value="resources" className="flex items-center gap-2">
+              <Database className="h-4 w-4" />
               TM List
             </TabsTrigger>
           </TabsList>

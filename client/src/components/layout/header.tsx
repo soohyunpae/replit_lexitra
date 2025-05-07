@@ -4,16 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useThemeToggle } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
-import {
-  Moon,
-  Sun,
-  Search,
-  Settings,
-  Menu,
-  UserCircle,
-  LogOut,
-  ChevronRight,
-} from "lucide-react";
+import { Moon, Sun, Search, Settings, Menu, UserCircle, LogOut, ChevronRight } from "lucide-react";
 import { SidebarContext } from "./sidebar";
 import {
   DropdownMenu,
@@ -23,7 +14,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Sidebar } from "./sidebar";
 
 interface HeaderProps {
@@ -37,9 +32,9 @@ interface Breadcrumb {
   active?: boolean;
 }
 
-export function Header({
-  title = "Lexitra",
-  showSidebarTrigger = true,
+export function Header({ 
+  title = "Lexitra", 
+  showSidebarTrigger = true
 }: HeaderProps) {
   const { toggleTheme, isDarkMode, mounted } = useThemeToggle();
   const { user, logoutMutation } = useAuth();
@@ -60,63 +55,16 @@ export function Header({
       href: "/",
     });
 
-    // Special handling for tabbed pages
-    if (paths[0] === "tm") {
-      breadcrumbs.push({
-        label: "Translation Memory",
-        href: "/tm",
-        active: paths.length === 1,
-      });
-
-      if (paths[1] === "resources") {
-        breadcrumbs.push({
-          label: "TM List",
-          href: "/tm/resources",
-          active: true,
-        });
-      } else if (paths.length === 1) {
-        breadcrumbs.push({
-          label: "TM Entries",
-          href: "/tm",
-          active: true,
-        });
-      }
-      return breadcrumbs;
-    }
-
-    if (paths[0] === "termbases") {
-      breadcrumbs.push({
-        label: "Termbases",
-        href: "/termbases",
-        active: paths.length === 1,
-      });
-
-      if (paths[1] === "resources") {
-        breadcrumbs.push({
-          label: "Termbase List",
-          href: "/termbases/resources",
-          active: true,
-        });
-      } else if (paths[1] === "entries") {
-        breadcrumbs.push({
-          label: "Glossary Entries",
-          href: "/termbases/entries",
-          active: true,
-        });
-      }
-      return breadcrumbs;
-    }
-
-    // Build path progressively for other pages
+    // Build path progressively
     let currentPath = "";
     paths.forEach((path, index) => {
       currentPath += `/${path}`;
-
+      
       // Check if this is a project ID
-      const isProjectId = /^\d+$/.test(path) && paths[index - 1] === "projects";
+      const isProjectId = /^\d+$/.test(path) && paths[index-1] === "projects";
       // Check if this is a file ID
-      const isFileId = /^\d+$/.test(path) && paths[index - 1] === "translation";
-
+      const isFileId = /^\d+$/.test(path) && paths[index-1] === "translation";
+      
       // Skip numeric IDs in the breadcrumb labels
       let label = path;
       if (isProjectId) {
@@ -127,17 +75,17 @@ export function Header({
         // Capitalize first letter
         label = path.charAt(0).toUpperCase() + path.slice(1);
       }
-
+      
       breadcrumbs.push({
         label,
         href: currentPath,
-        active: index === paths.length - 1,
+        active: index === paths.length - 1
       });
     });
 
     return breadcrumbs;
   };
-
+  
   const breadcrumbs = getBreadcrumbs();
 
   return (
@@ -167,7 +115,7 @@ export function Header({
             </Link>
           )}
         </div>
-
+      
         <div className="flex items-center space-x-3">
           <Button
             variant="ghost"
@@ -181,13 +129,13 @@ export function Header({
               <Sun className="h-5 w-5" />
             )}
           </Button>
-
+          
           <Link href="/settings">
             <Button variant="ghost" size="icon" aria-label="Settings">
               <Settings className="h-5 w-5" />
             </Button>
           </Link>
-
+          
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -221,14 +169,14 @@ export function Header({
           )}
         </div>
       </div>
-
+      
       <div className="flex items-center text-sm text-muted-foreground">
         {breadcrumbs ? (
           breadcrumbs.map((item, index) => (
             <React.Fragment key={item.href}>
-              <Link
+              <Link 
                 href={item.href}
-                className={`hover:text-foreground ${item.active ? "font-medium text-foreground" : ""}`}
+                className={`hover:text-foreground ${item.active ? 'font-medium text-foreground' : ''}`}
               >
                 {item.label}
               </Link>
