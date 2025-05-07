@@ -14,16 +14,19 @@ export default function GlossariesIndexPage() {
     navigate("/glossaries/entries");
   }, [navigate]);
 
+  // Page header content
+  const pageHeader = (
+    <div className="flex flex-col">
+      <h1 className="text-2xl font-bold">Glossaries</h1>
+      <p className="text-muted-foreground mt-1">
+        Manage glossary entries and terminology
+      </p>
+    </div>
+  );
+
   return (
-    <MainLayout title="Glossaries">
-      <div className="container max-w-screen-xl mx-auto p-6">
-        <div className="flex items-center gap-2 mb-2">
-          <Book className="h-5 w-5" />
-          <h2 className="text-3xl font-bold tracking-tight">Glossaries</h2>
-        </div>
-        <p className="text-muted-foreground mb-6">
-          Manage glossary entries and list
-        </p>
+    <MainLayout pageHeader={pageHeader}>
+      <div className="container max-w-screen-xl mx-auto">
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="border rounded-lg p-6 hover:shadow-md transition-shadow">

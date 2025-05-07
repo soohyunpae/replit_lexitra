@@ -156,18 +156,19 @@ export default function TranslationMemoryPage() {
     setActiveSubSection(activeTabLabel);
   }, [activeTabLabel, setActiveSubSection]);
 
+  // Page header with title and description
+  const pageHeader = (
+    <div className="flex flex-col">
+      <h1 className="text-2xl font-bold">Translation Memory</h1>
+      <p className="text-muted-foreground mt-1">
+        View and manage your translation memory database
+      </p>
+    </div>
+  );
+
   return (
-    <MainLayout title="Translation Memory">
-      <div className="container max-w-screen-xl mx-auto p-6">
-        <div className="flex items-center gap-2 mb-2">
-          <Database className="h-5 w-5" />
-          <h2 className="text-3xl font-bold tracking-tight">
-            Translation Memory
-          </h2>
-        </div>
-        <p className="text-muted-foreground mb-6">
-          View and manage your translation memory database
-        </p>
+    <MainLayout pageHeader={pageHeader}>
+      <div className="container max-w-screen-xl mx-auto">
 
         <Tabs
           defaultValue="entries"
