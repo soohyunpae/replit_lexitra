@@ -13,25 +13,29 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  Archive,
   Calendar,
-  FileText,
-  Plus,
-  ArrowRight,
-  Trash2,
-  ExternalLink,
-  Clock,
-  Search,
-  List,
-  LayoutGrid,
-  ArrowUpDown,
-  ArrowDown,
-  ArrowUp,
+  CheckCircle,
   CheckSquare,
+  Clock,
+  ExternalLink,
+  FileText,
   Filter,
-  Upload,
-  Paperclip,
-  X,
   FolderClosed,
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  ArrowUpDown,
+  LayoutGrid,
+  List,
+  Paperclip,
+  Plus,
+  RefreshCw,
+  Search,
+  Trash2,
+  Unlock,
+  Upload,
+  X,
 } from "lucide-react";
 import {
   Dialog,
@@ -486,8 +490,6 @@ export default function ProjectsPage() {
       });
     }
   };
-  
-  // 선택된 프로젝트 일괄 해제 및 재오픈을 위한 bulkReleaseProjects, bulkReopenProjects 함수는 아래에서 정의합니다.
   
   // 선택된 프로젝트 일괄 아카이브
   const bulkArchiveProjects = async () => {
