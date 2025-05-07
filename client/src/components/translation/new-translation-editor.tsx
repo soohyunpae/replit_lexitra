@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { SidePanel } from "./side-panel";
 import { apiRequest } from "@/lib/queryClient";
 import { saveToTM } from "@/lib/api";
-import { type TranslationUnit, type TranslationMemory, type Glossary } from "@/types";
+import { type TranslationUnit, type TranslationMemory, type Glossary, type StatusType } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import {
   Select,
@@ -48,7 +48,9 @@ export function NewTranslationEditor({
   const [translatedCount, setTranslatedCount] = useState(0);
   const [totalToTranslate, setTotalToTranslate] = useState(0);
   const [checkedSegments, setCheckedSegments] = useState<Record<number, boolean>>({});
-  const [bulkActionMode, setBulkActionMode] = useState(false);
+  
+  // Get count of checked segments for bulk actions
+  const checkedCount = Object.values(checkedSegments).filter(Boolean).length;
   
   // Filter and pagination states
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -535,7 +537,6 @@ export function NewTranslationEditor({
       
       // Clear selection after successful update
       setCheckedSegments({});
-      setBulkActionMode(false);
     } catch (error) {
       console.error("Error updating segment statuses:", error);
       toast({
@@ -546,8 +547,7 @@ export function NewTranslationEditor({
     }
   };
   
-  // Get count of checked segments
-  const checkedCount = Object.values(checkedSegments).filter(Boolean).length;
+  // Pagination related calculations
   
   // Calculate pagination
   const totalPages = Math.ceil(filteredSegments.length / segmentsPerPage);
@@ -634,14 +634,23 @@ export function NewTranslationEditor({
               </SelectContent>
             </Select>
             
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              onClick={() => setBulkActionMode(!bulkActionMode)}
+            <Select
+              onValueChange={(value) => {
+                if (value !== "none" && checkedCount > 0) {
+                  handleBulkStatusUpdate(value as StatusType);
+                }
+              }}
             >
-              {bulkActionMode ? "Exit Bulk Mode" : "Select Segments"}
-            </Button>
+              <SelectTrigger className="h-8 w-[160px]">
+                <SelectValue placeholder="Bulk Actions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Select Action</SelectItem>
+                <SelectItem value="Draft">Set as Draft</SelectItem>
+                <SelectItem value="Reviewed">Set as Reviewed</SelectItem>
+                <SelectItem value="Rejected">Set as Rejected</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
@@ -656,70 +665,33 @@ export function NewTranslationEditor({
         </div>
       )}
       
-      {/* Bulk action panel */}
-      {bulkActionMode && (
-        <div className="bg-primary/10 border-y border-primary/20 px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center">
-            <FileCheck className="h-4 w-4 text-primary mr-2" />
-            <span className="text-sm">
-              Bulk action mode: {checkedCount} segments selected
-            </span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleSelectAll}
-              className="h-8 text-xs"
-            >
-              Select All
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleUnselectAll}
-              className="h-8 text-xs"
-            >
-              Deselect All
-            </Button>
-            <Button 
-              variant="default" 
-              size="sm"
-              onClick={() => handleBulkStatusUpdate("Draft")}
-              className="h-8 text-xs"
-              disabled={checkedCount === 0}
-            >
-              Set as Draft
-            </Button>
-            <Button 
-              variant="default" 
-              size="sm"
-              onClick={() => handleBulkStatusUpdate("Reviewed")}
-              className="h-8 text-xs"
-              disabled={checkedCount === 0}
-            >
-              Set as Reviewed
-            </Button>
-            <Button 
-              variant="default" 
-              size="sm"
-              onClick={() => handleBulkStatusUpdate("Rejected")}
-              className="h-8 text-xs"
-              disabled={checkedCount === 0}
-            >
-              Set as Rejected
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setBulkActionMode(false)}
-              className="h-8"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+      {/* Bulk selection tools */}
+      <div className="bg-primary/5 border-b border-border px-4 py-2 flex items-center justify-between">
+        <div className="flex items-center">
+          <FileCheck className="h-4 w-4 text-primary mr-2" />
+          <span className="text-sm">
+            {checkedCount} segments selected
+          </span>
         </div>
-      )}
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleSelectAll}
+            className="h-8 text-xs"
+          >
+            Select All
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleUnselectAll}
+            className="h-8 text-xs"
+          >
+            Deselect All
+          </Button>
+        </div>
+      </div>
       
 {/* Removed Bulk mode toggle */}
       
@@ -763,8 +735,8 @@ export function NewTranslationEditor({
                         onUpdate={(target, status, origin) => handleSegmentUpdate(segment.id, target, status, origin)}
                         onTranslateWithGPT={() => handleTranslateWithGPT(segment.id)}
                         isSelected={selectedSegmentId === segment.id}
-                        isChecked={bulkActionMode ? !!checkedSegments[segment.id] : undefined}
-                        onCheckChange={bulkActionMode ? (checked) => handleCheckboxChange(segment.id, checked) : undefined}
+                        isChecked={!!checkedSegments[segment.id]}
+                        onCheckChange={(checked) => handleCheckboxChange(segment.id, checked)}
                       />
                     </div>
                   ))}
