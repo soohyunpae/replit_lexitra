@@ -56,8 +56,8 @@ import {
 import { formatDate } from "@/lib/utils";
 import { Link, useLocation } from "wouter";
 
-// Form schema for TB resources
-const tbResourceFormSchema = z.object({
+// Form schema for Glossary resources
+const glossaryResourceFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   description: z.string().optional(),
   defaultSourceLanguage: z.string().min(2),
@@ -66,18 +66,18 @@ const tbResourceFormSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-type TbResourceFormValues = z.infer<typeof tbResourceFormSchema>;
+type GlossaryResourceFormValues = z.infer<typeof glossaryResourceFormSchema>;
 
-export default function TermbaseResourcesPage() {
+export default function GlossaryResourcesPage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("resources");
   const [showResourceDialog, setShowResourceDialog] =
     React.useState<boolean>(false);
 
-  // TB Resource form setup
-  const resourceForm = useForm<TbResourceFormValues>({
-    resolver: zodResolver(tbResourceFormSchema),
+  // Glossary Resource form setup
+  const resourceForm = useForm<GlossaryResourceFormValues>({
+    resolver: zodResolver(glossaryResourceFormSchema),
     defaultValues: {
       name: "",
       description: "",
@@ -102,9 +102,9 @@ export default function TermbaseResourcesPage() {
     },
   });
 
-  // Add TB resource mutation
+  // Add Glossary resource mutation
   const addResourceMutation = useMutation({
-    mutationFn: async (data: TbResourceFormValues) => {
+    mutationFn: async (data: GlossaryResourceFormValues) => {
       const response = await apiRequest("POST", "/api/glossary/resource", data);
       return response.json();
     },

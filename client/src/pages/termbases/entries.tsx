@@ -237,9 +237,9 @@ export default function GlossaryEntriesPage() {
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     if (value === "resources") {
-      navigate("/termbases/resources");
+      navigate("/glossaries/resources");
     } else {
-      navigate("/termbases/entries");
+      navigate("/glossaries/entries");
     }
   };
 
@@ -248,10 +248,10 @@ export default function GlossaryEntriesPage() {
       <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center gap-2 mb-2">
           <BookMarked className="h-5 w-5" />
-          <h2 className="text-3xl font-bold tracking-tight">Termbases</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Glossaries</h2>
         </div>
         <p className="text-muted-foreground mb-6">
-          Manage termbases and glossary entries
+          Manage glossary entries and terminology resources
         </p>
         <Tabs
           defaultValue="entries"
@@ -266,7 +266,7 @@ export default function GlossaryEntriesPage() {
             </TabsTrigger>
             <TabsTrigger value="resources" className="flex items-center gap-2">
               <BookMarked className="h-4 w-4" />
-              Termbases
+              Glossary Resources
             </TabsTrigger>
           </TabsList>
         </Tabs>
