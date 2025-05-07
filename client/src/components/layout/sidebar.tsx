@@ -56,7 +56,7 @@ export const SidebarContext = React.createContext<SidebarContextType>({
   activeSubSection: null
 });
 
-export function Sidebar({ actionButtons }: { actionButtons?: React.ReactNode }) {
+export function Sidebar() {
   const [location] = useLocation();
   const isMobile = useMobile();
   const [isProjectOpen, setIsProjectOpen] = useState(true);
@@ -185,18 +185,6 @@ export function Sidebar({ actionButtons }: { actionButtons?: React.ReactNode }) 
           {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
       </div>
-      
-      {/* Action Buttons Section - For admin buttons */}
-      {actionButtons && (
-        <div className="px-3 py-4 border-b border-border">
-          <div className={cn(
-            "space-y-2",
-            isCollapsed ? "hidden" : "hidden lg:block"
-          )}>
-            {actionButtons}
-          </div>
-        </div>
-      )}
       
       {/* Main Navigation */}
       <div className="flex-1 overflow-y-auto py-4 px-3">

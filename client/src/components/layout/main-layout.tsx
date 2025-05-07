@@ -4,41 +4,35 @@ import { Sidebar } from "./sidebar";
 
 interface MainLayoutProps {
   children: React.ReactNode;
+  title?: string;
   showSidebarTrigger?: boolean;
-  actionButtons?: React.ReactNode;
-  pageHeader?: React.ReactNode;
+  headerContent?: React.ReactNode;
 }
 
 export function MainLayout({ 
   children, 
+  title = "Lexitra", 
   showSidebarTrigger = false,
-  actionButtons,
-  pageHeader
+  headerContent 
 }: MainLayoutProps) {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       {/* Sidebar */}
-      <Sidebar actionButtons={actionButtons} />
+      <Sidebar />
       
       {/* Main Content */}
       <div className="flex flex-col flex-1 overflow-hidden">
-        {/* Simple header with just icons */}
-        <Header showSidebarTrigger={showSidebarTrigger} />
+        <Header 
+          title={title} 
+          showSidebarTrigger={showSidebarTrigger}
+        >
+          {headerContent}
+        </Header>
         
         {/* Page Content */}
-        <div className="flex-1 overflow-auto">
-          {/* Optional Page Header Section */}
-          {pageHeader && (
-            <div className="border-b border-border bg-card/50 py-4 px-6">
-              {pageHeader}
-            </div>
-          )}
-          
-          {/* Main Content Area */}
-          <div className="p-6">
-            {children}
-          </div>
+        <div className="flex-1 overflow-auto p-6">
+          {children}
         </div>
       </div>
     </div>
