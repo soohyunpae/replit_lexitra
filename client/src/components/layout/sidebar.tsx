@@ -274,66 +274,7 @@ export function Sidebar() {
         </div>
       )}
       
-      {/* Settings Section */}
-      <div className="p-3 border-t border-border">
-        <Collapsible 
-          open={isSettingsOpen} 
-          onOpenChange={setIsSettingsOpen}
-          className="w-full"
-        >
-          <div className="flex items-center justify-between">
-            <h2 className={cn(
-              "font-medium text-sidebar-foreground text-xs",
-              isCollapsed ? "hidden" : "hidden lg:block"
-            )}>Language Settings</h2>
-            <div className="w-full flex justify-center lg:w-auto lg:justify-end">
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <ChevronsUpDown className="h-4 w-4" />
-                </Button>
-              </CollapsibleTrigger>
-            </div>
-          </div>
-          
-          <CollapsibleContent>
-            <div className="mt-3">
-              <div className="text-xs text-muted-foreground mb-1 text-center lg:text-left">Language Direction</div>
-              <div className="flex flex-col lg:flex-row bg-accent rounded-md p-1 w-full">
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
-                  className="flex-1 font-medium text-xs mb-1 lg:mb-0"
-                  onClick={() => {
-                    // In the future, this could open a dropdown to select source language
-                  }}
-                >
-                  {sourceLanguage}
-                </Button>
-                <div className="flex items-center justify-center py-1 lg:py-0 lg:px-1">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="p-0 h-6 w-6" 
-                    onClick={swapLanguages}
-                  >
-                    <ChevronsUpDown className="h-4 w-4 rotate-90 lg:rotate-0 text-muted-foreground" />
-                  </Button>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="flex-1 font-medium text-muted-foreground text-xs"
-                  onClick={() => {
-                    // In the future, this could open a dropdown to select target language
-                  }}
-                >
-                  {targetLanguage}
-                </Button>
-              </div>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </div>
+      
     </aside>
     </SidebarContext.Provider>
   );
