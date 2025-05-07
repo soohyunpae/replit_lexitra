@@ -59,6 +59,7 @@ import {
 import { formatDate } from "@/lib/utils";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 // Form schema for adding/editing glossary terms
 const glossaryFormSchema = z.object({
@@ -363,11 +364,14 @@ export default function UnifiedGlossaryPage() {
 
   return (
     <MainLayout title="Glossary">
-      <div className="container max-w-screen-xl mx-auto">
-        {/* Page title and action buttons moved to content area */}
-        <div className="flex justify-between items-center mb-6 mt-2">
-          <h2 className="text-2xl font-bold">Glossary</h2>
-          
+      <div className="container max-w-screen-xl mx-auto p-6">
+        {/* No breadcrumb - already in header */}
+
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-2">
+            <BookMarked className="h-5 w-5" />
+            <h2 className="text-3xl font-bold tracking-tight">Glossary</h2>
+          </div>
           {isAdmin && (
             <div className="flex gap-2">
               <input
@@ -384,23 +388,6 @@ export default function UnifiedGlossaryPage() {
                 className="hidden"
                 accept=".xlsx,.xls,.csv,.tmx,.tbx"
               />
-              <Button 
-                variant="outline" 
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-              >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload Glossary File
-                  </>
-                )}
-              </Button>
               <Dialog open={addTermDialogOpen} onOpenChange={setAddTermDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
@@ -408,164 +395,173 @@ export default function UnifiedGlossaryPage() {
                     Add Term
                   </Button>
                 </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Glossary Term</DialogTitle>
+                    <DialogDescription>
+                      Add a new term to your glossary database.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Form {...termForm}>
+                    <form onSubmit={termForm.handleSubmit(onSubmitTerm)} className="space-y-4">
+                      <FormField
+                        control={termForm.control}
+                        name="sourceLanguage"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Source Language</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select source language" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="en">English</SelectItem>
+                                <SelectItem value="ko">Korean</SelectItem>
+                                <SelectItem value="ja">Japanese</SelectItem>
+                                <SelectItem value="zh">Chinese</SelectItem>
+                                <SelectItem value="es">Spanish</SelectItem>
+                                <SelectItem value="fr">French</SelectItem>
+                                <SelectItem value="de">German</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={termForm.control}
+                        name="targetLanguage"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Target Language</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select target language" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="en">English</SelectItem>
+                                <SelectItem value="ko">Korean</SelectItem>
+                                <SelectItem value="ja">Japanese</SelectItem>
+                                <SelectItem value="zh">Chinese</SelectItem>
+                                <SelectItem value="es">Spanish</SelectItem>
+                                <SelectItem value="fr">French</SelectItem>
+                                <SelectItem value="de">German</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={termForm.control}
+                        name="resourceId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Glossary</FormLabel>
+                            <Select
+                              onValueChange={(value) => {
+                                field.onChange(
+                                  value === "none" ? undefined : parseInt(value),
+                                );
+                              }}
+                              defaultValue={field.value?.toString() || "none"}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select Glossary" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="none">No glossary</SelectItem>
+                                {glossaryResources.map((resource: any) => (
+                                  <SelectItem
+                                    key={resource.id}
+                                    value={resource.id.toString()}
+                                  >
+                                    {resource.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={termForm.control}
+                        name="source"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Source Term</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter source term" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={termForm.control}
+                        name="target"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Target Term</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter target term" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <DialogFooter>
+                        <Button
+                          type="submit"
+                          disabled={addGlossaryMutation.isPending}
+                        >
+                          {addGlossaryMutation.isPending ? "Adding..." : "Add Term"}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </Form>
+                </DialogContent>
               </Dialog>
+              <Button 
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <>Uploading...</>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Glossary File
+                  </>
+                )}
+              </Button>
             </div>
           )}
         </div>
-        
         <p className="text-muted-foreground mb-6">
-          Search and manage glossary terms
+          Search and manage glossary terms and resources
         </p>
-
-        {/* Dialog content for adding new terms */}
-        <Dialog open={addTermDialogOpen} onOpenChange={setAddTermDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Glossary Term</DialogTitle>
-              <DialogDescription>
-                Add a new term to your glossary database.
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...termForm}>
-              <form onSubmit={termForm.handleSubmit(onSubmitTerm)} className="space-y-4">
-                <FormField
-                  control={termForm.control}
-                  name="sourceLanguage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Source Language</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select source language" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="ko">Korean</SelectItem>
-                          <SelectItem value="ja">Japanese</SelectItem>
-                          <SelectItem value="zh">Chinese</SelectItem>
-                          <SelectItem value="es">Spanish</SelectItem>
-                          <SelectItem value="fr">French</SelectItem>
-                          <SelectItem value="de">German</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={termForm.control}
-                  name="targetLanguage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Target Language</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select target language" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="ko">Korean</SelectItem>
-                          <SelectItem value="ja">Japanese</SelectItem>
-                          <SelectItem value="zh">Chinese</SelectItem>
-                          <SelectItem value="es">Spanish</SelectItem>
-                          <SelectItem value="fr">French</SelectItem>
-                          <SelectItem value="de">German</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={termForm.control}
-                  name="resourceId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Glossary</FormLabel>
-                      <Select
-                        onValueChange={(value) => {
-                          field.onChange(
-                            value === "none" ? undefined : parseInt(value),
-                          );
-                        }}
-                        defaultValue={field.value?.toString() || "none"}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Glossary" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="none">No glossary</SelectItem>
-                          {glossaryResources.map((resource: any) => (
-                            <SelectItem
-                              key={resource.id}
-                              value={resource.id.toString()}
-                            >
-                              {resource.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={termForm.control}
-                  name="source"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Source Term</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter source term" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={termForm.control}
-                  name="target"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Target Term</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter target term" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <DialogFooter>
-                  <Button
-                    type="submit"
-                    disabled={addGlossaryMutation.isPending}
-                  >
-                    {addGlossaryMutation.isPending ? "Adding..." : "Add Term"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
         
-        {/* Glossary List Section - Moved to the top */}
+        {/* Glossary List Section - Now moved to the top */}
         <div className="bg-card border rounded-lg p-6 mb-8">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-2">
@@ -646,7 +642,7 @@ export default function UnifiedGlossaryPage() {
           </div>
         </div>
 
-        {/* Search Section - Now below Glossary List */}
+        {/* Search Section - Now moved below Glossary List */}
         <div className="bg-card border rounded-lg p-6 mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -659,10 +655,8 @@ export default function UnifiedGlossaryPage() {
                   className="ml-3 py-1 px-3 cursor-pointer hover:bg-muted/70 flex items-center gap-1"
                   onClick={() => setResourceFilter(undefined)}
                 >
-                  Resource: {
-                    glossaryResources.find((r: any) => r.id === resourceFilter)?.name || 'Unknown'
-                  }
-                  <X className="h-3 w-3 ml-1" />
+                  {glossaryResources.find((r: any) => r.id === resourceFilter)?.name}
+                  <X className="h-3.5 w-3.5 ml-1" />
                 </Badge>
               )}
             </div>
@@ -670,11 +664,10 @@ export default function UnifiedGlossaryPage() {
 
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="relative flex-grow">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                type="text"
                 placeholder="Search glossary terms..."
-                className="pl-10"
+                className="pl-8"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -684,10 +677,12 @@ export default function UnifiedGlossaryPage() {
               onValueChange={setSourceLanguageFilter}
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Source language" />
+                <SelectValue placeholder="Source Language" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all_source_languages">All Source Languages</SelectItem>
+                <SelectItem value="all_source_languages">
+                  All Source Languages
+                </SelectItem>
                 {languages.source.map((lang) => (
                   <SelectItem key={lang} value={lang}>
                     {lang.toUpperCase()}
@@ -700,10 +695,12 @@ export default function UnifiedGlossaryPage() {
               onValueChange={setTargetLanguageFilter}
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Target language" />
+                <SelectValue placeholder="Target Language" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all_target_languages">All Target Languages</SelectItem>
+                <SelectItem value="all_target_languages">
+                  All Target Languages
+                </SelectItem>
                 {languages.target.map((lang) => (
                   <SelectItem key={lang} value={lang}>
                     {lang.toUpperCase()}
@@ -713,27 +710,29 @@ export default function UnifiedGlossaryPage() {
             </Select>
           </div>
 
+          {/* Search Results */}
           <div className="rounded-md border overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Source Term</TableHead>
-                  <TableHead>Target Term</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Target</TableHead>
                   <TableHead>Languages</TableHead>
                   <TableHead>Glossary</TableHead>
+                  <TableHead>Added</TableHead>
                   {isAdmin && <TableHead className="text-right">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoadingTerms ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 5 : 4} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
                       Loading glossary terms...
                     </TableCell>
                   </TableRow>
                 ) : filteredGlossary.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 5 : 4} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
                       No glossary terms found
                     </TableCell>
                   </TableRow>
@@ -744,18 +743,19 @@ export default function UnifiedGlossaryPage() {
                       <TableCell>{term.target}</TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="text-xs text-muted-foreground">
-                            Source: {term.sourceLanguage.toUpperCase()}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            Target: {term.targetLanguage.toUpperCase()}
-                          </span>
+                          <span className="text-xs text-muted-foreground">Source: {term.sourceLanguage}</span>
+                          <span className="text-xs text-muted-foreground">Target: {term.targetLanguage}</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        {term.resourceId && glossaryResources ? 
-                          glossaryResources.find((r: any) => r.id === term.resourceId)?.name || "—"
-                          : "—"}
+                        {term.resourceId ? (
+                          glossaryResources.find((r: any) => r.id === term.resourceId)?.name || "Unknown"
+                        ) : (
+                          <span className="text-muted-foreground">None</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {formatDate(term.createdAt)}
                       </TableCell>
                       {isAdmin && (
                         <TableCell className="text-right">
@@ -774,7 +774,11 @@ export default function UnifiedGlossaryPage() {
               </TableBody>
             </Table>
           </div>
+
+          {/* No admin actions here - already in header */}
         </div>
+
+
       </div>
     </MainLayout>
   );
