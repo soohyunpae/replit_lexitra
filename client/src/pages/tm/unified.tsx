@@ -747,6 +747,7 @@ export default function UnifiedTranslationMemoryPage() {
                   <TableHead>Target</TableHead>
                   <TableHead>Project</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Origin</TableHead>
                   <TableHead>Added</TableHead>
                   <TableHead>Modified by</TableHead>
                   {isAdmin && <TableHead className="text-right">Actions</TableHead>}
@@ -755,13 +756,13 @@ export default function UnifiedTranslationMemoryPage() {
               <TableBody>
                 {isLoadingEntries ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={isAdmin ? 8 : 7} className="text-center py-8 text-muted-foreground">
                       Loading TM entries...
                     </TableCell>
                   </TableRow>
                 ) : filteredTM.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={isAdmin ? 8 : 7} className="text-center py-8 text-muted-foreground">
                       No translation memory entries found
                     </TableCell>
                   </TableRow>
@@ -797,6 +798,30 @@ export default function UnifiedTranslationMemoryPage() {
                           {entry.status === "Reviewed" && (
                             <span className="status-badge-reviewed px-2 py-0.5 rounded-full">
                               Reviewed
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="inline-flex px-2 py-1 rounded-full text-xs font-medium">
+                          {entry.origin === "MT" && (
+                            <span className="origin-badge-mt px-2 py-0.5 rounded-full">
+                              MT
+                            </span>
+                          )}
+                          {entry.origin === "Fuzzy" && (
+                            <span className="origin-badge-fuzzy px-2 py-0.5 rounded-full">
+                              Fuzzy
+                            </span>
+                          )}
+                          {entry.origin === "100%" && (
+                            <span className="origin-badge-100 px-2 py-0.5 rounded-full">
+                              100%
+                            </span>
+                          )}
+                          {entry.origin === "HT" && (
+                            <span className="origin-badge-ht px-2 py-0.5 rounded-full">
+                              HT
                             </span>
                           )}
                         </div>

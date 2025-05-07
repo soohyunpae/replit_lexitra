@@ -196,6 +196,23 @@
     @apply bg-gray-500 dark:bg-gray-500;
   }
   
+  /* Origin badges with light/dark variants */
+  .origin-badge-mt {
+    @apply bg-yellow-400/20 text-yellow-600 dark:bg-yellow-400/20 dark:text-yellow-400;
+  }
+  
+  .origin-badge-fuzzy {
+    @apply bg-orange-400/20 text-orange-600 dark:bg-orange-400/20 dark:text-orange-400;
+  }
+  
+  .origin-badge-100 {
+    @apply bg-green-400/20 text-green-600 dark:bg-green-400/20 dark:text-green-400;
+  }
+  
+  .origin-badge-ht {
+    @apply bg-purple-400/20 text-purple-600 dark:bg-purple-400/20 dark:text-purple-400;
+  }
+  
   /* Segment rows for translation alignment */
   .segment-row {
     @apply flex flex-col w-full min-h-[120px];
