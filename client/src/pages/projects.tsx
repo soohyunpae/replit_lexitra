@@ -461,6 +461,11 @@ export default function ProjectsPage() {
   const bulkClaimProjects = async () => {
     if (selectedProjects.length === 0) return;
     
+    // 확인 대화상자
+    if (!window.confirm(`Are you sure you want to claim ${selectedProjects.length} project(s)?`)) {
+      return;
+    }
+    
     try {
       for (const projectId of selectedProjects) {
         await claimProject.mutateAsync(projectId);
@@ -482,6 +487,11 @@ export default function ProjectsPage() {
   // 선택된 프로젝트 일괄 완료 처리
   const bulkCompleteProjects = async () => {
     if (selectedProjects.length === 0) return;
+    
+    // 확인 대화상자
+    if (!window.confirm(`Are you sure you want to mark ${selectedProjects.length} project(s) as completed?`)) {
+      return;
+    }
     
     try {
       for (const projectId of selectedProjects) {
