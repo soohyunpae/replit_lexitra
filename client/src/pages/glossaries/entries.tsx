@@ -116,15 +116,15 @@ export default function GlossaryEntriesPage() {
     },
   });
 
-  // Get TB resources
-  const { data: tbResources = [] } = useQuery({
+  // Get glossary resources
+  const { data: glossaryResources = [] } = useQuery({
     queryKey: ["/api/glossary/resources"],
     queryFn: async () => {
       try {
         const res = await apiRequest("GET", "/api/glossary/resources");
         return res.json();
       } catch (error) {
-        console.error("Error fetching TB resources:", error);
+        console.error("Error fetching glossary resources:", error);
         return [];
       }
     },
@@ -363,7 +363,7 @@ export default function GlossaryEntriesPage() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="none">No termbase</SelectItem>
-                          {tbResources.map((resource: any) => (
+                          {glossaryResources.map((resource: any) => (
                             <SelectItem
                               key={resource.id}
                               value={resource.id.toString()}
@@ -487,7 +487,7 @@ export default function GlossaryEntriesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all_resources">All Resources</SelectItem>
-                  {tbResources.map((resource: any) => (
+                  {glossaryResources.map((resource: any) => (
                     <SelectItem
                       key={resource.id}
                       value={resource.id.toString()}
