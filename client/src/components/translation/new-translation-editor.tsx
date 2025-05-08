@@ -231,24 +231,38 @@ export function NewTranslationEditor({
   };
   
   // Handle segment update
-  const handleSegmentUpdate = async (id: number, target: string, status = "MT", origin?: string) => {
+  const handleSegmentUpdate = async (id: number, target: string, status?: string, origin?: string) => {
     // Update segment in database
     try {
       // Find current segment to check if it was modified
       const currentSegment = localSegments.find(s => s.id === id);
-      const wasModified = currentSegment && currentSegment.target !== target;
+      if (!currentSegment) return;
+      
+      const wasModified = currentSegment.target !== target;
+      
+      // Use current status if not explicitly provided
+      const updatedStatus = status || currentSegment.status;
       
       // Set origin to HT if this is a human edit and it's marked as Reviewed
       // Only update origin if explicitly provided or if it's a human edit
       let updatedOrigin = origin;
       if (!updatedOrigin && wasModified) {
-        // If segment was manually edited, set origin to HT
-        updatedOrigin = (status === "Reviewed" || (currentSegment?.status === "Reviewed" && status === undefined)) 
+        // If segment was manually edited and the status is or will be Reviewed, set origin to HT
+        // Otherwise keep the current origin
+        const needsOriginChange = currentSegment.origin === "MT" || 
+                                 currentSegment.origin === "100%" || 
+                                 currentSegment.origin === "Fuzzy";
+                                 
+        updatedOrigin = (updatedStatus === "Reviewed" && needsOriginChange) 
           ? "HT" 
-          : currentSegment?.origin;
+          : currentSegment.origin;
       }
       
-      const payload: any = { target, status };
+      const payload: any = { 
+        target, 
+        status: updatedStatus 
+      };
+      
       if (updatedOrigin) {
         payload.origin = updatedOrigin;
       }
@@ -267,7 +281,7 @@ export function NewTranslationEditor({
           segment.id === id ? { 
             ...segment, 
             target, 
-            status,
+            status: updatedStatus, // Use updatedStatus instead of status
             origin: updatedOrigin || segment.origin,
             modified: true // Mark as modified
           } : segment
