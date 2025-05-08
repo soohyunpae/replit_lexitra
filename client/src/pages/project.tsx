@@ -20,6 +20,7 @@ import {
   Download as FileDownIcon,
   PlusCircle,
   File,
+  Pencil,
 } from "lucide-react";
 import {
   Card,
@@ -193,18 +194,32 @@ export default function Project() {
       );
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Reference files added",
         description: `${references.length} file(s) added successfully.`,
       });
       // 업로드 후 references 상태 초기화 (DB에서 관리하므로)
       setReferences([]);
+      
+      // 업로드 후 즉시 프로젝트 데이터와 파일 목록을 새로고침합니다
       queryClient.invalidateQueries({
         queryKey: [`/api/projects/${projectId}`],
       });
+      
+      // 새로운 참조 파일 즉시 표시
+      if (data && Array.isArray(data)) {
+        const newRefs = data.map((file: any) => ({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          addedAt: new Date().toISOString(),
+        }));
+        setSavedReferences((prev) => [...prev, ...newRefs]);
+      }
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("File upload error:", error);
       toast({
         title: "Error",
         description: "Failed to upload files. Please try again.",
