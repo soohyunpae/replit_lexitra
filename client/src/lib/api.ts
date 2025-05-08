@@ -1,5 +1,5 @@
 import { apiRequest } from "@/lib/queryClient";
-import { type TranslationUnit, type TranslationMemory, type Glossary } from "@/types";
+import { type TranslationUnit, type TranslationMemory, type Glossary, type Comment } from "@/types";
 
 // Helper function to download a file with authentication
 export async function downloadFile(url: string, filename: string): Promise<void> {

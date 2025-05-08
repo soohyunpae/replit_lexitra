@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { type TranslationMemory, type Glossary, type TranslationUnit, type Comment } from "@/types";
 import { apiRequest } from "@/lib/queryClient";
 import { searchGlossaryTerms, updateSegment, addComment } from "@/lib/api";
+import { useAuth } from "@/hooks/use-auth";
 
 interface SidePanelProps {
   tmMatches: TranslationMemory[];
@@ -213,14 +214,16 @@ export function SidePanel({
     }
   }, [selectedSegment]);
   
-  // Get the current username (temporary solution - in real app this should come from the auth system)
-  const getCurrentUsername = () => {
-    return "Soohyun"; // Hard-coded for now, should come from auth context in real app
-  };
+  // Get current user information from Auth context
+  const { user } = useAuth();
   
   // Add a new comment to the segment
   const handleAddComment = async () => {
     if (!selectedSegment || !commentText.trim()) return;
+    if (!user) {
+      alert("You need to be logged in to add comments");
+      return;
+    }
     
     setIsSavingComment(true);
     try {
@@ -228,7 +231,7 @@ export function SidePanel({
       const updatedSegment = await addComment(
         selectedSegment.id,
         commentText.trim(),
-        getCurrentUsername()
+        user.username // Get username from the authenticated user
       );
       
       // Clear the input field after successful add
