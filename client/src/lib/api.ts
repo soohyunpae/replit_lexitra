@@ -138,11 +138,10 @@ export async function updateSegment(
   }
 }
 
-// Add a comment to a segment
-export async function addComment(
+// Save comment to a segment (single comment)
+export async function saveComment(
   segmentId: number,
-  text: string,
-  username: string
+  comment: string
 ): Promise<TranslationUnit> {
   try {
     // First, get current segment
@@ -153,22 +152,12 @@ export async function addComment(
     
     const segment = await segmentResponse.json();
     
-    // Create a new comment
-    const newComment: Comment = {
-      username,
-      text,
-      timestamp: new Date().toISOString()
-    };
-    
-    // Prepare existing comments or create a new array
-    const comments = segment.comments ? [...segment.comments, newComment] : [newComment];
-    
-    // Update the segment
+    // Update the segment with single comment
     const response = await apiRequest(
       "PATCH",
       `/api/segments/${segmentId}`,
       { 
-        comments,
+        comment,
         // Keep other fields unchanged
         target: segment.target || "",
         status: segment.status
@@ -177,7 +166,7 @@ export async function addComment(
     
     return await response.json();
   } catch (error) {
-    console.error("Error adding comment:", error);
+    console.error("Error saving comment:", error);
     throw error;
   }
 }
