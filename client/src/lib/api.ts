@@ -1,6 +1,36 @@
 import { apiRequest } from "@/lib/queryClient";
 import { type TranslationUnit, type TranslationMemory, type Glossary } from "@/types";
 
+// Helper function to download a file with authentication
+export async function downloadFile(url: string, filename: string): Promise<void> {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+    }
+    
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(downloadUrl);
+    document.body.removeChild(a);
+    
+  } catch (error) {
+    console.error("Error downloading file:", error);
+    throw error;
+  }
+};
+
 // API functions for working with translations
 
 // Translate a segment with GPT, considering TM context and glossary terms

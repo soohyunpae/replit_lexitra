@@ -8,6 +8,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { formatDate, formatFileSize } from "@/lib/utils";
+import { downloadFile } from "@/lib/api";
 import { TranslationUnit } from "@/types";
 import { File as FileType } from "@shared/schema";
 import {
@@ -969,8 +970,18 @@ export default function Project() {
                             size="icon"
                             className="h-7 w-7"
                             onClick={() => {
-                              // 다운로드 링크 - 이제 인증 토큰이 필요하지 않음
-                              window.open(`/api/projects/${projectId}/references/${index}/download`, '_blank');
+                              // 새로 만든 API 헬퍼 함수를 이용해 다운로드 처리
+                              downloadFile(
+                                `/api/projects/${projectId}/references/${index}/download`,
+                                file.name || `reference-${index}.file`
+                              ).catch(err => {
+                                console.error('Download error:', err);
+                                toast({
+                                  title: "다운로드 실패",
+                                  description: "파일을 다운로드하는 중 오류가 발생했습니다",
+                                  variant: "destructive"
+                                });
+                              });
                             }}
                             title="Download file"
                           >
