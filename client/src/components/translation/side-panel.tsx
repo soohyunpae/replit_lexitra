@@ -1,35 +1,69 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, X, Database, Lightbulb, MessageSquare, History } from "lucide-react";
+import { Search, X, Database, Lightbulb, MessageSquare, History, FileSearch } from "lucide-react";
 import { type TranslationMemory, type Glossary, type TranslationUnit } from "@/types";
+import { apiRequest } from "@/lib/queryClient";
 
 interface SidePanelProps {
   tmMatches: TranslationMemory[];
   glossaryTerms: Glossary[];
   selectedSegment: TranslationUnit | null | undefined;
   onUseTranslation: (translation: string) => void;
+  sourceLanguage: string;
+  targetLanguage: string;
 }
 
 interface TmMatchProps {
   match: TranslationMemory;
   onUse: (translation: string) => void;
   sourceSimilarity: number;
+  highlightTerms?: string[];
 }
 
 // TM Match Component
-function TmMatch({ match, onUse, sourceSimilarity }: TmMatchProps) {
+function TmMatch({ match, onUse, sourceSimilarity, highlightTerms = [] }: TmMatchProps) {
+  // Function to highlight terms in the text
+  const highlightText = (text: string) => {
+    if (!highlightTerms.length) return text;
+    
+    // Create a regex to match any of the terms (case insensitive)
+    const regex = new RegExp(`(${highlightTerms.map(term => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
+    
+    // Return the original text if no matches
+    if (!regex.test(text)) return text;
+    
+    // Split the text on matches and create spans with highlights
+    const parts = text.split(regex);
+    return (
+      <>
+        {parts.map((part, i) => {
+          // Check if part matches any term (case insensitive)
+          const isMatch = highlightTerms.some(term => 
+            part.toLowerCase() === term.toLowerCase()
+          );
+          
+          return isMatch ? (
+            <span key={i} className="bg-yellow-200 dark:bg-yellow-800 rounded px-1">{part}</span>
+          ) : (
+            <span key={i}>{part}</span>
+          );
+        })}
+      </>
+    );
+  };
+  
   return (
     <div className="bg-accent/50 rounded-md p-3">
       <div className="flex justify-between items-center mb-1">
-        <div className="font-mono font-medium">{match.source}</div>
+        <div className="font-mono font-medium">{highlightText(match.source)}</div>
         <div className="text-xs text-muted-foreground">
           <span className="font-semibold">{sourceSimilarity}%</span> · {match.sourceLanguage} → {match.targetLanguage}
         </div>
       </div>
       <div className="flex justify-between items-center">
-        <div className="font-mono text-muted-foreground">{match.target}</div>
+        <div className="font-mono text-muted-foreground">{highlightText(match.target)}</div>
         <Button 
           size="sm" 
           variant="ghost" 
@@ -43,15 +77,136 @@ function TmMatch({ match, onUse, sourceSimilarity }: TmMatchProps) {
   );
 }
 
+// Glossary Term Component
+function GlossaryTerm({ term, onUse }: { term: Glossary, onUse: (term: string) => void }) {
+  return (
+    <div className="bg-accent/50 rounded-md p-3">
+      <div className="flex justify-between items-center mb-1">
+        <div className="font-mono font-medium">{term.source}</div>
+        <div className="text-xs text-muted-foreground">
+          {term.sourceLanguage} → {term.targetLanguage}
+        </div>
+      </div>
+      <div className="flex justify-between items-center">
+        <div className="font-mono text-muted-foreground">{term.target}</div>
+        <Button 
+          size="sm" 
+          variant="ghost" 
+          className="h-6 text-xs" 
+          onClick={() => onUse(term.target)}
+        >
+          Use Term
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function SidePanel({
   tmMatches = [],
   glossaryTerms = [],
   selectedSegment,
-  onUseTranslation
+  onUseTranslation,
+  sourceLanguage,
+  targetLanguage
 }: SidePanelProps) {
   const [activeTab, setActiveTab] = useState("tm");
   const [tmSearchQuery, setTmSearchQuery] = useState("");
   const [tbSearchQuery, setTbSearchQuery] = useState("");
+  const [globalTmResults, setGlobalTmResults] = useState<TranslationMemory[]>([]);
+  const [globalGlossaryResults, setGlobalGlossaryResults] = useState<Glossary[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  
+  // Function to search TM globally
+  const searchGlobalTM = async (query: string) => {
+    if (!query.trim()) {
+      setGlobalTmResults([]);
+      return;
+    }
+    
+    setIsSearching(true);
+    try {
+      const response = await apiRequest(
+        "POST", 
+        "/api/search_tm", 
+        { 
+          source: query,
+          sourceLanguage,
+          targetLanguage,
+          limit: 10,
+          fuzzy: true
+        }
+      );
+      
+      const data = await response.json();
+      setGlobalTmResults(data);
+    } catch (error) {
+      console.error("Error searching TM globally:", error);
+      setGlobalTmResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  
+  // Function to search glossary globally
+  const searchGlobalGlossary = async (query: string) => {
+    if (!query.trim()) {
+      setGlobalGlossaryResults([]);
+      return;
+    }
+    
+    setIsSearching(true);
+    try {
+      const response = await apiRequest(
+        "GET", 
+        `/api/glossary/search?query=${encodeURIComponent(query)}&sourceLanguage=${sourceLanguage}&targetLanguage=${targetLanguage}`
+      );
+      
+      const data = await response.json();
+      setGlobalGlossaryResults(data);
+    } catch (error) {
+      console.error("Error searching glossary globally:", error);
+      setGlobalGlossaryResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  
+  // Debounced global search when query changes
+  useEffect(() => {
+    const delaySearch = setTimeout(() => {
+      if (activeTab === "tm" && tmSearchQuery.length >= 2) {
+        searchGlobalTM(tmSearchQuery);
+      }
+    }, 500);
+    
+    return () => clearTimeout(delaySearch);
+  }, [tmSearchQuery, activeTab, sourceLanguage, targetLanguage]);
+  
+  // Debounced global glossary search
+  useEffect(() => {
+    const delaySearch = setTimeout(() => {
+      if (activeTab === "tb" && tbSearchQuery.length >= 2) {
+        searchGlobalGlossary(tbSearchQuery);
+      }
+    }, 500);
+    
+    return () => clearTimeout(delaySearch);
+  }, [tbSearchQuery, activeTab, sourceLanguage, targetLanguage]);
+  
+  // Clear search results when switching tabs
+  useEffect(() => {
+    setGlobalTmResults([]);
+    setGlobalGlossaryResults([]);
+  }, [activeTab]);
+  
+  // Determine which TM matches to display
+  const displayedTmMatches = tmSearchQuery.length >= 2 
+    ? globalTmResults 
+    : tmMatches;
+    
+  // Get glossary terms for highlighting in TM matches
+  const glossarySourceTerms = glossaryTerms.map(term => term.source);
   
   return (
     <aside className="w-80 border-l border-border bg-card overflow-hidden flex flex-col">
@@ -92,44 +247,50 @@ export function SidePanel({
                   value={tmSearchQuery}
                   onChange={(e) => setTmSearchQuery(e.target.value)}
                 />
-                <button 
-                  className="absolute right-2 top-2 text-muted-foreground hover:text-foreground transition-colors"
+                <div 
+                  className={`absolute right-2 top-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer ${isSearching ? 'animate-spin' : ''}`}
                   onClick={() => setTmSearchQuery("")}
                 >
-                  {tmSearchQuery ? <X className="h-4 w-4" /> : <Search className="h-4 w-4" />}
-                </button>
+                  {isSearching ? (
+                    <FileSearch className="h-4 w-4" />
+                  ) : tmSearchQuery ? (
+                    <X className="h-4 w-4" />
+                  ) : (
+                    <Search className="h-4 w-4" />
+                  )}
+                </div>
               </div>
+              {tmSearchQuery.length > 0 && tmSearchQuery.length < 2 && (
+                <p className="text-xs text-muted-foreground mt-1">Type at least 2 characters to search</p>
+              )}
             </div>
             
-            {selectedSegment && (
+            {selectedSegment && !tmSearchQuery && (
               <div className="mb-4">
                 <div className="text-xs font-semibold mb-1 text-muted-foreground">Active Segment</div>
                 <div className="text-sm mb-2 bg-accent/50 p-2 rounded font-mono">{selectedSegment.source}</div>
               </div>
             )}
             
-            {tmMatches.length > 0 ? (
+            {displayedTmMatches.length > 0 ? (
               <div className="space-y-4">
-                {tmMatches
-                  .filter(match => 
-                    !tmSearchQuery || 
-                    match.source.toLowerCase().includes(tmSearchQuery.toLowerCase()) ||
-                    match.target.toLowerCase().includes(tmSearchQuery.toLowerCase())
-                  )
-                  .map((match, index) => (
-                    <TmMatch 
-                      key={index} 
-                      match={match} 
-                      onUse={onUseTranslation} 
-                      sourceSimilarity={
-                        selectedSegment && match.source === selectedSegment.source ? 100 : 85
-                      }
-                    />
-                  ))}
+                {displayedTmMatches.map((match, index) => (
+                  <TmMatch 
+                    key={index} 
+                    match={match} 
+                    onUse={onUseTranslation} 
+                    sourceSimilarity={
+                      selectedSegment && match.source === selectedSegment.source ? 100 : 85
+                    }
+                    highlightTerms={glossarySourceTerms}
+                  />
+                ))}
               </div>
             ) : (
               <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground">
-                {tmSearchQuery 
+                {isSearching ? (
+                  "Searching translation memory..."
+                ) : tmSearchQuery 
                   ? "No matches found for your search." 
                   : "No TM matches found for this segment."}
               </div>
@@ -149,13 +310,22 @@ export function SidePanel({
                   value={tbSearchQuery}
                   onChange={(e) => setTbSearchQuery(e.target.value)}
                 />
-                <button 
-                  className="absolute right-2 top-2 text-muted-foreground hover:text-foreground transition-colors"
+                <div 
+                  className={`absolute right-2 top-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer ${isSearching ? 'animate-spin' : ''}`}
                   onClick={() => setTbSearchQuery("")}
                 >
-                  {tbSearchQuery ? <X className="h-4 w-4" /> : <Search className="h-4 w-4" />}
-                </button>
+                  {isSearching ? (
+                    <FileSearch className="h-4 w-4" />
+                  ) : tbSearchQuery ? (
+                    <X className="h-4 w-4" />
+                  ) : (
+                    <Search className="h-4 w-4" />
+                  )}
+                </div>
               </div>
+              {tbSearchQuery.length > 0 && tbSearchQuery.length < 2 && (
+                <p className="text-xs text-muted-foreground mt-1">Type at least 2 characters to search</p>
+              )}
             </div>
             
             {selectedSegment && !tbSearchQuery && (
@@ -165,42 +335,30 @@ export function SidePanel({
               </div>
             )}
             
-            {glossaryTerms.length > 0 ? (
-              <div className="space-y-3">
-                {glossaryTerms
-                  .filter(term => 
-                    !tbSearchQuery || 
-                    term.source.toLowerCase().includes(tbSearchQuery.toLowerCase()) ||
-                    term.target.toLowerCase().includes(tbSearchQuery.toLowerCase())
-                  )
-                  .map((term, index) => (
-                    <div key={index} className="bg-accent/50 rounded-md p-3">
-                      <div className="flex justify-between items-center mb-1">
-                        <div className="font-mono font-medium">{term.source}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {term.sourceLanguage} → {term.targetLanguage}
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <div className="font-mono text-muted-foreground">{term.target}</div>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="h-6 text-xs" 
-                          onClick={() => onUseTranslation(term.target)}
-                        >
-                          Use Term
-                        </Button>
-                      </div>
-                    </div>
+            {tbSearchQuery.length >= 2 ? (
+              globalGlossaryResults.length > 0 ? (
+                <div className="space-y-3">
+                  {globalGlossaryResults.map((term, index) => (
+                    <GlossaryTerm key={index} term={term} onUse={onUseTranslation} />
                   ))}
-              </div>
+                </div>
+              ) : (
+                <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground">
+                  {isSearching ? "Searching terminology..." : "No terms found for your search."}
+                </div>
+              )
             ) : (
-              <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground">
-                {tbSearchQuery 
-                  ? "No terms found for your search." 
-                  : "No matching terms found in the glossary for this segment."}
-              </div>
+              glossaryTerms.length > 0 ? (
+                <div className="space-y-3">
+                  {glossaryTerms.map((term, index) => (
+                    <GlossaryTerm key={index} term={term} onUse={onUseTranslation} />
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground">
+                  No matching terms found in the glossary for this segment.
+                </div>
+              )
             )}
           </div>
         </TabsContent>

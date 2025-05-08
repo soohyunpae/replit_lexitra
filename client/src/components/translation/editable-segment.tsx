@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Pencil, Check, X, Languages } from "lucide-react";
+import { Check, X, Languages } from "lucide-react";
 import { TranslationUnit, StatusType, OriginType } from "@/types";
 
 interface EditableSegmentProps {
@@ -28,45 +28,30 @@ export function EditableSegment({
   isChecked,
   onCheckChange
 }: EditableSegmentProps) {
-  // Source is not editable, target is always editable
-  const [isEditing, setIsEditing] = useState(!isSource);
+  // Source is not editable, target is always directly editable
   const [value, setValue] = useState(isSource ? segment.source : segment.target || "");
-  const [isModified, setIsModified] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
-  // Auto-focus textarea when editing starts
+  // Auto-focus textarea when selected
   useEffect(() => {
-    if (isEditing && textareaRef.current) {
+    if (!isSource && isSelected && textareaRef.current) {
       textareaRef.current.focus();
     }
-  }, [isEditing]);
+  }, [isSelected, isSource]);
   
   // Handle edit completion and set as Reviewed with HT (Human Translation) origin
   const handleSave = () => {
     if (!isSource && onUpdate) {
       // Mark as Reviewed and set origin to HT when saving after human edit
-      onUpdate(value, "Reviewed", isModified ? "HT" : segment.origin);
+      const isValueChanged = value !== segment.target;
+      onUpdate(value, "Reviewed", isValueChanged ? "HT" : segment.origin);
     }
-    setIsEditing(false);
   };
   
-  // Handle edit cancellation
-  const handleCancel = () => {
-    setValue(isSource ? segment.source : segment.target || "");
-    setIsEditing(false);
-  };
-  
-  // Auto-resize textarea as content grows and track modifications
+  // Auto-resize textarea as content grows
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setValue(newValue);
-    
-    // Check if translation has been modified from its original state
-    if (segment.target && newValue !== segment.target) {
-      setIsModified(true);
-    } else {
-      setIsModified(false);
-    }
     
     // Resize textarea to fit content
     if (textareaRef.current) {
@@ -151,28 +136,19 @@ export function EditableSegment({
                   {segment.origin}
                 </span>
               )}
-              {isModified && (
-                <span className="text-xs px-1.5 py-0.5 rounded-md bg-amber-200 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
-                  Modified
-                </span>
-              )}
+              {/* Removed the Modified badge as per requirements */}
             </div>
           )}
         </div>
         
         {!isSource && (
           <div className="flex space-x-1">
-            {isEditing && (
-              <>
-                <Button variant="ghost" size="sm" onClick={handleSave} className="h-7 w-7 p-0">
-                  <Check className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={handleCancel} className="h-7 w-7 p-0">
-                  <X className="h-4 w-4" />
-                </Button>
-              </>
+            {isSelected && (
+              <Button variant="ghost" size="sm" onClick={handleSave} className="h-7 w-7 p-0">
+                <Check className="h-4 w-4" />
+              </Button>
             )}
-            {!isEditing && onTranslateWithGPT && !segment.target && (
+            {!segment.target && onTranslateWithGPT && (
               <Button variant="ghost" size="sm" onClick={onTranslateWithGPT} className="h-7 w-7 p-0">
                 <Languages className="h-4 w-4" />
               </Button>
@@ -181,13 +157,14 @@ export function EditableSegment({
         )}
       </div>
       
-      {isEditing && !isSource ? (
+      {!isSource ? (
         <Textarea
           ref={textareaRef}
           value={value}
           onChange={handleTextareaChange}
           className="min-h-[60px] font-mono resize-none focus-visible:ring-offset-0 focus-visible:ring-1 overflow-hidden no-scrollbar"
           placeholder="Enter translation..."
+          disabled={!isSelected}
         />
       ) : (
         <div className="font-mono text-sm whitespace-pre-wrap break-words min-h-[60px] h-full w-full">
