@@ -15,6 +15,7 @@ interface SidePanelProps {
   onUseTranslation: (translation: string) => void;
   sourceLanguage: string;
   targetLanguage: string;
+  onSegmentUpdated?: (id: number, newTarget: string) => void;
 }
 
 interface TmMatchProps {
@@ -114,7 +115,8 @@ export function SidePanel({
   selectedSegment,
   onUseTranslation,
   sourceLanguage,
-  targetLanguage
+  targetLanguage,
+  onSegmentUpdated
 }: SidePanelProps) {
   const [activeTab, setActiveTab] = useState("tm");
   const [tmSearchQuery, setTmSearchQuery] = useState("");
@@ -122,6 +124,7 @@ export function SidePanel({
   const [globalTmResults, setGlobalTmResults] = useState<TranslationMemory[]>([]);
   const [globalGlossaryResults, setGlobalGlossaryResults] = useState<Glossary[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [previousVersions, setPreviousVersions] = useState<Record<number, string>>({});
   
   // Function to search TM globally
   const searchGlobalTM = async (query: string) => {
@@ -201,6 +204,20 @@ export function SidePanel({
     setGlobalTmResults([]);
     setGlobalGlossaryResults([]);
   }, [activeTab]);
+  
+  // Store previous version when a segment is selected or changes
+  useEffect(() => {
+    if (selectedSegment && selectedSegment.id) {
+      // Check if we don't have this segment's previous version yet
+      if (!previousVersions[selectedSegment.id]) {
+        // Store the initial version when first selecting
+        setPreviousVersions(prev => ({
+          ...prev,
+          [selectedSegment.id]: selectedSegment.target || ""
+        }));
+      }
+    }
+  }, [selectedSegment]);
   
   // Determine which TM matches to display
   const displayedTmMatches = tmSearchQuery.length >= 2 
@@ -420,21 +437,33 @@ export function SidePanel({
                     </div>
                   </div>
                   
-                  <div className="border border-muted rounded-md overflow-hidden opacity-60">
-                    <div className="bg-muted/30 px-3 py-2 border-b border-border flex justify-between items-center">
-                      <div className="text-xs font-medium">Previous Version</div>
-                      <div className="text-xs text-muted-foreground">
-                        <span className="font-semibold">Draft</span> • 
-                        <span className="font-semibold ml-1">MT</span>
+                  {/* Only display previous version if it exists and is different from current version */}
+                  {selectedSegment.id && previousVersions[selectedSegment.id] && previousVersions[selectedSegment.id] !== selectedSegment.target ? (
+                    <div className="border border-muted rounded-md overflow-hidden opacity-80">
+                      <div className="bg-muted/30 px-3 py-2 border-b border-border flex justify-between items-center">
+                        <div className="text-xs font-medium">Previous Version</div>
+                        <div className="text-xs text-muted-foreground">
+                          <span className="font-semibold">{selectedSegment.status === 'Reviewed' ? 'Draft' : selectedSegment.status}</span>
+                          {selectedSegment.origin && (
+                            <>
+                              <span className="mx-1">•</span>
+                              <span className="font-semibold">{selectedSegment.origin === 'HT' ? 'MT' : selectedSegment.origin}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div className="p-3">
+                        <div className="font-mono text-xs">{previousVersions[selectedSegment.id] || "(No translation)"}</div>
+                        <div className="text-xs text-muted-foreground mt-2">
+                          Last edited: {new Date().toLocaleString()}
+                        </div>
                       </div>
                     </div>
-                    <div className="p-3">
-                      <div className="font-mono text-xs">{selectedSegment.target || "(No translation)"}</div>
-                      <div className="text-xs text-muted-foreground mt-2">
-                        Created: {new Date(selectedSegment.createdAt).toLocaleString()}
-                      </div>
+                  ) : (
+                    <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center">
+                      No previous versions available for this segment. Previous versions will appear when you edit and save a segment.
                     </div>
-                  </div>
+                  )}
                 </>
               ) : (
                 <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center">
