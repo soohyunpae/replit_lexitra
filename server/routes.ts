@@ -24,7 +24,8 @@ function ensureDirectories() {
   const directories = [
     path.join(REPO_ROOT, 'uploads'),
     path.join(REPO_ROOT, 'uploads', 'tmp'),
-    path.join(REPO_ROOT, 'uploads', 'processed')
+    path.join(REPO_ROOT, 'uploads', 'processed'),
+    path.join(REPO_ROOT, 'uploads', 'references')
   ];
   
   for (const dir of directories) {
@@ -45,7 +46,7 @@ function ensureDirectories() {
 // 시작 시 디렉토리 확인
 ensureDirectories();
 
-// 파일 업로드를 위한 multer 설정
+// 일반 파일 업로드를 위한 multer 설정
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadDir = path.join(REPO_ROOT, 'uploads', 'tmp');
@@ -65,9 +66,36 @@ const storage = multer.diskStorage({
   }
 });
 
+// 참조 파일 업로드를 위한 multer 설정
+const referenceStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(REPO_ROOT, 'uploads', 'references');
+    // 업로드 직전에 디렉토리 확인
+    if (!fs.existsSync(uploadDir)) {
+      console.log(`Creating references directory for upload: ${uploadDir}`);
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    // projectId를 파일명에 포함시켜 저장
+    const projectId = req.params.id;
+    // 원본 파일명을 유지하면서 고유성 보장
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const filename = `${projectId}_${uniqueSuffix}_${file.originalname}`;
+    console.log(`Generated reference filename: ${filename}`);
+    cb(null, filename);
+  }
+});
+
 const upload = multer({ 
   storage: storage,
   limits: { fileSize: 200 * 1024 * 1024 } // 200MB 제한 (50MB에서 증가)
+});
+
+const referenceUpload = multer({
+  storage: referenceStorage,
+  limits: { fileSize: 200 * 1024 * 1024 } // 200MB 제한
 });
 
 // Helper function for calculating text similarity
@@ -1534,7 +1562,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // 프로젝트 참조 파일 저장 API
+  // 프로젝트 참조 파일 메타데이터 저장 API (기존 호환성 유지)
   app.post(`${apiPrefix}/projects/:id/references`, verifyToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1601,6 +1629,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // 실제 파일을 업로드하는 API 엔드포인트
+  app.post(`${apiPrefix}/projects/:id/references/upload`, verifyToken, referenceUpload.array('files'), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.user!.id;
+      const userRole = req.user!.role;
+      
+      // 업로드된 파일 확인
+      const files = req.files as Express.Multer.File[];
+      if (!files || files.length === 0) {
+        return res.status(400).json({ message: 'No files uploaded' });
+      }
+      
+      // 프로젝트가 존재하는지 확인
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, id)
+      });
+      
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      // admin 권한 체크
+      if (userRole !== 'admin') {
+        // 업로드된 파일 삭제
+        for (const file of files) {
+          try {
+            fs.unlinkSync(file.path);
+          } catch (err) {
+            console.error(`Failed to delete unauthorized upload: ${file.path}`, err);
+          }
+        }
+        return res.status(403).json({ message: 'Only admins can add reference files' });
+      }
+      
+      // 현재 참조 파일 메타데이터 가져오기
+      let existingReferences = [];
+      if (project.references) {
+        try {
+          existingReferences = JSON.parse(project.references);
+        } catch (e) {
+          console.warn('Failed to parse existing references:', e);
+        }
+      }
+      
+      // 파일에서 메타데이터 추출
+      const fileMetadata = files.map(file => ({
+        name: file.originalname,
+        size: file.size,
+        type: file.mimetype,
+        filename: file.filename, // 저장된 실제 파일명 포함
+        path: file.path, // 실제 저장 경로 (관리용, 클라이언트에게는 반환되지 않음)
+        addedAt: new Date().toISOString()
+      }));
+      
+      // 참조 파일 메타데이터 업데이트
+      const updatedReferences = [
+        ...existingReferences,
+        ...fileMetadata
+      ];
+      
+      // 프로젝트 업데이트
+      const [updatedProject] = await db
+        .update(schema.projects)
+        .set({
+          references: JSON.stringify(updatedReferences),
+          updatedAt: new Date()
+        })
+        .where(eq(schema.projects.id, id))
+        .returning();
+      
+      // 클라이언트에게 필요한 정보만 반환
+      const clientMetadata = fileMetadata.map(({ name, size, type, addedAt }) => ({
+        name,
+        size,
+        type,
+        addedAt
+      }));
+      
+      return res.status(200).json(clientMetadata);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
   // 프로젝트 참조 파일 삭제 API
   app.delete(`${apiPrefix}/projects/:id/references/:index`, verifyToken, async (req, res) => {
     try {
@@ -1639,7 +1752,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Reference file not found' });
       }
       
-      // 해당 인덱스의 참조 파일 제거
+      // 삭제할 파일의 메타데이터 저장
+      const fileToDelete = references[index];
+      
+      // 실제 파일이 있는 경우 (filename 필드가 존재) 삭제
+      if (fileToDelete.filename) {
+        const filePath = fileToDelete.path || path.join(REPO_ROOT, 'uploads', 'references', fileToDelete.filename);
+        try {
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`실제 파일 삭제 완료: ${filePath}`);
+          } else {
+            console.warn(`삭제할 파일을 찾지 못함: ${filePath}`);
+          }
+        } catch (err) {
+          console.error('파일 삭제 중 오류 발생:', err);
+        }
+      }
+      
+      // 참조 파일 메타데이터에서 제거
       references.splice(index, 1);
       
       // 프로젝트 업데이트
@@ -1713,31 +1844,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.setHeader('Access-Control-Allow-Methods', 'GET');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
       
-      // 파일 타입에 따라 적절한 내용 생성
-      let fileContent;
-      
-      if (fileType.startsWith('image/')) {
-        // 이미지 파일인 경우 간단한 이미지 데이터 생성 (1x1 픽셀 투명 PNG)
-        if (fileType === 'image/png') {
-          // 1x1 투명 PNG 파일 (Base64)
-          const transparentPngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
-          fileContent = Buffer.from(transparentPngBase64, 'base64');
-        } else if (fileType === 'image/jpeg' || fileType === 'image/jpg') {
-          // 1x1 흰색 JPEG 파일 (Base64)
-          const whiteJpegBase64 = '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigD//2Q==';
-          fileContent = Buffer.from(whiteJpegBase64, 'base64');
-        } else if (fileType === 'image/gif') {
-          // 1x1 투명 GIF 파일 (Base64)
-          const transparentGifBase64 = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-          fileContent = Buffer.from(transparentGifBase64, 'base64');
+      // 실제 파일이 존재하는지 확인 (filename 필드가 있는 경우)
+      if (file.filename) {
+        // 이전에 저장된 실제 파일 경로 확인
+        const filePath = file.path || path.join(REPO_ROOT, 'uploads', 'references', file.filename);
+        
+        console.log('실제 파일 다운로드 시도:', filePath);
+        
+        // 파일이 실제로 존재하는지 확인
+        if (fs.existsSync(filePath)) {
+          console.log('파일 존재함, 스트림으로 전송');
+          // 파일 스트림 생성하여 응답으로 전송
+          const fileStream = fs.createReadStream(filePath);
+          fileStream.pipe(res);
+          return;
         } else {
-          // 기타 이미지 형식은 PNG로 대체
-          const transparentPngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
-          fileContent = Buffer.from(transparentPngBase64, 'base64');
+          console.log('파일을 찾을 수 없음:', filePath);
+          // 파일이 없는 경우 에러 메시지 반환
+          return res.status(404).json({ message: 'File not found on server' });
         }
-      } else if (fileType === 'text/html') {
-        // HTML 파일인 경우
-        fileContent = `<!DOCTYPE html>
+      } else {
+        console.log('파일 경로 정보 없음, 가상 콘텐츠 생성');
+        
+        // 이전 버전과의 호환성을 위해 더미 데이터 생성 로직 유지
+        let fileContent;
+        
+        if (fileType.startsWith('image/')) {
+          // 이미지 파일인 경우 간단한 이미지 데이터 생성 (1x1 픽셀 투명 PNG)
+          if (fileType === 'image/png') {
+            // 1x1 투명 PNG 파일 (Base64)
+            const transparentPngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+            fileContent = Buffer.from(transparentPngBase64, 'base64');
+          } else if (fileType === 'image/jpeg' || fileType === 'image/jpg') {
+            // 1x1 흰색 JPEG 파일 (Base64)
+            const whiteJpegBase64 = '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigD//2Q==';
+            fileContent = Buffer.from(whiteJpegBase64, 'base64');
+          } else if (fileType === 'image/gif') {
+            // 1x1 투명 GIF 파일 (Base64)
+            const transparentGifBase64 = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+            fileContent = Buffer.from(transparentGifBase64, 'base64');
+          } else {
+            // 기타 이미지 형식은 PNG로 대체
+            const transparentPngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+            fileContent = Buffer.from(transparentPngBase64, 'base64');
+          }
+        } else if (fileType === 'text/html') {
+          // HTML 파일인 경우
+          fileContent = `<!DOCTYPE html>
 <html>
 <head>
   <title>${file.name}</title>
@@ -1750,36 +1903,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <p>참고: 이 파일은 참조용 메타데이터만 있는 더미 파일입니다.</p>
 </body>
 </html>`;
-      } else if (fileType === 'application/pdf') {
-        // PDF 파일을 위한 간단한 데이터 생성
-        // 매우 기본적인 PDF 구조 (실제 PDF 문서처럼 보이지 않을 수 있음)
-        const pdfData = '%PDF-1.4\n1 0 obj\n<</Type /Catalog /Pages 2 0 R>>\nendobj\n2 0 obj\n<</Type /Pages /Kids [3 0 R] /Count 1>>\nendobj\n3 0 obj\n<</Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R>>\nendobj\n4 0 obj\n<</Length 90>>\nstream\nBT\n/F1 12 Tf\n100 700 Td\n(This is a dummy PDF file for preview) Tj\n(File name: '+file.name+') \'\nET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f\n0000000010 00000 n\n0000000056 00000 n\n0000000111 00000 n\n0000000198 00000 n\ntrailer\n<</Size 5 /Root 1 0 R>>\nstartxref\n288\n%%EOF';
-        fileContent = Buffer.from(pdfData);
-      } else if (fileType === 'text/plain' || fileType.startsWith('text/')) {
-        // 텍스트 파일인 경우
-        fileContent = `이 파일은 ${file.name}입니다.\n` +
-                     `크기: ${file.size || 'N/A'}\n` +
-                     `추가된 날짜: ${file.addedAt || 'N/A'}\n\n` +
-                     `참고: 이 파일은 참조용 메타데이터만 있는 더미 파일입니다.`;
-      } else if (fileType === 'application/json') {
-        // JSON 파일인 경우
-        const jsonData = {
-          fileName: file.name,
-          fileSize: file.size || 'N/A',
-          addedAt: file.addedAt || 'N/A',
-          description: '이 파일은 참조용 메타데이터만 있는 더미 파일입니다.'
-        };
-        fileContent = JSON.stringify(jsonData, null, 2);
-      } else {
-        // 기타 모든 파일 형식에 대한 기본 텍스트 내용
-        fileContent = `이 파일은 ${file.name}입니다.\n` +
-                     `크기: ${file.size || 'N/A'}\n` +
-                     `추가된 날짜: ${file.addedAt || 'N/A'}\n\n` +
-                     `참고: 이 파일은 참조용 메타데이터만 있는 더미 파일입니다.`;
+        } else if (fileType === 'application/pdf') {
+          // PDF 파일을 위한 간단한 데이터 생성
+          // 매우 기본적인 PDF 구조 (실제 PDF 문서처럼 보이지 않을 수 있음)
+          const pdfData = '%PDF-1.4\n1 0 obj\n<</Type /Catalog /Pages 2 0 R>>\nendobj\n2 0 obj\n<</Type /Pages /Kids [3 0 R] /Count 1>>\nendobj\n3 0 obj\n<</Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R>>\nendobj\n4 0 obj\n<</Length 90>>\nstream\nBT\n/F1 12 Tf\n100 700 Td\n(This is a dummy PDF file for preview) Tj\n(File name: '+file.name+') \'\nET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f\n0000000010 00000 n\n0000000056 00000 n\n0000000111 00000 n\n0000000198 00000 n\ntrailer\n<</Size 5 /Root 1 0 R>>\nstartxref\n288\n%%EOF';
+          fileContent = Buffer.from(pdfData);
+        } else if (fileType === 'text/plain' || fileType.startsWith('text/')) {
+          // 텍스트 파일인 경우
+          fileContent = `이 파일은 ${file.name}입니다.\n` +
+                       `크기: ${file.size || 'N/A'}\n` +
+                       `추가된 날짜: ${file.addedAt || 'N/A'}\n\n` +
+                       `참고: 이 파일은 참조용 메타데이터만 있는 더미 파일입니다.`;
+        } else if (fileType === 'application/json') {
+          // JSON 파일인 경우
+          const jsonData = {
+            fileName: file.name,
+            fileSize: file.size || 'N/A',
+            addedAt: file.addedAt || 'N/A',
+            description: '이 파일은 참조용 메타데이터만 있는 더미 파일입니다.'
+          };
+          fileContent = JSON.stringify(jsonData, null, 2);
+        } else {
+          // 기타 모든 파일 형식에 대한 기본 텍스트 내용
+          fileContent = `이 파일은 ${file.name}입니다.\n` +
+                       `크기: ${file.size || 'N/A'}\n` +
+                       `추가된 날짜: ${file.addedAt || 'N/A'}\n\n` +
+                       `참고: 이 파일은 참조용 메타데이터만 있는 더미 파일입니다.`;
+        }
+        
+        console.log('가상 콘텐츠 생성 완료, 타입:', fileType);
+        return res.send(fileContent);
       }
-      
-      console.log('파일 다운로드 응답 전송 시작, 타입:', fileType);
-      return res.send(fileContent);
     } catch (error) {
       console.error('다운로드 처리 중 오류 발생:', error);
       return handleApiError(res, error);
