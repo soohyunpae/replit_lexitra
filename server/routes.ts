@@ -2718,6 +2718,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Delete TM entry by ID
+  app.delete(`${apiPrefix}/tm/:id`, verifyToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid ID format' });
+      }
+      
+      // Check if entry exists
+      const entry = await db.query.translationMemory.findFirst({
+        where: eq(schema.translationMemory.id, id)
+      });
+      
+      if (!entry) {
+        return res.status(404).json({ message: 'Translation memory entry not found' });
+      }
+      
+      // Delete the entry
+      await db.delete(schema.translationMemory).where(eq(schema.translationMemory.id, id));
+      
+      return res.json({ message: 'Translation memory entry deleted successfully' });
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
   const httpServer = createServer(app);
   return httpServer;
 }
