@@ -335,13 +335,20 @@ function registerAdminRoutes(app: Express) {
       console.log("TB File upload received:", req.file.originalname, "Size:", req.file.size, "bytes");
       
       const file = req.file;
-      const { sourceLanguage = 'EN', targetLanguage = 'KO' } = req.body;
+      // Make sure to provide defaults if values are not sent
+      const sourceLanguage = req.body.sourceLanguage || 'ko';
+      const targetLanguage = req.body.targetLanguage || 'en';
+      const domain = req.body.domain || '';
+      
+      console.log(`Processing with sourceLanguage: ${sourceLanguage}, targetLanguage: ${targetLanguage}`);
       
       // Process the file based on its type
       try {
         let glossaryEntries = [];
-        let resourceName = file.originalname;
-        let domain = '';
+        let resourceName = req.body.name || `Glossary from ${file.originalname}`;
+        
+        console.log(`Using resource name: ${resourceName}`);
+        
         
         // Extract file extension
         const fileExt = path.extname(file.originalname).toLowerCase();
@@ -508,9 +515,10 @@ function registerAdminRoutes(app: Express) {
           resourceId,
           resourceName
         });
-      } catch (fileError) {
+      } catch (fileError: any) {
         console.error("Error processing glossary file:", fileError);
-        return res.status(500).json({ error: "Failed to process the glossary file: " + fileError.message });
+        const errorMessage = fileError.message || "Unknown error occurred";
+        return res.status(500).json({ error: "Failed to process the glossary file: " + errorMessage });
       } finally {
         // Clean up the temporary file
         try {
