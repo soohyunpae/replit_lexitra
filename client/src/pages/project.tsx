@@ -51,6 +51,9 @@ export default function Project() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  // 관리자 권한 체크
+  const isAdmin = useMemo(() => user?.role === 'admin', [user?.role]);
 
   // 다이얼로그 상태 관리
   const [showReleaseDialog, setShowReleaseDialog] = useState(false);
@@ -958,15 +961,33 @@ export default function Project() {
                             </div>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => deleteReferenceFile.mutate(index)}
-                          disabled={deleteReferenceFile.isPending}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => {
+                              // Prepare download link
+                              window.open(`/api/projects/${projectId}/references/${index}/download`, '_blank');
+                            }}
+                            title="Download file"
+                          >
+                            <FileDownIcon className="h-3 w-3" />
+                          </Button>
+                          
+                          {isAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => deleteReferenceFile.mutate(index)}
+                              disabled={deleteReferenceFile.isPending}
+                              title="Delete file"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     ))}
                     
