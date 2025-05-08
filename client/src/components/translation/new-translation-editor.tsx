@@ -684,37 +684,7 @@ export function NewTranslationEditor({
           </div>
           
           <div className="flex items-center space-x-2 flex-shrink-0">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-8 w-[140px]">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="Draft">Draft ({statusCounts["Draft"] || 0})</SelectItem>
-                <SelectItem value="Reviewed">Reviewed ({statusCounts["Reviewed"] || 0})</SelectItem>
-                <SelectItem value="Rejected">Rejected ({statusCounts["Rejected"] || 0})</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select
-              onValueChange={(value) => {
-                if (value !== "none" && checkedCount > 0) {
-                  handleBulkStatusUpdate(value as StatusType);
-                }
-              }}
-            >
-              <SelectTrigger className="h-8 w-[160px]">
-                <SelectValue placeholder="Bulk Actions" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Select Action</SelectItem>
-                <SelectItem value="Draft">Set as Draft</SelectItem>
-                <SelectItem value="Reviewed">Set as Reviewed</SelectItem>
-                <SelectItem value="Rejected">Set as Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <div className="flex items-center ml-2">
+            <div className="flex items-center mr-2">
               <div className="flex items-center space-x-1.5">
                 <Checkbox 
                   id="toggle-select-all" 
@@ -734,6 +704,36 @@ export function NewTranslationEditor({
                 </div>
               </div>
             </div>
+            
+            <Select
+              onValueChange={(value) => {
+                if (value !== "none" && checkedCount > 0) {
+                  handleBulkStatusUpdate(value as StatusType);
+                }
+              }}
+            >
+              <SelectTrigger className="h-8 w-[160px]">
+                <SelectValue placeholder="Bulk Actions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Select Action</SelectItem>
+                <SelectItem value="Draft">Set as Draft</SelectItem>
+                <SelectItem value="Reviewed">Set as Reviewed</SelectItem>
+                <SelectItem value="Rejected">Set as Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-8 w-[140px]">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="Draft">Draft ({statusCounts["Draft"] || 0})</SelectItem>
+                <SelectItem value="Reviewed">Reviewed ({statusCounts["Reviewed"] || 0})</SelectItem>
+                <SelectItem value="Rejected">Rejected ({statusCounts["Rejected"] || 0})</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
