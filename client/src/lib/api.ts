@@ -116,18 +116,68 @@ export async function updateSegment(
   id: number,
   target: string,
   status: string,
-  comment?: string
+  comment?: string,
+  comments?: Comment[]
 ): Promise<TranslationUnit> {
   try {
     const response = await apiRequest(
       "PATCH",
       `/api/segments/${id}`,
-      { target, status, ...(comment !== undefined && { comment }) }
+      { 
+        target, 
+        status, 
+        ...(comment !== undefined && { comment }),
+        ...(comments !== undefined && { comments })
+      }
     );
     
     return await response.json();
   } catch (error) {
     console.error("Error updating segment:", error);
+    throw error;
+  }
+}
+
+// Add a comment to a segment
+export async function addComment(
+  segmentId: number,
+  text: string,
+  username: string
+): Promise<TranslationUnit> {
+  try {
+    // First, get current segment
+    const segmentResponse = await apiRequest(
+      "GET",
+      `/api/segments/${segmentId}`
+    );
+    
+    const segment = await segmentResponse.json();
+    
+    // Create a new comment
+    const newComment: Comment = {
+      username,
+      text,
+      timestamp: new Date().toISOString()
+    };
+    
+    // Prepare existing comments or create a new array
+    const comments = segment.comments ? [...segment.comments, newComment] : [newComment];
+    
+    // Update the segment
+    const response = await apiRequest(
+      "PATCH",
+      `/api/segments/${segmentId}`,
+      { 
+        comments,
+        // Keep other fields unchanged
+        target: segment.target || "",
+        status: segment.status
+      }
+    );
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error adding comment:", error);
     throw error;
   }
 }

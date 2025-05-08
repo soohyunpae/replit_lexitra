@@ -30,6 +30,13 @@ export interface Project {
   files?: File[];
 }
 
+// Comment Type
+export interface Comment {
+  username: string;
+  text: string;
+  timestamp: string;
+}
+
 // Translation Unit Type
 export interface TranslationUnit {
   id: number;
@@ -37,7 +44,8 @@ export interface TranslationUnit {
   target?: string;
   status: string; // 'Draft', 'Reviewed', 'Rejected'
   origin?: string; // 'MT', 'Fuzzy', '100%', 'HT'
-  comment?: string;
+  comment?: string; // Legacy comment field (will be converted to comments array)
+  comments?: Comment[]; // Array of comments with username and timestamp
   fileId: number;
   createdAt: string;
   updatedAt: string;

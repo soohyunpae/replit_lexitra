@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, X, Database, Lightbulb, MessageSquare, MessageSquarePlus, History, FileSearch } from "lucide-react";
+import { Search, X, Database, Lightbulb, MessageSquare, MessageSquarePlus, History, FileSearch, User } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { type TranslationMemory, type Glossary, type TranslationUnit } from "@/types";
+import { type TranslationMemory, type Glossary, type TranslationUnit, type Comment } from "@/types";
 import { apiRequest } from "@/lib/queryClient";
-import { searchGlossaryTerms, updateSegment } from "@/lib/api";
+import { searchGlossaryTerms, updateSegment, addComment } from "@/lib/api";
 
 interface SidePanelProps {
   tmMatches: TranslationMemory[];
@@ -213,25 +213,32 @@ export function SidePanel({
     }
   }, [selectedSegment]);
   
-  // Save comment to the segment
-  const handleSaveComment = async () => {
-    if (!selectedSegment) return;
+  // Get the current username (temporary solution - in real app this should come from the auth system)
+  const getCurrentUsername = () => {
+    return "Soohyun"; // Hard-coded for now, should come from auth context in real app
+  };
+  
+  // Add a new comment to the segment
+  const handleAddComment = async () => {
+    if (!selectedSegment || !commentText.trim()) return;
     
     setIsSavingComment(true);
     try {
-      // Use the updateSegment function to update the comment
-      const updatedSegment = await updateSegment(
+      // Use addComment function which handles getting the current segment and adding a new comment
+      const updatedSegment = await addComment(
         selectedSegment.id,
-        selectedSegment.target || "",
-        selectedSegment.status,
-        commentText
+        commentText.trim(),
+        getCurrentUsername()
       );
       
+      // Clear the input field after successful add
+      setCommentText("");
+      
       // Toast notification for success
-      alert("Comment saved successfully");
+      alert("Comment added successfully");
     } catch (error) {
-      console.error("Error saving comment:", error);
-      alert("Failed to save comment");
+      console.error("Error adding comment:", error);
+      alert("Failed to add comment");
     } finally {
       setIsSavingComment(false);
     }
@@ -397,9 +404,25 @@ export function SidePanel({
             {/* Removed Active Segment section as requested */}
             
             <div className="space-y-4">
-              {selectedSegment && selectedSegment.comment ? (
+              {selectedSegment && selectedSegment.comments && selectedSegment.comments.length > 0 ? (
+                <div className="space-y-3 mb-4">
+                  <div className="font-medium text-xs text-muted-foreground">Comments History:</div>
+                  {selectedSegment.comments.map((comment, index) => (
+                    <div key={index} className="bg-accent/50 rounded-md p-3 text-sm">
+                      <div className="flex items-center gap-1.5 mb-1 text-xs font-medium">
+                        <User className="h-3 w-3" />
+                        <span>{comment.username}</span>
+                        <span className="text-muted-foreground ml-auto text-xs font-normal">
+                          {new Date(comment.timestamp).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="whitespace-pre-wrap pl-1">{comment.text}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : selectedSegment && selectedSegment.comment ? (
                 <div className="bg-accent/50 rounded-md p-3 text-sm mb-4">
-                  <div className="font-medium text-xs text-muted-foreground mb-1">Current Comment:</div>
+                  <div className="font-medium text-xs text-muted-foreground mb-1">Legacy Comment:</div>
                   <div className="whitespace-pre-wrap">{selectedSegment.comment}</div>
                 </div>
               ) : (
@@ -411,7 +434,7 @@ export function SidePanel({
               <div className="space-y-2">
                 <Textarea 
                   placeholder="Add a comment about this segment..." 
-                  className="min-h-[100px] text-sm"
+                  className="min-h-[80px] text-sm"
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   disabled={!selectedSegment}
@@ -420,8 +443,8 @@ export function SidePanel({
                   <Button 
                     size="sm"
                     className="text-xs"
-                    onClick={handleSaveComment}
-                    disabled={!selectedSegment || isSavingComment}
+                    onClick={handleAddComment}
+                    disabled={!selectedSegment || isSavingComment || !commentText.trim()}
                   >
                     {isSavingComment ? (
                       <>
@@ -431,7 +454,7 @@ export function SidePanel({
                     ) : (
                       <>
                         <MessageSquarePlus className="h-3.5 w-3.5 mr-1.5" />
-                        {selectedSegment?.comment ? "Update Comment" : "Add Comment"}
+                        Add Comment
                       </>
                     )}
                   </Button>
