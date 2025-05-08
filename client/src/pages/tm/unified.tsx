@@ -121,6 +121,28 @@ export default function UnifiedTranslationMemoryPage() {
       isActive: true,
     },
   });
+  
+  // Delete TM entry mutation
+  const deleteTmEntryMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/tm/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Translation memory entry deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/tm/all"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete entry: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
 
   // Get all TM resources
   const { 
@@ -265,14 +287,10 @@ export default function UnifiedTranslationMemoryPage() {
     },
   });
 
-  // Delete TM entry (placeholder - implement in future)
+  // Delete TM entry
   function handleDeleteEntry(id: number) {
     if (window.confirm("Are you sure you want to delete this TM entry?")) {
-      toast({
-        title: "Feature not implemented",
-        description: "The delete TM entry feature is not yet implemented.",
-        variant: "destructive",
-      });
+      deleteTmEntryMutation.mutate(id);
     }
   }
 
