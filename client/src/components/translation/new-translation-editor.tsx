@@ -52,6 +52,9 @@ export function NewTranslationEditor({
   // Get count of checked segments for bulk actions
   const checkedCount = Object.values(checkedSegments).filter(Boolean).length;
   
+  // State to track previous versions of segments for history
+  const [previousVersions, setPreviousVersions] = useState<Record<number, string>>({});
+  
   // Filter and pagination states
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [originFilter, setOriginFilter] = useState<string>("all");
@@ -222,6 +225,14 @@ export function NewTranslationEditor({
     
     const segment = localSegments.find(s => s.id === id);
     if (segment) {
+      // Store the current translation when selecting a segment for history tracking
+      if (segment.target) {
+        setPreviousVersions(prev => ({
+          ...prev,
+          [id]: segment.target || ""
+        }));
+      }
+      
       // Search TM and glossary in parallel
       await Promise.all([
         searchTM(segment.source),
@@ -274,11 +285,20 @@ export function NewTranslationEditor({
         )
       );
       
-      // If this is the currently selected segment being updated, 
-      // notify the SidePanel to record it for history via the onSegmentUpdated callback
-      if (selectedSegmentId === id) {
+      // If this is the currently selected segment being updated,
+      // update history tracking if the translation changed
+      const oldTarget = currentSegment?.target;
+      if (selectedSegmentId === id && oldTarget && oldTarget !== target) {
         console.log("Recording segment history for:", id, target);
-        // The SidePanel component has logic to compare this with its previously stored version
+        
+        // Only store the previous version if it doesn't already exist
+        // This ensures we keep the original version, not intermediate ones
+        if (!previousVersions[id]) {
+          setPreviousVersions(prev => ({
+            ...prev,
+            [id]: oldTarget
+          }));
+        }
       }
       
       return updatedSegment;
@@ -844,14 +864,15 @@ export function NewTranslationEditor({
           selectedSegment={selectedSegment}
           sourceLanguage={sourceLanguage}
           targetLanguage={targetLanguage}
+          previousVersions={previousVersions}
           onUseTranslation={(translation: string) => {
             if (selectedSegmentId) {
               handleSegmentUpdate(selectedSegmentId, translation, "MT", "MT");
             }
           }}
           onSegmentUpdated={(id: number, newTarget: string) => {
-            // This callback will be triggered when a segment is updated
-            // Used to store the previous version for history tracking
+            // This callback is triggered when a segment is updated
+            // We're using a different approach with previousVersions state instead
             console.log(`Segment ${id} updated with new target: ${newTarget}`);
           }}
         />

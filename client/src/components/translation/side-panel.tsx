@@ -16,6 +16,7 @@ interface SidePanelProps {
   sourceLanguage: string;
   targetLanguage: string;
   onSegmentUpdated?: (id: number, newTarget: string) => void;
+  previousVersions?: Record<number, string>;
 }
 
 interface TmMatchProps {
@@ -116,7 +117,8 @@ export function SidePanel({
   onUseTranslation,
   sourceLanguage,
   targetLanguage,
-  onSegmentUpdated
+  onSegmentUpdated,
+  previousVersions: propPreviousVersions
 }: SidePanelProps) {
   const [activeTab, setActiveTab] = useState("tm");
   const [tmSearchQuery, setTmSearchQuery] = useState("");
@@ -205,19 +207,12 @@ export function SidePanel({
     setGlobalGlossaryResults([]);
   }, [activeTab]);
   
-  // Store previous version when a segment is selected or changes
+  // Initialize local previous versions state from props
   useEffect(() => {
-    if (selectedSegment && selectedSegment.id) {
-      // Check if we don't have this segment's previous version yet
-      if (!previousVersions[selectedSegment.id]) {
-        // Store the initial version when first selecting
-        setPreviousVersions(prev => ({
-          ...prev,
-          [selectedSegment.id]: selectedSegment.target || ""
-        }));
-      }
+    if (propPreviousVersions && Object.keys(propPreviousVersions).length > 0) {
+      setPreviousVersions(propPreviousVersions);
     }
-  }, [selectedSegment]);
+  }, [propPreviousVersions]);
   
   // Determine which TM matches to display
   const displayedTmMatches = tmSearchQuery.length >= 2 
