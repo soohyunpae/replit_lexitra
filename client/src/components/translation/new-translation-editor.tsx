@@ -58,6 +58,9 @@ export function NewTranslationEditor({
   // Filter and pagination states
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [originFilter, setOriginFilter] = useState<string>("all");
+  
+  // Track status counts for progress bar
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [segmentsPerPage, setSegmentsPerPage] = useState<number>(20);
   const [paginationMode, setPaginationMode] = useState<"pagination" | "infinite">("infinite");
@@ -167,11 +170,15 @@ export function NewTranslationEditor({
     ? Math.round((completedSegments / localSegments.length) * 100)
     : 0;
   
-  // Status counts
-  const statusCounts = localSegments.reduce((acc, segment) => {
-    acc[segment.status] = (acc[segment.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  // Calculate status counts
+  useEffect(() => {
+    const counts: Record<string, number> = {};
+    localSegments.forEach(segment => {
+      const status = segment.status || "Draft";
+      counts[status] = (counts[status] || 0) + 1;
+    });
+    setStatusCounts(counts);
+  }, [localSegments]);
   
   // Search TM for selected segment
   const searchTM = async (source: string) => {
@@ -462,6 +469,14 @@ export function NewTranslationEditor({
         onSave();
       }
       
+      // Recalculate status counts after save
+      const newStatusCounts: Record<string, number> = {};
+      localSegments.forEach(segment => {
+        const status = segment.status || "Draft";
+        newStatusCounts[status] = (newStatusCounts[status] || 0) + 1;
+      });
+      setStatusCounts(newStatusCounts);
+      
       toast({
         title: "Save Complete",
         description: `Saved ${localSegments.length} segments. ${reviewedSegments.length} reviewed segments stored to TM.`,
@@ -557,6 +572,21 @@ export function NewTranslationEditor({
       
       setLocalSegments(updatedSegments);
       
+      // Recalculate status counts after bulk update
+      const newStatusCounts: Record<string, number> = { ...statusCounts };
+      checkedIds.forEach(id => {
+        const segment = updatedSegments.find(s => s.id === id);
+        if (segment) {
+          // Decrement the old status count
+          const oldStatus = localSegments.find(s => s.id === id)?.status || "Draft";
+          newStatusCounts[oldStatus] = (newStatusCounts[oldStatus] || 0) - 1;
+          
+          // Increment the new status count
+          newStatusCounts[status] = (newStatusCounts[status] || 0) + 1;
+        }
+      });
+      setStatusCounts(newStatusCounts);
+      
       toast({
         title: "Status Update Complete",
         description: `Updated ${checkedIds.length} segments to ${status}`
@@ -642,10 +672,34 @@ export function NewTranslationEditor({
         <div className="flex justify-between items-center gap-4">
           <div className="flex flex-col space-y-1 w-full">
             <div className="flex justify-between text-xs mb-1">
-              <span>Progress</span>
-              <span className="font-medium">{progressPercentage}% ({completedSegments}/{localSegments.length})</span>
+              <span>Segment Status</span>
+              <span className="font-medium">
+                {statusCounts["Reviewed"] || 0} Reviewed • {statusCounts["Draft"] || 0} Draft • {statusCounts["Rejected"] || 0} Rejected
+              </span>
             </div>
-            <Progress value={progressPercentage} className="h-2" />
+            <div className="h-2 w-full rounded-full bg-secondary overflow-hidden flex">
+              {/* Reviewed segments (green) */}
+              <div 
+                className="h-full bg-green-500" 
+                style={{ 
+                  width: `${((statusCounts["Reviewed"] || 0) / localSegments.length) * 100}%` 
+                }}
+              />
+              {/* Draft segments (blue) */}
+              <div 
+                className="h-full bg-blue-500" 
+                style={{ 
+                  width: `${((statusCounts["Draft"] || 0) / localSegments.length) * 100}%` 
+                }}
+              />
+              {/* Rejected segments (red) */}
+              <div 
+                className="h-full bg-red-500" 
+                style={{ 
+                  width: `${((statusCounts["Rejected"] || 0) / localSegments.length) * 100}%` 
+                }}
+              />
+            </div>
           </div>
           
           <div className="flex items-center space-x-2 flex-shrink-0">
