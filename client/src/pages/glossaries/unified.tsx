@@ -60,6 +60,15 @@ import { formatDate } from "@/lib/utils";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 // Form schema for adding/editing glossary terms
 const glossaryFormSchema = z.object({
@@ -98,6 +107,10 @@ export default function UnifiedGlossaryPage() {
   // Dialog states
   const [addTermDialogOpen, setAddTermDialogOpen] = useState(false);
   const [addResourceDialogOpen, setAddResourceDialogOpen] = useState(false);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20; // Show 20 items per page
   
   // Glossary term form setup
   const termForm = useForm<GlossaryFormValues>({
@@ -216,6 +229,21 @@ export default function UnifiedGlossaryPage() {
       return matchesSearch && matchesSourceLang && matchesTargetLang && matchesResource;
     });
   }, [glossaryData, searchQuery, sourceLanguageFilter, targetLanguageFilter, resourceFilter]);
+  
+  // Calculate total pages for pagination
+  const totalPages = Math.ceil(filteredGlossary.length / itemsPerPage);
+  
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, sourceLanguageFilter, targetLanguageFilter, resourceFilter]);
+
+  // Paginated glossary data
+  const paginatedGlossary = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredGlossary.slice(startIndex, endIndex);
+  }, [filteredGlossary, currentPage, itemsPerPage]);
 
   // Add new glossary term
   const addGlossaryMutation = useMutation({
