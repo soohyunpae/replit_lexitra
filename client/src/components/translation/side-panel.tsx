@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, X, Database, Lightbulb, MessageSquare, History, FileSearch } from "lucide-react";
+import { Search, X, Database, Lightbulb, MessageSquare, MessageSquarePlus, History, FileSearch } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { type TranslationMemory, type Glossary, type TranslationUnit } from "@/types";
 import { apiRequest } from "@/lib/queryClient";
 import { searchGlossaryTerms } from "@/lib/api";
@@ -57,16 +58,16 @@ function TmMatch({ match, onUse, sourceSimilarity, highlightTerms = [] }: TmMatc
   
   return (
     <div className="bg-accent/50 rounded-md p-3 mb-3">
-      <div className="flex justify-between items-center mb-1">
+      <div className="mb-1">
         <div className="font-mono text-sm">{highlightText(match.source)}</div>
-        <div className="text-xs text-muted-foreground">
-          <span className="font-semibold">{sourceSimilarity}%</span>
-        </div>
       </div>
       <div className="font-mono text-xs text-muted-foreground mb-2">
         {highlightText(match.target)}
       </div>
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
+        <div className="text-xs text-muted-foreground">
+          <span className="font-semibold">{sourceSimilarity}%</span> Match
+        </div>
         <Button 
           size="sm" 
           variant="ghost" 
@@ -358,15 +359,34 @@ export function SidePanel({
           <div className="p-4">
             <div className="text-sm font-medium mb-2">Comments</div>
             
-            {selectedSegment && (
-              <div className="mb-4">
-                <div className="text-xs font-semibold mb-1 text-muted-foreground">Active Segment</div>
-                <div className="text-sm mb-2 bg-accent/50 p-2 rounded font-mono">{selectedSegment.source}</div>
-              </div>
-            )}
+            {/* Removed Active Segment section as requested */}
             
-            <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center">
-              No comments available for this segment.
+            <div className="space-y-4">
+              <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center mb-4">
+                No comments available for this segment. Add a comment below.
+              </div>
+              
+              <form className="space-y-2">
+                <Textarea 
+                  placeholder="Add a comment about this segment..." 
+                  className="min-h-[100px] text-sm"
+                />
+                <div className="flex justify-end">
+                  <Button 
+                    type="submit" 
+                    size="sm"
+                    className="text-xs"
+                  >
+                    <MessageSquarePlus className="h-3.5 w-3.5 mr-1.5" />
+                    Add Comment
+                  </Button>
+                </div>
+              </form>
+              
+              <div className="text-xs text-muted-foreground mt-2">
+                <span className="font-medium">Tip:</span> You can use simple Markdown in comments: 
+                **bold**, *italic*, `code`, and • bullet points.
+              </div>
             </div>
           </div>
         </TabsContent>
@@ -375,15 +395,60 @@ export function SidePanel({
           <div className="p-4">
             <div className="text-sm font-medium mb-2">Revision History</div>
             
-            {selectedSegment && (
-              <div className="mb-4">
-                <div className="text-xs font-semibold mb-1 text-muted-foreground">Active Segment</div>
-                <div className="text-sm mb-2 bg-accent/50 p-2 rounded font-mono">{selectedSegment.source}</div>
-              </div>
-            )}
+            {/* Removed Active Segment section as requested */}
             
-            <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center">
-              No revision history available for this segment.
+            <div className="space-y-4">
+              <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground">
+                <p>Segment revision history is recorded each time you click Save.</p>
+                <p className="mt-2">Only intentional, complete revisions are preserved to keep history meaningful and clean.</p>
+              </div>
+              
+              <div className="space-y-3 mt-4">
+                {selectedSegment ? (
+                  <>
+                    <div className="border border-border rounded-md overflow-hidden">
+                      <div className="bg-accent/30 px-3 py-2 border-b border-border flex justify-between items-center">
+                        <div className="text-xs font-medium">Current Version</div>
+                        <div className="text-xs text-muted-foreground">
+                          Status: <span className="font-semibold">{selectedSegment.status}</span> | 
+                          Origin: <span className="font-semibold">{selectedSegment.origin}</span>
+                        </div>
+                      </div>
+                      <div className="p-3">
+                        <div className="font-mono text-xs">{selectedSegment.target || "(No translation)"}</div>
+                        <div className="text-xs text-muted-foreground mt-2">
+                          Last modified: {new Date(selectedSegment.updatedAt).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="border border-muted rounded-md overflow-hidden opacity-60">
+                      <div className="bg-muted/30 px-3 py-2 border-b border-border flex justify-between items-center">
+                        <div className="text-xs font-medium">Previous Version</div>
+                        <div className="text-xs text-muted-foreground">
+                          Status: <span className="font-semibold">Draft</span> | 
+                          Origin: <span className="font-semibold">MT</span>
+                        </div>
+                      </div>
+                      <div className="p-3">
+                        <div className="font-mono text-xs">{selectedSegment.target || "(No translation)"}</div>
+                        <div className="text-xs text-muted-foreground mt-2">
+                          Created: {new Date(selectedSegment.createdAt).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center">
+                    Select a segment to view its revision history.
+                  </div>
+                )}
+              </div>
+              
+              <div className="text-xs text-muted-foreground border-t border-border pt-2 mt-4">
+                <p className="font-medium mb-1">History vs Translation Memory</p>
+                <p>History shows saved changes within this file's editing session. Only segments marked as 'Reviewed' are added to the Translation Memory.</p>
+              </div>
             </div>
           </div>
         </TabsContent>
