@@ -210,21 +210,27 @@ export default function Project() {
   // Reference 파일 업로드 mutation
   const uploadReferences = useMutation({
     mutationFn: async (files: File[]) => {
-      // 현재 우리 서버에서는 실제 파일 업로드 처리 대신 메타데이터만 전송
-      // 파일 이름과 크기를 서버에 전송합니다
-      const fileMetadata = files.map((file) => ({
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      }));
+      // Create FormData to send actual files
+      const formData = new FormData();
+      
+      // Add each file to FormData
+      files.forEach((file) => {
+        formData.append('files', file);
+      });
 
-      const response = await apiRequest(
-        "POST",
-        `/api/projects/${projectId}/references`,
-        {
-          files: fileMetadata,
+      // Use fetch directly with FormData
+      const response = await fetch(`/api/projects/${projectId}/references/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
-      );
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload files');
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
