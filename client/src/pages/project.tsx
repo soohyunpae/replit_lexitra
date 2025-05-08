@@ -981,6 +981,39 @@ export default function Project() {
                         </Button>
                       </div>
                     ))}
+                    
+                    {/* Drag and drop area for adding more files */}
+                    <div 
+                      className="border-2 border-dashed border-border/50 rounded-md p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
+                      onClick={() => fileInputRef.current?.click()}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.currentTarget.classList.add('border-primary');
+                      }}
+                      onDragLeave={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.currentTarget.classList.remove('border-primary');
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.currentTarget.classList.remove('border-primary');
+                        
+                        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                          const newFiles = Array.from(e.dataTransfer.files);
+                          setReferences([...references, ...newFiles]);
+                          // Upload the files
+                          uploadReferences.mutate(newFiles);
+                        }
+                      }}
+                    >
+                      <Upload className="h-6 w-6 text-muted-foreground mb-2" />
+                      <p className="text-xs text-muted-foreground">
+                        Drop files here or click to add more
+                      </p>
+                    </div>
                   </div>
                 ) : (
                   <div 
