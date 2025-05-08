@@ -1996,7 +1996,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateSchema = z.object({
         target: z.string().optional(),
         status: z.string().optional(),
-        comment: z.string().optional()
+        comment: z.string().optional(),
+        origin: z.string().optional() // 원산지(출처) 정보 추가
       });
       
       const data = updateSchema.parse(req.body);
