@@ -347,16 +347,57 @@ function registerAdminRoutes(app: Express) {
         const fileExt = path.extname(file.originalname).toLowerCase();
         
         if (fileExt === '.csv') {
-          // Read the file as text
-          const content = fs.readFileSync(file.path, 'utf8');
-          const lines = content.split('\n');
+          // Read the file as text with error handling for different encodings
+          let content;
+          try {
+            content = fs.readFileSync(file.path, 'utf8');
+          } catch (e) {
+            // Fallback to binary read if UTF-8 fails
+            const buffer = fs.readFileSync(file.path);
+            content = buffer.toString();
+          }
+          
+          // Try different line separators
+          let lines = content.split('\n');
+          if (lines.length <= 1) {
+            lines = content.split('\r\n');
+          }
+          
+          console.log(`File has ${lines.length} lines`);
+          
+          // Try to detect the delimiter by examining the first few lines
+          const sampleLines = lines.slice(0, Math.min(5, lines.length)).filter(line => line.trim().length > 0);
+          let delimiter = ',';  // Default delimiter
+          
+          // Check if the file uses tabs or semicolons instead of commas
+          if (sampleLines.length > 0) {
+            const firstSample = sampleLines[0];
+            const commaCount = (firstSample.match(/,/g) || []).length;
+            const tabCount = (firstSample.match(/\t/g) || []).length;
+            const semicolonCount = (firstSample.match(/;/g) || []).length;
+            
+            if (tabCount > commaCount && tabCount > semicolonCount) {
+              delimiter = '\t';
+              console.log("Detected tab delimiter");
+            } else if (semicolonCount > commaCount && semicolonCount > tabCount) {
+              delimiter = ';';
+              console.log("Detected semicolon delimiter");
+            } else {
+              console.log("Using comma delimiter");
+            }
+          }
           
           // Check if the file has headers
-          const firstLine = lines[0].trim();
+          const firstLine = lines[0]?.trim() || '';
           const hasHeaders = firstLine.toLowerCase().includes('source') || 
-                            firstLine.toLowerCase().includes('target') ||
-                            firstLine.toLowerCase().includes('domain');
+                             firstLine.toLowerCase().includes('target') || 
+                             firstLine.toLowerCase().includes('domain') ||
+                             firstLine.toLowerCase().includes('term') ||
+                             firstLine.toLowerCase().includes('원문') ||
+                             firstLine.toLowerCase().includes('번역') ||
+                             firstLine.toLowerCase().includes('용어');
           
+          console.log(`Has headers: ${hasHeaders}, first line: "${firstLine.substring(0, 50)}..."`);
           const startIndex = hasHeaders ? 1 : 0;
           
           // Process CSV data
@@ -364,11 +405,26 @@ function registerAdminRoutes(app: Express) {
             const line = lines[i].trim();
             if (!line) continue;
             
-            const columns = line.split(',');
-            if (columns.length >= 2) {
-              // Assume source and target are required at minimum
-              const source = columns[0]?.trim() || '';
-              const target = columns[1]?.trim() || '';
+            // Split by the detected delimiter
+            const columns = line.split(delimiter);
+            
+            // Proceed if we have at least two columns or try to be flexible
+            if (columns.length >= 2 || (columns.length === 1 && line.includes(':'))) {
+              let source = '';
+              let target = '';
+              
+              if (columns.length >= 2) {
+                // Standard CSV format
+                source = columns[0]?.trim() || '';
+                target = columns[1]?.trim() || '';
+              } else if (columns.length === 1 && line.includes(':')) {
+                // Try to handle "key: value" format
+                const parts = line.split(':');
+                if (parts.length >= 2) {
+                  source = parts[0]?.trim() || '';
+                  target = parts.slice(1).join(':').trim() || '';
+                }
+              }
               
               // Optional fields: could be domain, notes, etc.
               let entrySourceLang = sourceLanguage;
@@ -377,8 +433,9 @@ function registerAdminRoutes(app: Express) {
               
               // Try to extract domain if available in the CSV
               if (hasHeaders && columns.length > 2) {
-                const headers = firstLine.toLowerCase().split(',');
-                const domainIndex = headers.findIndex(h => h.includes('domain'));
+                const headers = firstLine.toLowerCase().split(delimiter);
+                const domainIndex = headers.findIndex(h => 
+                  h.includes('domain') || h.includes('분야') || h.includes('카테고리'));
                 
                 if (domainIndex >= 0 && columns[domainIndex]) {
                   entryDomain = columns[domainIndex].trim();
@@ -386,6 +443,10 @@ function registerAdminRoutes(app: Express) {
               }
               
               if (source && target) {
+                // Clean up potential quotes that might be part of CSV format
+                source = source.replace(/^["']|["']$/g, '');
+                target = target.replace(/^["']|["']$/g, '');
+                
                 glossaryEntries.push({
                   source,
                   target,
