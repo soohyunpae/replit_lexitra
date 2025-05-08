@@ -454,10 +454,7 @@ export default function Project() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
               <h1 className="text-xl font-semibold mb-1 flex items-center">
-                <span className="mr-2 text-sm font-medium text-muted-foreground">
-                  #{project.id}
-                </span>
-                {project.name}
+                <span>Project {project.id}: {project.name}</span>
                 <span
                   className={`ml-3 text-sm font-medium rounded-md px-2 py-0.5 ${
                     project.status === "Unclaimed"
