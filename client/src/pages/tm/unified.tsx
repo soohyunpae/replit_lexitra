@@ -97,6 +97,10 @@ export default function UnifiedTranslationMemoryPage() {
   const [addEntryDialogOpen, setAddEntryDialogOpen] = useState(false);
   const [addResourceDialogOpen, setAddResourceDialogOpen] = useState(false);
   
+  // Pagination
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 20; // 페이지당 표시할 항목 수 (20개)
+  
   // Entry form setup
   const entryForm = useForm<TmEntryFormValues>({
     resolver: zodResolver(tmEntryFormSchema),
@@ -317,7 +321,25 @@ export default function UnifiedTranslationMemoryPage() {
   // Handle TM resource click for filtering
   function handleResourceClick(resourceId: string) {
     setResourceFilter(resourceId);
+    setCurrentPage(1); // 필터가 변경되면 첫 페이지로 이동
   }
+  
+  // Calculate pagination
+  const paginatedTM = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredTM.slice(startIndex, endIndex);
+  }, [filteredTM, currentPage, itemsPerPage]);
+  
+  // Handle page change
+  function handlePageChange(newPage: number) {
+    setCurrentPage(newPage);
+  }
+  
+  // Reset to first page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, sourceLanguageFilter, targetLanguageFilter, statusFilter]);
 
   return (
     <MainLayout title="Translation Memory">
