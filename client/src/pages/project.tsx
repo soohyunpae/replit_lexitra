@@ -917,9 +917,9 @@ export default function Project() {
               </CardHeader>
               <CardContent>
                 {/* Reference files list */}
-                {referenceFiles.length > 0 ? (
+                {savedReferences.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
-                    {referenceFiles.map((file: FileType, index: number) => (
+                    {savedReferences.map((file, index) => (
                       <div
                         key={`file-ref-${index}`}
                         className="flex items-center justify-between border border-border/70 rounded-md p-3 hover:border-primary/60 transition-colors"
@@ -927,65 +927,12 @@ export default function Project() {
                         <div className="flex items-center gap-2 truncate mr-2">
                           <FileText className="h-4 w-4 text-muted-foreground" />
                           <div className="truncate">
-                            <button
-                              onClick={() => {
-                                const token =
-                                  localStorage.getItem("auth_token");
-                                const downloadFile = async () => {
-                                  try {
-                                    const response = await fetch(
-                                      `/api/files/${file.id}/download`,
-                                      {
-                                        method: "GET",
-                                        headers: {
-                                          Authorization: `Bearer ${token}`,
-                                        },
-                                      },
-                                    );
-
-                                    if (!response.ok) {
-                                      throw new Error(
-                                        `Download failed: ${response.status}`,
-                                      );
-                                    }
-
-                                    const blob = await response.blob();
-                                    const url =
-                                      window.URL.createObjectURL(blob);
-                                    const a = document.createElement("a");
-                                    a.style.display = "none";
-                                    a.href = url;
-                                    a.download = file.name;
-                                    document.body.appendChild(a);
-                                    a.click();
-                                    window.URL.revokeObjectURL(url);
-                                    document.body.removeChild(a);
-
-                                    toast({
-                                      title: "Download started",
-                                      description: `File ${file.name} is being downloaded.`,
-                                    });
-                                  } catch (error) {
-                                    console.error("Download error:", error);
-                                    toast({
-                                      title: "Download failed",
-                                      description:
-                                        error instanceof Error
-                                          ? error.message
-                                          : "Unknown error",
-                                      variant: "destructive",
-                                    });
-                                  }
-                                };
-
-                                downloadFile();
-                              }}
-                              className="text-sm text-primary hover:underline cursor-pointer truncate"
-                            >
+                            <div className="text-sm text-primary truncate">
                               {file.name}
-                            </button>
+                            </div>
                             <div className="text-xs text-muted-foreground">
-                              Added {formatDate(file.createdAt)}
+                              Added {formatDate(file.addedAt)}
+                              {file.size && ` • ${formatFileSize(file.size)}`}
                             </div>
                           </div>
                         </div>
