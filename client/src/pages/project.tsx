@@ -1243,9 +1243,22 @@ export default function Project() {
 
                           <div className="flex justify-end">
                             <Button
-                              onClick={() =>
-                                navigate(`/translation/${file.id}`)
-                              }
+                              onClick={(e) => {
+                                e.stopPropagation(); // Stop event propagation to prevent onBlur triggering
+                                // Check if notes are in edit mode
+                                if (isNotesEditing) {
+                                  // If notes are being edited, save them explicitly first
+                                  saveNotes.mutate();
+                                  setIsNotesEditing(false);
+                                  // Add a small delay before navigating to avoid seeing the toast notification
+                                  setTimeout(() => {
+                                    navigate(`/translation/${file.id}`);
+                                  }, 10);
+                                } else {
+                                  // If notes are not being edited, navigate immediately
+                                  navigate(`/translation/${file.id}`);
+                                }
+                              }}
                               disabled={
                                 project.status === "Unclaimed" ||
                                 (project.status === "Claimed" &&
