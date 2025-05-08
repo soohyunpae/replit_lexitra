@@ -1566,11 +1566,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(schema.projects.id, id))
         .returning();
       
-      return res.json({ 
-        success: true, 
-        message: 'References uploaded successfully',
-        references: updatedReferences
-      });
+      // 추가된 참조 파일의 배열만 반환합니다 (클라이언트가 기대하는 형식)
+      const newReferences = files.map((file: any) => ({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        addedAt: new Date().toISOString()
+      }));
+      
+      return res.json(newReferences);
     } catch (error) {
       return handleApiError(res, error);
     }
