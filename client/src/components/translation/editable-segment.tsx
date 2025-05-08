@@ -39,19 +39,31 @@ export function EditableSegment({
     }
   }, [isSelected, isSource]);
   
-  // Handle edit completion and set as Reviewed with HT (Human Translation) origin
-  const handleSave = () => {
+  // Toggle status between "Draft" and "Reviewed"
+  const toggleStatus = () => {
     if (!isSource && onUpdate) {
-      // Mark as Reviewed and set origin to HT when saving after human edit
-      const isValueChanged = value !== segment.target;
-      onUpdate(value, "Reviewed", isValueChanged ? "HT" : segment.origin);
+      // Toggle between Draft and Reviewed
+      const newStatus = segment.status === "Reviewed" ? "Draft" : "Reviewed";
+      onUpdate(value, newStatus, segment.origin);
     }
   };
+  
+  // Update value when segment target changes (to sync with external changes)
+  useEffect(() => {
+    if (!isSource) {
+      setValue(segment.target || "");
+    }
+  }, [segment.target, isSource]);
   
   // Auto-resize textarea as content grows
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setValue(newValue);
+    
+    // Automatically update as user types (without changing status)
+    if (!isSource && onUpdate) {
+      onUpdate(newValue, segment.status, segment.origin);
+    }
     
     // Resize textarea to fit content
     if (textareaRef.current) {
@@ -128,7 +140,14 @@ export function EditableSegment({
           <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded-md mr-2">{index}</span>
           {!isSource && (
             <div className="flex items-center space-x-1.5">
-              <span className={`text-xs px-1.5 py-0.5 rounded-md ${getStatusColor(segment.status)}`}>
+              <span 
+                className={`text-xs px-1.5 py-0.5 rounded-md ${getStatusColor(segment.status)} cursor-pointer`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleStatus();
+                }}
+                title={`Click to toggle status (${segment.status === "Reviewed" ? "Draft" : "Reviewed"})`}
+              >
                 {segment.status}
               </span>
               {segment.origin && (
@@ -143,13 +162,28 @@ export function EditableSegment({
         
         {!isSource && (
           <div className="flex space-x-1">
-            {isSelected && (
-              <Button variant="ghost" size="sm" onClick={handleSave} className="h-7 w-7 p-0">
-                <Check className="h-4 w-4" />
-              </Button>
-            )}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleStatus();
+              }} 
+              className="h-7 w-7 p-0"
+              title={`Mark as ${segment.status === "Reviewed" ? "Draft" : "Reviewed"}`}
+            >
+              <Check className={`h-4 w-4 ${segment.status === "Reviewed" ? "text-blue-600" : "text-muted-foreground"}`} />
+            </Button>
             {!segment.target && onTranslateWithGPT && (
-              <Button variant="ghost" size="sm" onClick={onTranslateWithGPT} className="h-7 w-7 p-0">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTranslateWithGPT();
+                }} 
+                className="h-7 w-7 p-0"
+              >
                 <Languages className="h-4 w-4" />
               </Button>
             )}
@@ -164,7 +198,6 @@ export function EditableSegment({
           onChange={handleTextareaChange}
           className="min-h-[60px] font-mono resize-none focus-visible:ring-offset-0 focus-visible:ring-1 overflow-hidden no-scrollbar"
           placeholder="Enter translation..."
-          disabled={!isSelected}
         />
       ) : (
         <div className="font-mono text-sm whitespace-pre-wrap break-words min-h-[60px] h-full w-full">
