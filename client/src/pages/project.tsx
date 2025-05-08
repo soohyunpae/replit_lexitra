@@ -1167,7 +1167,7 @@ export default function Project() {
                 <CardDescription />
               </CardHeader>
               <CardContent>
-                {isNotesEditing || !note ? (
+                {isNotesEditing ? (
                   <Textarea
                     placeholder="Document translation guidelines, special requirements, terminology instructions..."
                     className="min-h-24"
@@ -1185,7 +1185,12 @@ export default function Project() {
                     className={`border rounded-md p-3 min-h-24 text-sm whitespace-pre-wrap ${isAdmin ? 'cursor-pointer' : ''}`}
                     onClick={() => isAdmin && setIsNotesEditing(true)}
                   >
-                    {note || "No notes available."}
+                    {note 
+                      ? note 
+                      : isAdmin
+                        ? <span className="text-muted-foreground">Add special requirements, terminology instructions, or other notes. Click to edit.</span>
+                        : "No notes available."
+                    }
                   </div>
                 )}
                 {saveNotes.isPending && (
