@@ -217,6 +217,10 @@ export function SidePanel({
   // Get current user information from Auth context
   const { user } = useAuth();
   
+  // For debugging
+  console.log("Auth user:", user);
+  console.log("Selected segment:", selectedSegment);
+  
   // Add a new comment to the segment
   const handleAddComment = async () => {
     if (!selectedSegment || !commentText.trim()) return;
