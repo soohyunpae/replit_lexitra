@@ -274,6 +274,16 @@ export function NewTranslationEditor({
         )
       );
       
+      // If we have the onSegmentUpdated callback in the SidePanel, call it to record history
+      if (selectedSegmentId === id) {
+        console.log("Recording segment history for:", id, target);
+        // Find the onSegmentUpdated callback in the SidePanel's props
+        const sidePanelProps = document.getElementById("side-panel-container")?.getAttribute("data-segment-updated");
+        if (typeof sidePanelProps === "function") {
+          sidePanelProps(id, target);
+        }
+      }
+      
       return updatedSegment;
     } catch (error) {
       console.error("Error updating segment:", error);
@@ -841,6 +851,11 @@ export function NewTranslationEditor({
             if (selectedSegmentId) {
               handleSegmentUpdate(selectedSegmentId, translation, "MT", "MT");
             }
+          }}
+          onSegmentUpdated={(id: number, newTarget: string) => {
+            // This callback will be triggered when a segment is updated
+            // Used to store the previous version for history tracking
+            console.log(`Segment ${id} updated with new target: ${newTarget}`);
           }}
         />
       </div>
