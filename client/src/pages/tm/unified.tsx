@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,15 @@ import {
 import { formatDate } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 // Form schema for adding TM entries
 const tmEntryFormSchema = z.object({
@@ -208,6 +217,10 @@ export default function UnifiedTranslationMemoryPage() {
     };
   }, [tmData]);
 
+  // 페이지네이션 상태
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
   // Filtered TM entries
   const filteredTM = React.useMemo(() => {
     if (!tmData) return [];
@@ -238,6 +251,19 @@ export default function UnifiedTranslationMemoryPage() {
       );
     });
   }, [tmData, searchQuery, sourceLanguageFilter, targetLanguageFilter, statusFilter]);
+  
+  // 페이지네이션 로직
+  const totalPages = Math.ceil(filteredTM.length / itemsPerPage);
+  const paginatedTM = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredTM.slice(startIndex, endIndex);
+  }, [filteredTM, currentPage, itemsPerPage]);
+  
+  // 검색이나 필터 변경 시 첫 페이지로 돌아가기
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, sourceLanguageFilter, targetLanguageFilter, statusFilter, resourceFilter]);
 
   // Add new TM entry
   const addEntryMutation = useMutation({
@@ -745,7 +771,7 @@ export default function UnifiedTranslationMemoryPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredTM.map((entry: any) => (
+                  paginatedTM.map((entry: any) => (
                     <TableRow key={entry.id}>
                       <TableCell className="font-medium">
                         {entry.source}
@@ -803,6 +829,87 @@ export default function UnifiedTranslationMemoryPage() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination Component */}
+          {filteredTM.length > 0 && (
+            <div className="mt-6">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      className={currentPage <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  
+                  {/* First Page */}
+                  {currentPage > 3 && (
+                    <PaginationItem>
+                      <PaginationLink onClick={() => setCurrentPage(1)}>
+                        1
+                      </PaginationLink>
+                    </PaginationItem>
+                  )}
+                  
+                  {/* Ellipsis shown if not on the first few pages */}
+                  {currentPage > 3 && (
+                    <PaginationItem>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  )}
+                  
+                  {/* Previous Page */}
+                  {currentPage > 1 && (
+                    <PaginationItem>
+                      <PaginationLink onClick={() => setCurrentPage(currentPage - 1)}>
+                        {currentPage - 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )}
+                  
+                  {/* Current Page */}
+                  <PaginationItem>
+                    <PaginationLink isActive>{currentPage}</PaginationLink>
+                  </PaginationItem>
+                  
+                  {/* Next Page */}
+                  {currentPage < totalPages && (
+                    <PaginationItem>
+                      <PaginationLink onClick={() => setCurrentPage(currentPage + 1)}>
+                        {currentPage + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )}
+                  
+                  {/* Ellipsis shown if not on the last few pages */}
+                  {currentPage < totalPages - 2 && (
+                    <PaginationItem>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  )}
+                  
+                  {/* Last Page */}
+                  {currentPage < totalPages - 2 && (
+                    <PaginationItem>
+                      <PaginationLink onClick={() => setCurrentPage(totalPages)}>
+                        {totalPages}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      className={currentPage >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+              <div className="text-center text-sm text-muted-foreground mt-2">
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredTM.length)} of {filteredTM.length} entries
+              </div>
+            </div>
+          )}
 
           {/* Admin actions moved to header */}
         </div>
