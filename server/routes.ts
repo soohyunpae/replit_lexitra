@@ -1660,9 +1660,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // 프로젝트 참조 파일 다운로드 API (인증 불필요)
   app.get(`${apiPrefix}/projects/:id/references/:index/download`, optionalToken, async (req, res) => {
+    console.log('다운로드 요청 받음:', req.params.id, req.params.index);
     try {
       const id = parseInt(req.params.id);
       const index = parseInt(req.params.index);
+      
+      // 인증 정보 로깅 (디버깅용)
+      console.log('Auth header:', req.headers.authorization ? '존재함' : '존재하지 않음');
+      console.log('User 객체:', req.user ? '존재함' : '존재하지 않음');
       
       // 프로젝트가 존재하는지 확인
       const project = await db.query.projects.findFirst({
@@ -1670,6 +1675,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       if (!project) {
+        console.log('프로젝트를 찾을 수 없음:', id);
         return res.status(404).json({ message: 'Project not found' });
       }
       
@@ -1678,6 +1684,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (project.references) {
         try {
           references = JSON.parse(project.references);
+          console.log('파싱된 참조 파일 개수:', references.length);
         } catch (e) {
           console.warn('Failed to parse references:', e);
           return res.status(400).json({ message: 'Invalid references data' });
@@ -1686,24 +1693,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // 인덱스가 유효한지 확인
       if (index < 0 || index >= references.length) {
+        console.log('유효하지 않은 인덱스:', index, '전체 참조 파일 개수:', references.length);
         return res.status(404).json({ message: 'Reference file not found' });
       }
       
       const file = references[index];
+      console.log('다운로드할 파일 정보:', file);
       
-      // 파일을 가져오기 위한 처리 (파일 메타데이터만 있기 때문에 실제 파일은 없음)
-      // 테스트를 위해 더미 데이터 응답
-      res.setHeader('Content-Type', 'application/octet-stream');
-      res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
+      // 실제 파일이 없으므로 텍스트 기반 더미 파일 생성
+      const fileName = encodeURIComponent(file.name);
       
-      // 실제 파일 내용 대신 파일명과 메타데이터를 포함한 텍스트 보내기
+      // MIME 타입 설정
+      res.setHeader('Content-Type', 'text/plain');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      
+      // 파일 내용 생성 (텍스트 형식)
       const fileContent = `이 파일은 ${file.name}입니다.\n` +
                         `크기: ${file.size || 'N/A'}\n` +
                         `추가된 날짜: ${file.addedAt || 'N/A'}\n\n` +
                         `참고: 이 파일은 참조용 메타데이터만 있는 더미 파일입니다.`;
       
+      // CORS 헤더 추가 (필요한 경우)
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      
+      console.log('파일 다운로드 응답 전송 시작');
       return res.send(fileContent);
     } catch (error) {
+      console.error('다운로드 처리 중 오류 발생:', error);
       return handleApiError(res, error);
     }
   });
