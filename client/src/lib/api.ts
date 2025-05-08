@@ -117,21 +117,41 @@ export async function updateSegment(
   target: string,
   status: string,
   comment?: string,
-  comments?: Comment[]
+  comments?: Comment[],
+  origin?: string  // Add origin as optional parameter
 ): Promise<TranslationUnit> {
   try {
+    // First, get current segment to preserve fields if needed
+    const segmentResponse = await apiRequest(
+      "GET",
+      `/api/segments/${id}`
+    );
+    
+    const segment = await segmentResponse.json();
+    
+    // Prepare update data
+    const updateData = { 
+      target, 
+      status, 
+      // If origin is not provided, keep the existing one
+      origin: origin || segment.origin,
+      ...(comment !== undefined && { comment }),
+      ...(comments !== undefined && { comments })
+    };
+    
+    // Log update operation
+    console.log(`Updating segment ${id}:`, updateData);
+    
     const response = await apiRequest(
       "PATCH",
       `/api/segments/${id}`,
-      { 
-        target, 
-        status, 
-        ...(comment !== undefined && { comment }),
-        ...(comments !== undefined && { comments })
-      }
+      updateData
     );
     
-    return await response.json();
+    const updatedSegment = await response.json();
+    console.log(`Segment ${id} updated:`, updatedSegment);
+    
+    return updatedSegment;
   } catch (error) {
     console.error("Error updating segment:", error);
     throw error;
@@ -152,19 +172,32 @@ export async function saveComment(
     
     const segment = await segmentResponse.json();
     
+    // Log segment details before saving
+    console.log("Saving comment to segment:", {
+      id: segmentId,
+      target: segment.target,
+      status: segment.status,
+      origin: segment.origin,
+      comment: comment
+    });
+    
     // Update the segment with single comment
     const response = await apiRequest(
       "PATCH",
       `/api/segments/${segmentId}`,
       { 
         comment,
-        // Keep other fields unchanged
+        // Keep ALL other fields unchanged
         target: segment.target || "",
-        status: segment.status
+        status: segment.status,
+        origin: segment.origin // Preserve the origin field
       }
     );
     
-    return await response.json();
+    const responseData = await response.json();
+    console.log("Comment saved successfully:", responseData);
+    
+    return responseData;
   } catch (error) {
     console.error("Error saving comment:", error);
     throw error;
