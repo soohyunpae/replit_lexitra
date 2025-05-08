@@ -1459,6 +1459,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const { deadline, glossaryId, tmId, name, description } = req.body;
+      const userId = req.user!.id;
+      const userRole = req.user!.role;
       
       // 프로젝트가 존재하는지 확인
       const project = await db.query.projects.findFirst({
@@ -1467,6 +1469,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!project) {
         return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      // admin 권한 체크
+      if (userRole !== 'admin') {
+        return res.status(403).json({ message: 'Only admins can edit project information' });
       }
       
       // 프로젝트 정보 업데이트
@@ -1494,6 +1501,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const { notes } = req.body;
+      const userId = req.user!.id;
+      const userRole = req.user!.role;
       
       // 프로젝트가 존재하는지 확인
       const project = await db.query.projects.findFirst({
@@ -1502,6 +1511,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!project) {
         return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      // admin 권한 체크
+      if (userRole !== 'admin') {
+        return res.status(403).json({ message: 'Only admins can edit project notes' });
       }
       
       // 프로젝트 노트 업데이트
@@ -1525,6 +1539,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const { files } = req.body; // 파일 메타데이터 배열
+      const userId = req.user!.id;
+      const userRole = req.user!.role;
       
       // 프로젝트가 존재하는지 확인
       const project = await db.query.projects.findFirst({
@@ -1533,6 +1549,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!project) {
         return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      // admin 권한 체크
+      if (userRole !== 'admin') {
+        return res.status(403).json({ message: 'Only admins can add reference files' });
       }
       
       // 현재 참조 파일 메타데이터 가져오기
@@ -1575,6 +1596,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }));
       
       return res.json(newReferences);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // 프로젝트 참조 파일 삭제 API
+  app.delete(`${apiPrefix}/projects/:id/references/:index`, verifyToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const index = parseInt(req.params.index);
+      const userId = req.user!.id;
+      const userRole = req.user!.role;
+      
+      // 프로젝트가 존재하는지 확인
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, id)
+      });
+      
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      // admin 권한 체크
+      if (userRole !== 'admin') {
+        return res.status(403).json({ message: 'Only admins can delete reference files' });
+      }
+      
+      // 현재 참조 파일 메타데이터 가져오기
+      let references = [];
+      if (project.references) {
+        try {
+          references = JSON.parse(project.references);
+        } catch (e) {
+          console.warn('Failed to parse existing references:', e);
+          return res.status(400).json({ message: 'Invalid references data' });
+        }
+      }
+      
+      // 인덱스가 유효한지 확인
+      if (index < 0 || index >= references.length) {
+        return res.status(404).json({ message: 'Reference file not found' });
+      }
+      
+      // 해당 인덱스의 참조 파일 제거
+      references.splice(index, 1);
+      
+      // 프로젝트 업데이트
+      const [updatedProject] = await db
+        .update(schema.projects)
+        .set({
+          references: JSON.stringify(references),
+          updatedAt: new Date()
+        })
+        .where(eq(schema.projects.id, id))
+        .returning();
+      
+      return res.json({ success: true, references });
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // 프로젝트 참조 파일 다운로드 API
+  app.get(`${apiPrefix}/projects/:id/references/:index/download`, verifyToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const index = parseInt(req.params.index);
+      
+      // 프로젝트가 존재하는지 확인
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, id)
+      });
+      
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      // 현재 참조 파일 메타데이터 가져오기
+      let references = [];
+      if (project.references) {
+        try {
+          references = JSON.parse(project.references);
+        } catch (e) {
+          console.warn('Failed to parse existing references:', e);
+          return res.status(400).json({ message: 'Invalid references data' });
+        }
+      }
+      
+      // 인덱스가 유효한지 확인
+      if (index < 0 || index >= references.length) {
+        return res.status(404).json({ message: 'Reference file not found' });
+      }
+      
+      const fileRef = references[index];
+      const filePath = path.join(REPO_ROOT, 'uploads', 'references', `${id}_${fileRef.name}`);
+      
+      // 파일이 존재하는지 확인
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: 'File not found on server' });
+      }
+      
+      // 파일 전송
+      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(fileRef.name)}"`);
+      res.setHeader('Content-Type', fileRef.type || 'application/octet-stream');
+      
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
     } catch (error) {
       return handleApiError(res, error);
     }
