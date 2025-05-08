@@ -641,10 +641,11 @@ export default function UnifiedTranslationMemoryPage() {
             </div>
           </div>
 
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-4 mb-6">
-            {/* Search */}
-            <div className="relative md:col-span-4 flex items-center justify-between">
-              <div className="relative flex-1">
+          <div className="mb-6">
+            {/* Search and Filters in a single row */}
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+              {/* Search Box */}
+              <div className="relative flex-grow">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search in Translation Memory..."
@@ -653,21 +654,13 @@ export default function UnifiedTranslationMemoryPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <div className="ml-3 px-3 py-1 bg-muted rounded-md text-sm">
-                <span className="font-medium">
-                  {tmData ? tmData.length : 0}
-                </span>{" "}
-                total entries
-              </div>
-            </div>
-
-            {/* Source Language Filter */}
-            <div>
+              
+              {/* Source Language Filter */}
               <Select
                 value={sourceLanguageFilter}
                 onValueChange={setSourceLanguageFilter}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Source language" />
                 </SelectTrigger>
                 <SelectContent>
@@ -681,15 +674,13 @@ export default function UnifiedTranslationMemoryPage() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
 
-            {/* Target Language Filter */}
-            <div>
+              {/* Target Language Filter */}
               <Select
                 value={targetLanguageFilter}
                 onValueChange={setTargetLanguageFilter}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Target language" />
                 </SelectTrigger>
                 <SelectContent>
@@ -704,10 +695,6 @@ export default function UnifiedTranslationMemoryPage() {
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Status Filter Removed */}
-
-            {/* Resource Filter Removed - Now Using Resource Badges */}
           </div>
 
           {/* Stats Summary Removed - Now displayed next to search box */}
