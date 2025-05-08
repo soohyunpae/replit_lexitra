@@ -56,15 +56,17 @@ function TmMatch({ match, onUse, sourceSimilarity, highlightTerms = [] }: TmMatc
   };
   
   return (
-    <div className="bg-accent/50 rounded-md p-3">
+    <div className="bg-accent/50 rounded-md p-3 mb-3">
       <div className="flex justify-between items-center mb-1">
-        <div className="font-mono font-medium">{highlightText(match.source)}</div>
+        <div className="font-mono text-sm">{highlightText(match.source)}</div>
         <div className="text-xs text-muted-foreground">
-          <span className="font-semibold">{sourceSimilarity}%</span> · {match.sourceLanguage} → {match.targetLanguage}
+          <span className="font-semibold">{sourceSimilarity}%</span>
         </div>
       </div>
-      <div className="flex justify-between items-center">
-        <div className="font-mono text-muted-foreground">{highlightText(match.target)}</div>
+      <div className="font-mono text-xs text-muted-foreground mb-2">
+        {highlightText(match.target)}
+      </div>
+      <div className="flex justify-end">
         <Button 
           size="sm" 
           variant="ghost" 
@@ -81,15 +83,17 @@ function TmMatch({ match, onUse, sourceSimilarity, highlightTerms = [] }: TmMatc
 // Glossary Term Component
 function GlossaryTerm({ term, onUse }: { term: Glossary, onUse: (term: string) => void }) {
   return (
-    <div className="bg-accent/50 rounded-md p-3">
+    <div className="bg-accent/50 rounded-md p-3 mb-3">
       <div className="flex justify-between items-center mb-1">
-        <div className="font-mono font-medium">{term.source}</div>
+        <div className="font-mono text-sm">{term.source}</div>
         <div className="text-xs text-muted-foreground">
-          {term.sourceLanguage} → {term.targetLanguage}
+          <span className="font-semibold">Glossary</span>
         </div>
       </div>
-      <div className="flex justify-between items-center">
-        <div className="font-mono text-muted-foreground">{term.target}</div>
+      <div className="font-mono text-xs text-muted-foreground mb-2">
+        {term.target}
+      </div>
+      <div className="flex justify-end">
         <Button 
           size="sm" 
           variant="ghost" 
@@ -262,12 +266,7 @@ export function SidePanel({
               )}
             </div>
             
-            {selectedSegment && !tmSearchQuery && (
-              <div className="mb-4">
-                <div className="text-xs font-semibold mb-1 text-muted-foreground">Active Segment</div>
-                <div className="text-sm mb-2 bg-accent/50 p-2 rounded font-mono">{selectedSegment.source}</div>
-              </div>
-            )}
+            {/* Removed Active Segment section as requested */}
             
             {displayedTmMatches.length > 0 ? (
               <div className="space-y-4">
@@ -325,12 +324,7 @@ export function SidePanel({
               )}
             </div>
             
-            {selectedSegment && !tbSearchQuery && (
-              <div className="mb-4">
-                <div className="text-xs font-semibold mb-1 text-muted-foreground">Active Segment</div>
-                <div className="text-sm mb-2 bg-accent/50 p-2 rounded font-mono">{selectedSegment.source}</div>
-              </div>
-            )}
+            {/* Removed Active Segment section as requested */}
             
             {tbSearchQuery.length >= 2 ? (
               globalGlossaryResults.length > 0 ? (
