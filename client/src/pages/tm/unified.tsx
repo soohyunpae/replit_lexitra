@@ -37,7 +37,6 @@ import {
   FileText,
   Upload,
   ChevronRight,
-  ChevronLeft,
   X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -97,10 +96,6 @@ export default function UnifiedTranslationMemoryPage() {
   // Dialog states
   const [addEntryDialogOpen, setAddEntryDialogOpen] = useState(false);
   const [addResourceDialogOpen, setAddResourceDialogOpen] = useState(false);
-  
-  // Pagination
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 20; // 페이지당 표시할 항목 수 (20개)
   
   // Entry form setup
   const entryForm = useForm<TmEntryFormValues>({
@@ -322,25 +317,7 @@ export default function UnifiedTranslationMemoryPage() {
   // Handle TM resource click for filtering
   function handleResourceClick(resourceId: string) {
     setResourceFilter(resourceId);
-    setCurrentPage(1); // 필터가 변경되면 첫 페이지로 이동
   }
-  
-  // Calculate pagination
-  const paginatedTM = React.useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredTM.slice(startIndex, endIndex);
-  }, [filteredTM, currentPage, itemsPerPage]);
-  
-  // Handle page change
-  function handlePageChange(newPage: number) {
-    setCurrentPage(newPage);
-  }
-  
-  // Reset to first page when filters change
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, sourceLanguageFilter, targetLanguageFilter, statusFilter]);
 
   return (
     <MainLayout title="Translation Memory">
@@ -768,7 +745,7 @@ export default function UnifiedTranslationMemoryPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  paginatedTM.map((entry: any) => (
+                  filteredTM.map((entry: any) => (
                     <TableRow key={entry.id}>
                       <TableCell className="font-medium">
                         {entry.source}
@@ -826,38 +803,6 @@ export default function UnifiedTranslationMemoryPage() {
               </TableBody>
             </Table>
           </div>
-
-          {/* Pagination controls */}
-          {filteredTM.length > 0 && (
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">
-                Showing {paginatedTM.length} of {filteredTM.length} entries
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  <span className="sr-only">Previous Page</span>
-                </Button>
-                <div className="text-sm">
-                  Page {currentPage} of {Math.max(1, Math.ceil(filteredTM.length / itemsPerPage))}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage >= Math.ceil(filteredTM.length / itemsPerPage)}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                  <span className="sr-only">Next Page</span>
-                </Button>
-              </div>
-            </div>
-          )}
 
           {/* Admin actions moved to header */}
         </div>
