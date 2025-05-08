@@ -469,13 +469,8 @@ export function NewTranslationEditor({
         onSave();
       }
       
-      // Recalculate status counts after save
-      const newStatusCounts: Record<string, number> = {};
-      localSegments.forEach(segment => {
-        const status = segment.status || "Draft";
-        newStatusCounts[status] = (newStatusCounts[status] || 0) + 1;
-      });
-      setStatusCounts(newStatusCounts);
+      // No need to manually recalculate status counts here
+      // The useEffect hook will handle it automatically when localSegments changes
       
       toast({
         title: "Save Complete",
@@ -570,22 +565,8 @@ export function NewTranslationEditor({
         }
       });
       
+      // Update local segments - the useEffect hook will handle recalculating status counts
       setLocalSegments(updatedSegments);
-      
-      // Recalculate status counts after bulk update
-      const newStatusCounts: Record<string, number> = { ...statusCounts };
-      checkedIds.forEach(id => {
-        const segment = updatedSegments.find(s => s.id === id);
-        if (segment) {
-          // Decrement the old status count
-          const oldStatus = localSegments.find(s => s.id === id)?.status || "Draft";
-          newStatusCounts[oldStatus] = (newStatusCounts[oldStatus] || 0) - 1;
-          
-          // Increment the new status count
-          newStatusCounts[status] = (newStatusCounts[status] || 0) + 1;
-        }
-      });
-      setStatusCounts(newStatusCounts);
       
       toast({
         title: "Status Update Complete",
