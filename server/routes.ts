@@ -1700,25 +1700,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const file = references[index];
       console.log('다운로드할 파일 정보:', file);
       
-      // 실제 파일이 없으므로 텍스트 기반 더미 파일 생성
+      // 파일 유형에 따른 처리
+      const fileType = file.type || 'application/octet-stream';
       const fileName = encodeURIComponent(file.name);
       
-      // MIME 타입 설정
-      res.setHeader('Content-Type', 'text/plain');
+      // Content-Type 및 Content-Disposition 헤더 설정
+      res.setHeader('Content-Type', fileType);
       res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
       
-      // 파일 내용 생성 (텍스트 형식)
-      const fileContent = `이 파일은 ${file.name}입니다.\n` +
-                        `크기: ${file.size || 'N/A'}\n` +
-                        `추가된 날짜: ${file.addedAt || 'N/A'}\n\n` +
-                        `참고: 이 파일은 참조용 메타데이터만 있는 더미 파일입니다.`;
-      
-      // CORS 헤더 추가 (필요한 경우)
+      // CORS 헤더 추가
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
       
-      console.log('파일 다운로드 응답 전송 시작');
+      // 파일 타입에 따라 적절한 내용 생성
+      let fileContent;
+      
+      if (fileType.startsWith('image/')) {
+        // 이미지 파일인 경우 간단한 이미지 데이터 생성 (1x1 픽셀 투명 PNG)
+        if (fileType === 'image/png') {
+          // 1x1 투명 PNG 파일 (Base64)
+          const transparentPngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+          fileContent = Buffer.from(transparentPngBase64, 'base64');
+        } else if (fileType === 'image/jpeg' || fileType === 'image/jpg') {
+          // 1x1 흰색 JPEG 파일 (Base64)
+          const whiteJpegBase64 = '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigD//2Q==';
+          fileContent = Buffer.from(whiteJpegBase64, 'base64');
+        } else if (fileType === 'image/gif') {
+          // 1x1 투명 GIF 파일 (Base64)
+          const transparentGifBase64 = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+          fileContent = Buffer.from(transparentGifBase64, 'base64');
+        } else {
+          // 기타 이미지 형식은 PNG로 대체
+          const transparentPngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+          fileContent = Buffer.from(transparentPngBase64, 'base64');
+        }
+      } else if (fileType === 'text/html') {
+        // HTML 파일인 경우
+        fileContent = `<!DOCTYPE html>
+<html>
+<head>
+  <title>${file.name}</title>
+</head>
+<body>
+  <h1>샘플 HTML 파일</h1>
+  <p>이 파일은 ${file.name} 입니다.</p>
+  <p>크기: ${file.size || 'N/A'}</p>
+  <p>추가된 날짜: ${file.addedAt || 'N/A'}</p>
+  <p>참고: 이 파일은 참조용 메타데이터만 있는 더미 파일입니다.</p>
+</body>
+</html>`;
+      } else if (fileType === 'application/pdf') {
+        // PDF 파일을 위한 간단한 데이터 생성
+        // 매우 기본적인 PDF 구조 (실제 PDF 문서처럼 보이지 않을 수 있음)
+        const pdfData = '%PDF-1.4\n1 0 obj\n<</Type /Catalog /Pages 2 0 R>>\nendobj\n2 0 obj\n<</Type /Pages /Kids [3 0 R] /Count 1>>\nendobj\n3 0 obj\n<</Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R>>\nendobj\n4 0 obj\n<</Length 90>>\nstream\nBT\n/F1 12 Tf\n100 700 Td\n(This is a dummy PDF file for preview) Tj\n(File name: '+file.name+') \'\nET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f\n0000000010 00000 n\n0000000056 00000 n\n0000000111 00000 n\n0000000198 00000 n\ntrailer\n<</Size 5 /Root 1 0 R>>\nstartxref\n288\n%%EOF';
+        fileContent = Buffer.from(pdfData);
+      } else if (fileType === 'text/plain' || fileType.startsWith('text/')) {
+        // 텍스트 파일인 경우
+        fileContent = `이 파일은 ${file.name}입니다.\n` +
+                     `크기: ${file.size || 'N/A'}\n` +
+                     `추가된 날짜: ${file.addedAt || 'N/A'}\n\n` +
+                     `참고: 이 파일은 참조용 메타데이터만 있는 더미 파일입니다.`;
+      } else if (fileType === 'application/json') {
+        // JSON 파일인 경우
+        const jsonData = {
+          fileName: file.name,
+          fileSize: file.size || 'N/A',
+          addedAt: file.addedAt || 'N/A',
+          description: '이 파일은 참조용 메타데이터만 있는 더미 파일입니다.'
+        };
+        fileContent = JSON.stringify(jsonData, null, 2);
+      } else {
+        // 기타 모든 파일 형식에 대한 기본 텍스트 내용
+        fileContent = `이 파일은 ${file.name}입니다.\n` +
+                     `크기: ${file.size || 'N/A'}\n` +
+                     `추가된 날짜: ${file.addedAt || 'N/A'}\n\n` +
+                     `참고: 이 파일은 참조용 메타데이터만 있는 더미 파일입니다.`;
+      }
+      
+      console.log('파일 다운로드 응답 전송 시작, 타입:', fileType);
       return res.send(fileContent);
     } catch (error) {
       console.error('다운로드 처리 중 오류 발생:', error);
