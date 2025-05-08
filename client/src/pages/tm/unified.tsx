@@ -643,14 +643,22 @@ export default function UnifiedTranslationMemoryPage() {
 
           <div className="grid gap-4 grid-cols-1 md:grid-cols-4 mb-6">
             {/* Search */}
-            <div className="relative md:col-span-4">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search in Translation Memory..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            <div className="relative md:col-span-4 flex items-center justify-between">
+              <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search in Translation Memory..."
+                  className="pl-8"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <div className="ml-3 px-3 py-1 bg-muted rounded-md text-sm">
+                <span className="font-medium">
+                  {tmData ? tmData.length : 0}
+                </span>{" "}
+                total entries
+              </div>
             </div>
 
             {/* Source Language Filter */}
@@ -697,39 +705,12 @@ export default function UnifiedTranslationMemoryPage() {
               </Select>
             </div>
 
-            {/* Status Filter */}
-            <div>
-              <Select 
-                value={statusFilter} 
-                onValueChange={setStatusFilter}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all_statuses">All statuses</SelectItem>
-                  {filters.statuses.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Status Filter Removed */}
 
             {/* Resource Filter Removed - Now Using Resource Badges */}
           </div>
 
-          {/* Stats Summary */}
-          <div className="flex flex-wrap gap-3 items-center mb-4">
-            <div className="px-3 py-1 bg-muted rounded-md text-sm">
-              <span className="font-medium">
-                {tmData ? tmData.length : 0}
-              </span>{" "}
-              total entries
-            </div>
-            {/* Source and target langs indicators removed */}
-          </div>
+          {/* Stats Summary Removed - Now displayed next to search box */}
 
           {/* TM Entries Table */}
           <div className="rounded-md border overflow-hidden">
