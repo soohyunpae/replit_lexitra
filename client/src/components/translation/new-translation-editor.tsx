@@ -281,7 +281,8 @@ export function NewTranslationEditor({
           segment.id === id ? { 
             ...segment, 
             target, 
-            status: updatedStatus, // Use updatedStatus instead of status
+            // Make sure updatedStatus is never undefined
+            status: updatedStatus || segment.status,
             origin: updatedOrigin || segment.origin,
             modified: true // Mark as modified
           } : segment
