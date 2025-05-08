@@ -26,8 +26,8 @@ export function MainLayout({
           showSidebarTrigger={showSidebarTrigger}
         />
         
-        {/* Page Content */}
-        <div className="flex-1 overflow-auto p-6">
+        {/* Page Content - overflow-y-auto allows scrolling in the main content area */}
+        <div className="flex-1 p-6 overflow-y-auto">
           {children}
         </div>
       </div>
