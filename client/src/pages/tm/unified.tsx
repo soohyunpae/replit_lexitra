@@ -728,14 +728,7 @@ export default function UnifiedTranslationMemoryPage() {
               </span>{" "}
               total entries
             </div>
-            <div className="px-3 py-1 bg-muted rounded-md text-sm">
-              <span className="font-medium">{filters.source.length}</span>{" "}
-              source langs
-            </div>
-            <div className="px-3 py-1 bg-muted rounded-md text-sm">
-              <span className="font-medium">{filters.target.length}</span>{" "}
-              target langs
-            </div>
+            {/* Source and target langs indicators removed */}
           </div>
 
           {/* TM Entries Table */}
@@ -746,7 +739,6 @@ export default function UnifiedTranslationMemoryPage() {
                   <TableHead>Source</TableHead>
                   <TableHead>Target</TableHead>
                   <TableHead>Project</TableHead>
-                  <TableHead>Status</TableHead>
                   <TableHead>Origin</TableHead>
                   <TableHead>Added</TableHead>
                   <TableHead>Modified by</TableHead>
@@ -756,51 +748,27 @@ export default function UnifiedTranslationMemoryPage() {
               <TableBody>
                 {isLoadingEntries ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 8 : 7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-8 text-muted-foreground">
                       Loading TM entries...
                     </TableCell>
                   </TableRow>
                 ) : filteredTM.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 8 : 7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-8 text-muted-foreground">
                       No translation memory entries found
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredTM.map((entry: any) => (
                     <TableRow key={entry.id}>
-                      <TableCell className="max-w-xs truncate font-medium">
+                      <TableCell className="font-medium">
                         {entry.source}
                       </TableCell>
-                      <TableCell className="max-w-xs truncate">
+                      <TableCell>
                         {entry.target}
                       </TableCell>
                       <TableCell>
                         {entry.projectName || "—"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="inline-flex px-2 py-1 rounded-full text-xs font-medium">
-                          {entry.status === "100%" && (
-                            <span className="status-badge-100 px-2 py-0.5 rounded-full">
-                              100%
-                            </span>
-                          )}
-                          {entry.status === "Fuzzy" && (
-                            <span className="status-badge-fuzzy px-2 py-0.5 rounded-full">
-                              Fuzzy
-                            </span>
-                          )}
-                          {entry.status === "MT" && (
-                            <span className="status-badge-mt px-2 py-0.5 rounded-full">
-                              MT
-                            </span>
-                          )}
-                          {entry.status === "Reviewed" && (
-                            <span className="status-badge-reviewed px-2 py-0.5 rounded-full">
-                              Reviewed
-                            </span>
-                          )}
-                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="inline-flex px-2 py-1 rounded-full text-xs font-medium">
