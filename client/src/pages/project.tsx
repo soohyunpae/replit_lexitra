@@ -66,6 +66,7 @@ export default function Project() {
 
   // References & Notes 상태 관리
   const [note, setNote] = useState("");
+  const [isNotesEditing, setIsNotesEditing] = useState(false);
   const [references, setReferences] = useState<File[]>([]);
   const [savedReferences, setSavedReferences] = useState<SavedReference[]>([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -1102,29 +1103,51 @@ export default function Project() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <Card className="md:col-span-2">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center">
+                <CardTitle className="text-lg flex items-center justify-between">
                   <span>📝 Project Notes</span>
+                  {!isNotesEditing && note && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setIsNotesEditing(true)}
+                      className="text-xs"
+                    >
+                      <Pencil className="h-3.5 w-3.5 mr-1" />
+                      Edit
+                    </Button>
+                  )}
                 </CardTitle>
                 <CardDescription />
               </CardHeader>
               <CardContent>
-                <Textarea
-                  placeholder="Document translation guidelines, special requirements, terminology instructions..."
-                  className="min-h-24"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                />
+                {isNotesEditing || !note ? (
+                  <Textarea
+                    placeholder="Document translation guidelines, special requirements, terminology instructions..."
+                    className="min-h-24"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                  />
+                ) : (
+                  <div className="border rounded-md p-3 min-h-24 text-sm whitespace-pre-wrap">
+                    {note || "No notes available."}
+                  </div>
+                )}
               </CardContent>
-              <CardFooter className="flex justify-end pt-0">
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => saveNotes.mutate()}
-                  disabled={saveNotes.isPending}
-                >
-                  {saveNotes.isPending ? "Saving..." : "Save Notes"}
-                </Button>
-              </CardFooter>
+              {(isNotesEditing || !note) && (
+                <CardFooter className="flex justify-end pt-0">
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => {
+                      saveNotes.mutate();
+                      setIsNotesEditing(false);
+                    }}
+                    disabled={saveNotes.isPending}
+                  >
+                    {saveNotes.isPending ? "Saving..." : "Save Notes"}
+                  </Button>
+                </CardFooter>
+              )}
             </Card>
           </div>
 
