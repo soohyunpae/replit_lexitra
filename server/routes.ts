@@ -2279,6 +2279,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return handleApiError(res, error);
     }
   });
+  
+  // Search glossary with term matching
+  app.get(`${apiPrefix}/glossary/search`, verifyToken, async (req, res) => {
+    try {
+      const sourceLanguage = req.query.sourceLanguage as string;
+      const targetLanguage = req.query.targetLanguage as string;
+      const query = req.query.query as string;
+      
+      if (!sourceLanguage || !targetLanguage) {
+        return res.status(400).json({ message: 'Source and target languages are required' });
+      }
+      
+      if (!query || query.length < 2) {
+        return res.status(400).json({ message: 'Search query must be at least 2 characters long' });
+      }
+      
+      // Use SQL ILIKE for case-insensitive pattern matching
+      const terms = await db.query.glossary.findMany({
+        where: and(
+          eq(schema.glossary.sourceLanguage, sourceLanguage),
+          eq(schema.glossary.targetLanguage, targetLanguage),
+          or(
+            sql`${schema.glossary.source} ILIKE ${`%${query}%`}`,
+            sql`${schema.glossary.target} ILIKE ${`%${query}%`}`
+          )
+        ),
+        limit: 20
+      });
+      
+      return res.json(terms);
+    } catch (error) {
+      console.error("Error searching glossary:", error);
+      return handleApiError(res, error);
+    }
+  });
 
   // Get all Glossary resources
   app.get(`${apiPrefix}/glossary/resources`, verifyToken, async (req, res) => {
