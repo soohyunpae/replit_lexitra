@@ -337,28 +337,59 @@ export default function UnifiedGlossaryPage() {
   const uploadFileMutation = useMutation({
     mutationFn: async (formData: FormData) => {
       setIsUploading(true);
-      // Use the admin route for glossary file upload
-      const response = await apiRequest("POST", "/api/admin/tb/upload", formData, {
-        // Let the browser set the content type with proper boundary for FormData
-      });
-      return response.json();
+      try {
+        // Add source and target language to formData if not present
+        if (!formData.has('sourceLanguage')) {
+          formData.append('sourceLanguage', 'ko');
+        }
+        if (!formData.has('targetLanguage')) {
+          formData.append('targetLanguage', 'en');
+        }
+        
+        // Use the admin route for glossary file upload
+        const response = await apiRequest("POST", "/api/admin/tb/upload", formData, {
+          // Let the browser set the content type with proper boundary for FormData
+        });
+        
+        // Handle any errors that might not throw exceptions
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to upload glossary file');
+        }
+        
+        return await response.json();
+      } catch (err: any) {
+        console.error("File upload error:", err);
+        setIsUploading(false);
+        throw err;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/glossary/all"] });
       queryClient.invalidateQueries({ queryKey: ["/api/glossary/resources"] });
       toast({
         title: "File uploaded",
-        description: "The glossary file has been uploaded and processed successfully.",
+        description: `The glossary file has been uploaded and processed successfully. ${data.message || ''}`,
       });
       setIsUploading(false);
+      
+      // Reset the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     },
     onError: (error: any) => {
       toast({
         title: "Upload failed",
-        description: error.message || "Failed to upload glossary file",
+        description: error.message || "Failed to upload glossary file. Please check the file format.",
         variant: "destructive",
       });
       setIsUploading(false);
+      
+      // Reset the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     },
   });
 
