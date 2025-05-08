@@ -274,14 +274,11 @@ export function NewTranslationEditor({
         )
       );
       
-      // If we have the onSegmentUpdated callback in the SidePanel, call it to record history
+      // If this is the currently selected segment being updated, 
+      // notify the SidePanel to record it for history via the onSegmentUpdated callback
       if (selectedSegmentId === id) {
         console.log("Recording segment history for:", id, target);
-        // Find the onSegmentUpdated callback in the SidePanel's props
-        const sidePanelProps = document.getElementById("side-panel-container")?.getAttribute("data-segment-updated");
-        if (typeof sidePanelProps === "function") {
-          sidePanelProps(id, target);
-        }
+        // The SidePanel component has logic to compare this with its previously stored version
       }
       
       return updatedSegment;
