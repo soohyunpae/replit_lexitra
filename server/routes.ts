@@ -8,7 +8,7 @@ import { fromZodError } from "zod-validation-error";
 import { ZodError } from "zod";
 import { translateWithGPT } from "./openai";
 import { setupAuth } from "./auth";
-import { setupTokenAuth, verifyToken, JWT_SECRET, JwtPayload } from "./token-auth";
+import { setupTokenAuth, verifyToken, optionalToken, JWT_SECRET, JwtPayload } from "./token-auth";
 import jwt from "jsonwebtoken";
 import { isAdmin, isResourceOwnerOrAdmin, canManageProject, errorHandler } from "./auth-middleware";
 import multer from "multer";
@@ -1658,8 +1658,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // 프로젝트 참조 파일 다운로드 API
-  app.get(`${apiPrefix}/projects/:id/references/:index/download`, async (req, res) => {
+  // 프로젝트 참조 파일 다운로드 API (인증 불필요)
+  app.get(`${apiPrefix}/projects/:id/references/:index/download`, optionalToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const index = parseInt(req.params.index);

@@ -75,6 +75,40 @@ export function verifyToken(req: Request, res: Response, next: NextFunction) {
 }
 
 /**
+ * Optional token verification - allows requests to proceed even without a token
+ * Used for routes that should be accessible to both authenticated and unauthenticated users
+ */
+export function optionalToken(req: Request, res: Response, next: NextFunction) {
+  // Get token from Authorization header (Bearer token)
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(' ')[1];
+
+  if (!token) {
+    // Continue without authentication
+    return next();
+  }
+
+  try {
+    // Verify the token
+    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    
+    // Attach user info to request object
+    req.user = {
+      id: decoded.id,
+      username: decoded.username,
+      role: decoded.role
+    };
+  } catch (error) {
+    // Token is invalid, but we don't return an error 
+    // Just continue without authentication
+    console.warn('Invalid token in optional auth:', error);
+  }
+  
+  // Continue to the route handler
+  next();
+}
+
+/**
  * Setup token-based authentication routes
  */
 export function setupTokenAuth(app: Express) {
