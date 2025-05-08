@@ -87,6 +87,7 @@ export function highlightMatches(source: string, target: string): {
 
 // Format a file size in bytes to a human-readable string
 export function formatFileSize(bytes: number): string {
+  if (bytes === undefined || bytes === null || isNaN(bytes)) return '';
   if (bytes === 0) return '0 Bytes';
   
   const k = 1024;

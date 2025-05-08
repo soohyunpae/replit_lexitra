@@ -208,18 +208,11 @@ export default function Project() {
         queryKey: [`/api/projects/${projectId}`],
       });
       
-      // 새로운 참조 파일 즉시 표시
+      // 새로운 참조 파일 즉시 표시 - 서버에서 받은 데이터로 UI 업데이트
       if (data && Array.isArray(data)) {
         console.log("Adding new files to savedReferences:", data);
-        const newRefs = data.map((file: any) => ({
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          addedAt: new Date().toISOString(),
-        }));
         setSavedReferences((prev) => {
-          console.log("Previous savedReferences:", prev);
-          const updated = [...prev, ...newRefs];
+          const updated = [...prev, ...data];
           console.log("Updated savedReferences:", updated);
           return updated;
         });
