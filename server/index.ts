@@ -34,8 +34,21 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // extended: true 사용하여 중첩 객체 허용
 
+// uploads 디렉토리 확인 및 생성
+import fs from 'fs';
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  console.log('Creating uploads directory');
+  try {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    console.log('uploads directory created successfully');
+  } catch (err) {
+    console.error('Failed to create uploads directory:', err);
+  }
+}
+
 // 정적 파일 제공
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+app.use('/uploads', express.static(uploadsDir));
 
 // 멀티파트 데이터 허용 크기 증가 (100MB 제한)
 app.use(express.json({ limit: '100mb' }));
@@ -77,9 +90,23 @@ app.use((req, res, next) => {
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
+    
+    console.error('Server error:', {
+      status,
+      message,
+      stack: err.stack,
+      name: err.name,
+      code: err.code
+    });
 
-    res.status(status).json({ message });
-    throw err;
+    res.status(status).json({ 
+      message,
+      error: app.get('env') === 'development' ? {
+        stack: err.stack,
+        name: err.name,
+        code: err.code
+      } : undefined
+    });
   });
 
   // importantly only setup vite in development and after
