@@ -195,6 +195,7 @@ export default function Project() {
       return response.json();
     },
     onSuccess: (data) => {
+      console.log("File upload successful, received data:", data);
       toast({
         title: "Reference files added",
         description: `${references.length} file(s) added successfully.`,
@@ -209,13 +210,21 @@ export default function Project() {
       
       // 새로운 참조 파일 즉시 표시
       if (data && Array.isArray(data)) {
+        console.log("Adding new files to savedReferences:", data);
         const newRefs = data.map((file: any) => ({
           name: file.name,
           size: file.size,
           type: file.type,
           addedAt: new Date().toISOString(),
         }));
-        setSavedReferences((prev) => [...prev, ...newRefs]);
+        setSavedReferences((prev) => {
+          console.log("Previous savedReferences:", prev);
+          const updated = [...prev, ...newRefs];
+          console.log("Updated savedReferences:", updated);
+          return updated;
+        });
+      } else {
+        console.log("Data is not an array:", data);
       }
     },
     onError: (error) => {
