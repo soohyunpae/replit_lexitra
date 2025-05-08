@@ -209,35 +209,34 @@ export function SidePanel({
   useEffect(() => {
     if (selectedSegment) {
       setCommentText(selectedSegment.comment || "");
+      // Reset editing state when segment changes
+      setIsCommentEditing(!selectedSegment.comment);
     } else {
       setCommentText("");
+      setIsCommentEditing(false);
     }
   }, [selectedSegment]);
   
   // Get current user information from Auth context
   const { user } = useAuth();
   
+  // State for comment editing mode
+  const [isCommentEditing, setIsCommentEditing] = useState(false);
+  
   // Save a comment to the segment
-  const handleAddComment = async () => {
-    if (!selectedSegment || !commentText.trim()) return;
-    if (!user) {
-      alert("You need to be logged in to add comments");
-      return;
-    }
+  const handleSaveComment = async () => {
+    if (!selectedSegment) return;
     
     setIsSavingComment(true);
     try {
       // Use saveComment function for a single comment
-      const updatedSegment = await saveComment(
+      await saveComment(
         selectedSegment.id,
         commentText.trim()
       );
       
-      // Clear the input field after successful save
-      setCommentText("");
-      
-      // Success message
-      alert("Comment saved successfully");
+      // Exit editing mode after successful save
+      setIsCommentEditing(false);
     } catch (error) {
       console.error("Error saving comment:", error);
       alert("Failed to save comment");
@@ -401,73 +400,77 @@ export function SidePanel({
         
         <TabsContent value="comments" className="flex-1 overflow-auto">
           <div className="p-4">
-            <div className="text-sm font-medium mb-2">Comments</div>
+            <div className="text-sm font-medium mb-2 flex items-center justify-between">
+              <span>Comments</span>
+              {!isCommentEditing && selectedSegment?.comment && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setIsCommentEditing(true)}
+                  className="text-xs"
+                >
+                  <Edit className="h-3.5 w-3.5 mr-1" />
+                  Edit
+                </Button>
+              )}
+            </div>
             
-            {/* Single comment display with edit functionality */}
-            <div className="space-y-4">
-              {selectedSegment && selectedSegment.comment ? (
-                <div className="bg-accent/50 rounded-md p-3 text-sm mb-4">
-                  <div className="flex items-center gap-1.5 mb-1 text-xs font-medium">
-                    <User className="h-3 w-3" />
-                    <span>Comment</span>
+            <div className="space-y-2">
+              {isCommentEditing ? (
+                <>
+                  <Textarea
+                    placeholder="Add comments, notes or special instructions for this segment..."
+                    className="min-h-[120px] text-sm"
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    disabled={!selectedSegment || isSavingComment}
+                    autoFocus
+                  />
+                  <div className="flex justify-end">
                     <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-5 px-1 ml-auto"
-                      onClick={() => setCommentText(selectedSegment.comment || "")}
+                      size="sm"
+                      className="text-xs"
+                      onClick={handleSaveComment}
+                      disabled={!selectedSegment || isSavingComment}
                     >
-                      <Edit className="h-3 w-3 mr-1" />
-                      <span className="text-xs">Edit</span>
+                      {isSavingComment ? (
+                        <>
+                          <FileSearch className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <MessageSquarePlus className="h-3.5 w-3.5 mr-1.5" />
+                          Save Comment
+                        </>
+                      )}
                     </Button>
                   </div>
-                  <div className="whitespace-pre-wrap">{selectedSegment.comment}</div>
-                </div>
+                </>
               ) : (
-                <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center mb-4">
-                  No comments available for this segment. Add a comment below.
+                <div 
+                  className={`border rounded-md p-3 min-h-[120px] text-sm whitespace-pre-wrap cursor-pointer`}
+                  onClick={() => setIsCommentEditing(true)}
+                >
+                  {selectedSegment?.comment 
+                    ? selectedSegment.comment 
+                    : <span className="text-muted-foreground">Add comment for this segment. Click to edit.</span>
+                  }
                 </div>
               )}
-              
-              <div className="space-y-2">
-                <Textarea 
-                  placeholder="Add or edit comment for this segment..." 
-                  className="min-h-[80px] text-sm"
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  disabled={!selectedSegment}
-                />
-                <div className="flex justify-end">
-                  <Button 
-                    size="sm"
-                    className="text-xs"
-                    onClick={handleAddComment}
-                    disabled={!selectedSegment || isSavingComment || !commentText.trim()}
-                  >
-                    {isSavingComment ? (
-                      <>
-                        <FileSearch className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                        Saving...
-                      </>
-                    ) : selectedSegment && selectedSegment.comment ? (
-                      <>
-                        <Edit className="h-3.5 w-3.5 mr-1.5" />
-                        Update Comment
-                      </>
-                    ) : (
-                      <>
-                        <MessageSquarePlus className="h-3.5 w-3.5 mr-1.5" />
-                        Add Comment
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="text-xs text-muted-foreground mt-2">
-                <span className="font-medium">Tip:</span> You can use simple Markdown in comments: 
-                **bold**, *italic*, `code`, and • bullet points.
-              </div>
             </div>
+            
+            <div className="text-xs text-muted-foreground mt-2">
+              <span className="font-medium">Tip:</span> You can use simple Markdown in comments: 
+              **bold**, *italic*, `code`, and • bullet points.
+            </div>
+            
+            {isSavingComment && (
+              <div className="mt-2 text-xs text-muted-foreground flex items-center">
+                <div className="animate-spin mr-1 h-3 w-3 border-t-2 border-primary rounded-full"></div>
+                Saving comment...
+              </div>
+            )}
           </div>
         </TabsContent>
         
