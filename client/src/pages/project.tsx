@@ -991,118 +991,138 @@ export default function Project() {
                       </div>
                     ))}
                     
-                    {/* Drag and drop area for adding more files */}
-                    <div 
-                      className="border-2 border-dashed border-border/50 rounded-md p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
-                      onClick={() => fileInputRef.current?.click()}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        e.currentTarget.classList.add('border-primary');
-                      }}
-                      onDragLeave={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        e.currentTarget.classList.remove('border-primary');
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        e.currentTarget.classList.remove('border-primary');
-                        
-                        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                          const newFiles = Array.from(e.dataTransfer.files);
-                          setReferences([...references, ...newFiles]);
-                          // Upload the files
-                          uploadReferences.mutate(newFiles);
-                        }
-                      }}
-                    >
-                      <Upload className="h-6 w-6 text-muted-foreground mb-2" />
-                      <p className="text-xs text-muted-foreground">
-                        Drop files here or click to add more
-                      </p>
-                    </div>
+                    {/* Drag and drop area for adding more files (admin only) */}
+                    {isAdmin && (
+                      <div 
+                        className="border-2 border-dashed border-border/50 rounded-md p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
+                        onClick={() => fileInputRef.current?.click()}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.add('border-primary');
+                        }}
+                        onDragLeave={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.remove('border-primary');
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.remove('border-primary');
+                          
+                          if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                            const newFiles = Array.from(e.dataTransfer.files);
+                            setReferences([...references, ...newFiles]);
+                            // Upload the files
+                            uploadReferences.mutate(newFiles);
+                          }
+                        }}
+                      >
+                        <Upload className="h-6 w-6 text-muted-foreground mb-2" />
+                        <p className="text-xs text-muted-foreground">
+                          Drop files here or click to add more
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div 
-                    className="text-center py-8 border-2 border-dashed border-border/50 rounded-lg mb-4 hover:border-primary/50 transition-colors cursor-pointer"
-                    onClick={() => fileInputRef.current?.click()}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      e.currentTarget.classList.add('border-primary');
-                    }}
-                    onDragLeave={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      e.currentTarget.classList.remove('border-primary');
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      e.currentTarget.classList.remove('border-primary');
-                      
-                      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                        const newFiles = Array.from(e.dataTransfer.files);
-                        setReferences([...references, ...newFiles]);
-                        // Upload the files
-                        uploadReferences.mutate(newFiles);
-                      }
-                    }}
-                  >
-                    <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-3">
-                      <Upload className="h-6 w-6 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-sm font-medium mb-1">
-                      No Reference Files
-                    </h3>
-                    <p className="text-muted-foreground text-xs max-w-md mx-auto mb-2">
-                      Upload reference files to help translators understand
-                      context and terminology
-                    </p>
-                    <p className="text-xs text-primary">
-                      Drop files here or click to upload
-                    </p>
-                  </div>
+                  <>
+                    {isAdmin ? (
+                      <div 
+                        className="text-center py-8 border-2 border-dashed border-border/50 rounded-lg mb-4 hover:border-primary/50 transition-colors cursor-pointer"
+                        onClick={() => fileInputRef.current?.click()}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.add('border-primary');
+                        }}
+                        onDragLeave={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.remove('border-primary');
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.remove('border-primary');
+                          
+                          if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                            const newFiles = Array.from(e.dataTransfer.files);
+                            setReferences([...references, ...newFiles]);
+                            // Upload the files
+                            uploadReferences.mutate(newFiles);
+                          }
+                        }}
+                      >
+                        <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-3">
+                          <Upload className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-sm font-medium mb-1">
+                          No Reference Files
+                        </h3>
+                        <p className="text-muted-foreground text-xs max-w-md mx-auto mb-2">
+                          Upload reference files to help translators understand
+                          context and terminology
+                        </p>
+                        <p className="text-xs text-primary">
+                          Drop files here or click to upload
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 border-2 border-border/50 rounded-lg mb-4">
+                        <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-3">
+                          <File className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-sm font-medium mb-1">
+                          No Reference Files
+                        </h3>
+                        <p className="text-muted-foreground text-xs max-w-md mx-auto">
+                          No reference files have been added to this project yet.
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
 
-                {/* Add references button */}
-                <div className="flex items-center justify-end">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Reference Files
-                  </Button>
+                {/* Add references button (admin only) */}
+                {isAdmin && (
+                  <div className="flex items-center justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Reference Files
+                    </Button>
 
-                  {/* Hidden file input */}
-                  <input
-                    type="file"
-                    multiple
-                    ref={fileInputRef}
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files.length > 0) {
-                        const newFiles = Array.from(e.target.files);
-                        setReferences([...references, ...newFiles]);
+                    {/* Hidden file input */}
+                    <input
+                      type="file"
+                      multiple
+                      ref={fileInputRef}
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          const newFiles = Array.from(e.target.files);
+                          setReferences([...references, ...newFiles]);
 
-                        // Reset input field after selection
-                        if (fileInputRef.current) {
-                          fileInputRef.current.value = "";
+                          // Reset input field after selection
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = "";
+                          }
+
+                          // If there are files, upload them
+                          if (newFiles.length > 0) {
+                            uploadReferences.mutate(newFiles);
+                          }
                         }
-
-                        // If there are files, upload them
-                        if (newFiles.length > 0) {
-                          uploadReferences.mutate(newFiles);
-                        }
-                      }
-                    }}
-                  />
-                </div>
+                      }}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -1113,7 +1133,7 @@ export default function Project() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center justify-between">
                   <span>📝 Project Notes</span>
-                  {!isNotesEditing && note && (
+                  {!isNotesEditing && note && isAdmin && (
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -1139,13 +1159,14 @@ export default function Project() {
                       setIsNotesEditing(false);
                     }}
                     autoFocus
+                    disabled={!isAdmin}
                   />
                 ) : (
                   <div 
-                    className="border rounded-md p-3 min-h-24 text-sm whitespace-pre-wrap"
-                    onClick={() => setIsNotesEditing(true)}
+                    className={`border rounded-md p-3 min-h-24 text-sm whitespace-pre-wrap ${isAdmin ? 'cursor-pointer' : ''}`}
+                    onClick={() => isAdmin && setIsNotesEditing(true)}
                   >
-                    {note || "No notes available. Click to add notes."}
+                    {note || "No notes available."}
                   </div>
                 )}
                 {saveNotes.isPending && (
