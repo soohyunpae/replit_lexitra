@@ -95,6 +95,10 @@ export default function UnifiedGlossaryPage() {
   const [targetLanguageFilter, setTargetLanguageFilter] = useState<string>("all_target_languages");
   const [resourceFilter, setResourceFilter] = useState<number | undefined>(undefined);
   
+  // Pagination
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 20; // 페이지당 표시할 항목 수 (20개)
+  
   // Dialog states
   const [addTermDialogOpen, setAddTermDialogOpen] = useState(false);
   const [addResourceDialogOpen, setAddResourceDialogOpen] = useState(false);
@@ -329,6 +333,23 @@ export default function UnifiedGlossaryPage() {
       deleteResourceMutation.mutate(id);
     }
   }
+  
+  // Handle page change
+  function handlePageChange(newPage: number) {
+    setCurrentPage(newPage);
+  }
+  
+  // Calculate paginated glossary terms
+  const paginatedGlossary = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredGlossary.slice(startIndex, endIndex);
+  }, [filteredGlossary, currentPage, itemsPerPage]);
+  
+  // Reset to first page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, sourceLanguageFilter, targetLanguageFilter, resourceFilter]);
   
   // Handle file upload for glossary
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -768,7 +789,7 @@ export default function UnifiedGlossaryPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredGlossary.map((term: any) => (
+                  paginatedGlossary.map((term: any) => (
                     <TableRow key={term.id}>
                       <TableCell className="font-medium">{term.source}</TableCell>
                       <TableCell>{term.target}</TableCell>
@@ -805,6 +826,38 @@ export default function UnifiedGlossaryPage() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination controls */}
+          {filteredGlossary.length > 0 && (
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-muted-foreground">
+                Showing {paginatedGlossary.length} of {filteredGlossary.length} terms
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="sr-only">Previous Page</span>
+                </Button>
+                <div className="text-sm">
+                  Page {currentPage} of {Math.max(1, Math.ceil(filteredGlossary.length / itemsPerPage))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= Math.ceil(filteredGlossary.length / itemsPerPage)}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                  <span className="sr-only">Next Page</span>
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* No admin actions here - already in header */}
         </div>
