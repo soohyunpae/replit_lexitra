@@ -66,20 +66,15 @@ export function EditableSegment({
     
     // Automatically update as user types (change origin to HT when edited)
     if (!isSource && onUpdate) {
-      // Only process changes when the value is actually different
-      if (newValue !== segment.target) {
-        // If value is different from original target and origin was MT, 100%, or Fuzzy, change to HT
-        const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
-        const newOrigin = needsOriginChange ? "HT" : segment.origin;
-        
-        // Automatically change status to Draft if it was Reviewed and user is editing it
-        const newStatus = segment.status === "Reviewed" ? "Draft" : segment.status;
-        
-        onUpdate(newValue, newStatus, newOrigin);
-      } else {
-        // If value is not changed, just pass the existing status and origin
-        onUpdate(newValue, segment.status, segment.origin);
-      }
+      // If value is different from original target and origin was MT, 100%, or Fuzzy, change to HT
+      const isValueChanged = newValue !== segment.target;
+      const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
+      const newOrigin = isValueChanged && needsOriginChange ? "HT" : segment.origin;
+      
+      // Automatically change status to Draft if it was Reviewed and user is editing it
+      const newStatus = (isValueChanged && segment.status === "Reviewed") ? "Draft" : segment.status;
+      
+      onUpdate(newValue, newStatus, newOrigin);
     }
     
     // Resize textarea to fit content

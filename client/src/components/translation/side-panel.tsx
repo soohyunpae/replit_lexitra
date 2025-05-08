@@ -2,12 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, X, Database, Lightbulb, MessageSquare, MessageSquarePlus, History, FileSearch, User, Edit } from "lucide-react";
+import { Search, X, Database, Lightbulb, MessageSquare, MessageSquarePlus, History, FileSearch } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { type TranslationMemory, type Glossary, type TranslationUnit, type Comment } from "@/types";
+import { type TranslationMemory, type Glossary, type TranslationUnit } from "@/types";
 import { apiRequest } from "@/lib/queryClient";
-import { searchGlossaryTerms, updateSegment, saveComment } from "@/lib/api";
-import { useAuth } from "@/hooks/use-auth";
+import { searchGlossaryTerms } from "@/lib/api";
 
 interface SidePanelProps {
   tmMatches: TranslationMemory[];
@@ -123,8 +122,6 @@ export function SidePanel({
   const [globalTmResults, setGlobalTmResults] = useState<TranslationMemory[]>([]);
   const [globalGlossaryResults, setGlobalGlossaryResults] = useState<Glossary[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [isSavingComment, setIsSavingComment] = useState(false);
   
   // Function to search TM globally
   const searchGlobalTM = async (query: string) => {
@@ -204,46 +201,6 @@ export function SidePanel({
     setGlobalTmResults([]);
     setGlobalGlossaryResults([]);
   }, [activeTab]);
-  
-  // Load existing comment when selected segment changes
-  useEffect(() => {
-    if (selectedSegment) {
-      setCommentText(selectedSegment.comment || "");
-      // Reset editing state when segment changes
-      setIsCommentEditing(!selectedSegment.comment);
-    } else {
-      setCommentText("");
-      setIsCommentEditing(false);
-    }
-  }, [selectedSegment]);
-  
-  // Get current user information from Auth context
-  const { user } = useAuth();
-  
-  // State for comment editing mode
-  const [isCommentEditing, setIsCommentEditing] = useState(false);
-  
-  // Save a comment to the segment
-  const handleSaveComment = async () => {
-    if (!selectedSegment) return;
-    
-    setIsSavingComment(true);
-    try {
-      // Use saveComment function for a single comment
-      await saveComment(
-        selectedSegment.id,
-        commentText.trim()
-      );
-      
-      // Exit editing mode after successful save
-      setIsCommentEditing(false);
-    } catch (error) {
-      console.error("Error saving comment:", error);
-      alert("Failed to save comment");
-    } finally {
-      setIsSavingComment(false);
-    }
-  };
   
   // Determine which TM matches to display
   const displayedTmMatches = tmSearchQuery.length >= 2 
@@ -400,77 +357,41 @@ export function SidePanel({
         
         <TabsContent value="comments" className="flex-1 overflow-auto">
           <div className="p-4">
-            <div className="text-sm font-medium mb-2 flex items-center justify-between">
-              <span>Comments</span>
-              {!isCommentEditing && selectedSegment?.comment && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setIsCommentEditing(true)}
-                  className="text-xs"
-                >
-                  <Edit className="h-3.5 w-3.5 mr-1" />
-                  Edit
-                </Button>
-              )}
-            </div>
+            <div className="text-sm font-medium mb-2">Comments</div>
             
-            <div className="space-y-2">
-              {isCommentEditing ? (
-                <>
-                  <Textarea
-                    placeholder="Add comments, notes or special instructions for this segment..."
-                    className="min-h-[120px] text-sm"
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    disabled={!selectedSegment || isSavingComment}
-                    autoFocus
-                  />
-                  <div className="flex justify-end">
-                    <Button 
-                      size="sm"
-                      className="text-xs"
-                      onClick={handleSaveComment}
-                      disabled={!selectedSegment || isSavingComment}
-                    >
-                      {isSavingComment ? (
-                        <>
-                          <FileSearch className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <MessageSquarePlus className="h-3.5 w-3.5 mr-1.5" />
-                          Save Comment
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <div 
-                  className={`border rounded-md p-3 min-h-[120px] text-sm whitespace-pre-wrap cursor-pointer`}
-                  onClick={() => setIsCommentEditing(true)}
-                >
-                  {selectedSegment?.comment 
-                    ? selectedSegment.comment 
-                    : <span className="text-muted-foreground">Add comment for this segment. Click to edit.</span>
-                  }
-                </div>
-              )}
-            </div>
+            {/* Removed Active Segment section as requested */}
             
-            <div className="text-xs text-muted-foreground mt-2">
-              <span className="font-medium">Tip:</span> You can use simple Markdown in comments: 
-              **bold**, *italic*, `code`, and • bullet points.
-            </div>
-            
-            {isSavingComment && (
-              <div className="mt-2 text-xs text-muted-foreground flex items-center">
-                <div className="animate-spin mr-1 h-3 w-3 border-t-2 border-primary rounded-full"></div>
-                Saving comment...
+            <div className="space-y-4">
+              <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center mb-4">
+                No comments available for this segment. Add a comment below.
               </div>
-            )}
+              
+              <div className="space-y-2">
+                <Textarea 
+                  placeholder="Add a comment about this segment..." 
+                  className="min-h-[100px] text-sm"
+                />
+                <div className="flex justify-end">
+                  <Button 
+                    size="sm"
+                    className="text-xs"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      // 추후 실제 댓글 저장 기능 구현 시 이 부분에 API 연동
+                      alert("Comment feature will be implemented in future updates");
+                    }}
+                  >
+                    <MessageSquarePlus className="h-3.5 w-3.5 mr-1.5" />
+                    Add Comment
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="text-xs text-muted-foreground mt-2">
+                <span className="font-medium">Tip:</span> You can use simple Markdown in comments: 
+                **bold**, *italic*, `code`, and • bullet points.
+              </div>
+            </div>
           </div>
         </TabsContent>
         

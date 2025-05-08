@@ -1,5 +1,5 @@
 import { apiRequest } from "@/lib/queryClient";
-import { type TranslationUnit, type TranslationMemory, type Glossary, type Comment } from "@/types";
+import { type TranslationUnit, type TranslationMemory, type Glossary } from "@/types";
 
 // Helper function to download a file with authentication
 export async function downloadFile(url: string, filename: string): Promise<void> {
@@ -115,91 +115,18 @@ export async function searchTranslationMemory(
 export async function updateSegment(
   id: number,
   target: string,
-  status: string,
-  comment?: string,
-  comments?: Comment[],
-  origin?: string  // Add origin as optional parameter
+  status: string
 ): Promise<TranslationUnit> {
   try {
-    // First, get current segment to preserve fields if needed
-    const segmentResponse = await apiRequest(
-      "GET",
-      `/api/segments/${id}`
-    );
-    
-    const segment = await segmentResponse.json();
-    
-    // Prepare update data
-    const updateData = { 
-      target, 
-      status, 
-      // If origin is not provided, keep the existing one
-      origin: origin || segment.origin,
-      ...(comment !== undefined && { comment }),
-      ...(comments !== undefined && { comments })
-    };
-    
-    // Log update operation
-    console.log(`Updating segment ${id}:`, updateData);
-    
     const response = await apiRequest(
       "PATCH",
       `/api/segments/${id}`,
-      updateData
+      { target, status }
     );
     
-    const updatedSegment = await response.json();
-    console.log(`Segment ${id} updated:`, updatedSegment);
-    
-    return updatedSegment;
+    return await response.json();
   } catch (error) {
     console.error("Error updating segment:", error);
-    throw error;
-  }
-}
-
-// Save comment to a segment (single comment)
-export async function saveComment(
-  segmentId: number,
-  comment: string
-): Promise<TranslationUnit> {
-  try {
-    // First, get current segment
-    const segmentResponse = await apiRequest(
-      "GET",
-      `/api/segments/${segmentId}`
-    );
-    
-    const segment = await segmentResponse.json();
-    
-    // Log segment details before saving
-    console.log("Saving comment to segment:", {
-      id: segmentId,
-      target: segment.target,
-      status: segment.status,
-      origin: segment.origin,
-      comment: comment
-    });
-    
-    // Update the segment with single comment
-    const response = await apiRequest(
-      "PATCH",
-      `/api/segments/${segmentId}`,
-      { 
-        comment,
-        // Keep ALL other fields unchanged
-        target: segment.target || "",
-        status: segment.status,
-        origin: segment.origin // Preserve the origin field
-      }
-    );
-    
-    const responseData = await response.json();
-    console.log("Comment saved successfully:", responseData);
-    
-    return responseData;
-  } catch (error) {
-    console.error("Error saving comment:", error);
     throw error;
   }
 }
