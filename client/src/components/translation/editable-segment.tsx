@@ -71,7 +71,10 @@ export function EditableSegment({
       const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
       const newOrigin = isValueChanged && needsOriginChange ? "HT" : segment.origin;
       
-      onUpdate(newValue, segment.status, newOrigin);
+      // Automatically change status to Draft if it was Reviewed and user is editing it
+      const newStatus = (isValueChanged && segment.status === "Reviewed") ? "Draft" : segment.status;
+      
+      onUpdate(newValue, newStatus, newOrigin);
     }
     
     // Resize textarea to fit content
