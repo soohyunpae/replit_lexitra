@@ -6,7 +6,7 @@ import { Search, X, Database, Lightbulb, MessageSquare, MessageSquarePlus, Histo
 import { Textarea } from "@/components/ui/textarea";
 import { type TranslationMemory, type Glossary, type TranslationUnit } from "@/types";
 import { apiRequest } from "@/lib/queryClient";
-import { searchGlossaryTerms } from "@/lib/api";
+import { searchGlossaryTerms, updateSegment } from "@/lib/api";
 
 interface SidePanelProps {
   tmMatches: TranslationMemory[];
@@ -122,6 +122,8 @@ export function SidePanel({
   const [globalTmResults, setGlobalTmResults] = useState<TranslationMemory[]>([]);
   const [globalGlossaryResults, setGlobalGlossaryResults] = useState<Glossary[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [isSavingComment, setIsSavingComment] = useState(false);
   
   // Function to search TM globally
   const searchGlobalTM = async (query: string) => {
@@ -201,6 +203,39 @@ export function SidePanel({
     setGlobalTmResults([]);
     setGlobalGlossaryResults([]);
   }, [activeTab]);
+  
+  // Load existing comment when selected segment changes
+  useEffect(() => {
+    if (selectedSegment) {
+      setCommentText(selectedSegment.comment || "");
+    } else {
+      setCommentText("");
+    }
+  }, [selectedSegment]);
+  
+  // Save comment to the segment
+  const handleSaveComment = async () => {
+    if (!selectedSegment) return;
+    
+    setIsSavingComment(true);
+    try {
+      // Use the updateSegment function to update the comment
+      const updatedSegment = await updateSegment(
+        selectedSegment.id,
+        selectedSegment.target || "",
+        selectedSegment.status,
+        commentText
+      );
+      
+      // Toast notification for success
+      alert("Comment saved successfully");
+    } catch (error) {
+      console.error("Error saving comment:", error);
+      alert("Failed to save comment");
+    } finally {
+      setIsSavingComment(false);
+    }
+  };
   
   // Determine which TM matches to display
   const displayedTmMatches = tmSearchQuery.length >= 2 
@@ -362,27 +397,43 @@ export function SidePanel({
             {/* Removed Active Segment section as requested */}
             
             <div className="space-y-4">
-              <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center mb-4">
-                No comments available for this segment. Add a comment below.
-              </div>
+              {selectedSegment && selectedSegment.comment ? (
+                <div className="bg-accent/50 rounded-md p-3 text-sm mb-4">
+                  <div className="font-medium text-xs text-muted-foreground mb-1">Current Comment:</div>
+                  <div className="whitespace-pre-wrap">{selectedSegment.comment}</div>
+                </div>
+              ) : (
+                <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center mb-4">
+                  No comments available for this segment. Add a comment below.
+                </div>
+              )}
               
               <div className="space-y-2">
                 <Textarea 
                   placeholder="Add a comment about this segment..." 
                   className="min-h-[100px] text-sm"
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  disabled={!selectedSegment}
                 />
                 <div className="flex justify-end">
                   <Button 
                     size="sm"
                     className="text-xs"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      // 추후 실제 댓글 저장 기능 구현 시 이 부분에 API 연동
-                      alert("Comment feature will be implemented in future updates");
-                    }}
+                    onClick={handleSaveComment}
+                    disabled={!selectedSegment || isSavingComment}
                   >
-                    <MessageSquarePlus className="h-3.5 w-3.5 mr-1.5" />
-                    Add Comment
+                    {isSavingComment ? (
+                      <>
+                        <FileSearch className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <MessageSquarePlus className="h-3.5 w-3.5 mr-1.5" />
+                        {selectedSegment?.comment ? "Update Comment" : "Add Comment"}
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>

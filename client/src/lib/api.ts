@@ -115,13 +115,14 @@ export async function searchTranslationMemory(
 export async function updateSegment(
   id: number,
   target: string,
-  status: string
+  status: string,
+  comment?: string
 ): Promise<TranslationUnit> {
   try {
     const response = await apiRequest(
       "PATCH",
       `/api/segments/${id}`,
-      { target, status }
+      { target, status, ...(comment !== undefined && { comment }) }
     );
     
     return await response.json();
