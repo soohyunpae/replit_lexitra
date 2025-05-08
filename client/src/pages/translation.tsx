@@ -277,6 +277,16 @@ export default function Translation() {
     }
   }, [selectedSegment]);
   
+  // Auto-select first segment when file loads
+  useEffect(() => {
+    if (file && file.segments && file.segments.length > 0 && !selectedSegment) {
+      // Select the first segment automatically
+      setSelectedSegment(file.segments[0]);
+      // Log that we've auto-selected the first segment
+      console.log('Auto-selected first segment:', file.segments[0].id);
+    }
+  }, [file, selectedSegment]);
+  
   // Check editor access permissions
   useEffect(() => {
     if (!user) {
