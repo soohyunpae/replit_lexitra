@@ -16,14 +16,42 @@ import path from "path";
 import fs from "fs";
 
 // 파일 경로를 위한 변수 설정
-const __dirname = process.cwd();
+const REPO_ROOT = process.cwd();
+console.log('Repository root:', REPO_ROOT);
+
+// 필요한 모든 디렉토리를 생성하는 함수
+function ensureDirectories() {
+  const directories = [
+    path.join(REPO_ROOT, 'uploads'),
+    path.join(REPO_ROOT, 'uploads', 'tmp'),
+    path.join(REPO_ROOT, 'uploads', 'processed')
+  ];
+  
+  for (const dir of directories) {
+    if (!fs.existsSync(dir)) {
+      console.log(`Creating directory: ${dir}`);
+      try {
+        fs.mkdirSync(dir, { recursive: true });
+        console.log(`Directory created: ${dir}`);
+      } catch (err) {
+        console.error(`Failed to create directory ${dir}:`, err);
+      }
+    } else {
+      console.log(`Directory already exists: ${dir}`);
+    }
+  }
+}
+
+// 시작 시 디렉토리 확인
+ensureDirectories();
 
 // 파일 업로드를 위한 multer 설정
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // uploads 디렉토리가 없으면 생성
-    const uploadDir = path.join(__dirname, '..', 'uploads');
+    const uploadDir = path.join(REPO_ROOT, 'uploads', 'tmp');
+    // 업로드 직전에 디렉토리 확인
     if (!fs.existsSync(uploadDir)) {
+      console.log(`Creating tmp directory for upload: ${uploadDir}`);
       fs.mkdirSync(uploadDir, { recursive: true });
     }
     cb(null, uploadDir);
@@ -31,7 +59,9 @@ const storage = multer.diskStorage({
   filename: function (req, file, cb) {
     // 고유한 파일 이름 생성
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    const filename = file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname);
+    console.log(`Generated filename for upload: ${filename}`);
+    cb(null, filename);
   }
 });
 
@@ -333,6 +363,14 @@ function registerAdminRoutes(app: Express) {
       }
       
       console.log("TB File upload received:", req.file.originalname, "Size:", req.file.size, "bytes");
+      console.log("File path:", req.file.path);
+      
+      // 처리된 파일 저장을 위한 디렉토리 확인
+      const processedDir = path.join(REPO_ROOT, 'uploads', 'processed');
+      if (!fs.existsSync(processedDir)) {
+        console.log(`Creating processed directory: ${processedDir}`);
+        fs.mkdirSync(processedDir, { recursive: true });
+      }
       
       const file = req.file;
       // Make sure to provide defaults if values are not sent
@@ -554,7 +592,7 @@ function registerAdminRoutes(app: Express) {
         const fileContent = fileBuffer.toString('utf8', 0, Math.min(fileBuffer.length, 10000));
         
         // Create output directory if it doesn't exist
-        const outputDir = path.join(__dirname, '..', 'uploads', 'processed');
+        const outputDir = path.join(REPO_ROOT, 'uploads', 'processed');
         if (!fs.existsSync(outputDir)) {
           fs.mkdirSync(outputDir, { recursive: true });
         }
@@ -753,7 +791,7 @@ function registerAdminRoutes(app: Express) {
         // For other formats, in a real implementation, you would use appropriate libraries
         
         // Create processed directory if it doesn't exist
-        const outputDir = path.join(__dirname, '..', 'uploads', 'processed');
+        const outputDir = path.join(REPO_ROOT, 'uploads', 'processed');
         if (!fs.existsSync(outputDir)) {
           fs.mkdirSync(outputDir, { recursive: true });
         }
