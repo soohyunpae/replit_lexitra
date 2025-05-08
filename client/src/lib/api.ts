@@ -161,7 +161,7 @@ export async function saveToTM(
   }
 }
 
-// Get glossary terms
+// Get all glossary terms for a language pair
 export async function getGlossaryTerms(
   sourceLanguage: string,
   targetLanguage: string
@@ -176,5 +176,29 @@ export async function getGlossaryTerms(
   } catch (error) {
     console.error("Error fetching glossary terms:", error);
     throw error;
+  }
+}
+
+// Search glossary terms with a query string
+export async function searchGlossaryTerms(
+  query: string,
+  sourceLanguage: string,
+  targetLanguage: string
+): Promise<Glossary[]> {
+  try {
+    if (!query || query.length < 2) {
+      return [];
+    }
+    
+    const response = await apiRequest(
+      "GET",
+      `/api/glossary/search?query=${encodeURIComponent(query)}&sourceLanguage=${sourceLanguage}&targetLanguage=${targetLanguage}`,
+    );
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error searching glossary terms:", error);
+    // Return empty array instead of throwing to provide graceful degradation
+    return [];
   }
 }

@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, X, Database, Lightbulb, MessageSquare, History, FileSearch } from "lucide-react";
 import { type TranslationMemory, type Glossary, type TranslationUnit } from "@/types";
 import { apiRequest } from "@/lib/queryClient";
+import { searchGlossaryTerms } from "@/lib/api";
 
 interface SidePanelProps {
   tmMatches: TranslationMemory[];
@@ -157,13 +158,9 @@ export function SidePanel({
     
     setIsSearching(true);
     try {
-      const response = await apiRequest(
-        "GET", 
-        `/api/glossary/search?query=${encodeURIComponent(query)}&sourceLanguage=${sourceLanguage}&targetLanguage=${targetLanguage}`
-      );
-      
-      const data = await response.json();
-      setGlobalGlossaryResults(data);
+      // Use the dedicated API function instead of making the request directly
+      const results = await searchGlossaryTerms(query, sourceLanguage, targetLanguage);
+      setGlobalGlossaryResults(results);
     } catch (error) {
       console.error("Error searching glossary globally:", error);
       setGlobalGlossaryResults([]);
