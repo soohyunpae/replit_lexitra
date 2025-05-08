@@ -173,6 +173,35 @@ export default function Project() {
       });
     },
   });
+  
+  // 참조 파일 삭제 mutation
+  const deleteReferenceFile = useMutation({
+    mutationFn: async (fileIndex: number) => {
+      const response = await apiRequest(
+        "DELETE",
+        `/api/projects/${projectId}/references/${fileIndex}`,
+      );
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Reference file deleted",
+        description: "The reference file has been removed successfully.",
+      });
+      
+      // 프로젝트 데이터 새로고침
+      queryClient.invalidateQueries({
+        queryKey: [`/api/projects/${projectId}`],
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete reference file. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Reference 파일 업로드 mutation
   const uploadReferences = useMutation({
@@ -933,14 +962,8 @@ export default function Project() {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7"
-                          onClick={() => {
-                            // TODO: Implement delete reference file
-                            toast({
-                              title: "Not implemented",
-                              description:
-                                "Delete reference file functionality is not yet implemented.",
-                            });
-                          }}
+                          onClick={() => deleteReferenceFile.mutate(index)}
+                          disabled={deleteReferenceFile.isPending}
                         >
                           <X className="h-3 w-3" />
                         </Button>
@@ -1090,28 +1113,27 @@ export default function Project() {
                     className="min-h-24"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                  />
-                ) : (
-                  <div className="border rounded-md p-3 min-h-24 text-sm whitespace-pre-wrap">
-                    {note || "No notes available."}
-                  </div>
-                )}
-              </CardContent>
-              {(isNotesEditing || !note) && (
-                <CardFooter className="flex justify-end pt-0">
-                  <Button
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => {
+                    onBlur={() => {
                       saveNotes.mutate();
                       setIsNotesEditing(false);
                     }}
-                    disabled={saveNotes.isPending}
+                    autoFocus
+                  />
+                ) : (
+                  <div 
+                    className="border rounded-md p-3 min-h-24 text-sm whitespace-pre-wrap"
+                    onClick={() => setIsNotesEditing(true)}
                   >
-                    {saveNotes.isPending ? "Saving..." : "Save Notes"}
-                  </Button>
-                </CardFooter>
-              )}
+                    {note || "No notes available. Click to add notes."}
+                  </div>
+                )}
+                {saveNotes.isPending && (
+                  <div className="mt-2 text-xs text-muted-foreground flex items-center">
+                    <div className="animate-spin mr-1 h-3 w-3 border-t-2 border-primary rounded-full"></div>
+                    Saving notes...
+                  </div>
+                )}
+              </CardContent>
             </Card>
           </div>
 
