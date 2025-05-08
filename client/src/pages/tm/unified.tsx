@@ -37,6 +37,7 @@ import {
   FileText,
   Upload,
   ChevronRight,
+  ChevronLeft,
   X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -767,7 +768,7 @@ export default function UnifiedTranslationMemoryPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredTM.map((entry: any) => (
+                  paginatedTM.map((entry: any) => (
                     <TableRow key={entry.id}>
                       <TableCell className="font-medium">
                         {entry.source}
@@ -825,6 +826,38 @@ export default function UnifiedTranslationMemoryPage() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination controls */}
+          {filteredTM.length > 0 && (
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-muted-foreground">
+                Showing {paginatedTM.length} of {filteredTM.length} entries
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="sr-only">Previous Page</span>
+                </Button>
+                <div className="text-sm">
+                  Page {currentPage} of {Math.max(1, Math.ceil(filteredTM.length / itemsPerPage))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= Math.ceil(filteredTM.length / itemsPerPage)}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                  <span className="sr-only">Next Page</span>
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Admin actions moved to header */}
         </div>
