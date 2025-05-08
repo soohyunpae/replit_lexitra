@@ -37,7 +37,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
   storage: storage,
-  limits: { fileSize: 50 * 1024 * 1024 } // 50MB 제한
+  limits: { fileSize: 200 * 1024 * 1024 } // 200MB 제한 (50MB에서 증가)
 });
 
 // Helper function for calculating text similarity
@@ -323,6 +323,147 @@ function registerAdminRoutes(app: Express) {
     }
   });
 
+  // TB Upload endpoint (Glossary)
+  app.post("/api/admin/tb/upload", verifyToken, upload.single('file'), async (req: Request, res: Response) => {
+    try {
+      if (!checkAdminAccess(req, res)) return;
+      
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+      
+      console.log("TB File upload received:", req.file.originalname, "Size:", req.file.size, "bytes");
+      
+      const file = req.file;
+      const { sourceLanguage = 'EN', targetLanguage = 'KO' } = req.body;
+      
+      // Process the file based on its type
+      try {
+        let glossaryEntries = [];
+        let resourceName = file.originalname;
+        let domain = '';
+        
+        // Extract file extension
+        const fileExt = path.extname(file.originalname).toLowerCase();
+        
+        if (fileExt === '.csv') {
+          // Read the file as text
+          const content = fs.readFileSync(file.path, 'utf8');
+          const lines = content.split('\n');
+          
+          // Check if the file has headers
+          const firstLine = lines[0].trim();
+          const hasHeaders = firstLine.toLowerCase().includes('source') || 
+                            firstLine.toLowerCase().includes('target') ||
+                            firstLine.toLowerCase().includes('domain');
+          
+          const startIndex = hasHeaders ? 1 : 0;
+          
+          // Process CSV data
+          for (let i = startIndex; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            
+            const columns = line.split(',');
+            if (columns.length >= 2) {
+              // Assume source and target are required at minimum
+              const source = columns[0]?.trim() || '';
+              const target = columns[1]?.trim() || '';
+              
+              // Optional fields: could be domain, notes, etc.
+              let entrySourceLang = sourceLanguage;
+              let entryTargetLang = targetLanguage;
+              let entryDomain = domain;
+              
+              // Try to extract domain if available in the CSV
+              if (hasHeaders && columns.length > 2) {
+                const headers = firstLine.toLowerCase().split(',');
+                const domainIndex = headers.findIndex(h => h.includes('domain'));
+                
+                if (domainIndex >= 0 && columns[domainIndex]) {
+                  entryDomain = columns[domainIndex].trim();
+                }
+              }
+              
+              if (source && target) {
+                glossaryEntries.push({
+                  source,
+                  target,
+                  sourceLanguage: entrySourceLang,
+                  targetLanguage: entryTargetLang,
+                  domain: entryDomain,
+                  createdAt: new Date(),
+                  updatedAt: new Date()
+                });
+              }
+            }
+          }
+        } else if (fileExt === '.xlsx' || fileExt === '.xls') {
+          return res.status(400).json({ 
+            error: "Excel format is not supported yet. Please convert to CSV and try again." 
+          });
+        } else {
+          return res.status(400).json({ 
+            error: `Unsupported file format: ${fileExt}. Please use CSV format.` 
+          });
+        }
+        
+        if (glossaryEntries.length === 0) {
+          return res.status(400).json({ error: "No valid glossary entries found in the file" });
+        }
+        
+        console.log(`Processed ${glossaryEntries.length} glossary entries`);
+        
+        // Create TB resource record first
+        const tbResource = await db.insert(schema.tbResources).values({
+          name: resourceName,
+          description: `Uploaded from ${file.originalname}`,
+          domain: domain,
+          defaultSourceLanguage: sourceLanguage,
+          defaultTargetLanguage: targetLanguage,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }).returning();
+        
+        const resourceId = tbResource[0].id;
+        
+        // Add resource ID to all entries
+        glossaryEntries = glossaryEntries.map(entry => ({
+          ...entry,
+          resourceId
+        }));
+        
+        // Save glossary entries to database in chunks to avoid large inserts
+        const chunkSize = 100; // Process in smaller batches for glossary
+        for (let i = 0; i < glossaryEntries.length; i += chunkSize) {
+          const chunk = glossaryEntries.slice(i, i + chunkSize);
+          await db.insert(schema.glossary).values(chunk);
+          console.log(`Inserted chunk ${Math.floor(i/chunkSize) + 1} of ${Math.ceil(glossaryEntries.length/chunkSize)}`);
+        }
+        
+        return res.status(200).json({ 
+          message: `Successfully processed ${glossaryEntries.length} glossary entries`,
+          resourceId,
+          resourceName
+        });
+      } catch (fileError) {
+        console.error("Error processing glossary file:", fileError);
+        return res.status(500).json({ error: "Failed to process the glossary file: " + fileError.message });
+      } finally {
+        // Clean up the temporary file
+        try {
+          fs.unlinkSync(file.path);
+        } catch (unlinkErr) {
+          console.error(`Failed to unlink file ${file.path}:`, unlinkErr);
+        }
+      }
+    } catch (error) {
+      console.error("TB upload error:", error);
+      return handleApiError(res, error);
+    }
+  });
+  
   // PDF Processing - Extract Text endpoint
   app.post("/api/admin/file/pdf/process", verifyToken, upload.single('file'), async (req: Request, res: Response) => {
     try {
