@@ -713,6 +713,27 @@ export function NewTranslationEditor({
                 <SelectItem value="Rejected">Set as Rejected</SelectItem>
               </SelectContent>
             </Select>
+            
+            <div className="flex items-center ml-2">
+              <div className="flex items-center space-x-1.5">
+                <Checkbox 
+                  id="toggle-select-all" 
+                  checked={Object.keys(checkedSegments).length > 0 && Object.keys(checkedSegments).length === localSegments.length} 
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      handleSelectAll();
+                    } else {
+                      handleUnselectAll();
+                    }
+                  }}
+                />
+                <div className="flex items-center">
+                  <label htmlFor="toggle-select-all" className="text-xs font-medium ml-1 cursor-pointer">
+                    Select All ({checkedCount}/{localSegments.length})
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -727,35 +748,7 @@ export function NewTranslationEditor({
         </div>
       )}
       
-      {/* Bulk selection tools */}
-      <div className="bg-primary/5 border-b border-border px-4 py-2 flex items-center justify-between">
-        <div className="flex items-center">
-          <FileCheck className="h-4 w-4 text-primary mr-2" />
-          <span className="text-sm">
-            {checkedCount} segments selected
-          </span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleSelectAll}
-            className="h-8 text-xs"
-          >
-            Select All
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleUnselectAll}
-            className="h-8 text-xs"
-          >
-            Deselect All
-          </Button>
-        </div>
-      </div>
-      
-{/* Removed Bulk mode toggle */}
+      {/* No additional bulk selection tools here */}
       
       {/* Main content area */}
       <div className="flex-1 overflow-hidden flex">
