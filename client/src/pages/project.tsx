@@ -694,14 +694,16 @@ export default function Project() {
                   <CardTitle className="text-lg flex items-center">
                     <span>📋 Project Info</span>
                   </CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2 text-xs"
-                    onClick={() => setIsEditing(!isEditing)}
-                  >
-                    {isEditing ? "Cancel" : "Edit"}
-                  </Button>
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-xs"
+                      onClick={() => setIsEditing(!isEditing)}
+                    >
+                      {isEditing ? "Cancel" : "Edit"}
+                    </Button>
+                  )}
                 </div>
               </CardHeader>
               <CardContent className="text-sm space-y-3">
