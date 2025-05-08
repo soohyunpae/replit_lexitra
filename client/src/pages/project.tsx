@@ -964,19 +964,6 @@ export default function Project() {
                           </div>
                         </div>
                         <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => {
-                              // Prepare download link
-                              window.open(`/api/projects/${projectId}/references/${index}/download`, '_blank');
-                            }}
-                            title="Download file"
-                          >
-                            <FileDownIcon className="h-3 w-3" />
-                          </Button>
-                          
                           {isAdmin && (
                             <Button
                               variant="ghost"
