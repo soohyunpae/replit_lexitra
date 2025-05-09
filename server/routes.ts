@@ -2385,45 +2385,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get all glossary terms (for management page) with optional resourceId filter
   app.get(`${apiPrefix}/glossary/all`, verifyToken, async (req, res) => {
-  try {
-    const resourceId = req.query.resourceId ? parseInt(req.query.resourceId as string) : undefined;
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
-    const offset = (page - 1) * limit;
-
-    // Get total count first
-    const countQuery = resourceId 
-      ? db.select({ count: sql`count(*)` }).from(schema.glossary).where(eq(schema.glossary.resourceId, resourceId))
-      : db.select({ count: sql`count(*)` }).from(schema.glossary);
-
-    const [countResult] = await countQuery;
-    const totalItems = Number(countResult.count);
-
-    // Get paginated results
-    let terms;
-    if (resourceId) {
-      terms = await db.query.glossary.findMany({
-        where: eq(schema.glossary.resourceId, resourceId),
-        orderBy: desc(schema.glossary.createdAt),
-        limit: limit,
-        offset: offset
+    try {
+      const terms = await db.query.glossary.findMany({
+        orderBy: desc(schema.glossary.createdAt)
       });
-    } else {
-      terms = await db.query.glossary.findMany({
-        orderBy: desc(schema.glossary.createdAt),
-        limit: limit,
-        offset: offset
-      });
-    }
 
-    return res.json({
-      items: terms,
-      total: totalItems,
-      page,
-      totalPages: Math.ceil(totalItems / limit),
-      hasMore: offset + terms.length < totalItems
-    });
-  } catch (error) {
+      return res.json(terms);
+    } catch (error) {
       console.error('Error fetching glossary terms:', error);
       return handleApiError(res, error);
     }
