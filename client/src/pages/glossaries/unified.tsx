@@ -125,32 +125,26 @@ export default function UnifiedGlossaryPage() {
   });
 
   // Get all glossary terms
-  const [currentPage, setCurrentPage] = useState(1);
-const pageSize = 20;
-
-const {
+  const {
     data: glossaryData,
     isLoading: isLoadingTerms,
     error: termsError,
   } = useQuery({
-    queryKey: ["/api/glossary/all", resourceFilter, currentPage, pageSize],
+    queryKey: ["/api/glossary/all", resourceFilter],
     queryFn: async () => {
       try {
-        let url = `/api/glossary/all?page=${currentPage}&limit=${pageSize}`;
+        let url = "/api/glossary/all";
         if (resourceFilter) {
-          url += `&resourceId=${resourceFilter}`;
+          url += `?resourceId=${resourceFilter}`;
         }
         const res = await apiRequest("GET", url);
         return res.json();
       } catch (error) {
         console.error("Error fetching glossary terms:", error);
-        return { items: [], total: 0, page: 1, totalPages: 1, hasMore: false };
+        return [];
       }
     },
   });
-
-const terms = glossaryData?.items || [];
-const totalPages = glossaryData?.totalPages || 1;
 
   // Get glossary resources
   const { 
@@ -532,30 +526,6 @@ const totalPages = glossaryData?.totalPages || 1;
                                 ))}
                               </SelectContent>
                             </Select>
-
-{/* Pagination Controls */}
-<div className="flex items-center justify-between px-2 mt-4">
-  <Button
-    variant="outline"
-    size="sm"
-    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-    disabled={currentPage === 1}
-  >
-    Previous
-  </Button>
-  <span className="text-sm text-muted-foreground">
-    Page {currentPage} of {totalPages}
-  </span>
-  <Button
-    variant="outline"
-    size="sm"
-    onClick={() => setCurrentPage(prev => prev + 1)}
-    disabled={!glossaryData?.hasMore}
-  >
-    Next
-  </Button>
-</div>
-
                             <FormMessage />
                           </FormItem>
                         )}
