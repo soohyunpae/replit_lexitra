@@ -15,6 +15,7 @@ interface DocSegmentProps {
   onSave?: () => void;
   onCancel?: () => void;
   className?: string;
+  isDocumentMode?: boolean; // 문서 모드 여부
 }
 
 export function DocSegment({
@@ -27,6 +28,7 @@ export function DocSegment({
   onSave,
   onCancel,
   className,
+  isDocumentMode = false, // 기본값은 false
 }: DocSegmentProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
@@ -88,6 +90,78 @@ export function DocSegment({
     }
   };
   
+  // 문서 모드일 때 다른 스타일 적용
+  if (isDocumentMode) {
+    // 소스 패널 문서 모드
+    if (isSource) {
+      return (
+        <div 
+          id={`source-${segment.id}`}
+          className={cn(
+            "py-1 px-4 relative group font-serif",
+            isEditing && "bg-muted/20", 
+            className
+          )}
+        >
+          <p className="text-base whitespace-pre-wrap leading-relaxed">{segment.source}</p>
+        </div>
+      );
+    }
+    
+    // 타겟 패널 문서 모드
+    return (
+      <div 
+        className={cn(
+          "py-1 px-4 relative group transition-colors font-serif",
+          isEditing ? "bg-accent/30" : "hover:bg-accent/5",
+          className
+        )}
+        data-status={segment.status}
+        data-origin={segment.origin}
+        data-has-comment={segment.comment ? "true" : "false"}
+      >
+        {/* 편집 모드 */}
+        {isEditing ? (
+          <div className="relative my-1">
+            <Textarea
+              ref={textareaRef}
+              value={editedValue}
+              onChange={(e) => onEditValueChange?.(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="min-h-[80px] resize-none border-accent font-serif text-base"
+              placeholder="Enter translation..."
+            />
+            <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
+              <button 
+                onClick={onCancel}
+                className="p-1 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+                title="Cancel (Esc)"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+              <button 
+                onClick={onSave}
+                className="p-1 rounded-full bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800"
+                title="Save (Ctrl+Enter)"
+              >
+                <Check className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          // 보기 모드 (클릭 가능)
+          <p 
+            onClick={onSelectForEditing}
+            className="text-base whitespace-pre-wrap leading-relaxed cursor-text"
+          >
+            {segment.target || <span className="text-muted-foreground italic">Click to add translation</span>}
+          </p>
+        )}
+      </div>
+    );
+  }
+  
+  // 기존 세그먼트 에디터 모드 (문서 모드가 아닐 때)
   // Render source segment (read-only)
   if (isSource) {
     return (

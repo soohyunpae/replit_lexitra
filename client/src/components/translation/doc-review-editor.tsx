@@ -4,7 +4,7 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { 
   Save, Download, Languages, Eye, EyeOff, Check, X,
-  ArrowUp, ArrowDown, Smartphone, Monitor
+  ArrowUp, ArrowDown, Smartphone, Monitor, FileText
 } from 'lucide-react';
 import { TranslationUnit } from '@/types';
 import { DocSegment } from './doc-segment';
@@ -24,6 +24,66 @@ interface DocReviewEditorProps {
   fileId?: number; // fileId는 선택적으로 변경
 }
 
+// 세그먼트가 연속되어야 하는지 판단하는 함수
+function shouldBeConnected(
+  currentSegment: TranslationUnit, 
+  nextSegment: TranslationUnit | undefined,
+  segmentsArray: TranslationUnit[]
+): boolean {
+  // 다음 세그먼트가 없으면 연결하지 않음
+  if (!nextSegment) return false;
+  
+  // 양쪽 모두 텍스트가 있는지 확인
+  const currentHasText = currentSegment.source && currentSegment.source.trim().length > 0;
+  const nextHasText = nextSegment.source && nextSegment.source.trim().length > 0;
+  
+  if (!currentHasText || !nextHasText) return false;
+  
+  // 현재 세그먼트의 마지막 문자
+  const lastChar = currentSegment.source.trim().slice(-1);
+  
+  // 마침표, 물음표, 느낌표, 콜론 등으로 끝나면 연결하지 않음 (문단 구분)
+  if (['.', '?', '!', ':', ';'].includes(lastChar)) {
+    return false;
+  }
+  
+  // 줄바꿈이 있으면 연결하지 않음
+  if (currentSegment.source.includes('\n') || nextSegment.source.includes('\n')) {
+    return false;
+  }
+  
+  // 항목으로 시작하는 경우 (번호, 글머리 기호 등)
+  const bulletPattern = /^\s*[-•*]|\s*\d+\.\s+/;
+  if (nextSegment.source.match(bulletPattern)) {
+    return false;
+  }
+  
+  return true;
+}
+
+// 세그먼트 그룹화 함수
+function groupSegmentsByParagraphs(segments: TranslationUnit[]): TranslationUnit[][] {
+  const groups: TranslationUnit[][] = [];
+  let currentGroup: TranslationUnit[] = [];
+  
+  segments.forEach((segment, index) => {
+    currentGroup.push(segment);
+    
+    // 연결되지 않아야 하면 새 그룹 시작
+    if (!shouldBeConnected(segment, segments[index + 1], segments)) {
+      groups.push([...currentGroup]);
+      currentGroup = [];
+    }
+  });
+  
+  // 마지막 그룹이 있으면 추가
+  if (currentGroup.length > 0) {
+    groups.push(currentGroup);
+  }
+  
+  return groups;
+}
+
 export function DocReviewEditor({
   fileName,
   sourceLanguage,
@@ -38,6 +98,9 @@ export function DocReviewEditor({
   const [showSource, setShowSource] = useState(true);
   const [scrollSyncEnabled, setScrollSyncEnabled] = useState(true);
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
+  
+  // 문서 보기를 위해 세그먼트를 그룹화
+  const segmentGroups = groupSegmentsByParagraphs(segments);
   
   // References for the panels to sync scrolling
   const leftPanelRef = useRef<HTMLDivElement>(null);
@@ -173,6 +236,10 @@ export function DocReviewEditor({
               <Languages className="h-3.5 w-3.5 mr-1" />
               {sourceLanguage} → {targetLanguage}
             </Badge>
+            <Badge variant="outline" className="bg-muted/50">
+              <FileText className="h-3.5 w-3.5 mr-1" />
+              {fileName}
+            </Badge>
           </div>
         </div>
         
@@ -260,7 +327,7 @@ export function DocReviewEditor({
         {/* Source Panel - Hidden on mobile when showSource is false */}
         <div 
           className={cn(
-            "border-r",
+            "border-r bg-card/20",
             isMobile ? (showSource ? "h-1/2 overflow-y-auto" : "hidden") : "w-1/2 overflow-y-auto"
           )}
           ref={leftPanelRef}
@@ -280,16 +347,31 @@ export function DocReviewEditor({
             </div>
           )}
           
-          {/* Source segments */}
-          <div className="divide-y">
-            {segments.map(segment => (
-              <DocSegment
-                key={`source-${segment.id}`}
-                segment={segment}
-                isSource={true}
-                isEditing={editingId === segment.id}
-                className={isMobile ? "" : "h-auto"}
-              />
+          {/* Source segments as document paragraphs */}
+          <div className="p-4">
+            {segmentGroups.map((group, groupIndex) => (
+              <div 
+                key={`source-group-${groupIndex}`}
+                className={cn(
+                  "mb-4 rounded-md bg-card/30 shadow-sm overflow-hidden",
+                  group.length > 1 ? "border" : ""
+                )}
+              >
+                {group.map((segment, segmentIndex) => (
+                  <DocSegment
+                    key={`source-${segment.id}`}
+                    segment={segment}
+                    isSource={true}
+                    isEditing={editingId === segment.id}
+                    isDocumentMode={true}
+                    className={cn(
+                      segmentIndex === 0 ? "pt-3" : "pt-0",
+                      segmentIndex === group.length - 1 ? "pb-3" : "pb-0",
+                      editingId === segment.id ? "bg-muted/50" : ""
+                    )}
+                  />
+                ))}
+              </div>
             ))}
           </div>
         </div>
@@ -297,6 +379,7 @@ export function DocReviewEditor({
         {/* Target Panel */}
         <div 
           className={cn(
+            "bg-card/20",
             isMobile ? "flex-1 overflow-y-auto" : "w-1/2 overflow-y-auto"
           )}
           ref={rightPanelRef}
@@ -316,21 +399,35 @@ export function DocReviewEditor({
             </div>
           )}
           
-          {/* Target segments (editable) */}
-          <div className="divide-y">
-            {segments.map(segment => (
-              <DocSegment
-                key={`target-${segment.id}`}
-                segment={segment}
-                isSource={false}
-                isEditing={editingId === segment.id}
-                editedValue={editingId === segment.id ? editedValue : segment.target || ''}
-                onEditValueChange={setEditedValue}
-                onSelectForEditing={() => selectSegmentForEditing(segment)}
-                onSave={() => updateSegment(segment.id, editedValue)}
-                onCancel={cancelEditing}
-                className={isMobile ? "" : "h-auto"}
-              />
+          {/* Target segments as document paragraphs */}
+          <div className="p-4">
+            {segmentGroups.map((group, groupIndex) => (
+              <div 
+                key={`target-group-${groupIndex}`}
+                className={cn(
+                  "mb-4 rounded-md bg-card/30 shadow-sm overflow-hidden",
+                  group.length > 1 ? "border" : ""
+                )}
+              >
+                {group.map((segment, segmentIndex) => (
+                  <DocSegment
+                    key={`target-${segment.id}`}
+                    segment={segment}
+                    isSource={false}
+                    isEditing={editingId === segment.id}
+                    editedValue={editingId === segment.id ? editedValue : segment.target || ''}
+                    onEditValueChange={setEditedValue}
+                    onSelectForEditing={() => selectSegmentForEditing(segment)}
+                    onSave={() => updateSegment(segment.id, editedValue)}
+                    onCancel={cancelEditing}
+                    isDocumentMode={true}
+                    className={cn(
+                      segmentIndex === 0 ? "pt-3" : "pt-0",
+                      segmentIndex === group.length - 1 ? "pb-3" : "pb-0"
+                    )}
+                  />
+                ))}
+              </div>
             ))}
           </div>
         </div>

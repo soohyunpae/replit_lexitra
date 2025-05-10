@@ -2,11 +2,18 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, X, Database, Lightbulb, MessageSquare, MessageSquarePlus, History, FileSearch } from "lucide-react";
+import { 
+  Search, X, Database, Lightbulb, MessageSquare, MessageSquarePlus, 
+  History, FileSearch, CheckCircle, XCircle, AlertCircle, PenLine,
+  Bot, User, PenSquare, Circle, Info
+} from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { type TranslationMemory, type Glossary, type TranslationUnit } from "@/types";
 import { apiRequest } from "@/lib/queryClient";
 import { searchGlossaryTerms } from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
 
 interface SidePanelProps {
   tmMatches: TranslationMemory[];
@@ -78,6 +85,148 @@ function TmMatch({ match, onUse, sourceSimilarity, highlightTerms = [] }: TmMatc
         >
           Use Translation
         </Button>
+      </div>
+    </div>
+  );
+}
+
+// Segment Status Info Component
+function StatusInfoPanel({ segment }: { segment: TranslationUnit | null }) {
+  if (!segment) {
+    return (
+      <div className="bg-muted/50 rounded-md p-4 text-center text-muted-foreground">
+        <Info className="h-5 w-5 mx-auto mb-2 opacity-50" />
+        <p className="text-sm">Select a segment to view its status information</p>
+      </div>
+    );
+  }
+
+  // Get appropriate icon for status
+  const getStatusIcon = () => {
+    switch (segment.status) {
+      case 'Reviewed':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'Rejected':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      case 'Draft':
+      default:
+        return <PenLine className="h-4 w-4 text-blue-500" />;
+    }
+  };
+
+  // Get appropriate icon for origin
+  const getOriginIcon = () => {
+    switch (segment.origin) {
+      case 'HT':
+        return <User className="h-4 w-4 text-purple-500" />;
+      case '100%':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'Fuzzy':
+        return <Circle className="h-4 w-4 text-yellow-500" />;
+      case 'MT':
+      default:
+        return <Bot className="h-4 w-4 text-blue-500" />;
+    }
+  };
+
+  // Get color for status badge
+  const getStatusColor = () => {
+    switch (segment.status) {
+      case 'Reviewed':
+        return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-900";
+      case 'Rejected':
+        return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-900";
+      case 'Draft':
+      default:
+        return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900";
+    }
+  };
+
+  // Get color for origin badge
+  const getOriginColor = () => {
+    switch (segment.origin) {
+      case 'HT':
+        return "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-900";
+      case '100%':
+        return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-900";
+      case 'Fuzzy':
+        return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-900";
+      case 'MT':
+      default:
+        return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900";
+    }
+  };
+
+  return (
+    <div className="bg-card rounded-md border p-4 mb-4">
+      <h3 className="text-sm font-medium mb-3">Segment Information</h3>
+      
+      <div className="space-y-3">
+        {/* Status */}
+        <div className="flex items-start gap-3">
+          <div className="bg-muted/50 rounded-full p-2">
+            {getStatusIcon()}
+          </div>
+          <div className="flex-1">
+            <div className="text-xs text-muted-foreground mb-1">Status</div>
+            <div className="flex items-center gap-2">
+              <Badge className={cn("font-normal", getStatusColor())}>
+                {segment.status || 'Draft'}
+              </Badge>
+            </div>
+          </div>
+        </div>
+        
+        {/* Origin */}
+        <div className="flex items-start gap-3">
+          <div className="bg-muted/50 rounded-full p-2">
+            {getOriginIcon()}
+          </div>
+          <div className="flex-1">
+            <div className="text-xs text-muted-foreground mb-1">Origin</div>
+            <div className="flex items-center gap-2">
+              <Badge className={cn("font-normal", getOriginColor())}>
+                {segment.origin || 'MT'}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {segment.origin === 'HT' ? 'Human Translation' : 
+                 segment.origin === 'MT' ? 'Machine Translation' :
+                 segment.origin === '100%' ? 'Perfect Match' :
+                 segment.origin === 'Fuzzy' ? 'Fuzzy Match' : ''}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Comment */}
+        {segment.comment && (
+          <div className="flex items-start gap-3">
+            <div className="bg-muted/50 rounded-full p-2">
+              <MessageSquare className="h-4 w-4 text-blue-500" />
+            </div>
+            <div className="flex-1">
+              <div className="text-xs text-muted-foreground mb-1">Comment</div>
+              <div className="text-sm bg-muted/30 p-2 rounded">
+                {segment.comment}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Dates */}
+        <div className="pt-2">
+          <Separator className="mb-3" />
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <div className="text-muted-foreground mb-1">Created</div>
+              <div>{new Date(segment.createdAt).toLocaleDateString()}</div>
+            </div>
+            <div>
+              <div className="text-muted-foreground mb-1">Updated</div>
+              <div>{new Date(segment.updatedAt).toLocaleDateString()}</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -251,6 +400,9 @@ export function SidePanel({
         
         <TabsContent value="tm" className="flex-1 overflow-auto">
           <div className="p-4">
+            {/* Segment Status Info Panel */}
+            {activeTab === "tm" && <StatusInfoPanel segment={selectedSegment} />}
+          
             <div className="text-sm font-medium mb-2">Translation Memory</div>
             
             <div className="mb-4">
@@ -279,8 +431,7 @@ export function SidePanel({
               )}
             </div>
             
-            {/* Removed Active Segment section as requested */}
-            
+            {/* TM Matches list */}
             {displayedTmMatches.length > 0 ? (
               <div className="space-y-4">
                 {displayedTmMatches.map((match, index) => (
