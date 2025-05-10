@@ -696,7 +696,7 @@ export function NewTranslationEditor({
               />
             </div>
           </div>
-          
+
           <div className="text-xs font-medium text-muted-foreground whitespace-nowrap">
             {statusCounts["Reviewed"] || 0}/{localSegments.length} Reviewed
           </div>
@@ -723,18 +723,18 @@ export function NewTranslationEditor({
                   htmlFor="toggle-select-all"
                   className="text-xs font-medium ml-1 cursor-pointer"
                 >
-                  Select All ({checkedCount}/{localSegments.length})
+                  {checkedCount}/{localSegments.length}
                 </label>
               </div>
             </div>
-            
+
             <div className="flex items-center">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="h-7 w-[100px] text-xs">
+                <SelectTrigger className="h-7 w-[90px] text-xs">
                   <SelectValue placeholder="Filter by" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="all">Filter by</SelectItem>
                   <SelectItem value="MT">
                     MT ({statusCounts["MT"] || 0})
                   </SelectItem>
@@ -755,7 +755,7 @@ export function NewTranslationEditor({
                   </SelectItem>
                 </SelectContent>
               </Select>
-            
+
               <Select
                 onValueChange={(value) => {
                   if (value !== "none" && checkedCount > 0) {
@@ -763,7 +763,7 @@ export function NewTranslationEditor({
                   }
                 }}
               >
-                <SelectTrigger className="h-7 w-[100px] text-xs">
+                <SelectTrigger className="h-7 w-[90px] text-xs">
                   <SelectValue placeholder="Set as..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -916,8 +916,8 @@ export function NewTranslationEditor({
                     className="ml-4 text-xs h-8"
                     onClick={() => {
                       setPaginationMode("infinite");
-                    // Infinite 모드로 변경 시, 현재 페이지를 1로 초기화
-                    setCurrentPage(1);
+                      // Infinite 모드로 변경 시, 현재 페이지를 1로 초기화
+                      setCurrentPage(1);
                       setSegmentsPerPage(10);
                     }}
                   >
