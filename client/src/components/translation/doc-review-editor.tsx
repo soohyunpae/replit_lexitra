@@ -356,17 +356,19 @@ export function DocReviewEditor({
   return (
     <div className="flex flex-col h-full w-full">
       {/* Progress bar with controls */}
-      <div className="px-3 py-2 bg-muted/30 border-b">
-        <div className="mb-1 flex justify-between items-center">
+      <div className="px-3 py-3 bg-muted/30 border-b">
+        <div className="flex justify-between items-center mb-1">
           <span className="text-xs">Translation Progress</span>
-          <span className="text-xs font-medium">
-            {statusCounts['Reviewed'] || 0} of {totalSegments} segments
-          </span>
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-medium mr-1">
+              {statusCounts['Reviewed'] || 0} of {totalSegments} segments
+            </span>
+          </div>
         </div>
         
-        <div className="flex items-center gap-2 mb-1.5">
+        <div className="flex items-center gap-4">
           <div className="flex-1">
-            <div className="h-2 rounded-full bg-muted overflow-hidden flex">
+            <div className="h-2.5 rounded-full bg-muted overflow-hidden flex">
               <div 
                 className="h-full bg-green-500" 
                 style={{ width: `${reviewedPercentage}%` }}
@@ -389,17 +391,17 @@ export function DocReviewEditor({
                 size="sm"
                 variant={scrollSyncEnabled ? "default" : "outline"}
                 onClick={() => setScrollSyncEnabled(!scrollSyncEnabled)}
-                className="gap-1.5 h-6 text-xs"
+                className="gap-1.5 h-8"
               >
                 {scrollSyncEnabled ? (
                   <>
-                    <Check className="h-3 w-3" />
-                    <span className="text-xs">Sync Scroll</span>
+                    <Check className="h-3.5 w-3.5" />
+                    <span>Sync Scroll</span>
                   </>
                 ) : (
                   <>
-                    <X className="h-3 w-3" />
-                    <span className="text-xs">Sync Scroll</span>
+                    <X className="h-3.5 w-3.5" />
+                    <span>Sync Scroll</span>
                   </>
                 )}
               </Button>
@@ -410,13 +412,13 @@ export function DocReviewEditor({
               size="sm"
               variant={showSidePanel ? "default" : "outline"}
               onClick={() => setShowSidePanel(!showSidePanel)}
-              className="h-6 w-6 p-0"
+              className="h-8 w-8 p-0"
               title={showSidePanel ? "Hide side panel" : "Show side panel"}
             >
               {showSidePanel ? (
-                <ChevronRight className="h-3.5 w-3.5" />
+                <ChevronRight className="h-4 w-4" />
               ) : (
-                <ChevronLeft className="h-3.5 w-3.5" />
+                <ChevronLeft className="h-4 w-4" />
               )}
             </Button>
             
@@ -425,12 +427,12 @@ export function DocReviewEditor({
               size="sm"
               variant="ghost"
               title="Current layout mode"
-              className="opacity-70 h-6 w-6 p-0"
+              className="opacity-70 h-8 w-8 p-0"
             >
               {isMobile ? (
-                <Smartphone className="h-3.5 w-3.5" />
+                <Smartphone className="h-4 w-4" />
               ) : (
-                <Monitor className="h-3.5 w-3.5" />
+                <Monitor className="h-4 w-4" />
               )}
             </Button>
           </div>
