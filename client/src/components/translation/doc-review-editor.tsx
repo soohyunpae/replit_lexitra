@@ -357,13 +357,6 @@ export function DocReviewEditor({
     <div className="flex flex-col h-full w-full">
       {/* Progress bar with controls */}
       <div className="px-3 py-3 bg-muted/30 border-b">
-        <div className="flex justify-between items-center mb-1">
-          <span className="text-xs">Translation Progress</span>
-          <span className="text-xs font-medium">
-            {statusCounts['Reviewed'] || 0} of {totalSegments} segments
-          </span>
-        </div>
-        
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <div className="h-2.5 rounded-full bg-muted overflow-hidden flex">
