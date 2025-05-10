@@ -47,8 +47,8 @@ export function useEditingState(
     const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
     const newOrigin = isValueChanged && needsOriginChange ? "HT" : segment.origin;
     
-    // Change to Draft if it was Reviewed and content changed
-    const newStatus = (isValueChanged && segment.status === "Reviewed") ? "Draft" : segment.status;
+    // Change to Edited if it was Reviewed and content changed
+    const newStatus = (isValueChanged && segment.status === "Reviewed") ? "Edited" : segment.status;
     
     try {
       // Update the segment via API

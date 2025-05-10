@@ -240,11 +240,11 @@ export function DocReviewEditor({
       // 값이 변경되었는지 확인
       const isValueChanged = value !== segment.target;
       
-      // 값이 변경되었고 상태가 'Reviewed'였다면 'Draft'로 변경
+      // 값이 변경되었고 상태가 'Reviewed'였다면 'Edited'로 변경
       if (isValueChanged && segment.status === 'Reviewed') {
         setSegmentStatuses(prev => ({
           ...prev,
-          [id]: 'Draft'
+          [id]: 'Edited'
         }));
       }
     }
