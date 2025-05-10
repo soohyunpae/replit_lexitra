@@ -213,8 +213,8 @@ export function DocSegment({
                           })
                         });
                         
-                        // 로컬 상태 업데이트
-                        onUpdate?.(editedValue, newStatus, segment.origin);
+                        // 로컬 상태 업데이트 - 변경된 origin 값 사용
+                        onUpdate?.(editedValue, newStatus, newOrigin);
                         onSave?.();
                       } catch (error) {
                         console.error("Failed to update segment status:", error);
@@ -241,7 +241,7 @@ export function DocSegment({
       if (isDocumentMode) {
         return (
           <span 
-            className="relative inline"
+            className="relative inline group"
             data-segment-id={segment.id}
             data-status={segment.status}
             data-origin={segment.origin}
@@ -260,7 +260,48 @@ export function DocSegment({
               {segment.target || "Click to add translation"}
             </span>
             
-            {/* 문서 모드에서는 인라인 뱃지를 제거하고 상태에 따른 텍스트 색상만 적용 */}
+            {/* 상태 버튼 추가 - 세그먼트 호버 시에만 보임 */}
+            {hasTranslation && (
+              <span 
+                className="ml-1 inline-flex opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={async (e) => {
+                  e.stopPropagation(); // 편집 모드 진입 방지
+                  
+                  // Reviewed와 현재 상태 간 토글
+                  const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
+                  
+                  // MT, 100%, Fuzzy일 경우 origin도 HT로 변경
+                  const needsOriginChange = (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
+                  const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : segment.origin;
+                  
+                  try {
+                    // API 요청을 통해 실제 서버에 업데이트
+                    await fetch(`/api/segments/${segment.id}`, {
+                      method: 'PATCH',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        target: segment.target,
+                        status: newStatus,
+                        origin: newOrigin
+                      })
+                    });
+                    
+                    // 로컬 상태 업데이트 - toggleStatus 호출
+                    onUpdate?.(segment.target || "", newStatus, newOrigin);
+                  } catch (error) {
+                    console.error("Failed to toggle segment status:", error);
+                  }
+                }}
+              >
+                {segment.status === 'Reviewed' ? (
+                  <CircleCheck className="h-4 w-4 text-green-600" />
+                ) : (
+                  <Circle className="h-4 w-4 text-muted-foreground" />
+                )}
+              </span>
+            )}
           </span>
         );
       }
@@ -392,6 +433,10 @@ export function DocSegment({
                     // 저장과 동시에 Reviewed로 마크
                     const newStatus = "Reviewed";
                     
+                    // MT, 100%, Fuzzy일 경우 origin도 HT로 변경
+                    const needsOriginChange = (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
+                    const newOrigin = needsOriginChange ? "HT" : segment.origin;
+                    
                     try {
                       // API 요청을 통해 실제 서버에 업데이트
                       await fetch(`/api/segments/${segment.id}`, {
@@ -402,12 +447,12 @@ export function DocSegment({
                         body: JSON.stringify({
                           target: editedValue,
                           status: newStatus,
-                          origin: segment.origin
+                          origin: newOrigin
                         })
                       });
                       
-                      // 로컬 상태 업데이트
-                      onUpdate?.(editedValue, newStatus, segment.origin);
+                      // 로컬 상태 업데이트 - 변경된 origin 값 사용
+                      onUpdate?.(editedValue, newStatus, newOrigin);
                       onSave?.();
                     } catch (error) {
                       console.error("Failed to update segment status:", error);
@@ -425,11 +470,63 @@ export function DocSegment({
           </div>
         </div>
       ) : (
-        <div 
-          onClick={onSelectForEditing}
-          className="text-sm md:text-base whitespace-pre-wrap min-h-[40px] cursor-text"
-        >
-          {segment.target || <span className="text-muted-foreground italic">Click to add translation</span>}
+        <div className="relative group">
+          <div 
+            onClick={onSelectForEditing}
+            className="text-sm md:text-base whitespace-pre-wrap min-h-[40px] cursor-text"
+          >
+            {segment.target || <span className="text-muted-foreground italic">Click to add translation</span>}
+          </div>
+          
+          {/* 상태 변경 체크 버튼 추가 - 테이블 모드 */}
+          {segment.target && (
+            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button
+                size="sm"
+                variant="ghost"
+                className={cn(
+                  "h-6 w-6 p-0 rounded-full",
+                  segment.status === 'Reviewed' && "bg-green-100 dark:bg-green-900/30"
+                )}
+                onClick={async (e) => {
+                  e.stopPropagation(); // 편집 모드 진입 방지
+                  
+                  // Reviewed와 현재 상태 간 토글
+                  const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
+                  
+                  // MT, 100%, Fuzzy일 경우 origin도 HT로 변경
+                  const needsOriginChange = (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
+                  const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : segment.origin;
+                  
+                  try {
+                    // API 요청을 통해 실제 서버에 업데이트
+                    await fetch(`/api/segments/${segment.id}`, {
+                      method: 'PATCH',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        target: segment.target,
+                        status: newStatus,
+                        origin: newOrigin
+                      })
+                    });
+                    
+                    // 로컬 상태 업데이트
+                    onUpdate?.(segment.target, newStatus, newOrigin);
+                  } catch (error) {
+                    console.error("Failed to toggle segment status:", error);
+                  }
+                }}
+              >
+                {segment.status === 'Reviewed' ? (
+                  <CircleCheck className="h-4 w-4 text-green-600" />
+                ) : (
+                  <Circle className="h-4 w-4 text-muted-foreground" />
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>
