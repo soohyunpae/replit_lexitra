@@ -638,39 +638,9 @@ export function NewTranslationEditor({
       
       {/* Progress bar with integrated controls */}
       <div className="bg-card border-b border-border py-2 px-4">
-        <div className="flex justify-between items-center mb-1">
-          <span className="text-xs">Segment Status</span>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium">
-              {statusCounts["Reviewed"] || 0} Reviewed • 
-              {(statusCounts["MT"] || 0) + (statusCounts["100%"] || 0) + (statusCounts["Fuzzy"] || 0) + (statusCounts["Edited"] || 0)} In Progress • 
-              {statusCounts["Rejected"] || 0} Rejected
-            </span>
-            
-            <div className="flex items-center space-x-1.5">
-              <Checkbox 
-                id="toggle-select-all" 
-                checked={Object.keys(checkedSegments).length > 0 && Object.keys(checkedSegments).length === localSegments.length} 
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    handleSelectAll();
-                  } else {
-                    handleUnselectAll();
-                  }
-                }}
-              />
-              <div className="flex items-center">
-                <label htmlFor="toggle-select-all" className="text-xs font-medium ml-1 cursor-pointer">
-                  Select All ({checkedCount}/{localSegments.length})
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-        
         <div className="flex items-center gap-2 mb-1.5">
           <div className="flex-1">
-            <div className="h-2 w-full rounded-full bg-secondary overflow-hidden flex">
+            <div className="h-2.5 rounded-full bg-secondary overflow-hidden flex">
               {/* Reviewed segments (green) */}
               <div 
                 className="h-full bg-green-500" 
@@ -696,27 +666,6 @@ export function NewTranslationEditor({
           </div>
           
           <div className="flex items-center gap-2">
-            <Select
-              onValueChange={(value) => {
-                if (value !== "none" && checkedCount > 0) {
-                  handleBulkStatusUpdate(value as StatusType);
-                }
-              }}
-            >
-              <SelectTrigger className="h-7 w-[140px] text-xs">
-                <SelectValue placeholder="Bulk Actions" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Select Action</SelectItem>
-                <SelectItem value="MT">Set as MT</SelectItem>
-                <SelectItem value="100%">Set as 100% Match</SelectItem>
-                <SelectItem value="Fuzzy">Set as Fuzzy Match</SelectItem>
-                <SelectItem value="Edited">Set as Edited</SelectItem>
-                <SelectItem value="Reviewed">Set as Reviewed</SelectItem>
-                <SelectItem value="Rejected">Set as Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-            
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="h-7 w-[130px] text-xs">
                 <SelectValue placeholder="All Statuses" />
@@ -731,6 +680,25 @@ export function NewTranslationEditor({
                 <SelectItem value="Rejected">Rejected ({statusCounts["Rejected"] || 0})</SelectItem>
               </SelectContent>
             </Select>
+            
+            <div className="flex items-center space-x-1.5">
+              <Checkbox 
+                id="toggle-select-all" 
+                checked={Object.keys(checkedSegments).length > 0 && Object.keys(checkedSegments).length === localSegments.length} 
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    handleSelectAll();
+                  } else {
+                    handleUnselectAll();
+                  }
+                }}
+              />
+              <div className="flex items-center">
+                <label htmlFor="toggle-select-all" className="text-xs font-medium ml-1 cursor-pointer">
+                  Select All ({checkedCount}/{localSegments.length})
+                </label>
+              </div>
+            </div>
           </div>
         </div>
       </div>
