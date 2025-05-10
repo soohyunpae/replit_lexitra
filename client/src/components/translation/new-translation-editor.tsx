@@ -174,7 +174,8 @@ export function NewTranslationEditor({
   useEffect(() => {
     const counts: Record<string, number> = {};
     localSegments.forEach(segment => {
-      const status = segment.status || "Draft";
+      // Use new status types: MT, 100%, Fuzzy, Edited, Reviewed, Rejected
+      const status = segment.status || "MT";
       counts[status] = (counts[status] || 0) + 1;
     });
     setStatusCounts(counts);
@@ -249,24 +250,34 @@ export function NewTranslationEditor({
   };
   
   // Handle segment update
-  const handleSegmentUpdate = async (id: number, target: string, status = "MT", origin?: string) => {
+  const handleSegmentUpdate = async (id: number, target: string, status?: string, origin?: string) => {
     // Update segment in database
     try {
       // Find current segment to check if it was modified
       const currentSegment = localSegments.find(s => s.id === id);
       const wasModified = currentSegment && currentSegment.target !== target;
       
+      // If segment was manually edited and no status is provided, set to "Edited"
+      let updatedStatus = status;
+      if (!updatedStatus && wasModified) {
+        updatedStatus = "Edited";
+      }
+      
       // Set origin to HT if this is a human edit and it's marked as Reviewed
       // Only update origin if explicitly provided or if it's a human edit
       let updatedOrigin = origin;
       if (!updatedOrigin && wasModified) {
         // If segment was manually edited, set origin to HT
-        updatedOrigin = (status === "Reviewed" || (currentSegment?.status === "Reviewed" && status === undefined)) 
+        updatedOrigin = (updatedStatus === "Reviewed" || (currentSegment?.status === "Reviewed" && updatedStatus === undefined)) 
           ? "HT" 
           : currentSegment?.origin;
       }
       
-      const payload: any = { target, status };
+      const payload: any = { 
+        target, 
+        status: updatedStatus // Use the updated status we determined
+      };
+      
       if (updatedOrigin) {
         payload.origin = updatedOrigin;
       }
@@ -285,7 +296,7 @@ export function NewTranslationEditor({
           segment.id === id ? { 
             ...segment, 
             target, 
-            status,
+            status: updatedStatus || "MT", // Ensure status is always a string
             origin: updatedOrigin || segment.origin,
             modified: true // Mark as modified
           } : segment
@@ -405,7 +416,7 @@ export function NewTranslationEditor({
             updatedSegments[segmentIndex] = {
               ...updatedSegments[segmentIndex],
               target: data.target,
-              status: "MT",
+              status: "MT", // Using the new status model
               origin: "MT"
             };
           }
@@ -655,7 +666,9 @@ export function NewTranslationEditor({
             <div className="flex justify-between text-xs mb-1">
               <span>Segment Status</span>
               <span className="font-medium">
-                {statusCounts["Reviewed"] || 0} Reviewed • {statusCounts["Draft"] || 0} Draft • {statusCounts["Rejected"] || 0} Rejected
+                {statusCounts["Reviewed"] || 0} Reviewed • 
+                {(statusCounts["MT"] || 0) + (statusCounts["100%"] || 0) + (statusCounts["Fuzzy"] || 0) + (statusCounts["Edited"] || 0)} In Progress • 
+                {statusCounts["Rejected"] || 0} Rejected
               </span>
             </div>
             <div className="h-2 w-full rounded-full bg-secondary overflow-hidden flex">
@@ -666,11 +679,11 @@ export function NewTranslationEditor({
                   width: `${((statusCounts["Reviewed"] || 0) / localSegments.length) * 100}%` 
                 }}
               />
-              {/* Draft segments (blue) */}
+              {/* In Progress segments (MT, 100%, Fuzzy, Edited) - (blue) */}
               <div 
                 className="h-full bg-blue-500" 
                 style={{ 
-                  width: `${((statusCounts["Draft"] || 0) / localSegments.length) * 100}%` 
+                  width: `${((statusCounts["MT"] || 0) + (statusCounts["100%"] || 0) + (statusCounts["Fuzzy"] || 0) + (statusCounts["Edited"] || 0)) / localSegments.length * 100}%` 
                 }}
               />
               {/* Rejected segments (red) */}
@@ -717,7 +730,10 @@ export function NewTranslationEditor({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Select Action</SelectItem>
-                <SelectItem value="Draft">Set as Draft</SelectItem>
+                <SelectItem value="MT">Set as MT</SelectItem>
+                <SelectItem value="100%">Set as 100% Match</SelectItem>
+                <SelectItem value="Fuzzy">Set as Fuzzy Match</SelectItem>
+                <SelectItem value="Edited">Set as Edited</SelectItem>
                 <SelectItem value="Reviewed">Set as Reviewed</SelectItem>
                 <SelectItem value="Rejected">Set as Rejected</SelectItem>
               </SelectContent>
@@ -729,7 +745,10 @@ export function NewTranslationEditor({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="Draft">Draft ({statusCounts["Draft"] || 0})</SelectItem>
+                <SelectItem value="MT">MT ({statusCounts["MT"] || 0})</SelectItem>
+                <SelectItem value="100%">100% Match ({statusCounts["100%"] || 0})</SelectItem>
+                <SelectItem value="Fuzzy">Fuzzy Match ({statusCounts["Fuzzy"] || 0})</SelectItem>
+                <SelectItem value="Edited">Edited ({statusCounts["Edited"] || 0})</SelectItem>
                 <SelectItem value="Reviewed">Reviewed ({statusCounts["Reviewed"] || 0})</SelectItem>
                 <SelectItem value="Rejected">Rejected ({statusCounts["Rejected"] || 0})</SelectItem>
               </SelectContent>
