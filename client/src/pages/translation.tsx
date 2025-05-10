@@ -376,17 +376,79 @@ export default function Translation() {
     );
   }
   
+  // Get editor mode from URL query param, defaults to 'segment'
+  const [searchParams] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search);
+    }
+    return new URLSearchParams();
+  });
+  const defaultMode = searchParams.get('mode') || 'segment';
+  const [editorMode, setEditorMode] = useState<'segment' | 'doc'>(defaultMode as 'segment' | 'doc');
+  
+  // Update URL when mode changes
+  const updateUrlMode = (mode: 'segment' | 'doc') => {
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('mode', mode);
+    window.history.replaceState({}, '', currentUrl.toString());
+  };
+  
+  // Handle mode change
+  const handleModeChange = (mode: 'segment' | 'doc') => {
+    setEditorMode(mode);
+    updateUrlMode(mode);
+  };
+  
   return (
     <MainLayout title={`Translating: ${file.name}`}>
-      <div className="flex h-full overflow-hidden">
-        <NewTranslationEditor
-          fileName={file.name}
-          sourceLanguage={project.sourceLanguage}
-          targetLanguage={project.targetLanguage}
-          segments={(file as ExtendedFile).segments || []}
-          onSave={() => saveProject.mutate()}
-          onExport={() => exportProject.mutate()}
-        />
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="border-b bg-card px-4 py-2">
+          <Tabs 
+            value={editorMode} 
+            onValueChange={(value) => handleModeChange(value as 'segment' | 'doc')}
+            className="w-full"
+          >
+            <div className="flex items-center justify-between">
+              <TabsList className="grid w-[400px] grid-cols-2">
+                <TabsTrigger value="segment" className="flex items-center gap-2">
+                  <Blocks className="h-4 w-4" />
+                  <span>Segment Editor</span>
+                </TabsTrigger>
+                <TabsTrigger value="doc" className="flex items-center gap-2">
+                  <LayoutTemplate className="h-4 w-4" />
+                  <span>Document View</span>
+                </TabsTrigger>
+              </TabsList>
+              
+              <div className="text-sm text-muted-foreground">
+                {project.sourceLanguage} → {project.targetLanguage}
+              </div>
+            </div>
+          </Tabs>
+        </div>
+        
+        <div className="flex-1 overflow-hidden">
+          {editorMode === 'segment' ? (
+            <NewTranslationEditor
+              fileName={file.name}
+              sourceLanguage={project.sourceLanguage}
+              targetLanguage={project.targetLanguage}
+              segments={(file as ExtendedFile).segments || []}
+              onSave={() => saveProject.mutate()}
+              onExport={() => exportProject.mutate()}
+            />
+          ) : (
+            <DocReviewEditor
+              fileName={file.name}
+              sourceLanguage={project.sourceLanguage}
+              targetLanguage={project.targetLanguage}
+              segments={(file as ExtendedFile).segments || []}
+              onSave={() => saveProject.mutate()}
+              onExport={() => exportProject.mutate()}
+              fileId={fileId || 0}
+            />
+          )}
+        </div>
       </div>
     </MainLayout>
   );
