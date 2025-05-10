@@ -181,23 +181,49 @@ export function DocSegment({
                 {/* 오른쪽에 버튼들 */}
                 <div className="flex gap-2">
                   <Button 
-                    onClick={onCancel} 
+                    onClick={async () => {
+                      // X 버튼 클릭 시 변경 사항 저장 후 창 닫기
+                      if (editedValue !== segment.target) {
+                        try {
+                          // API 요청을 통해 실제 서버에 업데이트
+                          await fetch(`/api/segments/${segment.id}`, {
+                            method: 'PATCH',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                              target: editedValue,
+                              status: segment.status,
+                              origin: segment.origin
+                            })
+                          });
+                          
+                          // 로컬 상태 업데이트
+                          onUpdate?.(editedValue, segment.status, segment.origin);
+                        } catch (error) {
+                          console.error("Failed to save segment:", error);
+                        }
+                      }
+                      
+                      // 편집 모드 종료
+                      onCancel?.();
+                    }}
                     size="sm" 
                     variant="ghost" 
                     className="h-7 w-7 p-0 rounded-full"
                   >
                     <X className="h-4 w-4" />
-                    <span className="sr-only">Cancel</span>
+                    <span className="sr-only">Save and Close</span>
                   </Button>
                   
                   <Button 
                     onClick={async () => {
-                      // 저장과 동시에 Reviewed로 마크
-                      const newStatus = "Reviewed";
+                      // Reviewed와 현재 상태 간 토글 (한번 누르면 Reviewed, 다시 누르면 Edited)
+                      const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
                       
                       // MT, 100%, Fuzzy일 경우 origin도 HT로 변경
                       const needsOriginChange = (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
-                      const newOrigin = needsOriginChange ? "HT" : segment.origin;
+                      const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : segment.origin;
                       
                       try {
                         // API 요청을 통해 실제 서버에 업데이트
@@ -419,23 +445,49 @@ export function DocSegment({
               {/* 오른쪽에 버튼들 */}
               <div className="flex gap-2">
                 <Button 
-                  onClick={onCancel} 
+                  onClick={async () => {
+                    // X 버튼 클릭 시 변경 사항 저장 후 창 닫기
+                    if (editedValue !== segment.target) {
+                      try {
+                        // API 요청을 통해 실제 서버에 업데이트
+                        await fetch(`/api/segments/${segment.id}`, {
+                          method: 'PATCH',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                            target: editedValue,
+                            status: segment.status,
+                            origin: segment.origin
+                          })
+                        });
+                        
+                        // 로컬 상태 업데이트
+                        onUpdate?.(editedValue, segment.status, segment.origin);
+                      } catch (error) {
+                        console.error("Failed to save segment:", error);
+                      }
+                    }
+                    
+                    // 편집 모드 종료
+                    onCancel?.();
+                  }}
                   size="sm" 
                   variant="ghost" 
                   className="h-7 w-7 p-0 rounded-full"
                 >
                   <X className="h-4 w-4" />
-                  <span className="sr-only">Cancel</span>
+                  <span className="sr-only">Save and Close</span>
                 </Button>
                 
                 <Button 
                   onClick={async () => {
-                    // 저장과 동시에 Reviewed로 마크
-                    const newStatus = "Reviewed";
+                    // Reviewed와 현재 상태 간 토글 (한번 누르면 Reviewed, 다시 누르면 Edited)
+                    const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
                     
                     // MT, 100%, Fuzzy일 경우 origin도 HT로 변경
                     const needsOriginChange = (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
-                    const newOrigin = needsOriginChange ? "HT" : segment.origin;
+                    const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : segment.origin;
                     
                     try {
                       // API 요청을 통해 실제 서버에 업데이트
@@ -513,7 +565,7 @@ export function DocSegment({
                     });
                     
                     // 로컬 상태 업데이트
-                    onUpdate?.(segment.target, newStatus, newOrigin);
+                    onUpdate?.(segment.target || "", newStatus, newOrigin);
                   } catch (error) {
                     console.error("Failed to toggle segment status:", error);
                   }
