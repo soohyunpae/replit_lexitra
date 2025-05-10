@@ -409,9 +409,32 @@ export default function Translation() {
     <MainLayout title={`Translating: ${file.name}`}>
       <div className="flex flex-col h-full overflow-hidden">
         <div className="border-b bg-card px-6 py-4">
-          <h1 className="text-2xl font-semibold mb-4">
-            Project: {file.name}
-          </h1>
+          {/* Breadcrumb Navigation and Save Button */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <a href="/projects" className="text-sm hover:text-primary transition-colors">
+                Projects
+              </a>
+              <span className="text-muted-foreground">/</span>
+              <a href={`/project/${project.id}`} className="text-sm hover:text-primary transition-colors">
+                Project {project.id}: {project.name}
+              </a>
+              <span className="text-muted-foreground">/</span>
+              <span className="text-sm font-medium">{file.name}</span>
+            </div>
+            
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="flex items-center"
+              onClick={() => saveProject.mutate()}
+            >
+              <FileX className="h-4 w-4 mr-1" />
+              Save
+            </Button>
+          </div>
+          
+          {/* Tabs */}
           <Tabs 
             value={editorMode} 
             onValueChange={(value) => handleModeChange(value as 'segment' | 'doc')}
