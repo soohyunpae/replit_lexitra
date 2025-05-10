@@ -357,14 +357,32 @@ export function DocReviewEditor({
     <div className="flex flex-col h-full w-full">
       {/* Progress bar with controls */}
       <div className="px-3 py-2 bg-muted/30 border-b">
-        <div className="text-xs text-muted-foreground mb-1.5 flex justify-between items-center">
-          <span>Translation Progress</span>
+        <div className="mb-1 flex justify-between items-center">
+          <span className="text-xs">Translation Progress</span>
+          <span className="text-xs font-medium">
+            {statusCounts['Reviewed'] || 0} of {totalSegments} segments
+          </span>
+        </div>
+        
+        <div className="flex items-center gap-2 mb-1.5">
+          <div className="flex-1">
+            <div className="h-2 rounded-full bg-muted overflow-hidden flex">
+              <div 
+                className="h-full bg-green-500" 
+                style={{ width: `${reviewedPercentage}%` }}
+              />
+              <div 
+                className="h-full bg-blue-500" 
+                style={{ width: `${inProgressPercentage}%` }}
+              />
+              <div 
+                className="h-full bg-red-500" 
+                style={{ width: `${rejectedPercentage}%` }}
+              />
+            </div>
+          </div>
+          
           <div className="flex items-center gap-2">
-            {/* Segment counts */}
-            <span className="text-xs font-medium mr-2">
-              {statusCounts['Reviewed'] || 0} of {totalSegments} segments
-            </span>
-            
             {/* Desktop-only controls */}
             <div className="hidden md:flex items-center gap-2">
               <Button
@@ -416,20 +434,6 @@ export function DocReviewEditor({
               )}
             </Button>
           </div>
-        </div>
-        <div className="h-2 w-full bg-muted overflow-hidden rounded-full flex">
-          <div 
-            className="h-full bg-green-500" 
-            style={{ width: `${reviewedPercentage}%` }}
-          />
-          <div 
-            className="h-full bg-blue-500" 
-            style={{ width: `${inProgressPercentage}%` }}
-          />
-          <div 
-            className="h-full bg-red-500" 
-            style={{ width: `${rejectedPercentage}%` }}
-          />
         </div>
       </div>
       
