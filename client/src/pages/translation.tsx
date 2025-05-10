@@ -451,7 +451,7 @@ export default function Translation() {
               segments={(file as ExtendedFile).segments || []}
               onSave={() => saveProject.mutate()}
               onExport={() => exportProject.mutate()}
-              fileId={fileId || 0}
+              fileId={Number(fileId)}
             />
           )}
         </div>
