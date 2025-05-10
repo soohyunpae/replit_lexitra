@@ -144,79 +144,82 @@ export function DocSegment({
             {/* 불필요한 상태 뱃지 제거 - 기능을 버튼에 통합 */}
             
             {/* 문서 모드에서 텍스트 영역 - 자동 높이 조절 */}
-            <Textarea
-              ref={textareaRef}
-              value={editedValue}
-              onChange={(e) => {
-                const newValue = e.target.value;
-                onEditValueChange?.(newValue);
-                
-                // 자동 상태 업데이트 - 편집할 때 segment.target과 다르면 상태 업데이트
-                if (onUpdate) {
-                  const isValueChanged = newValue !== segment.target;
-                  const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
-                  const newOrigin = isValueChanged && needsOriginChange ? "HT" : segment.origin;
+            <div className="relative border-accent shadow-sm">
+              <Textarea
+                ref={textareaRef}
+                value={editedValue}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  onEditValueChange?.(newValue);
                   
-                  // 이미 Reviewed였는데 편집하면 Edited로 변경, MT/100%/Fuzzy였는데 편집하면 Edited로 변경
-                  let newStatus = segment.status;
-                  if (isValueChanged) {
-                    if (segment.status === "Reviewed") {
-                      newStatus = "Edited";
-                    } else if (segment.status === "MT" || segment.status === "100%" || segment.status === "Fuzzy") {
-                      newStatus = "Edited";
-                    }
+                  // 자동 상태 업데이트 - 편집할 때 segment.target과 다르면 상태 업데이트
+                  if (onUpdate) {
+                    const isValueChanged = newValue !== segment.target;
+                    const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
+                    const newOrigin = isValueChanged && needsOriginChange ? "HT" : segment.origin;
                     
-                    onUpdate(newValue, newStatus, newOrigin);
+                    // 이미 Reviewed였는데 편집하면 Edited로 변경, MT/100%/Fuzzy였는데 편집하면 Edited로 변경
+                    let newStatus = segment.status;
+                    if (isValueChanged) {
+                      if (segment.status === "Reviewed") {
+                        newStatus = "Edited";
+                      } else if (segment.status === "MT" || segment.status === "100%" || segment.status === "Fuzzy") {
+                        newStatus = "Edited";
+                      }
+                      
+                      onUpdate(newValue, newStatus, newOrigin);
+                    }
                   }
-                }
-              }}
-              onKeyDown={handleKeyDown}
-              className="w-full p-2 resize-none border-accent shadow-sm mb-10" // 아래 여백 추가
-              placeholder="Enter translation..."
-              autoFocus
-              style={{ height: 'auto', minHeight: '80px', overflow: 'hidden' }}
-            />
-            
-            {/* 버튼들을 아래에 별도 영역으로 배치 */}
-            {/* 간소화된 UI - 세그먼트 에디터와 일치하는 디자인 */}
-            <div className="flex absolute right-2 bottom-2 gap-2">
-              <Button 
-                onClick={onCancel} 
-                size="sm" 
-                variant="ghost" 
-                className="h-7 w-7 p-0 rounded-full"
-              >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Cancel</span>
-              </Button>
+                }}
+                onKeyDown={handleKeyDown}
+                className="w-full p-2 pt-2 pb-12 resize-none"
+                placeholder="Enter translation..."
+                autoFocus
+                style={{ height: 'auto', minHeight: '80px', overflow: 'hidden' }}
+              />
               
-              {onUpdate && (
-                <Button 
-                  onClick={toggleStatus} 
-                  size="sm" 
-                  variant="ghost" 
-                  className="h-7 w-7 p-0 rounded-full"
-                >
-                  {segment.status === "Reviewed" ? (
-                    <CircleCheck className="h-4 w-4 text-green-600 dark:text-green-500" />
-                  ) : (
-                    <Circle className="h-4 w-4" />
+              {/* 텍스트 영역 내부 하단에 버튼 푸터 영역 배치 */}
+              <div className="absolute bottom-0 left-0 right-0 h-10 bg-muted/20 border-t border-border/30 flex items-center justify-end pr-2">
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={onCancel} 
+                    size="sm" 
+                    variant="ghost" 
+                    className="h-7 w-7 p-0 rounded-full"
+                  >
+                    <X className="h-4 w-4" />
+                    <span className="sr-only">Cancel</span>
+                  </Button>
+                  
+                  {onUpdate && (
+                    <Button 
+                      onClick={toggleStatus} 
+                      size="sm" 
+                      variant="ghost" 
+                      className="h-7 w-7 p-0 rounded-full"
+                    >
+                      {segment.status === "Reviewed" ? (
+                        <CircleCheck className="h-4 w-4 text-green-600 dark:text-green-500" />
+                      ) : (
+                        <Circle className="h-4 w-4" />
+                      )}
+                      <span className="sr-only">
+                        {segment.status === "Reviewed" ? "Unmark as Reviewed" : "Mark as Reviewed"}
+                      </span>
+                    </Button>
                   )}
-                  <span className="sr-only">
-                    {segment.status === "Reviewed" ? "Unmark as Reviewed" : "Mark as Reviewed"}
-                  </span>
-                </Button>
-              )}
-              
-              <Button 
-                onClick={onSave} 
-                size="sm" 
-                variant="ghost" 
-                className="h-7 w-7 p-0 rounded-full bg-blue-100 dark:bg-blue-900/30"
-              >
-                <Check className="h-4 w-4 text-blue-700 dark:text-blue-400" />
-                <span className="sr-only">Save</span>
-              </Button>
+                  
+                  <Button 
+                    onClick={onSave} 
+                    size="sm" 
+                    variant="ghost" 
+                    className="h-7 w-7 p-0 rounded-full bg-blue-100 dark:bg-blue-900/30"
+                  >
+                    <Check className="h-4 w-4 text-blue-700 dark:text-blue-400" />
+                    <span className="sr-only">Save</span>
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </span>
@@ -313,78 +316,82 @@ export function DocSegment({
           {/* 불필요한 상태 뱃지 제거 - 표 모드에서도 제거 */}
           
           {/* 표 모드에서 텍스트 영역 */}
-          <Textarea
-            ref={textareaRef}
-            value={editedValue}
-            onChange={(e) => {
-              const newValue = e.target.value;
-              onEditValueChange?.(newValue);
-              
-              // 자동 상태 업데이트 - 편집할 때 segment.target과 다르면 상태 업데이트
-              if (onUpdate) {
-                const isValueChanged = newValue !== segment.target;
-                const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
-                const newOrigin = isValueChanged && needsOriginChange ? "HT" : segment.origin;
+          <div className="relative border border-border/60 rounded-md shadow-none">
+            <Textarea
+              ref={textareaRef}
+              value={editedValue}
+              onChange={(e) => {
+                const newValue = e.target.value;
+                onEditValueChange?.(newValue);
                 
-                // 이미 Reviewed였는데 편집하면 Edited로 변경, MT/100%/Fuzzy였는데 편집하면 Edited로 변경
-                let newStatus = segment.status;
-                if (isValueChanged) {
-                  if (segment.status === "Reviewed") {
-                    newStatus = "Edited";
-                  } else if (segment.status === "MT" || segment.status === "100%" || segment.status === "Fuzzy") {
-                    newStatus = "Edited";
-                  }
+                // 자동 상태 업데이트 - 편집할 때 segment.target과 다르면 상태 업데이트
+                if (onUpdate) {
+                  const isValueChanged = newValue !== segment.target;
+                  const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
+                  const newOrigin = isValueChanged && needsOriginChange ? "HT" : segment.origin;
                   
-                  onUpdate(newValue, newStatus, newOrigin);
+                  // 이미 Reviewed였는데 편집하면 Edited로 변경, MT/100%/Fuzzy였는데 편집하면 Edited로 변경
+                  let newStatus = segment.status;
+                  if (isValueChanged) {
+                    if (segment.status === "Reviewed") {
+                      newStatus = "Edited";
+                    } else if (segment.status === "MT" || segment.status === "100%" || segment.status === "Fuzzy") {
+                      newStatus = "Edited";
+                    }
+                    
+                    onUpdate(newValue, newStatus, newOrigin);
+                  }
                 }
-              }
-            }}
-            onKeyDown={handleKeyDown}
-            className="w-full p-3 resize-none border border-border/60 rounded-md shadow-none mb-10" // 아래 여백 추가
-            placeholder="Enter translation..."
-            autoFocus
-            style={{ height: 'auto', minHeight: '90px', overflow: 'hidden' }}
-          />
-          
-          {/* 간소화된 UI - 세그먼트 에디터와 일치하는 디자인 */}
-          <div className="flex absolute right-2 bottom-2 gap-2">
-            <Button 
-              onClick={onCancel} 
-              size="sm" 
-              variant="ghost" 
-              className="h-7 w-7 p-0 rounded-full"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Cancel</span>
-            </Button>
+              }}
+              onKeyDown={handleKeyDown}
+              className="w-full p-3 pt-3 pb-12 resize-none border-0 rounded-md"
+              placeholder="Enter translation..."
+              autoFocus
+              style={{ height: 'auto', minHeight: '90px', overflow: 'hidden' }}
+            />
             
-            {onUpdate && (
-              <Button 
-                onClick={toggleStatus} 
-                size="sm" 
-                variant="ghost" 
-                className="h-7 w-7 p-0 rounded-full"
-              >
-                {segment.status === "Reviewed" ? (
-                  <CircleCheck className="h-4 w-4 text-green-600 dark:text-green-500" />
-                ) : (
-                  <Circle className="h-4 w-4" />
+            {/* 텍스트 영역 내부 하단에 버튼 푸터 영역 배치 */}
+            <div className="absolute bottom-0 left-0 right-0 h-10 bg-muted/20 border-t border-border/30 flex items-center justify-end pr-2 rounded-b-md">
+              <div className="flex gap-2">
+                <Button 
+                  onClick={onCancel} 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-7 w-7 p-0 rounded-full"
+                >
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Cancel</span>
+                </Button>
+                
+                {onUpdate && (
+                  <Button 
+                    onClick={toggleStatus} 
+                    size="sm" 
+                    variant="ghost" 
+                    className="h-7 w-7 p-0 rounded-full"
+                  >
+                    {segment.status === "Reviewed" ? (
+                      <CircleCheck className="h-4 w-4 text-green-600 dark:text-green-500" />
+                    ) : (
+                      <Circle className="h-4 w-4" />
+                    )}
+                    <span className="sr-only">
+                      {segment.status === "Reviewed" ? "Unmark as Reviewed" : "Mark as Reviewed"}
+                    </span>
+                  </Button>
                 )}
-                <span className="sr-only">
-                  {segment.status === "Reviewed" ? "Unmark as Reviewed" : "Mark as Reviewed"}
-                </span>
-              </Button>
-            )}
-            
-            <Button 
-              onClick={onSave} 
-              size="sm" 
-              variant="ghost" 
-              className="h-7 w-7 p-0 rounded-full bg-blue-100 dark:bg-blue-900/30"
-            >
-              <Check className="h-4 w-4 text-blue-700 dark:text-blue-400" />
-              <span className="sr-only">Save</span>
-            </Button>
+                
+                <Button 
+                  onClick={onSave} 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-7 w-7 p-0 rounded-full bg-blue-100 dark:bg-blue-900/30"
+                >
+                  <Check className="h-4 w-4 text-blue-700 dark:text-blue-400" />
+                  <span className="sr-only">Save</span>
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       ) : (
