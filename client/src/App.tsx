@@ -54,6 +54,9 @@ const AdminRoute = ({ component: Component, ...rest }: any) => {
 };
 
 function Router() {
+  const [location] = useLocation();
+  console.log('Current route:', location);
+  
   return (
     <Switch>
       <ProtectedRoute path="/" component={Home} />
