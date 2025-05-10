@@ -182,30 +182,28 @@ export function DocSegment({
                 <div className="flex gap-2">
                   <Button 
                     onClick={async () => {
-                      // X 버튼 클릭 시 변경 사항 저장 후 창 닫기
-                      if (editedValue !== segment.target) {
-                        try {
-                          // API 요청을 통해 실제 서버에 업데이트
-                          await fetch(`/api/segments/${segment.id}`, {
-                            method: 'PATCH',
-                            headers: {
-                              'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                              target: editedValue,
-                              status: segment.status,
-                              origin: segment.origin
-                            })
-                          });
-                          
-                          // 로컬 상태 업데이트
-                          onUpdate?.(editedValue, segment.status, segment.origin);
-                        } catch (error) {
-                          console.error("Failed to save segment:", error);
-                        }
+                      // X 버튼 클릭 시 항상 현재 내용을 저장하고 창 닫기 (수정 여부 관계없이)
+                      try {
+                        // API 요청을 통해 서버에 업데이트
+                        await fetch(`/api/segments/${segment.id}`, {
+                          method: 'PATCH',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                            target: editedValue,
+                            status: segment.status,
+                            origin: segment.origin
+                          })
+                        });
+                        
+                        // 로컬 상태 업데이트
+                        onUpdate?.(editedValue, segment.status, segment.origin);
+                      } catch (error) {
+                        console.error("Failed to save segment:", error);
                       }
                       
-                      // 편집 모드 종료
+                      // 편집 모드 종료 - 항상 실행
                       onCancel?.();
                     }}
                     size="sm" 
@@ -241,7 +239,7 @@ export function DocSegment({
                         
                         // 로컬 상태 업데이트 - 변경된 origin 값 사용
                         onUpdate?.(editedValue, newStatus, newOrigin);
-                        onSave?.();
+                        // 중요: onSave 호출하지 않음 - 편집 상태를 유지하기 위해
                       } catch (error) {
                         console.error("Failed to update segment status:", error);
                       }
@@ -469,7 +467,7 @@ export function DocSegment({
                       }
                     }
                     
-                    // 편집 모드 종료
+                    // 편집 모드 종료 - 항상 실행
                     onCancel?.();
                   }}
                   size="sm" 
@@ -505,7 +503,7 @@ export function DocSegment({
                       
                       // 로컬 상태 업데이트 - 변경된 origin 값 사용
                       onUpdate?.(editedValue, newStatus, newOrigin);
-                      onSave?.();
+                      // 중요: onSave 호출하지 않음 - 편집 상태를 유지하기 위해
                     } catch (error) {
                       console.error("Failed to update segment status:", error);
                     }
