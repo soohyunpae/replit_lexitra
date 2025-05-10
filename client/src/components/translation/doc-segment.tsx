@@ -319,7 +319,27 @@ export function DocSegment({
             ref={textareaRef}
             value={editedValue}
             onChange={(e) => {
-              onEditValueChange?.(e.target.value);
+              const newValue = e.target.value;
+              onEditValueChange?.(newValue);
+              
+              // 자동 상태 업데이트 - 편집할 때 segment.target과 다르면 상태 업데이트
+              if (onUpdate) {
+                const isValueChanged = newValue !== segment.target;
+                const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
+                const newOrigin = isValueChanged && needsOriginChange ? "HT" : segment.origin;
+                
+                // 이미 Reviewed였는데 편집하면 Edited로 변경, MT/100%/Fuzzy였는데 편집하면 Edited로 변경
+                let newStatus = segment.status;
+                if (isValueChanged) {
+                  if (segment.status === "Reviewed") {
+                    newStatus = "Edited";
+                  } else if (segment.status === "MT" || segment.status === "100%" || segment.status === "Fuzzy") {
+                    newStatus = "Edited";
+                  }
+                  
+                  onUpdate(newValue, newStatus, newOrigin);
+                }
+              }
             }}
             onKeyDown={handleKeyDown}
             className="w-full p-3 resize-none border border-border/60 rounded-md shadow-none"
