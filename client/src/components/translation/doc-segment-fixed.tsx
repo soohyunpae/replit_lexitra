@@ -188,17 +188,17 @@ export function DocSegment({
                       const saveAndClose = async () => {
                         try {
                           // API 요청을 통해 서버에 업데이트
-                          await fetch(`/api/segments/${segment.id}`, {
-                            method: 'PATCH',
-                            headers: {
-                              'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                              target: editedValue,
-                              status: segment.status,
-                              origin: segment.origin
-                            })
-                          });
+                          await import('@/lib/queryClient').then(({ apiRequest }) => 
+                            apiRequest(
+                              'PATCH',
+                              `/api/segments/${segment.id}`,
+                              {
+                                target: editedValue,
+                                status: segment.status,
+                                origin: segment.origin
+                              }
+                            )
+                          );
                           
                           // 로컬 상태 업데이트
                           onUpdate?.(editedValue, segment.status, segment.origin);
@@ -538,17 +538,18 @@ export function DocSegment({
                       const updateStatus = async () => {
                         try {
                           // API 요청을 통해 실제 서버에 업데이트
-                          const response = await fetch(`/api/segments/${segment.id}`, {
-                            method: 'PATCH',
-                            headers: {
-                              'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                              target: editedValue,
-                              status: newStatus,
-                              origin: newOrigin
-                            })
-                          });
+                          // apiRequest 함수를 이용해 인증 토큰을 포함시킴
+                          const response = await import('@/lib/queryClient').then(({ apiRequest }) =>
+                            apiRequest(
+                              'PATCH',
+                              `/api/segments/${segment.id}`,
+                              {
+                                target: editedValue,
+                                status: newStatus,
+                                origin: newOrigin
+                              }
+                            )
+                          );
                           
                           // 응답 확인 및 에러 처리 추가
                           if (!response.ok) {
