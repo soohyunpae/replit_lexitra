@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useLayoutEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Check, X, MessageCircle, FileEdit, CircuitBoard, CircleSlash, CircleCheck, UserCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +47,26 @@ export function DocSegment({
       textareaRef.current.setSelectionRange(length, length);
     }
   }, [isEditing]);
+  
+  // 텍스트 영역 자동 높이 조절
+  useLayoutEffect(() => {
+    if (isEditing && textareaRef.current) {
+      const adjustHeight = () => {
+        const textarea = textareaRef.current;
+        if (textarea) {
+          textarea.style.height = 'auto';
+          textarea.style.height = `${textarea.scrollHeight}px`;
+        }
+      };
+      
+      // 초기 로드 시 높이 조절
+      adjustHeight();
+      
+      // 윈도우 리사이즈 시 높이 재조정
+      window.addEventListener('resize', adjustHeight);
+      return () => window.removeEventListener('resize', adjustHeight);
+    }
+  }, [isEditing, editedValue]);
   
   // Handle keyboard shortcuts
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -105,47 +125,56 @@ export function DocSegment({
               </div>
             )}
             
-            {/* 문서 모드에서 텍스트 영역이 내용에 맞게 자동 조정되도록 수정 */}
+            {/* 문서 모드에서 상태 표시 */}
+            <div className="mb-2">
+              <Badge 
+                variant={segment.status === 'Reviewed' ? "default" : "outline"}
+                className={cn(
+                  "text-xs py-0.5 h-6",
+                  segment.status === 'Reviewed' ? "bg-indigo-600 hover:bg-indigo-600/90" : "",
+                  segment.status === 'Rejected' ? "border-red-500 text-red-500" : "",
+                  editedValue !== segment.target ? "border-blue-500 text-blue-500" : ""
+                )}
+              >
+                {editedValue !== segment.target ? 'Edited' : segment.status || 'Draft'}
+              </Badge>
+            </div>
+            
+            {/* 문서 모드에서 텍스트 영역 - 자동 높이 조절 */}
             <Textarea
               ref={textareaRef}
               value={editedValue}
               onChange={(e) => {
                 onEditValueChange?.(e.target.value);
-                // 내용 변경 시에도 높이 자동 조정
-                const target = e.target as HTMLTextAreaElement;
-                target.style.height = 'auto';
-                target.style.height = `${target.scrollHeight}px`;
               }}
               onKeyDown={handleKeyDown}
-              className="w-full p-2 pb-10 resize-none border-accent shadow-sm"
+              className="w-full p-2 resize-none border-accent shadow-sm"
               placeholder="Enter translation..."
               autoFocus
               style={{ height: 'auto', minHeight: '80px', overflow: 'hidden' }}
-              onInput={(e) => {
-                const target = e.target as HTMLTextAreaElement;
-                target.style.height = 'auto';
-                target.style.height = `${target.scrollHeight}px`;
-              }}
             />
             
-            {/* 버튼을 텍스트 영역 내부 하단에 배치 */}
-            <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-background/90 backdrop-blur-sm rounded-md border border-border/50 shadow-sm z-10">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button onClick={onCancel} variant="ghost" size="icon" className="h-7 w-7">
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Cancel (Esc)</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button onClick={onSave} variant="ghost" size="icon" className="h-7 w-7">
-                    <Check className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Save (Ctrl+Enter)</TooltipContent>
-              </Tooltip>
+            {/* 버튼들을 아래에 별도 영역으로 배치 */}
+            <div className="flex justify-end mt-2 gap-2">
+              <Button 
+                onClick={onCancel} 
+                size="sm" 
+                variant="outline" 
+                className="h-8 px-3 text-xs"
+              >
+                <X className="h-3.5 w-3.5 mr-1" />
+                Cancel
+              </Button>
+              
+              <Button 
+                onClick={onSave} 
+                size="sm" 
+                variant="default" 
+                className="h-8 px-3 text-xs bg-blue-600 hover:bg-blue-700"
+              >
+                <Check className="h-3.5 w-3.5 mr-1" />
+                Save
+              </Button>
             </div>
           </div>
         </span>
@@ -239,50 +268,57 @@ export function DocSegment({
       {/* Editing or viewing mode */}
       {isEditing ? (
         <div className="relative">
-          {/* 스크린샷과 같이 상단에 단순하게 상태만 표시 */}
-          <div className="mb-2 flex items-center">
-            <div className={cn(
-              "px-3 py-1 text-sm font-medium rounded-md",
-              segment.status === 'Reviewed' ? "bg-indigo-600 text-white" : 
-              segment.status === 'Rejected' ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" : 
-              "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
-            )}>
+          {/* 표 모드에서 상태 표시 */}
+          <div className="mb-2">
+            <Badge 
+              className={cn(
+                "text-xs py-0.5 h-6",
+                segment.status === 'Reviewed' ? "bg-indigo-600 hover:bg-indigo-600/90" : "",
+                segment.status === 'Rejected' ? "border-red-500 bg-red-100 text-red-800 dark:bg-red-900/60 dark:text-red-200" : "",
+                editedValue !== segment.target ? "border-blue-500 bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200" : 
+                "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+              )}
+            >
               {segment.status === 'Reviewed' ? 'Reviewed' : 
                segment.status === 'Rejected' ? 'Rejected' : 
                editedValue !== segment.target ? 'Edited' : 'Draft'}
-            </div>
+            </Badge>
           </div>
           
-          {/* 표 모드에서 텍스트 영역이 내용에 맞게 자동 조정되도록 수정 */}
+          {/* 표 모드에서 텍스트 영역 */}
           <Textarea
             ref={textareaRef}
             value={editedValue}
             onChange={(e) => {
               onEditValueChange?.(e.target.value);
-              // 내용 변경 시에도 높이 자동 조정
-              const target = e.target as HTMLTextAreaElement;
-              target.style.height = 'auto';
-              target.style.height = `${target.scrollHeight}px`;
             }}
             onKeyDown={handleKeyDown}
-            className="w-full p-3 pb-12 resize-none border border-border/60 rounded-md shadow-none"
+            className="w-full p-3 resize-none border border-border/60 rounded-md shadow-none"
             placeholder="Enter translation..."
             autoFocus
-            style={{ height: 'auto', minHeight: '100px', overflow: 'hidden' }}
-            onInput={(e) => {
-              const target = e.target as HTMLTextAreaElement;
-              target.style.height = 'auto';
-              target.style.height = `${target.scrollHeight}px`;
-            }}
+            style={{ height: 'auto', minHeight: '90px', overflow: 'hidden' }}
           />
           
-          {/* 스크린샷처럼 우측 하단에 버튼 배치 */}
-          <div className="absolute bottom-3 right-3 flex items-center gap-2 z-10">
-            <Button onClick={onCancel} variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full bg-gray-200/80 hover:bg-gray-300/90 dark:bg-gray-800/80 dark:hover:bg-gray-700/90">
-              <X className="h-4 w-4" />
+          {/* 버튼들을 아래에 별도 영역으로 배치 */}
+          <div className="flex justify-end mt-2 gap-2">
+            <Button 
+              onClick={onCancel} 
+              size="sm" 
+              variant="outline" 
+              className="h-8 px-3 text-xs"
+            >
+              <X className="h-3.5 w-3.5 mr-1" />
+              Cancel
             </Button>
-            <Button onClick={onSave} variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full bg-blue-100/80 hover:bg-blue-200/90 dark:bg-blue-900/80 dark:hover:bg-blue-800/90">
-              <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            
+            <Button 
+              onClick={onSave} 
+              size="sm" 
+              variant="default" 
+              className="h-8 px-3 text-xs bg-blue-600 hover:bg-blue-700"
+            >
+              <Check className="h-3.5 w-3.5 mr-1" />
+              Save
             </Button>
           </div>
         </div>
