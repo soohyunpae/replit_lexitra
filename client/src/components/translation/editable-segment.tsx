@@ -39,11 +39,11 @@ export function EditableSegment({
     }
   }, [isSelected, isSource]);
   
-  // Toggle status between "Draft" and "Reviewed"
+  // Toggle status between current status and "Reviewed"
   const toggleStatus = () => {
     if (!isSource && onUpdate) {
-      // Toggle between Draft and Reviewed
-      const newStatus = segment.status === "Reviewed" ? "Draft" : "Reviewed";
+      // Toggle between current status and Reviewed
+      const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
       // Also update origin to HT if it's MT, 100%, or Fuzzy and status is toggled to Reviewed
       const needsOriginChange = (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
       const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : segment.origin;
@@ -71,8 +71,15 @@ export function EditableSegment({
       const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
       const newOrigin = isValueChanged && needsOriginChange ? "HT" : segment.origin;
       
-      // Automatically change status to Draft if it was Reviewed and user is editing it
-      const newStatus = (isValueChanged && segment.status === "Reviewed") ? "Draft" : segment.status;
+      // Automatically change status to Edited if it was MT/100%/Fuzzy/Reviewed and user is editing it
+      let newStatus = segment.status;
+      if (isValueChanged) {
+        if (segment.status === "Reviewed") {
+          newStatus = "Edited";
+        } else if (segment.status === "MT" || segment.status === "100%" || segment.status === "Fuzzy") {
+          newStatus = "Edited";
+        }
+      }
       
       onUpdate(newValue, newStatus, newOrigin);
     }
@@ -98,12 +105,20 @@ export function EditableSegment({
   // Get status badge color based on status
   const getStatusColor = (status: string): string => {
     switch (status) {
-      case "Draft":
-        return "bg-yellow-200 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
       case "Reviewed":
-        return "bg-blue-200 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+        return "bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-200";
       case "Rejected":
         return "bg-red-200 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "Edited":
+        return "bg-purple-200 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+      case "100%":
+        return "bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "Fuzzy":
+        return "bg-yellow-200 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      case "MT":
+        return "bg-blue-200 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+      case "Draft": // 이전 버전과의 호환성 유지
+        return "bg-yellow-200 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
       default:
         return "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
     }
@@ -158,15 +173,10 @@ export function EditableSegment({
                   e.stopPropagation();
                   toggleStatus();
                 }}
-                title={`Click to toggle status (${segment.status === "Reviewed" ? "Draft" : "Reviewed"})`}
+                title={`Click to toggle status (${segment.status === "Reviewed" ? "Edited" : "Reviewed"})`}
               >
                 {segment.status}
               </span>
-              {segment.origin && (
-                <span className={`text-xs px-1.5 py-0.5 rounded-md ${getOriginColor(segment.origin)}`}>
-                  {segment.origin}
-                </span>
-              )}
               {/* Removed the Modified badge as per requirements */}
             </div>
           )}
@@ -182,9 +192,9 @@ export function EditableSegment({
                 toggleStatus();
               }} 
               className="h-7 w-7 p-0"
-              title={`Mark as ${segment.status === "Reviewed" ? "Draft" : "Reviewed"}`}
+              title={`Mark as ${segment.status === "Reviewed" ? "Edited" : "Reviewed"}`}
             >
-              <Check className={`h-4 w-4 ${segment.status === "Reviewed" ? "text-blue-600" : "text-muted-foreground"}`} />
+              <Check className={`h-4 w-4 ${segment.status === "Reviewed" ? "text-green-600" : "text-muted-foreground"}`} />
             </Button>
             {!segment.target && onTranslateWithGPT && (
               <Button 
