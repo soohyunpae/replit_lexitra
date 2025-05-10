@@ -5,8 +5,10 @@ import { Progress } from '@/components/ui/progress';
 import { 
   Save, Download, Languages, Eye, EyeOff, Check, X,
   ArrowUp, ArrowDown, Smartphone, Monitor, FileText, 
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
+  RotateCw
 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { TranslationUnit, TranslationMemory, Glossary } from '@/types';
 import { DocSegment } from './doc-segment-authenticated';
 import { useEditingState } from '@/hooks/useEditingState';
@@ -375,11 +377,36 @@ export function DocReviewEditor({
             </div>
           </div>
           
-          <div className="text-xs font-medium text-muted-foreground mr-2">
+          <div className="text-xs font-medium text-muted-foreground whitespace-nowrap">
             {statusCounts["Reviewed"] || 0}/{segments.length} Reviewed
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ml-1">
+            {/* Select All Checkbox */}
+            <div className="flex items-center space-x-1.5">
+              <Checkbox
+                id="doc-toggle-select-all"
+                checked={false}
+                className="h-3.5 w-3.5 rounded"
+                onCheckedChange={() => {
+                  // This is a placeholder for future functionality
+                  // No bulk selection is implemented for document view yet
+                  toast({
+                    title: "Feature unavailable",
+                    description: "Bulk selection is not available in document view.",
+                  });
+                }}
+              />
+              <div className="flex items-center">
+                <label
+                  htmlFor="doc-toggle-select-all"
+                  className="text-xs font-medium ml-1 cursor-pointer"
+                >
+                  Select All
+                </label>
+              </div>
+            </div>
+        
             {/* Desktop-only controls */}
             <div className="hidden md:flex items-center gap-2">
               <Button
