@@ -464,7 +464,7 @@ export function DocSegment({
                     if (editedValue !== segment.target) {
                       try {
                         // API 요청을 통해 실제 서버에 업데이트
-                        await fetch(`/api/segments/${segment.id}`, {
+                        const response = await fetch(`/api/segments/${segment.id}`, {
                           method: 'PATCH',
                           headers: {
                             'Content-Type': 'application/json',
@@ -476,8 +476,16 @@ export function DocSegment({
                           })
                         });
                         
-                        // 로컬 상태 업데이트
-                        onUpdate?.(editedValue, segment.status, segment.origin);
+                        // 응답 확인 및 에러 처리 추가
+                        if (!response.ok) {
+                          throw new Error(`Server responded with status: ${response.status}`);
+                        }
+                        
+                        const updatedSegment = await response.json();
+                        console.log('Updated segment (X button):', updatedSegment);
+                        
+                        // 로컬 상태 업데이트 - 서버에서 반환된 값으로 업데이트
+                        onUpdate?.(updatedSegment.target || editedValue, updatedSegment.status, updatedSegment.origin);
                       } catch (error) {
                         console.error("Failed to save segment:", error);
                       }
@@ -505,7 +513,7 @@ export function DocSegment({
                     
                     try {
                       // API 요청을 통해 실제 서버에 업데이트
-                      await fetch(`/api/segments/${segment.id}`, {
+                      const response = await fetch(`/api/segments/${segment.id}`, {
                         method: 'PATCH',
                         headers: {
                           'Content-Type': 'application/json',
@@ -517,8 +525,16 @@ export function DocSegment({
                         })
                       });
                       
-                      // 로컬 상태 업데이트 - 변경된 origin 값 사용
-                      onUpdate?.(editedValue, newStatus, newOrigin);
+                      // 응답 확인 및 에러 처리 추가
+                      if (!response.ok) {
+                        throw new Error(`Server responded with status: ${response.status}`);
+                      }
+                      
+                      const updatedSegment = await response.json();
+                      console.log('Updated segment (check button):', updatedSegment);
+                      
+                      // 로컬 상태 업데이트 - 서버에서 반환된 값으로 업데이트
+                      onUpdate?.(updatedSegment.target || editedValue, updatedSegment.status, updatedSegment.origin);
                       // 중요: onSave 호출하지 않음 - 편집 상태를 유지하기 위해
                     } catch (error) {
                       console.error("Failed to update segment status:", error);
