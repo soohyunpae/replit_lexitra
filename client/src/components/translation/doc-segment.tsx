@@ -105,15 +105,27 @@ export function DocSegment({
               </div>
             )}
             
-            {/* 텍스트 영역에 하단 패딩 추가하여 버튼 공간 확보 */}
+            {/* 문서 모드에서 텍스트 영역이 내용에 맞게 자동 조정되도록 수정 */}
             <Textarea
               ref={textareaRef}
               value={editedValue}
-              onChange={(e) => onEditValueChange?.(e.target.value)}
+              onChange={(e) => {
+                onEditValueChange?.(e.target.value);
+                // 내용 변경 시에도 높이 자동 조정
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = `${target.scrollHeight}px`;
+              }}
               onKeyDown={handleKeyDown}
-              className="min-h-[80px] p-2 pb-10 resize-both border-accent shadow-sm"
+              className="w-full p-2 pb-10 resize-none border-accent shadow-sm"
               placeholder="Enter translation..."
               autoFocus
+              style={{ height: 'auto', minHeight: '80px', overflow: 'hidden' }}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = `${target.scrollHeight}px`;
+              }}
             />
             
             {/* 버튼을 텍스트 영역 내부 하단에 배치 */}
@@ -227,22 +239,41 @@ export function DocSegment({
       {/* Editing or viewing mode */}
       {isEditing ? (
         <div className="relative">
-          {/* 스크린샷 모양대로 상단에 상태 뱃지 표시 */}
-          <div className="absolute top-0 left-0 right-0 flex items-center bg-indigo-600 text-white py-1 px-3 font-medium text-sm rounded-t z-10">
-            {segment.status === 'Reviewed' ? 'Reviewed' : 
-             segment.status === 'Rejected' ? 'Rejected' : 
-             editedValue !== segment.target ? 'Edited' : 'Draft'}
+          {/* 스크린샷과 같이 상단에 단순하게 상태만 표시 */}
+          <div className="mb-2 flex items-center">
+            <div className={cn(
+              "px-3 py-1 text-sm font-medium rounded-md",
+              segment.status === 'Reviewed' ? "bg-indigo-600 text-white" : 
+              segment.status === 'Rejected' ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" : 
+              "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+            )}>
+              {segment.status === 'Reviewed' ? 'Reviewed' : 
+               segment.status === 'Rejected' ? 'Rejected' : 
+               editedValue !== segment.target ? 'Edited' : 'Draft'}
+            </div>
           </div>
           
-          {/* 상단 헤더에 맞게 텍스트 영역 스타일 조정 */}
+          {/* 표 모드에서 텍스트 영역이 내용에 맞게 자동 조정되도록 수정 */}
           <Textarea
             ref={textareaRef}
             value={editedValue}
-            onChange={(e) => onEditValueChange?.(e.target.value)}
+            onChange={(e) => {
+              onEditValueChange?.(e.target.value);
+              // 내용 변경 시에도 높이 자동 조정
+              const target = e.target as HTMLTextAreaElement;
+              target.style.height = 'auto';
+              target.style.height = `${target.scrollHeight}px`;
+            }}
             onKeyDown={handleKeyDown}
-            className="min-h-[150px] resize-none border-0 border-b rounded-t-none rounded-b mt-6 pt-4 shadow-none"
+            className="w-full p-3 pb-12 resize-none border border-border/60 rounded-md shadow-none"
             placeholder="Enter translation..."
             autoFocus
+            style={{ height: 'auto', minHeight: '100px', overflow: 'hidden' }}
+            onInput={(e) => {
+              const target = e.target as HTMLTextAreaElement;
+              target.style.height = 'auto';
+              target.style.height = `${target.scrollHeight}px`;
+            }}
           />
           
           {/* 스크린샷처럼 우측 하단에 버튼 배치 */}
