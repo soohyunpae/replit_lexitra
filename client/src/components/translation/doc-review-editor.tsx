@@ -132,7 +132,10 @@ export function DocReviewEditor({
   // Update status counts when segments change
   useEffect(() => {
     const counts: Record<string, number> = {
-      'Draft': 0,
+      'MT': 0,
+      '100%': 0,
+      'Fuzzy': 0,
+      'Edited': 0,
       'Reviewed': 0,
       'Rejected': 0
     };
@@ -141,7 +144,8 @@ export function DocReviewEditor({
       if (segment.status && counts[segment.status] !== undefined) {
         counts[segment.status]++;
       } else {
-        counts['Draft']++;
+        // Default to MT if status is not recognized
+        counts['MT']++;
       }
     });
     
@@ -153,9 +157,18 @@ export function DocReviewEditor({
   const reviewedPercentage = totalSegments > 0 
     ? (statusCounts['Reviewed'] || 0) / totalSegments * 100 
     : 0;
-  const draftPercentage = totalSegments > 0 
-    ? (statusCounts['Draft'] || 0) / totalSegments * 100 
+    
+  // Combine all non-reviewed, non-rejected statuses for the progress bar
+  // This includes MT, 100%, Fuzzy, and Edited
+  const inProgressCount = (statusCounts['MT'] || 0) + 
+    (statusCounts['100%'] || 0) + 
+    (statusCounts['Fuzzy'] || 0) + 
+    (statusCounts['Edited'] || 0);
+    
+  const inProgressPercentage = totalSegments > 0 
+    ? inProgressCount / totalSegments * 100 
     : 0;
+    
   const rejectedPercentage = totalSegments > 0 
     ? (statusCounts['Rejected'] || 0) / totalSegments * 100 
     : 0;
@@ -330,7 +343,7 @@ export function DocReviewEditor({
           />
           <div 
             className="h-full bg-blue-500" 
-            style={{ width: `${draftPercentage}%` }}
+            style={{ width: `${inProgressPercentage}%` }}
           />
           <div 
             className="h-full bg-red-500" 
