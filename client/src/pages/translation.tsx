@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { NewTranslationEditor } from "@/components/translation/new-translation-editor";
 import { DocReviewEditor } from "@/components/translation/doc-review-editor";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -411,9 +412,21 @@ export default function Translation() {
         <div className="border-b bg-card px-6 py-4 flex-shrink-0">
           {/* Breadcrumb Navigation and Save Button */}
           <div className="mb-4">
-            <h1 className="text-lg font-semibold">
-              Project {project.id}: {project.name} / {file.name}
-            </h1>
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href={`/project/${project.id}`}>
+                    Project {project.id}: {project.name}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>
+                    {file.name}
+                  </BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
           
           {/* Tabs and Save Button */}
