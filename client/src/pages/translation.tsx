@@ -376,21 +376,27 @@ export default function Translation() {
     );
   }
   
-  // Get editor mode from URL query param, defaults to 'segment'
-  const [searchParams] = useState(() => {
+  // editor mode state
+  const [editorMode, setEditorMode] = useState<'segment' | 'doc'>('segment');
+  
+  // Initialize editor mode from URL on mount
+  useEffect(() => {
     if (typeof window !== 'undefined') {
-      return new URLSearchParams(window.location.search);
+      const params = new URLSearchParams(window.location.search);
+      const modeParam = params.get('mode');
+      if (modeParam === 'segment' || modeParam === 'doc') {
+        setEditorMode(modeParam);
+      }
     }
-    return new URLSearchParams();
-  });
-  const defaultMode = searchParams.get('mode') || 'segment';
-  const [editorMode, setEditorMode] = useState<'segment' | 'doc'>(defaultMode as 'segment' | 'doc');
+  }, []);
   
   // Update URL when mode changes
   const updateUrlMode = (mode: 'segment' | 'doc') => {
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set('mode', mode);
-    window.history.replaceState({}, '', currentUrl.toString());
+    if (typeof window !== 'undefined') {
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.set('mode', mode);
+      window.history.replaceState({}, '', currentUrl.toString());
+    }
   };
   
   // Handle mode change
