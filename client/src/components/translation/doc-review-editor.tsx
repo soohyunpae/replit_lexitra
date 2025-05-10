@@ -470,9 +470,9 @@ export function DocReviewEditor({
                     className="paragraph-block mb-6 relative hover:bg-muted/5 transition-colors duration-150 p-2 -mx-2 rounded-md" 
                     data-paragraph-id={groupIndex}
                   >
-                    <div className="inline-flex flex-wrap">
+                    <div className="inline">
                       {group.map((segment, segmentIndex) => (
-                        <span key={`source-${segment.id}`} className="inline-segment">
+                        <span key={`source-${segment.id}`} className="inline">
                           <DocSegment
                             segment={segment}
                             isSource={true}
@@ -483,7 +483,7 @@ export function DocReviewEditor({
                               editingId === segment.id ? "bg-muted/50 rounded px-1" : ""
                             )}
                           />
-                          {/* 문장 연결 - 항상 공백 추가하여 부드럽게 연결 (마지막 세그먼트가 아닌 경우) */}
+                          {/* 일반 문서처럼 보이도록 공백 추가 */}
                           {segmentIndex < group.length - 1 && " "}
                         </span>
                       ))}
@@ -533,9 +533,9 @@ export function DocReviewEditor({
                     className="paragraph-block mb-6 relative hover:bg-muted/5 transition-colors duration-150 p-2 -mx-2 rounded-md" 
                     data-paragraph-id={groupIndex}
                   >
-                    <div className="inline-flex flex-wrap">
+                    <div className="inline">
                       {group.map((segment, segmentIndex) => (
-                        <span key={`target-${segment.id}`} className="inline-segment">
+                        <span key={`target-${segment.id}`} className="inline">
                           <DocSegment
                             segment={segment}
                             isSource={false}
@@ -552,7 +552,7 @@ export function DocReviewEditor({
                               editingId === segment.id ? "bg-accent/30 rounded px-1" : ""
                             )}
                           />
-                          {/* 문장 연결 - 항상 공백 추가하여 부드럽게 연결 (마지막 세그먼트가 아닌 경우) */}
+                          {/* 일반 문서처럼 보이도록 공백 추가 */}
                           {segmentIndex < group.length - 1 && " "}
                         </span>
                       ))}
