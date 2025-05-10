@@ -91,10 +91,15 @@ export function DocSegment({
               autoFocus
             />
             {showStatusInEditor && (
-              <div className="absolute top-2 right-2 flex items-center gap-1 text-xs opacity-80 bg-background/90 rounded-md p-1">
-                <span>{segment.status}</span>
-                <Separator orientation="vertical" className="h-3" />
-                <span>{segment.origin || 'None'}</span>
+              <div className="absolute top-2 right-2 flex items-center gap-1 text-xs opacity-80 bg-background/90 rounded-md p-1 z-10">
+                <Badge variant="outline" className="text-[10px] py-0 h-4">
+                  {segment.status || 'MT'}
+                </Badge>
+                {segment.origin && (
+                  <Badge variant="outline" className="text-[10px] py-0 h-4">
+                    {segment.origin}
+                  </Badge>
+                )}
               </div>
             )}
             <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
