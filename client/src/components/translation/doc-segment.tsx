@@ -178,46 +178,44 @@ export function DocSegment({
             />
             
             {/* 버튼들을 아래에 별도 영역으로 배치 */}
-            <div className="flex justify-end mt-2 gap-2">
+            {/* 간소화된 UI - 세그먼트 에디터와 일치하는 디자인 */}
+            <div className="flex absolute right-2 top-2 gap-2">
               <Button 
                 onClick={onCancel} 
                 size="sm" 
-                variant="outline" 
-                className="h-8 px-3 text-xs"
+                variant="ghost" 
+                className="h-7 w-7 p-0 rounded-full"
               >
-                <X className="h-3.5 w-3.5 mr-1" />
-                Cancel
+                <X className="h-4 w-4" />
+                <span className="sr-only">Cancel</span>
               </Button>
               
-              {/* 상태 토글 버튼 추가 */}
               {onUpdate && (
                 <Button 
                   onClick={toggleStatus} 
                   size="sm" 
-                  variant="outline" 
-                  className={cn(
-                    "h-8 px-3 text-xs",
-                    segment.status === "Reviewed" ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50" : 
-                    "bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                  )}
+                  variant="ghost" 
+                  className="h-7 w-7 p-0 rounded-full"
                 >
                   {segment.status === "Reviewed" ? (
-                    <CircleCheck className="h-3.5 w-3.5 mr-1 text-green-600 dark:text-green-400" />
+                    <CircleCheck className="h-4 w-4 text-green-600 dark:text-green-500" />
                   ) : (
-                    <Circle className="h-3.5 w-3.5 mr-1" />
+                    <Circle className="h-4 w-4" />
                   )}
-                  {segment.status === "Reviewed" ? "Reviewed" : "Mark as Reviewed"}
+                  <span className="sr-only">
+                    {segment.status === "Reviewed" ? "Unmark as Reviewed" : "Mark as Reviewed"}
+                  </span>
                 </Button>
               )}
               
               <Button 
                 onClick={onSave} 
                 size="sm" 
-                variant="default" 
-                className="h-8 px-3 text-xs bg-blue-600 hover:bg-blue-700"
+                variant="ghost" 
+                className="h-7 w-7 p-0 rounded-full bg-blue-100 dark:bg-blue-900/30"
               >
-                <Check className="h-3.5 w-3.5 mr-1" />
-                Save
+                <Check className="h-4 w-4 text-blue-700 dark:text-blue-400" />
+                <span className="sr-only">Save</span>
               </Button>
             </div>
           </div>
@@ -348,47 +346,44 @@ export function DocSegment({
             style={{ height: 'auto', minHeight: '90px', overflow: 'hidden' }}
           />
           
-          {/* 버튼들을 아래에 별도 영역으로 배치 */}
-          <div className="flex justify-end mt-2 gap-2">
+          {/* 간소화된 UI - 세그먼트 에디터와 일치하는 디자인 */}
+          <div className="flex absolute right-2 top-2 gap-2">
             <Button 
               onClick={onCancel} 
               size="sm" 
-              variant="outline" 
-              className="h-8 px-3 text-xs"
+              variant="ghost" 
+              className="h-7 w-7 p-0 rounded-full"
             >
-              <X className="h-3.5 w-3.5 mr-1" />
-              Cancel
+              <X className="h-4 w-4" />
+              <span className="sr-only">Cancel</span>
             </Button>
             
-            {/* 상태 토글 버튼 추가 */}
             {onUpdate && (
               <Button 
                 onClick={toggleStatus} 
                 size="sm" 
-                variant="outline" 
-                className={cn(
-                  "h-8 px-3 text-xs",
-                  segment.status === "Reviewed" ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50" : 
-                  "bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                )}
+                variant="ghost" 
+                className="h-7 w-7 p-0 rounded-full"
               >
                 {segment.status === "Reviewed" ? (
-                  <CircleCheck className="h-3.5 w-3.5 mr-1 text-green-600 dark:text-green-400" />
+                  <CircleCheck className="h-4 w-4 text-green-600 dark:text-green-500" />
                 ) : (
-                  <Circle className="h-3.5 w-3.5 mr-1" />
+                  <Circle className="h-4 w-4" />
                 )}
-                {segment.status === "Reviewed" ? "Reviewed" : "Mark as Reviewed"}
+                <span className="sr-only">
+                  {segment.status === "Reviewed" ? "Unmark as Reviewed" : "Mark as Reviewed"}
+                </span>
               </Button>
             )}
             
             <Button 
               onClick={onSave} 
               size="sm" 
-              variant="default" 
-              className="h-8 px-3 text-xs bg-blue-600 hover:bg-blue-700"
+              variant="ghost" 
+              className="h-7 w-7 p-0 rounded-full bg-blue-100 dark:bg-blue-900/30"
             >
-              <Check className="h-3.5 w-3.5 mr-1" />
-              Save
+              <Check className="h-4 w-4 text-blue-700 dark:text-blue-400" />
+              <span className="sr-only">Save</span>
             </Button>
           </div>
         </div>
