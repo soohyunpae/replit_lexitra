@@ -18,6 +18,7 @@ interface DocSegmentProps {
   onSave?: () => void;
   onCancel?: () => void;
   onUpdate?: (target: string, status?: string, origin?: string) => void;
+  onToggleStatus?: () => void; // 상태 토글 콜백 추가
   className?: string;
   isDocumentMode?: boolean; // 문서 모드 여부
   showStatusInEditor?: boolean; // 편집 중에만 상태 표시 (문서 모드에서)
@@ -33,6 +34,7 @@ export function DocSegment({
   onSave,
   onCancel,
   onUpdate,
+  onToggleStatus,
   className,
   isDocumentMode = false, // 기본값은 false
   showStatusInEditor = false, // 기본값은 false
