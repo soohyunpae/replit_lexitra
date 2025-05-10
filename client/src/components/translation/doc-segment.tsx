@@ -128,7 +128,7 @@ export function DocSegment({
             {/* 불필요한 상태 뱃지 제거 - 푸터 영역에 통합 */}
             
             {/* 문서 모드에서 텍스트 영역 - 자동 높이 조절 */}
-            <div className="relative border-accent shadow-sm">
+            <div className="relative">
               <Textarea
                 ref={textareaRef}
                 value={editedValue}
@@ -156,7 +156,7 @@ export function DocSegment({
                   }
                 }}
                 onKeyDown={handleKeyDown}
-                className="w-full p-2 pt-2 pb-12 resize-none"
+                className="w-full p-2 pt-2 pb-12 resize-none border-0 shadow-none"
                 placeholder="Enter translation..."
                 autoFocus
                 style={{ height: 'auto', minHeight: '80px', overflow: 'hidden' }}
@@ -190,23 +190,20 @@ export function DocSegment({
                     <span className="sr-only">Cancel</span>
                   </Button>
                   
-                  {onUpdate && (
-                    <Button 
-                      onClick={toggleStatus} 
-                      size="sm" 
-                      variant="ghost" 
-                      className="h-7 w-7 p-0 rounded-full"
-                    >
-                      {segment.status === "Reviewed" ? (
-                        <CircleCheck className="h-4 w-4 text-green-600 dark:text-green-500" />
-                      ) : (
-                        <Circle className="h-4 w-4" />
-                      )}
-                      <span className="sr-only">
-                        {segment.status === "Reviewed" ? "Unmark as Reviewed" : "Mark as Reviewed"}
-                      </span>
-                    </Button>
-                  )}
+                  <Button 
+                    onClick={() => {
+                      // Reviewed로 마크하고 저장하는 기능
+                      const newStatus = "Reviewed";
+                      onUpdate?.(editedValue, newStatus, segment.origin);
+                      onSave?.();
+                    }} 
+                    size="sm" 
+                    variant="ghost" 
+                    className="h-7 w-7 p-0 rounded-full bg-green-100 dark:bg-green-900/30"
+                  >
+                    <CircleCheck className="h-4 w-4 text-green-600 dark:text-green-500" />
+                    <span className="sr-only">Mark as Reviewed and Save</span>
+                  </Button>
                   
                   <Button 
                     onClick={onSave} 
@@ -315,7 +312,7 @@ export function DocSegment({
           {/* 불필요한 상태 뱃지 제거 - 표 모드에서도 제거 */}
           
           {/* 표 모드에서 텍스트 영역 */}
-          <div className="relative border border-border/60 rounded-md shadow-none">
+          <div className="relative">
             <Textarea
               ref={textareaRef}
               value={editedValue}
@@ -343,7 +340,7 @@ export function DocSegment({
                 }
               }}
               onKeyDown={handleKeyDown}
-              className="w-full p-3 pt-3 pb-12 resize-none border-0 rounded-md"
+              className="w-full p-3 pt-3 pb-12 resize-none border-0 shadow-none rounded-md"
               placeholder="Enter translation..."
               autoFocus
               style={{ height: 'auto', minHeight: '90px', overflow: 'hidden' }}
@@ -377,23 +374,20 @@ export function DocSegment({
                   <span className="sr-only">Cancel</span>
                 </Button>
                 
-                {onUpdate && (
-                  <Button 
-                    onClick={toggleStatus} 
-                    size="sm" 
-                    variant="ghost" 
-                    className="h-7 w-7 p-0 rounded-full"
-                  >
-                    {segment.status === "Reviewed" ? (
-                      <CircleCheck className="h-4 w-4 text-green-600 dark:text-green-500" />
-                    ) : (
-                      <Circle className="h-4 w-4" />
-                    )}
-                    <span className="sr-only">
-                      {segment.status === "Reviewed" ? "Unmark as Reviewed" : "Mark as Reviewed"}
-                    </span>
-                  </Button>
-                )}
+                <Button 
+                  onClick={() => {
+                    // Reviewed로 마크하고 저장하는 기능
+                    const newStatus = "Reviewed";
+                    onUpdate?.(editedValue, newStatus, segment.origin);
+                    onSave?.();
+                  }} 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-7 w-7 p-0 rounded-full bg-green-100 dark:bg-green-900/30"
+                >
+                  <CircleCheck className="h-4 w-4 text-green-600 dark:text-green-500" />
+                  <span className="sr-only">Mark as Reviewed and Save</span>
+                </Button>
                 
                 <Button 
                   onClick={onSave} 
