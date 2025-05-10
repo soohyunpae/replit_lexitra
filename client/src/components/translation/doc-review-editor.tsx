@@ -355,114 +355,67 @@ export function DocReviewEditor({
   
   return (
     <div className="flex flex-col h-full w-full">
-      {/* Editor Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 p-2 border-b bg-card">
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button 
-            size="sm" 
-            onClick={handleSave}
-            className="gap-1.5"
-          >
-            <Save className="h-4 w-4" />
-            <span className="hidden sm:inline">Save</span>
-          </Button>
-          
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={onExport}
-            className="gap-1.5"
-          >
-            <Download className="h-4 w-4" />
-            <span className="hidden sm:inline">Export</span>
-          </Button>
-          
-          <Separator orientation="vertical" className="h-6 mx-1" />
-          
-          <div className="flex items-center gap-1.5">
-            <Badge variant="outline" className="bg-muted/50">
-              <Languages className="h-3.5 w-3.5 mr-1" />
-              {sourceLanguage} → {targetLanguage}
-            </Badge>
-            <Badge variant="outline" className="bg-muted/50">
-              <FileText className="h-3.5 w-3.5 mr-1" />
-              {fileName}
-            </Badge>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {/* Responsive layout controls for mobile */}
-          <Button
-            size="sm"
-            variant="ghost"
-            title={showSource ? "Hide source text" : "Show source text"}
-            onClick={() => setShowSource(!showSource)}
-            className="md:hidden"
-          >
-            {showSource ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </Button>
-          
-          {/* Desktop-only controls */}
-          <div className="hidden md:flex items-center gap-2">
+      {/* Progress bar with controls */}
+      <div className="px-3 py-2 bg-muted/30 border-b">
+        <div className="text-xs text-muted-foreground mb-1.5 flex justify-between items-center">
+          <span>Translation Progress</span>
+          <div className="flex items-center gap-2">
+            {/* Segment counts */}
+            <span className="text-xs font-medium mr-2">
+              {statusCounts['Reviewed'] || 0} of {totalSegments} segments
+            </span>
+            
+            {/* Desktop-only controls */}
+            <div className="hidden md:flex items-center gap-2">
+              <Button
+                size="sm"
+                variant={scrollSyncEnabled ? "default" : "outline"}
+                onClick={() => setScrollSyncEnabled(!scrollSyncEnabled)}
+                className="gap-1.5 h-6 text-xs"
+              >
+                {scrollSyncEnabled ? (
+                  <>
+                    <Check className="h-3 w-3" />
+                    <span className="text-xs">Sync Scroll</span>
+                  </>
+                ) : (
+                  <>
+                    <X className="h-3 w-3" />
+                    <span className="text-xs">Sync Scroll</span>
+                  </>
+                )}
+              </Button>
+            </div>
+            
+            {/* Side panel toggle button */}
             <Button
               size="sm"
-              variant={scrollSyncEnabled ? "default" : "outline"}
-              onClick={() => setScrollSyncEnabled(!scrollSyncEnabled)}
-              className="gap-1.5"
+              variant={showSidePanel ? "default" : "outline"}
+              onClick={() => setShowSidePanel(!showSidePanel)}
+              className="h-6 w-6 p-0"
+              title={showSidePanel ? "Hide side panel" : "Show side panel"}
             >
-              {scrollSyncEnabled ? (
-                <>
-                  <Check className="h-3.5 w-3.5" />
-                  <span className="text-xs">Sync Scroll</span>
-                </>
+              {showSidePanel ? (
+                <ChevronRight className="h-3.5 w-3.5" />
               ) : (
-                <>
-                  <X className="h-3.5 w-3.5" />
-                  <span className="text-xs">Sync Scroll</span>
-                </>
+                <ChevronLeft className="h-3.5 w-3.5" />
+              )}
+            </Button>
+            
+            {/* Device layout toggle button (just visual indicator for demo) */}
+            <Button
+              size="sm"
+              variant="ghost"
+              title="Current layout mode"
+              className="opacity-70 h-6 w-6 p-0"
+            >
+              {isMobile ? (
+                <Smartphone className="h-3.5 w-3.5" />
+              ) : (
+                <Monitor className="h-3.5 w-3.5" />
               )}
             </Button>
           </div>
-          
-          {/* Side panel toggle button */}
-          <Button
-            size="sm"
-            variant={showSidePanel ? "default" : "outline"}
-            onClick={() => setShowSidePanel(!showSidePanel)}
-            className="gap-1.5"
-            title={showSidePanel ? "Hide side panel" : "Show side panel"}
-          >
-            {showSidePanel ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
-          </Button>
-          
-          {/* Device layout toggle button (just visual indicator for demo) */}
-          <Button
-            size="sm"
-            variant="ghost"
-            title="Current layout mode"
-            className="opacity-70"
-          >
-            {isMobile ? (
-              <Smartphone className="h-4 w-4" />
-            ) : (
-              <Monitor className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
-      </div>
-      
-      {/* Progress bar */}
-      <div className="px-3 py-2 bg-muted/30 border-b">
-        <div className="text-xs text-muted-foreground mb-1.5 flex justify-between">
-          <span>Translation Progress</span>
-          <span>
-            {statusCounts['Reviewed'] || 0} of {totalSegments} segments
-          </span>
         </div>
         <div className="h-2 w-full bg-muted overflow-hidden rounded-full flex">
           <div 
