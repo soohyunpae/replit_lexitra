@@ -179,6 +179,8 @@ export function DocReviewEditor({
   const [scrollSyncEnabled, setScrollSyncEnabled] = useState(true);
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [showSidePanel, setShowSidePanel] = useState(true);
+  // 문장 하이라이트를 위한 상태 변수 추가
+  const [highlightedSegmentId, setHighlightedSegmentId] = useState<number | null>(null);
   
   // 문서 보기를 위해 세그먼트를 그룹화
   const segmentGroups = groupSegmentsByParagraphs(segments);
@@ -198,10 +200,30 @@ export function DocReviewEditor({
     editingId,
     editedValue,
     setEditedValue,
-    selectSegmentForEditing,
+    selectSegmentForEditing: originalSelectForEditing,
     updateSegment,
     cancelEditing
   } = useEditingState(segments, fileId);
+  
+  // 수정된 선택 함수 - 하이라이트 기능 추가
+  const selectSegmentForEditing = (segment: TranslationUnit) => {
+    setHighlightedSegmentId(segment.id);
+    originalSelectForEditing(segment);
+  };
+  
+  // 수정된 취소 함수 - 하이라이트 제거
+  const originalCancelEditing = cancelEditing;
+  const customCancelEditing = () => {
+    setHighlightedSegmentId(null);
+    originalCancelEditing();
+  };
+  
+  // 수정된 저장 함수 - 하이라이트 제거
+  const originalUpdateSegment = updateSegment;
+  const customUpdateSegment = (id: number, value: string) => {
+    originalUpdateSegment(id, value);
+    setHighlightedSegmentId(null);
+  };
   
   // Update status counts when segments change
   useEffect(() => {
@@ -480,7 +502,7 @@ export function DocReviewEditor({
                             isDocumentMode={true}
                             className={cn(
                               "py-0 mr-0 border-0",
-                              editingId === segment.id ? "bg-muted/50 rounded px-1" : ""
+                              (editingId === segment.id || highlightedSegmentId === segment.id) ? "bg-muted/50 rounded px-1" : ""
                             )}
                           />
                           {/* 일반 문서처럼 보이도록 공백 추가 */}
