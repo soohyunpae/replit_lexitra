@@ -125,23 +125,7 @@ export function DocSegment({
       return (
         <span className={cn("relative font-serif", className)}>
           <div className="relative my-1">
-            {/* 상태 뱃지를 텍스트 영역 위에 배치 */}
-            {showStatusInEditor && (
-              <div className="absolute top-0 left-0 -mt-6 flex items-center gap-1 text-xs bg-background/90 backdrop-blur-sm rounded-md p-1 shadow-sm border border-border/50 z-10">
-                <Badge variant={editedValue !== segment.target ? "outline" : segment.status === 'Reviewed' ? "default" : "outline"}
-                  className={cn(
-                    "text-xs font-normal h-5",
-                    editedValue !== segment.target ? "border-blue-500 text-blue-500" : "",
-                    editedValue === segment.target && segment.status === 'Reviewed' ? "bg-green-600/80 hover:bg-green-600/90" : "",
-                    editedValue === segment.target && segment.status === 'Rejected' ? "border-red-500 text-red-500" : ""
-                  )}
-                >
-                  {editedValue !== segment.target ? 'Edited' : segment.status || 'Draft'}
-                </Badge>
-              </div>
-            )}
-            
-            {/* 불필요한 상태 뱃지 제거 - 기능을 버튼에 통합 */}
+            {/* 불필요한 상태 뱃지 제거 - 푸터 영역에 통합 */}
             
             {/* 문서 모드에서 텍스트 영역 - 자동 높이 조절 */}
             <div className="relative border-accent shadow-sm">
@@ -179,7 +163,22 @@ export function DocSegment({
               />
               
               {/* 텍스트 영역 내부 하단에 버튼 푸터 영역 배치 */}
-              <div className="absolute bottom-0 left-0 right-0 h-10 bg-muted/20 border-t border-border/30 flex items-center justify-end pr-2">
+              <div className="absolute bottom-0 left-0 right-0 h-10 bg-muted/20 border-t border-border/30 flex items-center justify-between px-2">
+                {/* 왼쪽에 상태 뱃지 */}
+                <div className="flex items-center">
+                  <Badge variant={editedValue !== segment.target ? "outline" : segment.status === 'Reviewed' ? "default" : "outline"}
+                    className={cn(
+                      "text-xs font-normal h-5",
+                      editedValue !== segment.target ? "border-blue-500 text-blue-500" : "",
+                      editedValue === segment.target && segment.status === 'Reviewed' ? "bg-green-600/80 hover:bg-green-600/90" : "",
+                      editedValue === segment.target && segment.status === 'Rejected' ? "border-red-500 text-red-500" : ""
+                    )}
+                  >
+                    {editedValue !== segment.target ? 'Edited' : segment.status || 'Draft'}
+                  </Badge>
+                </div>
+                
+                {/* 오른쪽에 버튼들 */}
                 <div className="flex gap-2">
                   <Button 
                     onClick={onCancel} 
@@ -351,7 +350,22 @@ export function DocSegment({
             />
             
             {/* 텍스트 영역 내부 하단에 버튼 푸터 영역 배치 */}
-            <div className="absolute bottom-0 left-0 right-0 h-10 bg-muted/20 border-t border-border/30 flex items-center justify-end pr-2 rounded-b-md">
+            <div className="absolute bottom-0 left-0 right-0 h-10 bg-muted/20 border-t border-border/30 flex items-center justify-between px-2 rounded-b-md">
+              {/* 왼쪽에 상태 뱃지 */}
+              <div className="flex items-center">
+                <Badge variant={editedValue !== segment.target ? "outline" : segment.status === 'Reviewed' ? "default" : "outline"}
+                  className={cn(
+                    "text-xs font-normal h-5",
+                    editedValue !== segment.target ? "border-blue-500 text-blue-500" : "",
+                    editedValue === segment.target && segment.status === 'Reviewed' ? "bg-green-600/80 hover:bg-green-600/90" : "",
+                    editedValue === segment.target && segment.status === 'Rejected' ? "border-red-500 text-red-500" : ""
+                  )}
+                >
+                  {editedValue !== segment.target ? 'Edited' : segment.status || 'Draft'}
+                </Badge>
+              </div>
+              
+              {/* 오른쪽에 버튼들 */}
               <div className="flex gap-2">
                 <Button 
                   onClick={onCancel} 
