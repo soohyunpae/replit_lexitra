@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, X, MessageCircle, FileEdit, CircuitBoard, CircleSlash, CircleCheck, UserCheck } from 'lucide-react';
+import { Check, X, MessageCircle, FileEdit, CircuitBoard, CircleSlash, CircleCheck, UserCheck, Circle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -189,6 +189,27 @@ export function DocSegment({
                 Cancel
               </Button>
               
+              {/* 상태 토글 버튼 추가 */}
+              {onUpdate && (
+                <Button 
+                  onClick={toggleStatus} 
+                  size="sm" 
+                  variant="outline" 
+                  className={cn(
+                    "h-8 px-3 text-xs",
+                    segment.status === "Reviewed" ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50" : 
+                    "bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  )}
+                >
+                  {segment.status === "Reviewed" ? (
+                    <CircleCheck className="h-3.5 w-3.5 mr-1 text-green-600 dark:text-green-400" />
+                  ) : (
+                    <Circle className="h-3.5 w-3.5 mr-1" />
+                  )}
+                  {segment.status === "Reviewed" ? "Reviewed" : "Mark as Reviewed"}
+                </Button>
+              )}
+              
               <Button 
                 onClick={onSave} 
                 size="sm" 
@@ -318,6 +339,27 @@ export function DocSegment({
               <X className="h-3.5 w-3.5 mr-1" />
               Cancel
             </Button>
+            
+            {/* 상태 토글 버튼 추가 */}
+            {onUpdate && (
+              <Button 
+                onClick={toggleStatus} 
+                size="sm" 
+                variant="outline" 
+                className={cn(
+                  "h-8 px-3 text-xs",
+                  segment.status === "Reviewed" ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50" : 
+                  "bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                )}
+              >
+                {segment.status === "Reviewed" ? (
+                  <CircleCheck className="h-3.5 w-3.5 mr-1 text-green-600 dark:text-green-400" />
+                ) : (
+                  <Circle className="h-3.5 w-3.5 mr-1" />
+                )}
+                {segment.status === "Reviewed" ? "Reviewed" : "Mark as Reviewed"}
+              </Button>
+            )}
             
             <Button 
               onClick={onSave} 
