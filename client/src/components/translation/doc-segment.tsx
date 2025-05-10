@@ -1,11 +1,11 @@
-import React, { useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Check, X, MessageCircle, FileEdit, CircuitBoard, CircleSlash, CircleCheck, UserCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
-import { TranslationUnit } from '@/types';
+import { TranslationUnit, StatusType, OriginType } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface DocSegmentProps {
@@ -17,6 +17,7 @@ interface DocSegmentProps {
   onSelectForEditing?: () => void;
   onSave?: () => void;
   onCancel?: () => void;
+  onUpdate?: (target: string, status?: string, origin?: string) => void;
   className?: string;
   isDocumentMode?: boolean; // 문서 모드 여부
   showStatusInEditor?: boolean; // 편집 중에만 상태 표시 (문서 모드에서)
@@ -31,11 +32,26 @@ export function DocSegment({
   onSelectForEditing,
   onSave,
   onCancel,
+  onUpdate,
   className,
   isDocumentMode = false, // 기본값은 false
   showStatusInEditor = false, // 기본값은 false
 }: DocSegmentProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // 상태 토글 기능 추가
+  const toggleStatus = () => {
+    if (!isSource && onUpdate) {
+      // Reviewed와 현재 상태 간 토글
+      const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
+      
+      // MT, 100%, Fuzzy일 경우 origin도 HT로 변경
+      const needsOriginChange = (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
+      const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : segment.origin;
+      
+      onUpdate(editedValue, newStatus, newOrigin);
+    }
+  };
   
   // Auto-focus textarea when editing begins
   useEffect(() => {
@@ -125,27 +141,34 @@ export function DocSegment({
               </div>
             )}
             
-            {/* 문서 모드에서 상태 표시 */}
-            <div className="mb-2">
-              <Badge 
-                variant={segment.status === 'Reviewed' ? "default" : "outline"}
-                className={cn(
-                  "text-xs py-0.5 h-6",
-                  segment.status === 'Reviewed' ? "bg-indigo-600 hover:bg-indigo-600/90" : "",
-                  segment.status === 'Rejected' ? "border-red-500 text-red-500" : "",
-                  editedValue !== segment.target ? "border-blue-500 text-blue-500" : ""
-                )}
-              >
-                {editedValue !== segment.target ? 'Edited' : segment.status || 'Draft'}
-              </Badge>
-            </div>
+            {/* 불필요한 상태 뱃지 제거 - 기능을 버튼에 통합 */}
             
             {/* 문서 모드에서 텍스트 영역 - 자동 높이 조절 */}
             <Textarea
               ref={textareaRef}
               value={editedValue}
               onChange={(e) => {
-                onEditValueChange?.(e.target.value);
+                const newValue = e.target.value;
+                onEditValueChange?.(newValue);
+                
+                // 자동 상태 업데이트 - 편집할 때 segment.target과 다르면 상태 업데이트
+                if (onUpdate) {
+                  const isValueChanged = newValue !== segment.target;
+                  const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
+                  const newOrigin = isValueChanged && needsOriginChange ? "HT" : segment.origin;
+                  
+                  // 이미 Reviewed였는데 편집하면 Edited로 변경, MT/100%/Fuzzy였는데 편집하면 Edited로 변경
+                  let newStatus = segment.status;
+                  if (isValueChanged) {
+                    if (segment.status === "Reviewed") {
+                      newStatus = "Edited";
+                    } else if (segment.status === "MT" || segment.status === "100%" || segment.status === "Fuzzy") {
+                      newStatus = "Edited";
+                    }
+                    
+                    onUpdate(newValue, newStatus, newOrigin);
+                  }
+                }
               }}
               onKeyDown={handleKeyDown}
               className="w-full p-2 resize-none border-accent shadow-sm"
@@ -268,22 +291,7 @@ export function DocSegment({
       {/* Editing or viewing mode */}
       {isEditing ? (
         <div className="relative">
-          {/* 표 모드에서 상태 표시 */}
-          <div className="mb-2">
-            <Badge 
-              className={cn(
-                "text-xs py-0.5 h-6",
-                segment.status === 'Reviewed' ? "bg-indigo-600 hover:bg-indigo-600/90" : "",
-                segment.status === 'Rejected' ? "border-red-500 bg-red-100 text-red-800 dark:bg-red-900/60 dark:text-red-200" : "",
-                editedValue !== segment.target ? "border-blue-500 bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200" : 
-                "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
-              )}
-            >
-              {segment.status === 'Reviewed' ? 'Reviewed' : 
-               segment.status === 'Rejected' ? 'Rejected' : 
-               editedValue !== segment.target ? 'Edited' : 'Draft'}
-            </Badge>
-          </div>
+          {/* 불필요한 상태 뱃지 제거 - 표 모드에서도 제거 */}
           
           {/* 표 모드에서 텍스트 영역 */}
           <Textarea
