@@ -16,6 +16,7 @@ interface DocSegmentProps {
   onCancel?: () => void;
   className?: string;
   isDocumentMode?: boolean; // 문서 모드 여부
+  showStatusInEditor?: boolean; // 편집 중에만 상태 표시 (문서 모드에서)
 }
 
 export function DocSegment({
@@ -29,6 +30,7 @@ export function DocSegment({
   onCancel,
   className,
   isDocumentMode = false, // 기본값은 false
+  showStatusInEditor = false, // 기본값은 false
 }: DocSegmentProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
@@ -131,6 +133,24 @@ export function DocSegment({
               className="min-h-[80px] resize-none border-accent font-serif text-base"
               placeholder="Enter translation..."
             />
+            {/* 요청에 따라 편집할 때만 상태 배지 표시 */}
+            {showStatusInEditor && (
+              <div className="absolute top-2 right-2 flex items-center gap-1 text-xs opacity-80">
+                {segment.comment && (
+                  <MessageCircle className="h-3.5 w-3.5 text-blue-500" />
+                )}
+                {segment.status && (
+                  <Badge variant="outline" className={cn("text-[10px] py-0 h-4", getStatusColor(segment.status))}>
+                    {segment.status}
+                  </Badge>
+                )}
+                {segment.origin && (
+                  <Badge variant="outline" className={cn("text-[10px] py-0 h-4", getOriginColor(segment.origin))}>
+                    {segment.origin}
+                  </Badge>
+                )}
+              </div>
+            )}
             <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
               <button 
                 onClick={onCancel}

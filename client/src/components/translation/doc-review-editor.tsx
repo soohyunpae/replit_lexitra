@@ -350,7 +350,9 @@ export function DocReviewEditor({
         <div 
           className={cn(
             "border-r bg-card/20",
-            isMobile ? (showSource ? "h-1/2 overflow-y-auto" : "hidden") : "w-1/2 overflow-y-auto"
+            isMobile 
+              ? (showSource ? "h-1/2 overflow-y-auto" : "hidden") 
+              : (showSidePanel ? "w-[35%]" : "w-1/2") + " overflow-y-auto"
           )}
           ref={leftPanelRef}
         >
@@ -379,20 +381,22 @@ export function DocReviewEditor({
                   group.length > 1 ? "border" : ""
                 )}
               >
-                {group.map((segment, segmentIndex) => (
-                  <DocSegment
-                    key={`source-${segment.id}`}
-                    segment={segment}
-                    isSource={true}
-                    isEditing={editingId === segment.id}
-                    isDocumentMode={true}
-                    className={cn(
-                      segmentIndex === 0 ? "pt-3" : "pt-0",
-                      segmentIndex === group.length - 1 ? "pb-3" : "pb-0",
-                      editingId === segment.id ? "bg-muted/50" : ""
-                    )}
-                  />
-                ))}
+                <div className="px-3 py-0">
+                  {group.map((segment, segmentIndex) => (
+                    <DocSegment
+                      key={`source-${segment.id}`}
+                      segment={segment}
+                      isSource={true}
+                      isEditing={editingId === segment.id}
+                      isDocumentMode={true}
+                      className={cn(
+                        segmentIndex === 0 ? "" : "mt-0",
+                        segmentIndex === group.length - 1 ? "" : "mb-0",
+                        editingId === segment.id ? "bg-muted/50" : ""
+                      )}
+                    />
+                  ))}
+                </div>
               </div>
             ))}
           </div>
@@ -402,7 +406,9 @@ export function DocReviewEditor({
         <div 
           className={cn(
             "bg-card/20",
-            isMobile ? "flex-1 overflow-y-auto" : "w-1/2 overflow-y-auto"
+            isMobile 
+              ? "flex-1 overflow-y-auto" 
+              : (showSidePanel ? "w-[35%]" : "w-1/2") + " overflow-y-auto"
           )}
           ref={rightPanelRef}
         >
@@ -431,28 +437,48 @@ export function DocReviewEditor({
                   group.length > 1 ? "border" : ""
                 )}
               >
-                {group.map((segment, segmentIndex) => (
-                  <DocSegment
-                    key={`target-${segment.id}`}
-                    segment={segment}
-                    isSource={false}
-                    isEditing={editingId === segment.id}
-                    editedValue={editingId === segment.id ? editedValue : segment.target || ''}
-                    onEditValueChange={setEditedValue}
-                    onSelectForEditing={() => selectSegmentForEditing(segment)}
-                    onSave={() => updateSegment(segment.id, editedValue)}
-                    onCancel={cancelEditing}
-                    isDocumentMode={true}
-                    className={cn(
-                      segmentIndex === 0 ? "pt-3" : "pt-0",
-                      segmentIndex === group.length - 1 ? "pb-3" : "pb-0"
-                    )}
-                  />
-                ))}
+                <div className="px-3 py-0">
+                  {group.map((segment, segmentIndex) => (
+                    <DocSegment
+                      key={`target-${segment.id}`}
+                      segment={segment}
+                      isSource={false}
+                      isEditing={editingId === segment.id}
+                      editedValue={editingId === segment.id ? editedValue : segment.target || ''}
+                      onEditValueChange={setEditedValue}
+                      onSelectForEditing={() => selectSegmentForEditing(segment)}
+                      onSave={() => updateSegment(segment.id, editedValue)}
+                      onCancel={cancelEditing}
+                      isDocumentMode={true}
+                      className={cn(
+                        segmentIndex === 0 ? "" : "mt-0",
+                        segmentIndex === group.length - 1 ? "" : "mb-0"
+                      )}
+                      showStatusInEditor={true}
+                    />
+                  ))}
+                </div>
               </div>
             ))}
           </div>
         </div>
+        
+        {/* Side Panel - Only shown when enabled */}
+        {!isMobile && showSidePanel && (
+          <SidePanel
+            tmMatches={tmMatches}
+            glossaryTerms={glossaryTerms}
+            selectedSegment={segments.find(s => s.id === editingId)}
+            onUseTranslation={(translation) => {
+              if (editingId) {
+                setEditedValue(translation);
+              }
+            }}
+            sourceLanguage={sourceLanguage}
+            targetLanguage={targetLanguage}
+            showStatusInfo={false}
+          />
+        )}
       </div>
     </div>
   );

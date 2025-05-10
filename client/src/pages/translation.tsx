@@ -452,6 +452,8 @@ export default function Translation() {
               onSave={() => saveProject.mutate()}
               onExport={() => exportProject.mutate()}
               fileId={Number(fileId)}
+              tmMatches={tmMatches}
+              glossaryTerms={glossaryTerms}
             />
           )}
         </div>
