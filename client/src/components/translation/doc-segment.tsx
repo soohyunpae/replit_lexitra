@@ -165,22 +165,7 @@ export function DocSegment({
               {segment.target || "Click to add translation"}
             </span>
             
-            {/* 문서 모드에서 상태 표시를 위한 작은 아이콘 또는 표시 */}
-            {hasTranslation && segment.status && (
-              <span className="inline-block relative ml-0.5">
-                <Badge 
-                  variant={segment.status === 'Reviewed' ? "default" : "outline"}
-                  className={cn(
-                    "text-[9px] px-1 py-0 h-4 ml-0.5 align-text-top",
-                    segment.status === 'Reviewed' ? "bg-green-600/80" : "",
-                    segment.status === 'Rejected' ? "border-red-500 text-red-500" : "",
-                    segment.status === 'Draft' || segment.status === 'MT' ? "border-blue-500 text-blue-500" : ""
-                  )}
-                >
-                  {segment.status}
-                </Badge>
-              </span>
-            )}
+            {/* 문서 모드에서는 인라인 뱃지를 제거하고 상태에 따른 텍스트 색상만 적용 */}
           </span>
         );
       }
@@ -232,50 +217,41 @@ export function DocSegment({
         className
       )}
     >
-      {/* Segment status badge - 우측 상단에 더 작게 표시하여 텍스트를 가리지 않도록 개선 */}
-      <div className="absolute top-1 right-1 flex items-center gap-1 text-xs opacity-70 group-hover:opacity-100 bg-background/40 backdrop-blur-sm rounded p-0.5 z-10">
-        {segment.comment && <MessageCircle className="h-3 w-3 text-blue-500" />}
-        {segment.status && (
-          <Badge variant="outline" className="text-[9px] py-0 h-3.5 px-1.5 font-normal border-border/60">
-            {segment.status}
-          </Badge>
-        )}
-      </div>
+      {/* 표 모드에서 댓글 아이콘만 표시 */}
+      {segment.comment && (
+        <div className="absolute top-1 right-1 opacity-70 group-hover:opacity-100 z-10">
+          <MessageCircle className="h-3.5 w-3.5 text-blue-500" />
+        </div>
+      )}
       
       {/* Editing or viewing mode */}
       {isEditing ? (
         <div className="relative">
-          {/* 상태 뱃지를 텍스트 영역 위쪽에 표시 */}
-          <div className="absolute top-0 left-2 -mt-6 flex items-center gap-1 text-xs bg-background/90 backdrop-blur-sm rounded-md p-1 shadow-sm border border-border/50 z-10">
-            <Badge variant={editedValue !== segment.target ? "outline" : segment.status === 'Reviewed' ? "default" : "outline"}
-              className={cn(
-                "text-xs font-normal h-5",
-                editedValue !== segment.target ? "border-blue-500 text-blue-500" : "",
-                editedValue === segment.target && segment.status === 'Reviewed' ? "bg-green-600/80 hover:bg-green-600/90" : "",
-                editedValue === segment.target && segment.status === 'Rejected' ? "border-red-500 text-red-500" : ""
-              )}
-            >
-              {editedValue !== segment.target ? 'Edited' : segment.status || 'Draft'}
-            </Badge>
+          {/* 스크린샷 모양대로 상단에 상태 뱃지 표시 */}
+          <div className="absolute top-0 left-0 right-0 flex items-center bg-indigo-600 text-white py-1 px-3 font-medium text-sm rounded-t z-10">
+            {segment.status === 'Reviewed' ? 'Reviewed' : 
+             segment.status === 'Rejected' ? 'Rejected' : 
+             editedValue !== segment.target ? 'Edited' : 'Draft'}
           </div>
           
-          {/* 텍스트 입력란에 하단 패딩 추가하여 버튼 공간 확보 */}
+          {/* 상단 헤더에 맞게 텍스트 영역 스타일 조정 */}
           <Textarea
             ref={textareaRef}
             value={editedValue}
             onChange={(e) => onEditValueChange?.(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="min-h-[80px] resize-none border-accent pb-10"
+            className="min-h-[150px] resize-none border-0 border-b rounded-t-none rounded-b mt-6 pt-4 shadow-none"
             placeholder="Enter translation..."
+            autoFocus
           />
           
-          {/* 텍스트 영역 내부 하단에 버튼 배치 */}
-          <div className="absolute bottom-2 right-2 flex items-center gap-1.5 bg-background/90 backdrop-blur-sm rounded-md p-0.5 border border-border/50 shadow-sm z-10">
-            <Button onClick={onCancel} variant="ghost" size="icon" className="h-7 w-7">
-              <X className="h-3.5 w-3.5" />
+          {/* 스크린샷처럼 우측 하단에 버튼 배치 */}
+          <div className="absolute bottom-3 right-3 flex items-center gap-2 z-10">
+            <Button onClick={onCancel} variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full bg-gray-200/80 hover:bg-gray-300/90 dark:bg-gray-800/80 dark:hover:bg-gray-700/90">
+              <X className="h-4 w-4" />
             </Button>
-            <Button onClick={onSave} variant="ghost" size="icon" className="h-7 w-7">
-              <Check className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            <Button onClick={onSave} variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full bg-blue-100/80 hover:bg-blue-200/90 dark:bg-blue-900/80 dark:hover:bg-blue-800/90">
+              <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </Button>
           </div>
         </div>
