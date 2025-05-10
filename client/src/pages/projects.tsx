@@ -117,7 +117,7 @@ export default function ProjectsPage() {
   const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
-
+  
   // Check if user is admin
   const isAdmin = user?.role === "admin";
 
@@ -292,7 +292,7 @@ export default function ProjectsPage() {
 
   const createProject = useMutation({
     mutationFn: async (data: ProjectFormValues) => {
-      // 폼 데이터를 FormData로 변환하여 파일 업로드 j��리
+      // 폼 데이터를 FormData로 변환하여 파일 업로드 처리
       const formData = new FormData();
       formData.append("name", data.name);
       formData.append("sourceLanguage", data.sourceLanguage);
@@ -313,9 +313,10 @@ export default function ProjectsPage() {
       // 파일 추가
       if (data.files && data.files.length > 0) {
         // FileList를 배열로 변환
-        const filesArray =
-          data.files instanceof FileList ? Array.from(data.files) : data.files;
-
+        const filesArray = data.files instanceof FileList 
+          ? Array.from(data.files)
+          : data.files;
+          
         filesArray.forEach((file: File) => {
           formData.append(`files`, file);
         });
@@ -324,11 +325,10 @@ export default function ProjectsPage() {
       // 참조 파일 추가
       if (data.references && data.references.length > 0) {
         // FileList를 배열로 변환
-        const referencesArray =
-          data.references instanceof FileList
-            ? Array.from(data.references)
-            : data.references;
-
+        const referencesArray = data.references instanceof FileList 
+          ? Array.from(data.references)
+          : data.references;
+          
         referencesArray.forEach((file: File) => {
           formData.append(`references`, file);
         });
@@ -416,7 +416,7 @@ export default function ProjectsPage() {
       setSelectedProjects([]);
     },
   });
-
+  
   // 프로젝트 아카이브 mutation (여기서는 삭제와 동일하게 구현)
   const archiveProject = useMutation({
     mutationFn: async (projectId: number) => {
@@ -429,20 +429,16 @@ export default function ProjectsPage() {
       setSelectedProjects([]);
     },
   });
-
+  
   // 선택된 프로젝트 일괄 삭제
   const bulkDeleteProjects = async () => {
     if (selectedProjects.length === 0) return;
-
+    
     // 확인 대화상자
-    if (
-      !window.confirm(
-        `Are you sure you want to delete ${selectedProjects.length} project(s)?`,
-      )
-    ) {
+    if (!window.confirm(`Are you sure you want to delete ${selectedProjects.length} project(s)?`)) {
       return;
     }
-
+    
     try {
       for (const projectId of selectedProjects) {
         await deleteProject.mutateAsync(projectId);
@@ -455,25 +451,21 @@ export default function ProjectsPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: `Failed to delete projects: ${error instanceof Error ? error.message : "Unknown error"}`,
+        description: `Failed to delete projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     }
   };
-
+  
   // 선택된 프로젝트 일괄 클레임
   const bulkClaimProjects = async () => {
     if (selectedProjects.length === 0) return;
-
+    
     // 확인 대화상자
-    if (
-      !window.confirm(
-        `Are you sure you want to claim ${selectedProjects.length} project(s)?`,
-      )
-    ) {
+    if (!window.confirm(`Are you sure you want to claim ${selectedProjects.length} project(s)?`)) {
       return;
     }
-
+    
     try {
       for (const projectId of selectedProjects) {
         await claimProject.mutateAsync(projectId);
@@ -486,25 +478,21 @@ export default function ProjectsPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: `Failed to claim projects: ${error instanceof Error ? error.message : "Unknown error"}`,
+        description: `Failed to claim projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     }
   };
-
+  
   // 선택된 프로젝트 일괄 완료 처리
   const bulkCompleteProjects = async () => {
     if (selectedProjects.length === 0) return;
-
+    
     // 확인 대화상자
-    if (
-      !window.confirm(
-        `Are you sure you want to mark ${selectedProjects.length} project(s) as completed?`,
-      )
-    ) {
+    if (!window.confirm(`Are you sure you want to mark ${selectedProjects.length} project(s) as completed?`)) {
       return;
     }
-
+    
     try {
       for (const projectId of selectedProjects) {
         await completeProject.mutateAsync(projectId);
@@ -517,25 +505,21 @@ export default function ProjectsPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: `Failed to complete projects: ${error instanceof Error ? error.message : "Unknown error"}`,
+        description: `Failed to complete projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     }
   };
-
+  
   // 선택된 프로젝트 일괄 아카이브
   const bulkArchiveProjects = async () => {
     if (selectedProjects.length === 0) return;
-
+    
     // 확인 대화상자
-    if (
-      !window.confirm(
-        `Are you sure you want to archive ${selectedProjects.length} project(s)?`,
-      )
-    ) {
+    if (!window.confirm(`Are you sure you want to archive ${selectedProjects.length} project(s)?`)) {
       return;
     }
-
+    
     try {
       for (const projectId of selectedProjects) {
         await archiveProject.mutateAsync(projectId);
@@ -548,25 +532,21 @@ export default function ProjectsPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: `Failed to archive projects: ${error instanceof Error ? error.message : "Unknown error"}`,
+        description: `Failed to archive projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     }
   };
-
+  
   // 선택된 프로젝트 일괄 해제(Release)
   const bulkReleaseProjects = async () => {
     if (selectedProjects.length === 0) return;
-
+    
     // 확인 대화상자
-    if (
-      !window.confirm(
-        `Are you sure you want to release ${selectedProjects.length} project(s)?`,
-      )
-    ) {
+    if (!window.confirm(`Are you sure you want to release ${selectedProjects.length} project(s)?`)) {
       return;
     }
-
+    
     try {
       for (const projectId of selectedProjects) {
         await releaseProject.mutateAsync(projectId);
@@ -579,25 +559,21 @@ export default function ProjectsPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: `Failed to release projects: ${error instanceof Error ? error.message : "Unknown error"}`,
+        description: `Failed to release projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     }
   };
-
+  
   // 선택된 프로젝트 일괄 재오픈(Reopen)
   const bulkReopenProjects = async () => {
     if (selectedProjects.length === 0) return;
-
+    
     // 확인 대화상자
-    if (
-      !window.confirm(
-        `Are you sure you want to reopen ${selectedProjects.length} project(s)?`,
-      )
-    ) {
+    if (!window.confirm(`Are you sure you want to reopen ${selectedProjects.length} project(s)?`)) {
       return;
     }
-
+    
     try {
       for (const projectId of selectedProjects) {
         await reopenProject.mutateAsync(projectId);
@@ -610,7 +586,7 @@ export default function ProjectsPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: `Failed to reopen projects: ${error instanceof Error ? error.message : "Unknown error"}`,
+        description: `Failed to reopen projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     }
@@ -675,7 +651,7 @@ export default function ProjectsPage() {
             <FolderClosed className="h-5 w-5" />
             <h2 className="text-3xl font-bold tracking-tight">Projects</h2>
           </div>
-
+          
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -929,11 +905,7 @@ export default function ProjectsPage() {
                               onChange={(e) => {
                                 const files = e.target.files;
                                 if (files && files.length > 0) {
-                                  const currentFiles = field.value
-                                    ? Array.isArray(field.value)
-                                      ? field.value
-                                      : Array.from(field.value)
-                                    : [];
+                                  const currentFiles = field.value ? (Array.isArray(field.value) ? field.value : Array.from(field.value)) : [];
                                   field.onChange([
                                     ...currentFiles,
                                     ...Array.from(files),
@@ -1031,9 +1003,9 @@ export default function ProjectsPage() {
               <span className="font-medium mr-2">
                 {selectedProjects.length} project(s) selected
               </span>
-              <Button
-                variant="ghost"
-                size="sm"
+              <Button 
+                variant="ghost" 
+                size="sm" 
                 onClick={() => setSelectedProjects([])}
                 className="text-muted-foreground h-7 px-2"
               >
@@ -1058,6 +1030,7 @@ export default function ProjectsPage() {
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
+              <span className="text-sm text-muted-foreground">View:</span>
               <div className="border rounded-md overflow-hidden flex">
                 <Button
                   variant={viewMode === "list" ? "default" : "ghost"}
@@ -1077,46 +1050,44 @@ export default function ProjectsPage() {
                 </Button>
               </div>
             </div>
-
+            
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Filter by</SelectItem>
+                <SelectItem value="all">All Projects</SelectItem>
                 <SelectItem value="Unclaimed">Unclaimed</SelectItem>
                 <SelectItem value="In Progress">In Progress</SelectItem>
                 <SelectItem value="Claimed">Claimed</SelectItem>
                 <SelectItem value="Completed">Completed</SelectItem>
               </SelectContent>
             </Select>
-
+            
             {/* Admin Bulk Actions Dropdown */}
             {isAdmin && selectedProjects.length > 0 && (
-              <Select
-                onValueChange={(action) => {
-                  switch (action) {
-                    case "claim":
-                      bulkClaimProjects();
-                      break;
-                    case "release":
-                      bulkReleaseProjects();
-                      break;
-                    case "complete":
-                      bulkCompleteProjects();
-                      break;
-                    case "reopen":
-                      bulkReopenProjects();
-                      break;
-                    case "archive":
-                      bulkArchiveProjects();
-                      break;
-                    case "delete":
-                      bulkDeleteProjects();
-                      break;
-                  }
-                }}
-              >
+              <Select onValueChange={(action) => {
+                switch (action) {
+                  case "claim":
+                    bulkClaimProjects();
+                    break;
+                  case "release":
+                    bulkReleaseProjects();
+                    break;
+                  case "complete":
+                    bulkCompleteProjects();
+                    break;
+                  case "reopen":
+                    bulkReopenProjects();
+                    break;
+                  case "archive":
+                    bulkArchiveProjects();
+                    break;
+                  case "delete":
+                    bulkDeleteProjects();
+                    break;
+                }
+              }}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Bulk Actions" />
                 </SelectTrigger>
@@ -1347,17 +1318,11 @@ export default function ProjectsPage() {
                   <TableRow>
                     {isAdmin && (
                       <TableHead className="w-[50px]">
-                        <Checkbox
-                          checked={
-                            selectedProjects.length ===
-                              filteredAndSortedProjects.length &&
-                            filteredAndSortedProjects.length > 0
-                          }
+                        <Checkbox 
+                          checked={selectedProjects.length === filteredAndSortedProjects.length && filteredAndSortedProjects.length > 0}
                           onCheckedChange={(checked) => {
                             if (checked) {
-                              setSelectedProjects(
-                                filteredAndSortedProjects.map((p) => p.id),
-                              );
+                              setSelectedProjects(filteredAndSortedProjects.map(p => p.id));
                             } else {
                               setSelectedProjects([]);
                             }
@@ -1446,10 +1411,7 @@ export default function ProjectsPage() {
                         className="group hover:bg-muted/40 cursor-pointer"
                         onClick={(e) => {
                           // 체크박스를 클릭했을 때는 페이지 이동 방지
-                          if (
-                            e.target instanceof HTMLInputElement &&
-                            e.target.type === "checkbox"
-                          ) {
+                          if (e.target instanceof HTMLInputElement && e.target.type === 'checkbox') {
                             e.stopPropagation();
                             return;
                           }
@@ -1457,22 +1419,17 @@ export default function ProjectsPage() {
                         }}
                       >
                         {isAdmin && (
-                          <TableCell
+                          <TableCell 
                             className="w-[50px]"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <Checkbox
+                            <Checkbox 
                               checked={selectedProjects.includes(project.id)}
                               onCheckedChange={(checked) => {
                                 if (checked) {
-                                  setSelectedProjects((prev) => [
-                                    ...prev,
-                                    project.id,
-                                  ]);
+                                  setSelectedProjects(prev => [...prev, project.id]);
                                 } else {
-                                  setSelectedProjects((prev) =>
-                                    prev.filter((id) => id !== project.id),
-                                  );
+                                  setSelectedProjects(prev => prev.filter(id => id !== project.id));
                                 }
                               }}
                             />

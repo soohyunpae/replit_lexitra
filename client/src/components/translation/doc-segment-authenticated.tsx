@@ -579,7 +579,11 @@ export function DocSegment({
                     variant="ghost" 
                     className="h-6 w-6 p-0 rounded-full"
                   >
-                    <Circle className={`h-4 w-4 ${segment.status === 'Reviewed' ? "text-green-600 fill-green-600" : ""}`} />
+                    {segment.status === 'Reviewed' ? (
+                      <CircleCheck className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Circle className="h-4 w-4" />
+                    )}
                     <span className="sr-only">Toggle Status</span>
                   </Button>
                 </div>
