@@ -100,20 +100,16 @@ export function DocSegment({
             />
             {showStatusInEditor && (
               <div className="absolute top-2 right-2 flex items-center gap-1 text-xs bg-background/90 rounded-md p-1 shadow-sm border border-border/50">
-                <Badge variant={segment.status === 'Reviewed' ? "default" : "outline"}
+                <Badge variant={editedValue !== segment.target ? "outline" : segment.status === 'Reviewed' ? "default" : "outline"}
                   className={cn(
                     "text-xs font-normal h-5",
-                    segment.status === 'Reviewed' ? "bg-green-600/80 hover:bg-green-600/90" : "",
-                    segment.status === 'Rejected' ? "border-red-500 text-red-500" : ""
+                    editedValue !== segment.target ? "border-blue-500 text-blue-500" : "",
+                    editedValue === segment.target && segment.status === 'Reviewed' ? "bg-green-600/80 hover:bg-green-600/90" : "",
+                    editedValue === segment.target && segment.status === 'Rejected' ? "border-red-500 text-red-500" : ""
                   )}
                 >
-                  {segment.status || 'Draft'}
+                  {editedValue !== segment.target ? 'Edited' : segment.status || 'Draft'}
                 </Badge>
-                {segment.origin && (
-                  <Badge variant="secondary" className="text-xs font-normal h-5">
-                    {segment.origin}
-                  </Badge>
-                )}
               </div>
             )}
             <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-background/80 backdrop-blur-sm rounded-md border border-border/50 shadow-sm">
