@@ -109,17 +109,8 @@ function StatusInfoPanel({ segment }: { segment: TranslationUnit | null | undefi
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'Rejected':
         return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'Draft':
-      default:
-        return <PenLine className="h-4 w-4 text-blue-500" />;
-    }
-  };
-
-  // Get appropriate icon for origin
-  const getOriginIcon = () => {
-    switch (segment.origin) {
-      case 'HT':
-        return <User className="h-4 w-4 text-purple-500" />;
+      case 'Edited':
+        return <PenLine className="h-4 w-4 text-purple-500" />;
       case '100%':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'Fuzzy':
@@ -137,16 +128,7 @@ function StatusInfoPanel({ segment }: { segment: TranslationUnit | null | undefi
         return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-900";
       case 'Rejected':
         return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-900";
-      case 'Draft':
-      default:
-        return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900";
-    }
-  };
-
-  // Get color for origin badge
-  const getOriginColor = () => {
-    switch (segment.origin) {
-      case 'HT':
+      case 'Edited':
         return "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-900";
       case '100%':
         return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-900";
@@ -155,6 +137,25 @@ function StatusInfoPanel({ segment }: { segment: TranslationUnit | null | undefi
       case 'MT':
       default:
         return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900";
+    }
+  };
+  
+  // Get status description
+  const getStatusDescription = () => {
+    switch (segment.status) {
+      case 'Reviewed':
+        return "Final approved version";
+      case 'Rejected':
+        return "Marked as incorrect";
+      case 'Edited':
+        return "Modified by human";
+      case '100%':
+        return "Exact match from TM";
+      case 'Fuzzy':
+        return "Partial match from TM";
+      case 'MT':
+      default:
+        return "Machine translated";
     }
   };
 
@@ -172,28 +173,10 @@ function StatusInfoPanel({ segment }: { segment: TranslationUnit | null | undefi
             <div className="text-xs text-muted-foreground mb-1">Status</div>
             <div className="flex items-center gap-2">
               <Badge className={cn("font-normal", getStatusColor())}>
-                {segment.status || 'Draft'}
-              </Badge>
-            </div>
-          </div>
-        </div>
-        
-        {/* Origin */}
-        <div className="flex items-start gap-3">
-          <div className="bg-muted/50 rounded-full p-2">
-            {getOriginIcon()}
-          </div>
-          <div className="flex-1">
-            <div className="text-xs text-muted-foreground mb-1">Origin</div>
-            <div className="flex items-center gap-2">
-              <Badge className={cn("font-normal", getOriginColor())}>
-                {segment.origin || 'MT'}
+                {segment.status || 'MT'}
               </Badge>
               <span className="text-xs text-muted-foreground">
-                {segment.origin === 'HT' ? 'Human Translation' : 
-                 segment.origin === 'MT' ? 'Machine Translation' :
-                 segment.origin === '100%' ? 'Perfect Match' :
-                 segment.origin === 'Fuzzy' ? 'Fuzzy Match' : ''}
+                {getStatusDescription()}
               </span>
             </div>
           </div>

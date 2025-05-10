@@ -194,7 +194,7 @@ export type InsertGlossary = z.infer<typeof insertGlossarySchema>;
 export type Glossary = typeof glossary.$inferSelect;
 
 // Status Types Enum - For Translation Memory entries
-export const StatusTypes = z.enum(['Draft', 'Reviewed', 'Rejected']);
+export const StatusTypes = z.enum(['MT', '100%', 'Fuzzy', 'Edited', 'Reviewed', 'Rejected']);
 export type StatusType = z.infer<typeof StatusTypes>;
 
 // Origin Types Enum - Source of the translation

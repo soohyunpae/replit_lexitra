@@ -1,21 +1,22 @@
 # Lexitra TM Management Guidelines
 
-This document defines the recommended approach to storing and managing Translation Memory (TM) entries within the Lexitra platform.
+This document defines the recommended approach to storing and managing Translation Memory (TM) entries within the Lexitra platform. Lexitra now simplifies status tracking for translation segments to focus on clarity and usability. Internally, we still preserve the `origin` of each segment (e.g., MT, TM, HT), but the user interface will only display a simplified `status` that reflects the current workflow stage.
 
 ---
 
-## ✅ TM Entry Statuses
+## ✅ TM Entry Statuses (User-facing)
 
-| Status     | Description                                 | Stored in TM | Default Visibility |
-| ---------- | ------------------------------------------- | ------------ | ------------------ |
-| `MT`       | AI-generated (GPT) translation              | ✅ (optional) | ❌                  |
-| `Draft`    | Human-edited or manually translated segment | ✅            | ❌                  |
-| `Reviewed` | Final, confirmed translation                | ✅            | ✅                  |
+Lexitra now simplifies status tracking for translation segments to focus on clarity and usability. Internally, we still preserve the `origin` of each segment (e.g., MT, TM, HT), but the user interface will only display a simplified `status` that reflects the current workflow stage.
 
-* **`MT`**: Stored if needed for debugging or future reference. Not shown by default.
-* **`Draft`**: Represents incomplete or unreviewed work. Can be stored and updated to `Reviewed` upon approval.
-* **`Reviewed`**: Final stage. Only `Reviewed` entries are used by default for TM matching.
-* **`Rejected`**: Translation explicitly marked as invalid or incorrect. Not shown or used in TM matching. Can be restored manually as `Draft` or `Reviewed`.
+| Status      | Description                                          | Stored in TM | Default Visibility |
+|-------------|------------------------------------------------------|--------------|---------------------|
+| `MT`        | GPT-translated segment, unmodified                   | ❌           | ✅                  |
+| `100%`      | TM match with perfect confidence, unmodified         | ❌           | ✅                  |
+| `Fuzzy`     | TM match with partial similarity                     | ❌           | ✅                  |
+| `Edited`    | Segment has been edited by a human                   | ❌           | ✅                  |
+| `Reviewed`  | Final approved version by human                      | ✅           | ✅                  |
+
+> Internally, each segment retains a separate `origin` field (`MT`, `TM`, `HT`) for debugging, analytics, and advanced workflows. This data is not shown to end users unless explicitly needed.
 
 ---
 
@@ -88,12 +89,8 @@ This allows reviewers to recover or reclassify rejected translations efficiently
 
 ## ✅ Summary
 
-* Use `MT`, `Draft`, `Reviewed` as standard TM statuses.
-* Only `Reviewed` is shown and used by default.
-* Avoid duplicates by checking source/target combinations.
-* Fuzzy suggestions are never stored in TM unless reviewed.
-* Consider upserting TM entries based on status updates.
-
----
-
-These TM practices help maintain quality, reduce noise, and ensure consistent reuse of trusted translations within Lexitra.
+* Use simplified status values (`MT`, `100%`, `Fuzzy`, `Edited`, `Reviewed`) in the user interface.
+* Internally maintain a separate `origin` field (`MT`, `TM`, `HT`) for debugging and analytics.
+* Only `Reviewed` entries are stored in TM and used for matching by default.
+* Fuzzy suggestions are not stored unless explicitly reviewed.
+* Status transitions are simplified and triggered through user interactions (edit/save/approve).
