@@ -383,7 +383,7 @@ export function DocSegment({
                 }}
               >
                 {segment.status === 'Reviewed' ? (
-                  <CircleCheck className="h-4 w-4 text-green-600" />
+                  <span className="inline-block h-4 w-4 bg-green-600 rounded-full"></span>
                 ) : (
                   <Circle className="h-4 w-4 text-muted-foreground" />
                 )}
