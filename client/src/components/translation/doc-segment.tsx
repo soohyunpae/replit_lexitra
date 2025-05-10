@@ -192,27 +192,17 @@ export function DocSegment({
                   
                   <Button 
                     onClick={() => {
-                      // Reviewed로 마크하고 저장하는 기능
+                      // 저장과 동시에 Reviewed로 마크
                       const newStatus = "Reviewed";
                       onUpdate?.(editedValue, newStatus, segment.origin);
                       onSave?.();
                     }} 
                     size="sm" 
                     variant="ghost" 
-                    className="h-7 w-7 p-0 rounded-full bg-green-100 dark:bg-green-900/30"
-                  >
-                    <CircleCheck className="h-4 w-4 text-green-600 dark:text-green-500" />
-                    <span className="sr-only">Mark as Reviewed and Save</span>
-                  </Button>
-                  
-                  <Button 
-                    onClick={onSave} 
-                    size="sm" 
-                    variant="ghost" 
                     className="h-7 w-7 p-0 rounded-full bg-blue-100 dark:bg-blue-900/30"
                   >
                     <Check className="h-4 w-4 text-blue-700 dark:text-blue-400" />
-                    <span className="sr-only">Save</span>
+                    <span className="sr-only">Mark as Reviewed and Save</span>
                   </Button>
                 </div>
               </div>
@@ -376,7 +366,7 @@ export function DocSegment({
                 
                 <Button 
                   onClick={() => {
-                    // 문서 모드에서는 저장버튼이 Reviewed로 마크하는 기능으로 변경
+                    // 저장과 동시에 Reviewed로 마크
                     const newStatus = "Reviewed";
                     onUpdate?.(editedValue, newStatus, segment.origin);
                     onSave?.();
