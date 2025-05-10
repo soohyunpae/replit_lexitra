@@ -89,17 +89,9 @@ export function DocSegment({
       return (
         <span className={cn("relative font-serif", className)}>
           <div className="relative my-1">
-            <Textarea
-              ref={textareaRef}
-              value={editedValue}
-              onChange={(e) => onEditValueChange?.(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="min-h-[80px] p-2 resize-both border-accent shadow-sm"
-              placeholder="Enter translation..."
-              autoFocus
-            />
+            {/* 상태 뱃지를 텍스트 영역 위에 배치 */}
             {showStatusInEditor && (
-              <div className="absolute top-1 right-1 flex items-center gap-1 text-xs bg-background/90 backdrop-blur-sm rounded-md p-1 shadow-sm border border-border/50 z-10">
+              <div className="absolute top-0 left-0 -mt-6 flex items-center gap-1 text-xs bg-background/90 backdrop-blur-sm rounded-md p-1 shadow-sm border border-border/50 z-10">
                 <Badge variant={editedValue !== segment.target ? "outline" : segment.status === 'Reviewed' ? "default" : "outline"}
                   className={cn(
                     "text-xs font-normal h-5",
@@ -112,7 +104,20 @@ export function DocSegment({
                 </Badge>
               </div>
             )}
-            <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-background/80 backdrop-blur-sm rounded-md border border-border/50 shadow-sm">
+            
+            {/* 텍스트 영역에 하단 패딩 추가하여 버튼 공간 확보 */}
+            <Textarea
+              ref={textareaRef}
+              value={editedValue}
+              onChange={(e) => onEditValueChange?.(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="min-h-[80px] p-2 pb-10 resize-both border-accent shadow-sm"
+              placeholder="Enter translation..."
+              autoFocus
+            />
+            
+            {/* 버튼을 텍스트 영역 내부 하단에 배치 */}
+            <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-background/90 backdrop-blur-sm rounded-md border border-border/50 shadow-sm z-10">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button onClick={onCancel} variant="ghost" size="icon" className="h-7 w-7">
@@ -227,11 +232,11 @@ export function DocSegment({
         className
       )}
     >
-      {/* Segment status badge */}
-      <div className="absolute top-1 right-2 flex items-center gap-1 text-xs opacity-70 group-hover:opacity-100">
-        {segment.comment && <MessageCircle className="h-3.5 w-3.5 text-blue-500" />}
+      {/* Segment status badge - 우측 상단에 더 작게 표시하여 텍스트를 가리지 않도록 개선 */}
+      <div className="absolute top-1 right-1 flex items-center gap-1 text-xs opacity-70 group-hover:opacity-100 bg-background/40 backdrop-blur-sm rounded p-0.5 z-10">
+        {segment.comment && <MessageCircle className="h-3 w-3 text-blue-500" />}
         {segment.status && (
-          <Badge variant="outline" className="text-[10px] py-0 h-4">
+          <Badge variant="outline" className="text-[9px] py-0 h-3.5 px-1.5 font-normal border-border/60">
             {segment.status}
           </Badge>
         )}
@@ -240,21 +245,38 @@ export function DocSegment({
       {/* Editing or viewing mode */}
       {isEditing ? (
         <div className="relative">
+          {/* 상태 뱃지를 텍스트 영역 위쪽에 표시 */}
+          <div className="absolute top-0 left-2 -mt-6 flex items-center gap-1 text-xs bg-background/90 backdrop-blur-sm rounded-md p-1 shadow-sm border border-border/50 z-10">
+            <Badge variant={editedValue !== segment.target ? "outline" : segment.status === 'Reviewed' ? "default" : "outline"}
+              className={cn(
+                "text-xs font-normal h-5",
+                editedValue !== segment.target ? "border-blue-500 text-blue-500" : "",
+                editedValue === segment.target && segment.status === 'Reviewed' ? "bg-green-600/80 hover:bg-green-600/90" : "",
+                editedValue === segment.target && segment.status === 'Rejected' ? "border-red-500 text-red-500" : ""
+              )}
+            >
+              {editedValue !== segment.target ? 'Edited' : segment.status || 'Draft'}
+            </Badge>
+          </div>
+          
+          {/* 텍스트 입력란에 하단 패딩 추가하여 버튼 공간 확보 */}
           <Textarea
             ref={textareaRef}
             value={editedValue}
             onChange={(e) => onEditValueChange?.(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="min-h-[80px] resize-none border-accent"
+            className="min-h-[80px] resize-none border-accent pb-10"
             placeholder="Enter translation..."
           />
-          <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
-            <button onClick={onCancel} className="p-1 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">
+          
+          {/* 텍스트 영역 내부 하단에 버튼 배치 */}
+          <div className="absolute bottom-2 right-2 flex items-center gap-1.5 bg-background/90 backdrop-blur-sm rounded-md p-0.5 border border-border/50 shadow-sm z-10">
+            <Button onClick={onCancel} variant="ghost" size="icon" className="h-7 w-7">
               <X className="h-3.5 w-3.5" />
-            </button>
-            <button onClick={onSave} className="p-1 rounded-full bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800">
+            </Button>
+            <Button onClick={onSave} variant="ghost" size="icon" className="h-7 w-7">
               <Check className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
