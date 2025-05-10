@@ -382,11 +382,7 @@ export function DocSegment({
                   }
                 }}
               >
-                {segment.status === 'Reviewed' ? (
-                  <Circle className="h-4 w-4 text-green-600 bg-green-600 rounded-full" />
-                ) : (
-                  <Circle className="h-4 w-4 text-muted-foreground" />
-                )}
+                {/* 원 아이콘 제거 */}
               </span>
             )}
           </span>
