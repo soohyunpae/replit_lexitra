@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, X, MessageCircle, FileEdit, CircuitBoard, CircleSlash, CircleCheck, UserCheck, Circle } from 'lucide-react';
+import { Check, X, MessageCircle, FileEdit, CircuitBoard, CircleSlash, UserCheck, Circle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -383,7 +383,7 @@ export function DocSegment({
                 }}
               >
                 {segment.status === 'Reviewed' ? (
-                  <span className="inline-block h-4 w-4 bg-green-600 rounded-full"></span>
+                  <Circle className="h-4 w-4 text-green-600 bg-green-600 rounded-full" />
                 ) : (
                   <Circle className="h-4 w-4 text-muted-foreground" />
                 )}
