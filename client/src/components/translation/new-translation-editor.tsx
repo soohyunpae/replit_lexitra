@@ -667,7 +667,7 @@ export function NewTranslationEditor({
   );
 
   return (
-    <main className="flex-1 overflow-hidden flex flex-col">
+    <main className="flex-1 flex flex-col">
       {/* Progress bar with integrated controls */}
       <div className="bg-card border-b border-border py-2 px-4">
         <div className="flex items-center gap-2 mb-1.5">

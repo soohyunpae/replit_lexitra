@@ -407,8 +407,8 @@ export default function Translation() {
   // 메인 UI 렌더링
   return (
     <MainLayout title={`Translating: ${file.name}`}>
-      <div className="flex flex-col h-full overflow-hidden">
-        <div className="border-b bg-card px-6 py-4">
+      <div className="flex flex-col h-full">
+        <div className="border-b bg-card px-6 py-4 flex-shrink-0">
           {/* Breadcrumb Navigation and Save Button */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
@@ -447,7 +447,7 @@ export default function Translation() {
           </Tabs>
         </div>
         
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-auto">
           {editorMode === 'segment' ? (
             <NewTranslationEditor
               fileName={file.name}
