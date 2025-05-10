@@ -384,11 +384,30 @@ export function DocSegment({
                 </Button>
                 
                 <Button 
-                  onClick={() => {
+                  onClick={async () => {
                     // 저장과 동시에 Reviewed로 마크
                     const newStatus = "Reviewed";
-                    onUpdate?.(editedValue, newStatus, segment.origin);
-                    onSave?.();
+                    
+                    try {
+                      // API 요청을 통해 실제 서버에 업데이트
+                      await fetch(`/api/segments/${segment.id}`, {
+                        method: 'PATCH',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                          target: editedValue,
+                          status: newStatus,
+                          origin: segment.origin
+                        })
+                      });
+                      
+                      // 로컬 상태 업데이트
+                      onUpdate?.(editedValue, newStatus, segment.origin);
+                      onSave?.();
+                    } catch (error) {
+                      console.error("Failed to update segment status:", error);
+                    }
                   }} 
                   size="sm" 
                   variant="ghost" 
