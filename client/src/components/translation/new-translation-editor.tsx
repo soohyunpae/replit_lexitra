@@ -701,82 +701,82 @@ export function NewTranslationEditor({
             {statusCounts["Reviewed"] || 0}/{localSegments.length} Reviewed
           </div>
 
-          <div className="flex items-center gap-2 ml-1">
-            {/* Select All Checkbox */}
-            <div className="flex items-center space-x-1.5">
-              <Checkbox
-                id="toggle-select-all"
-                checked={
-                  Object.keys(checkedSegments).length > 0 &&
-                  Object.keys(checkedSegments).length === localSegments.length
-                }
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    handleSelectAll();
-                  } else {
-                    handleUnselectAll();
-                  }
-                }}
-              />
-              <div className="flex items-center">
-                <label
-                  htmlFor="toggle-select-all"
-                  className="text-xs font-medium ml-1 cursor-pointer"
+          <div className="flex items-center gap-4 ml-1">
+              <div className="flex items-center gap-3">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="h-7 w-[90px] text-xs">
+                    <SelectValue placeholder="Filter by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Filter by</SelectItem>
+                    <SelectItem value="MT">
+                      MT ({statusCounts["MT"] || 0})
+                    </SelectItem>
+                    <SelectItem value="100%">
+                      100% Match ({statusCounts["100%"] || 0})
+                    </SelectItem>
+                    <SelectItem value="Fuzzy">
+                      Fuzzy Match ({statusCounts["Fuzzy"] || 0})
+                    </SelectItem>
+                    <SelectItem value="Edited">
+                      Edited ({statusCounts["Edited"] || 0})
+                    </SelectItem>
+                    <SelectItem value="Reviewed">
+                      Reviewed ({statusCounts["Reviewed"] || 0})
+                    </SelectItem>
+                    <SelectItem value="Rejected">
+                      Rejected ({statusCounts["Rejected"] || 0})
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  onValueChange={(value) => {
+                    if (value !== "none" && checkedCount > 0) {
+                      handleBulkStatusUpdate(value as StatusType);
+                    }
+                  }}
                 >
-                  {checkedCount}/{localSegments.length}
-                </label>
+                  <SelectTrigger className="h-7 w-[90px] text-xs">
+                    <SelectValue placeholder="Set as..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MT">MT</SelectItem>
+                    <SelectItem value="100%">100% Match</SelectItem>
+                    <SelectItem value="Fuzzy">Fuzzy Match</SelectItem>
+                    <SelectItem value="Edited">Edited</SelectItem>
+                    <SelectItem value="Reviewed">Reviewed</SelectItem>
+                    <SelectItem value="Rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Select All Checkbox */}
+              <div className="flex items-center space-x-1.5">
+                <Checkbox
+                  id="toggle-select-all"
+                  checked={
+                    Object.keys(checkedSegments).length > 0 &&
+                    Object.keys(checkedSegments).length === localSegments.length
+                  }
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      handleSelectAll();
+                    } else {
+                      handleUnselectAll();
+                    }
+                  }}
+                />
+                <div className="flex items-center">
+                  <label
+                    htmlFor="toggle-select-all"
+                    className="text-xs font-medium ml-1 cursor-pointer"
+                  >
+                    {checkedCount}/{localSegments.length}
+                  </label>
+                </div>
               </div>
             </div>
-
-            <div className="flex items-center">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="h-7 w-[90px] text-xs">
-                  <SelectValue placeholder="Filter by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Filter by</SelectItem>
-                  <SelectItem value="MT">
-                    MT ({statusCounts["MT"] || 0})
-                  </SelectItem>
-                  <SelectItem value="100%">
-                    100% Match ({statusCounts["100%"] || 0})
-                  </SelectItem>
-                  <SelectItem value="Fuzzy">
-                    Fuzzy Match ({statusCounts["Fuzzy"] || 0})
-                  </SelectItem>
-                  <SelectItem value="Edited">
-                    Edited ({statusCounts["Edited"] || 0})
-                  </SelectItem>
-                  <SelectItem value="Reviewed">
-                    Reviewed ({statusCounts["Reviewed"] || 0})
-                  </SelectItem>
-                  <SelectItem value="Rejected">
-                    Rejected ({statusCounts["Rejected"] || 0})
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select
-                onValueChange={(value) => {
-                  if (value !== "none" && checkedCount > 0) {
-                    handleBulkStatusUpdate(value as StatusType);
-                  }
-                }}
-              >
-                <SelectTrigger className="h-7 w-[90px] text-xs">
-                  <SelectValue placeholder="Set as..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="MT">MT</SelectItem>
-                  <SelectItem value="100%">100% Match</SelectItem>
-                  <SelectItem value="Fuzzy">Fuzzy Match</SelectItem>
-                  <SelectItem value="Edited">Edited</SelectItem>
-                  <SelectItem value="Reviewed">Reviewed</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
         </div>
       </div>
 
