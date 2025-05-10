@@ -162,7 +162,7 @@ export function DocSegment({
                   }
                 }}
                 onKeyDown={handleKeyDown}
-                className="w-full p-2 pt-2 pb-12 resize-none border-0 shadow-none bg-transparent"
+                className="w-full p-2 pt-2 pb-12 resize-none border-0 shadow-none bg-transparent font-serif text-base"
                 placeholder="Enter translation..."
                 autoFocus
                 style={{ height: 'auto', minHeight: '80px', overflow: 'hidden' }}

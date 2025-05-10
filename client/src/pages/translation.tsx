@@ -411,16 +411,10 @@ export default function Translation() {
         <div className="border-b bg-card px-6 py-4">
           {/* Breadcrumb Navigation and Save Button */}
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-2">
-              <a href="/projects" className="text-sm hover:text-primary transition-colors">
-                Projects
-              </a>
-              <span className="text-muted-foreground">/</span>
-              <a href={`/project/${project.id}`} className="text-sm hover:text-primary transition-colors">
-                Project {project.id}: {project.name}
-              </a>
-              <span className="text-muted-foreground">/</span>
-              <span className="text-sm font-medium">{file.name}</span>
+            <div className="flex items-center">
+              <h1 className="text-lg font-semibold">
+                Project {project.id}: {project.name} / {file.name}
+              </h1>
             </div>
             
             <Button 
