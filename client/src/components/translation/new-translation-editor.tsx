@@ -275,7 +275,7 @@ export function NewTranslationEditor({
       
       const payload: any = { 
         target, 
-        status: updatedStatus // Use the updated status we determined
+        status: updatedStatus || "MT" // Ensure status is always a string value
       };
       
       if (updatedOrigin) {
@@ -290,17 +290,20 @@ export function NewTranslationEditor({
       
       const updatedSegment = await response.json();
       
-      // Update local state
+      // Update local state with type-safe approach
       setLocalSegments(prev => 
-        prev.map(segment => 
-          segment.id === id ? { 
-            ...segment, 
-            target, 
-            status: updatedStatus || "MT", // Ensure status is always a string
-            origin: updatedOrigin || segment.origin,
-            modified: true // Mark as modified
-          } : segment
-        )
+        prev.map(segment => {
+          if (segment.id === id) {
+            return {
+              ...segment,
+              target,
+              status: (updatedStatus as string) || "MT", // Type assertion to fix TypeScript error
+              origin: updatedOrigin || segment.origin || "MT",
+              modified: true // Mark as modified
+            };
+          }
+          return segment;
+        })
       );
       
       // If this is the currently selected segment being updated,
