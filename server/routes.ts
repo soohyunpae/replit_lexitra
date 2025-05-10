@@ -96,6 +96,9 @@ const upload = multer({
     const ext = path.extname(file.originalname).toLowerCase();
     const allowedExtensions = ['.txt', '.docx', '.doc', '.pdf', '.xml', '.xliff', '.tmx', '.zip'];
     
+    // 파일 MIME 타입 로깅
+    console.log(`File upload info: ${file.originalname} (${ext}), type: ${file.mimetype}`);
+    
     if (allowedExtensions.includes(ext)) {
       console.log(`Accepting file upload: ${file.originalname} (${ext})`);
       return cb(null, true);
@@ -112,7 +115,7 @@ const referenceUpload = multer({
   fileFilter: function (req, file, cb) {
     // 참조 파일에 대한 확장자 확인 (모든 파일 형식 허용)
     const ext = path.extname(file.originalname).toLowerCase();
-    console.log(`Accepting reference file upload: ${file.originalname} (${ext})`);
+    console.log(`Reference file upload info: ${file.originalname} (${ext}), type: ${file.mimetype}`);
     return cb(null, true);
   }
 });
@@ -1049,6 +1052,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (savedFiles.length > 0) {
         for (const file of savedFiles) {
           if (file.type === 'work') { // 참조 파일이 아닌 작업 파일만 세그먼트 생성
+            // 파일 콘텐츠 확인
+            let fileContent = file.content;
+            
+            // 바이너리 파일(base64로 인코딩된 경우) 체크
+            if (fileContent.startsWith('[BASE64:')) {
+              console.log(`Binary file detected: ${file.name}`);
+              // DOCX 파일은 처리하지 않고 스킵 (필요시 docx 파서 추가 가능)
+              console.log(`Skipping binary file segmentation for: ${file.name}`);
+              continue;
+            }
+            
             // Parse content into segments by splitting into sentences
             const segmentText = (text: string): string[] => {
               // Matches end of sentence: period, question mark, exclamation mark followed by space or end
@@ -1075,7 +1089,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             };
             
             // First split by lines, then split each line into sentences
-            const contentLines = file.content.split(/\r?\n/).filter(line => line.trim().length > 0);
+            const contentLines = fileContent.split(/\r?\n/).filter(line => line.trim().length > 0);
             let segments: {source: string, status: string, fileId: number}[] = [];
             
             // Process each line
