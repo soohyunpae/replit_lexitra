@@ -666,6 +666,27 @@ export function NewTranslationEditor({
           </div>
           
           <div className="flex items-center gap-2">
+            <Select
+              onValueChange={(value) => {
+                if (value !== "none" && checkedCount > 0) {
+                  handleBulkStatusUpdate(value as StatusType);
+                }
+              }}
+            >
+              <SelectTrigger className="h-7 w-[140px] text-xs">
+                <SelectValue placeholder="Bulk Actions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Select Action</SelectItem>
+                <SelectItem value="MT">Set as MT</SelectItem>
+                <SelectItem value="100%">Set as 100% Match</SelectItem>
+                <SelectItem value="Fuzzy">Set as Fuzzy Match</SelectItem>
+                <SelectItem value="Edited">Set as Edited</SelectItem>
+                <SelectItem value="Reviewed">Set as Reviewed</SelectItem>
+                <SelectItem value="Rejected">Set as Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+            
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="h-7 w-[130px] text-xs">
                 <SelectValue placeholder="All Statuses" />
