@@ -20,6 +20,7 @@ interface ExtendedFile extends File {
 }
 
 export default function Translation() {
+  // 모든 상태 변수를 최상단에 선언 (Hook 규칙 준수)
   const [isMatch, params] = useRoute("/translation/:fileId");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -27,9 +28,11 @@ export default function Translation() {
   const [selectedSegment, setSelectedSegment] = useState<TranslationUnit | null>(null);
   const [tmMatches, setTmMatches] = useState([]);
   const [accessError, setAccessError] = useState<string | null>(null);
+  const [editorMode, setEditorMode] = useState<'segment' | 'doc'>('segment');
+  const [autoTranslationDone, setAutoTranslationDone] = useState(false);
   
-  // Get file ID from URL params
-  const fileId = isMatch && params ? parseInt(params.fileId) : null;
+  // Get file ID from URL params - 항상 숫자값 반환
+  const fileId = isMatch && params ? parseInt(params.fileId) : 0;
   
   // Initial empty data with correct type shape to avoid TypeScript errors
   const emptyFile: ExtendedFile = {
@@ -59,19 +62,6 @@ export default function Translation() {
     queryKey: [`/api/files/${fileId}`],
     enabled: !!fileId,
   });
-  
-  // Log file data for debugging
-  useEffect(() => {
-    if (file && file !== emptyFile) {
-      console.log('File data loaded successfully:', {
-        fileId,
-        fileName: file.name,
-        hasSegments: !!file.segments,
-        segmentsCount: file.segments?.length || 0,
-        segmentSample: file.segments && file.segments.length > 0 ? file.segments[0] : null
-      });
-    }
-  }, [file, fileId]);
   
   // Fetch project data for the file
   const {
@@ -149,6 +139,19 @@ export default function Translation() {
     },
   });
   
+  // Log file data for debugging
+  useEffect(() => {
+    if (file && file !== emptyFile) {
+      console.log('File data loaded successfully:', {
+        fileId,
+        fileName: file.name,
+        hasSegments: !!file.segments,
+        segmentsCount: file.segments?.length || 0,
+        segmentSample: file.segments && file.segments.length > 0 ? file.segments[0] : null
+      });
+    }
+  }, [file, fileId]);
+  
   // Refresh segments when page loads
   useEffect(() => {
     if (fileId) {
@@ -160,8 +163,6 @@ export default function Translation() {
   }, [fileId]);
   
   // Auto-translation on file load
-  const [autoTranslationDone, setAutoTranslationDone] = useState(false);
-  
   useEffect(() => {
     const performAutoTranslation = async () => {
       if (!file || !file.segments || file.segments.length === 0 || !project || autoTranslationDone) {
@@ -314,7 +315,34 @@ export default function Translation() {
     }
   }, [project, user]);
   
-  // Create a blank loader state while data is loading
+  // Initialize editor mode from URL on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const modeParam = params.get('mode');
+      if (modeParam === 'segment' || modeParam === 'doc') {
+        setEditorMode(modeParam as 'segment' | 'doc');
+      }
+    }
+  }, []);
+  
+  // Update URL when mode changes
+  const updateUrlMode = (mode: 'segment' | 'doc') => {
+    if (typeof window !== 'undefined') {
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.set('mode', mode);
+      window.history.replaceState({}, '', currentUrl.toString());
+    }
+  };
+  
+  // Handle mode change
+  const handleModeChange = (mode: 'segment' | 'doc') => {
+    setEditorMode(mode);
+    updateUrlMode(mode);
+  };
+  
+  // 조건부 렌더링을 컴포넌트 마지막에 수행
+  // 로딩 상태
   if (isFileLoading || isProjectLoading) {
     return (
       <MainLayout title="Loading...">
@@ -328,7 +356,7 @@ export default function Translation() {
     );
   }
   
-  // If file or project wasn't found
+  // 파일이나 프로젝트가 없는 경우
   if (!file || !project) {
     return (
       <MainLayout title="File Not Found">
@@ -344,7 +372,7 @@ export default function Translation() {
     );
   }
   
-  // If access error exists, show error UI
+  // 접근 권한 오류
   if (accessError) {
     return (
       <MainLayout title="Access Denied">
@@ -376,35 +404,7 @@ export default function Translation() {
     );
   }
   
-  // editor mode state
-  const [editorMode, setEditorMode] = useState<'segment' | 'doc'>('segment');
-  
-  // Initialize editor mode from URL on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const modeParam = params.get('mode');
-      if (modeParam === 'segment' || modeParam === 'doc') {
-        setEditorMode(modeParam);
-      }
-    }
-  }, []);
-  
-  // Update URL when mode changes
-  const updateUrlMode = (mode: 'segment' | 'doc') => {
-    if (typeof window !== 'undefined') {
-      const currentUrl = new URL(window.location.href);
-      currentUrl.searchParams.set('mode', mode);
-      window.history.replaceState({}, '', currentUrl.toString());
-    }
-  };
-  
-  // Handle mode change
-  const handleModeChange = (mode: 'segment' | 'doc') => {
-    setEditorMode(mode);
-    updateUrlMode(mode);
-  };
-  
+  // 메인 UI 렌더링
   return (
     <MainLayout title={`Translating: ${file.name}`}>
       <div className="flex flex-col h-full overflow-hidden">
