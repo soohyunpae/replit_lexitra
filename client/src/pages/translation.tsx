@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
 import { NewTranslationEditor } from "@/components/translation/new-translation-editor";
+import { DocReviewEditor } from "@/components/translation/doc-review-editor";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
@@ -10,7 +11,8 @@ import { TranslationUnit, Project, File, Glossary } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { FileX, AlertTriangle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileX, AlertTriangle, LayoutTemplate, Blocks } from "lucide-react";
 
 // Extended File type with segments for the translation interface
 interface ExtendedFile extends File {
