@@ -1,41 +1,12 @@
 import React, { useRef, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, X, MessageCircle, FileEdit, CircuitBoard, CircleSlash, CircleCheck, UserCheck, FileType, File } from 'lucide-react';
+import { Check, X, MessageCircle, FileEdit, CircuitBoard, CircleSlash, CircleCheck, UserCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { TranslationUnit } from '@/types';
 import { cn } from '@/lib/utils';
-
-// DOCX/바이너리 파일 확인 헬퍼 함수
-const isBinaryContent = (content: string): boolean => {
-  return content.startsWith('[BASE64:');
-};
-
-// 바이너리 파일 유형 확인 헬퍼 함수
-const getBinaryFileType = (content: string): string => {
-  if (!isBinaryContent(content)) return '';
-  
-  const typeMatch = content.match(/\[BASE64:([^\]]+)\]/);
-  return typeMatch ? typeMatch[1] : 'application/octet-stream';
-};
-
-// 사용자에게 보여줄 친화적인 메시지 생성 함수
-const getReadableFileContent = (content: string): string => {
-  if (!isBinaryContent(content)) return content;
-  
-  const fileType = getBinaryFileType(content);
-  if (fileType.includes('word') || fileType.includes('docx')) {
-    return 'The document appears to be a Word document containing various XML files and settings for a Word document. It includes content types, relationships, document settings, styles, web settings, font tables, and core properties. The document is likely a template or a structured document that uses XML to define its layout and content.';
-  } else if (fileType.includes('pdf')) {
-    return 'This is a PDF document containing binary data. It may include text, images, and other formatting that cannot be displayed directly in the editor.';
-  } else if (fileType.includes('image')) {
-    return 'This is an image file containing binary data that cannot be displayed directly in the text editor.';
-  } else {
-    return `This is a binary file of type "${fileType}" that cannot be displayed directly in the text editor.`;
-  }
-};
 
 interface DocSegmentProps {
   segment: TranslationUnit;
@@ -120,10 +91,10 @@ export function DocSegment({
               autoFocus
             />
             {showStatusInEditor && (
-              <div className="absolute top-2 right-2 flex items-center gap-1 text-xs opacity-80 bg-background/90 rounded-md p-1 z-10">
-                <Badge variant="outline" className="text-[10px] py-0 h-4">
-                  {segment.status || 'MT'}
-                </Badge>
+              <div className="absolute top-2 right-2 flex items-center gap-1 text-xs opacity-80 bg-background/90 rounded-md p-1">
+                <span>{segment.status}</span>
+                <Separator orientation="vertical" className="h-3" />
+                <span>{segment.origin || 'None'}</span>
               </div>
             )}
             <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
@@ -143,19 +114,7 @@ export function DocSegment({
           className={cn("font-serif text-base inline cursor-text", className)}
           onClick={onSelectForEditing}
         >
-          {segment.target ? (
-            isBinaryContent(segment.target) ? (
-              <div className="p-2 border rounded-md bg-muted/50">
-                <div className="flex items-center text-muted-foreground mb-2">
-                  <FileType className="w-4 h-4 mr-2" />
-                  <span className="text-xs">Binary file: {getBinaryFileType(segment.target)}</span>
-                </div>
-                <div className="text-sm italic">{getReadableFileContent(segment.target)}</div>
-              </div>
-            ) : (
-              segment.target
-            )
-          ) : (
+          {segment.target || (
             <span className="text-muted-foreground italic">Click to add translation</span>
           )}
         </span>
@@ -174,19 +133,7 @@ export function DocSegment({
           className
         )}
       >
-        <div className="text-sm md:text-base whitespace-pre-wrap">
-          {isBinaryContent(segment.source) ? (
-            <div className="p-2 border rounded-md bg-muted/50">
-              <div className="flex items-center text-muted-foreground mb-2">
-                <FileType className="w-4 h-4 mr-2" />
-                <span className="text-xs">Binary file: {getBinaryFileType(segment.source)}</span>
-              </div>
-              <div className="text-sm italic">{getReadableFileContent(segment.source)}</div>
-            </div>
-          ) : (
-            segment.source
-          )}
-        </div>
+        <div className="text-sm md:text-base whitespace-pre-wrap">{segment.source}</div>
       </div>
     );
   }
