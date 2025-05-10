@@ -69,7 +69,7 @@ export interface Glossary {
 }
 
 // Status for translation segments
-export type StatusType = 'Draft' | 'Reviewed' | 'Rejected';
+export type StatusType = 'MT' | '100%' | 'Fuzzy' | 'Edited' | 'Reviewed' | 'Rejected';
 
 // Origin for translation sources
 export type OriginType = 'MT' | 'Fuzzy' | '100%' | 'HT';
