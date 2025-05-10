@@ -30,6 +30,55 @@ export function useEditingState(
     }
   }, []);
   
+  // 상태 변경을 처리하는 새로운 함수 추가
+  const toggleStatus = useCallback(async (segmentId: number, currentTarget: string) => {
+    // Find segment in local data
+    const segment = segments.find(s => s.id === segmentId);
+    if (!segment) return;
+    
+    // 상태 토글 규칙
+    // - MT, 100%, Fuzzy, Edited 상태에서 체크 버튼을 누르면 Reviewed로 변경
+    // - Reviewed 상태에서 체크 버튼을 누르면 Edited로 변경 
+    const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
+    
+    // MT, 100%, Fuzzy 상태의 세그먼트가 Reviewed로 변경될 때는 origin을 HT로 변경
+    const needsOriginChange = (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
+    const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : segment.origin;
+    
+    try {
+      // Update the segment via API
+      const response = await apiRequest(
+        "PATCH", 
+        `/api/segments/${segmentId}`, 
+        { 
+          target: currentTarget, 
+          status: newStatus, 
+          origin: newOrigin 
+        }
+      );
+      
+      const updatedSegment = await response.json();
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({
+        queryKey: [`/api/files/${fileId}`],
+      });
+      
+      // Notify parent component if callback provided
+      if (onSegmentUpdate) {
+        onSegmentUpdate(updatedSegment);
+      }
+      
+      // 편집 창은 닫지 않음 - 중요
+      console.log(`Status toggled to ${newStatus}`, updatedSegment);
+      
+      return updatedSegment;
+    } catch (error) {
+      console.error('Error toggling segment status:', error);
+      return null;
+    }
+  }, [segments, fileId, onSegmentUpdate]);
+  
   // Handle segment update
   const updateSegment = useCallback(async (segmentId: number, newValue: string) => {
     // Find segment in local data
@@ -92,6 +141,7 @@ export function useEditingState(
     setEditedValue,
     selectSegmentForEditing,
     updateSegment,
-    cancelEditing
+    cancelEditing,
+    toggleStatus
   };
 }
