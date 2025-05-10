@@ -171,7 +171,7 @@ export function DocSegment({
                 }
               }}
               onKeyDown={handleKeyDown}
-              className="w-full p-2 resize-none border-accent shadow-sm"
+              className="w-full p-2 resize-none border-accent shadow-sm mb-10" // 아래 여백 추가
               placeholder="Enter translation..."
               autoFocus
               style={{ height: 'auto', minHeight: '80px', overflow: 'hidden' }}
@@ -179,7 +179,7 @@ export function DocSegment({
             
             {/* 버튼들을 아래에 별도 영역으로 배치 */}
             {/* 간소화된 UI - 세그먼트 에디터와 일치하는 디자인 */}
-            <div className="flex absolute right-2 top-2 gap-2">
+            <div className="flex absolute right-2 bottom-2 gap-2">
               <Button 
                 onClick={onCancel} 
                 size="sm" 
@@ -340,14 +340,14 @@ export function DocSegment({
               }
             }}
             onKeyDown={handleKeyDown}
-            className="w-full p-3 resize-none border border-border/60 rounded-md shadow-none"
+            className="w-full p-3 resize-none border border-border/60 rounded-md shadow-none mb-10" // 아래 여백 추가
             placeholder="Enter translation..."
             autoFocus
             style={{ height: 'auto', minHeight: '90px', overflow: 'hidden' }}
           />
           
           {/* 간소화된 UI - 세그먼트 에디터와 일치하는 디자인 */}
-          <div className="flex absolute right-2 top-2 gap-2">
+          <div className="flex absolute right-2 bottom-2 gap-2">
             <Button 
               onClick={onCancel} 
               size="sm" 
