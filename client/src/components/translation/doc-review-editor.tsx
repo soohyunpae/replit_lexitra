@@ -211,16 +211,45 @@ export function DocReviewEditor({
     originalSelectForEditing(segment);
   };
   
+  // 세그먼트의 상태를 추적하기 위한 로컬 상태
+  const [segmentStatuses, setSegmentStatuses] = useState<Record<number, string>>({});
+  
   // 수정된 취소 함수 - 하이라이트 제거
   const originalCancelEditing = cancelEditing;
   const customCancelEditing = () => {
     setHighlightedSegmentId(null);
+    // 원래 세그먼트 상태로 복원
+    if (editingId) {
+      const segment = segments.find(s => s.id === editingId);
+      if (segment) {
+        setSegmentStatuses(prev => ({
+          ...prev,
+          [editingId]: segment.status
+        }));
+      }
+    }
     originalCancelEditing();
   };
   
-  // 수정된 저장 함수 - 하이라이트 제거
+  // 수정된 저장 함수 - 하이라이트 제거 및 상태 업데이트
   const originalUpdateSegment = updateSegment;
   const customUpdateSegment = (id: number, value: string) => {
+    // 현재 편집 중인 세그먼트 찾기
+    const segment = segments.find(s => s.id === id);
+    if (segment) {
+      // 값이 변경되었는지 확인
+      const isValueChanged = value !== segment.target;
+      
+      // 값이 변경되었고 상태가 'Reviewed'였다면 'Draft'로 변경
+      if (isValueChanged && segment.status === 'Reviewed') {
+        setSegmentStatuses(prev => ({
+          ...prev,
+          [id]: 'Draft'
+        }));
+      }
+    }
+    
+    // 원래 업데이트 함수 호출
     originalUpdateSegment(id, value);
     setHighlightedSegmentId(null);
   };
@@ -502,7 +531,7 @@ export function DocReviewEditor({
                             isDocumentMode={true}
                             className={cn(
                               "py-0 mr-0 border-0",
-                              (editingId === segment.id || highlightedSegmentId === segment.id) ? "bg-muted/50 rounded px-1" : ""
+                              (editingId === segment.id || highlightedSegmentId === segment.id) ? "bg-blue-100 dark:bg-blue-900/50 rounded px-1 shadow-sm" : ""
                             )}
                           />
                           {/* 일반 문서처럼 보이도록 공백 추가 */}
@@ -559,7 +588,11 @@ export function DocReviewEditor({
                       {group.map((segment, segmentIndex) => (
                         <span key={`target-${segment.id}`} className="inline">
                           <DocSegment
-                            segment={segment}
+                            segment={{
+                              ...segment,
+                              // 로컬 상태에 있는 경우 그것을 사용, 아니면 원래 상태 사용
+                              status: segmentStatuses[segment.id] || segment.status
+                            }}
                             isSource={false}
                             isEditing={editingId === segment.id}
                             editedValue={editingId === segment.id ? editedValue : segment.target || ''}
@@ -571,7 +604,7 @@ export function DocReviewEditor({
                             showStatusInEditor={true}
                             className={cn(
                               "py-0 mr-0 border-0",
-                              (editingId === segment.id || highlightedSegmentId === segment.id) ? "bg-accent/30 rounded px-1" : ""
+                              (editingId === segment.id || highlightedSegmentId === segment.id) ? "bg-blue-100 dark:bg-blue-900/50 rounded px-1 shadow-sm" : ""
                             )}
                           />
                           {/* 일반 문서처럼 보이도록 공백 추가 */}

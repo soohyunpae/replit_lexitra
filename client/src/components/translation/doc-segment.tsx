@@ -99,7 +99,7 @@ export function DocSegment({
               autoFocus
             />
             {showStatusInEditor && (
-              <div className="absolute top-2 right-2 flex items-center gap-1 text-xs bg-background/90 rounded-md p-1 shadow-sm border border-border/50">
+              <div className="absolute top-1 right-1 flex items-center gap-1 text-xs bg-background/90 backdrop-blur-sm rounded-md p-1 shadow-sm border border-border/50 z-10">
                 <Badge variant={editedValue !== segment.target ? "outline" : segment.status === 'Reviewed' ? "default" : "outline"}
                   className={cn(
                     "text-xs font-normal h-5",
@@ -137,6 +137,50 @@ export function DocSegment({
       // 상태에 따른 스타일 적용
       const hasTranslation = !!segment.target;
       
+      // 문서 모드에서 뱃지 표시 방식 변경 (인라인으로 표시)
+      if (isDocumentMode) {
+        return (
+          <span 
+            className="relative inline"
+            data-segment-id={segment.id}
+            data-status={segment.status}
+            data-origin={segment.origin}
+          >
+            <span 
+              className={cn(
+                "font-serif text-base inline cursor-text", 
+                "selection:bg-blue-100 dark:selection:bg-blue-900",
+                !hasTranslation && "text-muted-foreground italic",
+                hasTranslation && segment.status === 'Reviewed' && "text-green-700 dark:text-green-400",
+                hasTranslation && segment.status === 'Rejected' && "text-red-700 dark:text-red-400",
+                className
+              )}
+              onClick={onSelectForEditing}
+            >
+              {segment.target || "Click to add translation"}
+            </span>
+            
+            {/* 문서 모드에서 상태 표시를 위한 작은 아이콘 또는 표시 */}
+            {hasTranslation && segment.status && (
+              <span className="inline-block relative ml-0.5">
+                <Badge 
+                  variant={segment.status === 'Reviewed' ? "default" : "outline"}
+                  className={cn(
+                    "text-[9px] px-1 py-0 h-4 ml-0.5 align-text-top",
+                    segment.status === 'Reviewed' ? "bg-green-600/80" : "",
+                    segment.status === 'Rejected' ? "border-red-500 text-red-500" : "",
+                    segment.status === 'Draft' || segment.status === 'MT' ? "border-blue-500 text-blue-500" : ""
+                  )}
+                >
+                  {segment.status}
+                </Badge>
+              </span>
+            )}
+          </span>
+        );
+      }
+      
+      // 기본 표시 방식
       return (
         <span 
           className={cn(
