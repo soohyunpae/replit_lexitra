@@ -354,7 +354,7 @@ export function DocReviewEditor({
   };
   
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col h-full w-full overflow-auto">
       {/* Progress bar with controls */}
       <div className="bg-card border-b border-border py-2 px-4">
         <div className="flex items-center gap-2 mb-1.5">
@@ -437,7 +437,7 @@ export function DocReviewEditor({
       {/* Document Editor Area */}
       <div 
         className={cn(
-          "flex-1 overflow-hidden",
+          "flex-1",
           isMobile ? "flex flex-col" : "flex flex-row"
         )}
       >
@@ -447,7 +447,7 @@ export function DocReviewEditor({
             "border-r bg-card/20",
             isMobile 
               ? (showSource ? "h-1/2 overflow-y-auto" : "hidden") 
-              : (showSidePanel ? "w-[35%]" : "w-1/2") + " overflow-y-auto"
+              : (showSidePanel ? "w-[35%]" : "w-1/2") + " overflow-auto"
           )}
           ref={leftPanelRef}
         >
@@ -509,8 +509,8 @@ export function DocReviewEditor({
           className={cn(
             "bg-card/20",
             isMobile 
-              ? "flex-1 overflow-y-auto" 
-              : (showSidePanel ? "w-[35%]" : "w-1/2") + " overflow-y-auto"
+              ? "flex-1 overflow-auto" 
+              : (showSidePanel ? "w-[35%]" : "w-1/2") + " overflow-auto"
           )}
           ref={rightPanelRef}
         >

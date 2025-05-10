@@ -791,14 +791,14 @@ export function NewTranslationEditor({
       {/* No additional bulk selection tools here */}
 
       {/* Main content area */}
-      <div className="flex-1 overflow-hidden flex">
+      <div className="flex-1 flex">
         {/* Source and Target panels with single scrollbar */}
-        <div className="flex-1 overflow-hidden flex relative">
+        <div className="flex-1 flex relative">
           {/* Container with single scrollbar */}
-          <div className="flex-1 overflow-y-auto" id="main-scroll-container">
+          <div className="flex-1 overflow-auto" id="main-scroll-container">
             <div className="flex w-full">
               {/* Source panel - no individual scrollbar */}
-              <div className="w-1/2 overflow-hidden" id="source-panel">
+              <div className="w-1/2" id="source-panel">
                 <div className="px-4 py-3">
                   {currentSegments.map((segment, index) => (
                     <div
@@ -822,7 +822,7 @@ export function NewTranslationEditor({
               <div className="border-l border-border sticky top-0 h-full cursor-col-resize"></div>
 
               {/* Target panel - no individual scrollbar */}
-              <div className="w-1/2 overflow-hidden" id="target-panel">
+              <div className="w-1/2" id="target-panel">
                 <div className="px-4 py-3">
                   {currentSegments.map((segment, index) => (
                     <div
