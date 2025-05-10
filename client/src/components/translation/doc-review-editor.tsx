@@ -467,12 +467,12 @@ export function DocReviewEditor({
                 {segmentGroups.map((group, groupIndex) => (
                   <div 
                     key={`source-group-${groupIndex}`} 
-                    className="paragraph-block mb-6 relative" 
+                    className="paragraph-block mb-6 relative hover:bg-muted/5 transition-colors duration-150 p-2 -mx-2 rounded-md" 
                     data-paragraph-id={groupIndex}
                   >
                     <div className="inline-flex flex-wrap">
                       {group.map((segment, segmentIndex) => (
-                        <React.Fragment key={`source-${segment.id}`}>
+                        <span key={`source-${segment.id}`} className="inline-segment">
                           <DocSegment
                             segment={segment}
                             isSource={true}
@@ -480,15 +480,15 @@ export function DocReviewEditor({
                             isDocumentMode={true}
                             className={cn(
                               "py-0 mr-0 border-0",
-                              editingId === segment.id ? "bg-muted/50" : ""
+                              editingId === segment.id ? "bg-muted/50 rounded px-1" : ""
                             )}
                           />
                           {/* 문장 연결 - 항상 공백 추가하여 부드럽게 연결 (마지막 세그먼트가 아닌 경우) */}
                           {segmentIndex < group.length - 1 && " "}
-                        </React.Fragment>
+                        </span>
                       ))}
                     </div>
-                    <div className="absolute -left-3 top-0 opacity-10 text-xs font-mono">
+                    <div className="absolute -left-3 top-0 opacity-20 text-xs font-mono text-muted-foreground">
                       ¶{groupIndex+1}
                     </div>
                   </div>
@@ -535,7 +535,7 @@ export function DocReviewEditor({
                   >
                     <div className="inline-flex flex-wrap">
                       {group.map((segment, segmentIndex) => (
-                        <React.Fragment key={`target-${segment.id}`}>
+                        <span key={`target-${segment.id}`} className="inline-segment">
                           <DocSegment
                             segment={segment}
                             isSource={false}
@@ -554,7 +554,7 @@ export function DocReviewEditor({
                           />
                           {/* 문장 연결 - 항상 공백 추가하여 부드럽게 연결 (마지막 세그먼트가 아닌 경우) */}
                           {segmentIndex < group.length - 1 && " "}
-                        </React.Fragment>
+                        </span>
                       ))}
                     </div>
                     <div className="absolute -left-3 top-0 opacity-10 text-xs font-mono">
