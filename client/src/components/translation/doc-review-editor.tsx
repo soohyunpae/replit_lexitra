@@ -8,7 +8,7 @@ import {
   ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { TranslationUnit, TranslationMemory, Glossary } from '@/types';
-import { DocSegment } from './doc-segment';
+import { DocSegment } from './doc-segment-fixed';
 import { useEditingState } from '@/hooks/useEditingState';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
