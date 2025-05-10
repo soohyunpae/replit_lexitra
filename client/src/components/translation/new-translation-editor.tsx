@@ -85,7 +85,7 @@ export function NewTranslationEditor({
   // Track status counts for progress bar
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [segmentsPerPage, setSegmentsPerPage] = useState<number>(20);
+  const [segmentsPerPage, setSegmentsPerPage] = useState<number>(10);
   const [paginationMode, setPaginationMode] = useState<
     "pagination" | "infinite"
   >("infinite");
@@ -916,7 +916,9 @@ export function NewTranslationEditor({
                     className="ml-4 text-xs h-8"
                     onClick={() => {
                       setPaginationMode("infinite");
-                      setSegmentsPerPage(20);
+                    // Infinite 모드로 변경 시, 현재 페이지를 1로 초기화
+                    setCurrentPage(1);
+                      setSegmentsPerPage(10);
                     }}
                   >
                     <ArrowDown className="h-3.5 w-3.5 mr-1" />
@@ -930,11 +932,11 @@ export function NewTranslationEditor({
                   className="text-xs h-8"
                   onClick={() => {
                     setPaginationMode("pagination");
-                    setSegmentsPerPage(20);
+                    setSegmentsPerPage(10);
                   }}
                 >
                   <ListFilter className="h-3.5 w-3.5 mr-1" />
-                  Switch to Pagination (20 per page)
+                  Switch to Pagination (10 per page)
                 </Button>
               )}
             </div>
