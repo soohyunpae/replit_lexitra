@@ -52,7 +52,7 @@ export default function Project() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
-
+  
   // 관리자 권한 체크
   const isAdmin = useMemo(() => user?.role === 'admin', [user?.role]);
 
@@ -177,7 +177,7 @@ export default function Project() {
       });
     },
   });
-
+  
   // 참조 파일 삭제 mutation
   const deleteReferenceFile = useMutation({
     mutationFn: async (fileIndex: number) => {
@@ -192,7 +192,7 @@ export default function Project() {
         title: "Reference file deleted",
         description: "The reference file has been removed successfully.",
       });
-
+      
       // 프로젝트 데이터 새로고침
       queryClient.invalidateQueries({
         queryKey: [`/api/projects/${projectId}`],
@@ -212,7 +212,7 @@ export default function Project() {
     mutationFn: async (files: File[]) => {
       // Create FormData to send actual files
       const formData = new FormData();
-
+      
       // Add each file to FormData
       files.forEach((file) => {
         formData.append('files', file);
@@ -226,11 +226,11 @@ export default function Project() {
         },
         body: formData,
       });
-
+      
       if (!response.ok) {
         throw new Error('Failed to upload files');
       }
-
+      
       return response.json();
     },
     onSuccess: (data) => {
@@ -241,12 +241,12 @@ export default function Project() {
       });
       // 업로드 후 references 상태 초기화 (DB에서 관리하므로)
       setReferences([]);
-
+      
       // 업로드 후 즉시 프로젝트 데이터와 파일 목록을 새로고침합니다
       queryClient.invalidateQueries({
         queryKey: [`/api/projects/${projectId}`],
       });
-
+      
       // 새로운 참조 파일 즉시 표시 - 서버에서 받은 데이터로 UI 업데이트
       if (data && Array.isArray(data)) {
         console.log("Adding new files to savedReferences:", data);
@@ -992,7 +992,9 @@ export default function Project() {
                             title="Download file"
                           >
                             <FileDownIcon className="h-3 w-3" />
-                          </Button{isAdmin && (
+                          </Button>
+                          
+                          {isAdmin && (
                             <Button
                               variant="ghost"
                               size="icon"
@@ -1007,7 +1009,7 @@ export default function Project() {
                         </div>
                       </div>
                     ))}
-
+                    
                     {/* Drag and drop area for adding more files (admin only) */}
                     {isAdmin && (
                       <div 
@@ -1027,7 +1029,7 @@ export default function Project() {
                           e.preventDefault();
                           e.stopPropagation();
                           e.currentTarget.classList.remove('border-primary');
-
+                          
                           if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
                             const newFiles = Array.from(e.dataTransfer.files);
                             setReferences([...references, ...newFiles]);
@@ -1063,7 +1065,7 @@ export default function Project() {
                           e.preventDefault();
                           e.stopPropagation();
                           e.currentTarget.classList.remove('border-primary');
-
+                          
                           if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
                             const newFiles = Array.from(e.dataTransfer.files);
                             setReferences([...references, ...newFiles]);
