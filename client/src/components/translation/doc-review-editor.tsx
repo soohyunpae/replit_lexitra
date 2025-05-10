@@ -21,7 +21,7 @@ interface DocReviewEditorProps {
   segments: TranslationUnit[];
   onSave?: () => void;
   onExport?: () => void;
-  fileId: number;
+  fileId?: number; // fileId는 선택적으로 변경
 }
 
 export function DocReviewEditor({
@@ -31,7 +31,7 @@ export function DocReviewEditor({
   segments = [],
   onSave,
   onExport,
-  fileId
+  fileId = 0 // 기본값 제공
 }: DocReviewEditorProps) {
   const { toast } = useToast();
   const isMobile = useMobile();

@@ -8,7 +8,7 @@ import { queryClient } from "@/lib/queryClient";
  */
 export function useEditingState(
   segments: TranslationUnit[],
-  fileId: number,
+  fileId: number = 0,
   onSegmentUpdate?: (updatedSegment: TranslationUnit) => void
 ) {
   // Currently editing segment ID
