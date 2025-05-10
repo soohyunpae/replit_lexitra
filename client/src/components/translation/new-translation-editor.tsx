@@ -702,31 +702,7 @@ export function NewTranslationEditor({
           </div>
 
           <div className="flex items-center gap-2 ml-1">
-            {/* Status Filter - 메뉴 위치 변경 */}
-            <div className="flex items-center">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="h-7 w-[100px] text-xs">
-                  <SelectValue placeholder="Filter by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="MT">
-                    MT ({statusCounts["MT"] || 0})
-                  </SelectItem>
-                  <SelectItem value="100%">
-                    100% Match ({statusCounts["100%"] || 0})
-                  </SelectItem>
-                  <SelectItem value="Fuzzy">
-                    Fuzzy Match ({statusCounts["Fuzzy"] || 0})
-                  </SelectItem>
-                  <SelectItem value="Edited">
-                    Edited ({statusCounts["Edited"] || 0})
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {/* Select All Checkbox - 위치 변경됨 */}
+            {/* Select All Checkbox */}
             <div className="flex items-center space-x-1.5">
               <Checkbox
                 id="toggle-select-all"
@@ -751,6 +727,26 @@ export function NewTranslationEditor({
                 </label>
               </div>
             </div>
+            
+            <div className="flex items-center">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-7 w-[100px] text-xs">
+                  <SelectValue placeholder="Filter by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="MT">
+                    MT ({statusCounts["MT"] || 0})
+                  </SelectItem>
+                  <SelectItem value="100%">
+                    100% Match ({statusCounts["100%"] || 0})
+                  </SelectItem>
+                  <SelectItem value="Fuzzy">
+                    Fuzzy Match ({statusCounts["Fuzzy"] || 0})
+                  </SelectItem>
+                  <SelectItem value="Edited">
+                    Edited ({statusCounts["Edited"] || 0})
+                  </SelectItem>
                   <SelectItem value="Reviewed">
                     Reviewed ({statusCounts["Reviewed"] || 0})
                   </SelectItem>
