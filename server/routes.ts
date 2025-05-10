@@ -90,12 +90,31 @@ const referenceStorage = multer.diskStorage({
 
 const upload = multer({ 
   storage: storage,
-  limits: { fileSize: 200 * 1024 * 1024 } // 200MB 제한 (50MB에서 증가)
+  limits: { fileSize: 200 * 1024 * 1024 }, // 200MB 제한 (50MB에서 증가)
+  fileFilter: function (req, file, cb) {
+    // 파일 확장자 확인
+    const ext = path.extname(file.originalname).toLowerCase();
+    const allowedExtensions = ['.txt', '.docx', '.doc', '.pdf', '.xml', '.xliff', '.tmx', '.zip'];
+    
+    if (allowedExtensions.includes(ext)) {
+      console.log(`Accepting file upload: ${file.originalname} (${ext})`);
+      return cb(null, true);
+    }
+    
+    console.log(`Rejecting file upload: ${file.originalname} (${ext})`);
+    cb(new Error(`Unsupported file format: ${ext}. Allowed formats: ${allowedExtensions.join(', ')}`));
+  }
 });
 
 const referenceUpload = multer({
   storage: referenceStorage,
-  limits: { fileSize: 200 * 1024 * 1024 } // 200MB 제한
+  limits: { fileSize: 200 * 1024 * 1024 }, // 200MB 제한
+  fileFilter: function (req, file, cb) {
+    // 참조 파일에 대한 확장자 확인 (모든 파일 형식 허용)
+    const ext = path.extname(file.originalname).toLowerCase();
+    console.log(`Accepting reference file upload: ${file.originalname} (${ext})`);
+    return cb(null, true);
+  }
 });
 
 // Helper function for calculating text similarity
