@@ -966,7 +966,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // 작업 파일 처리
         for (const file of uploadedFiles.files) {
           try {
-            const fileContent = fs.readFileSync(file.path, 'utf8');
+            let fileContent;
+            // DOCX 파일이나 바이너리 파일은 base64로 저장
+            if (file.originalname.endsWith('.docx') || file.mimetype.includes('application/')) {
+              console.log(`Processing binary file: ${file.originalname}, mimetype: ${file.mimetype}`);
+              const binaryContent = fs.readFileSync(file.path);
+              fileContent = binaryContent.toString('base64');
+              
+              // 파일 형식을 나타내는 메타데이터 추가
+              fileContent = `[BASE64:${file.mimetype}]${fileContent}`;
+            } else {
+              // 텍스트 파일은 기존 방식대로 처리
+              fileContent = fs.readFileSync(file.path, 'utf8');
+            }
+            
             files.push({
               name: file.originalname,
               content: fileContent,
@@ -985,7 +998,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // 참조 파일 처리
         for (const file of uploadedFiles.references) {
           try {
-            const fileContent = fs.readFileSync(file.path, 'utf8');
+            let fileContent;
+            // DOCX 파일이나 바이너리 파일은 base64로 저장
+            if (file.originalname.endsWith('.docx') || file.mimetype.includes('application/')) {
+              console.log(`Processing binary reference file: ${file.originalname}, mimetype: ${file.mimetype}`);
+              const binaryContent = fs.readFileSync(file.path);
+              fileContent = binaryContent.toString('base64');
+              
+              // 파일 형식을 나타내는 메타데이터 추가
+              fileContent = `[BASE64:${file.mimetype}]${fileContent}`;
+            } else {
+              // 텍스트 파일은 기존 방식대로 처리
+              fileContent = fs.readFileSync(file.path, 'utf8');
+            }
+            
             files.push({
               name: file.originalname,
               content: fileContent,

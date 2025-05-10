@@ -95,11 +95,6 @@ export function DocSegment({
                 <Badge variant="outline" className="text-[10px] py-0 h-4">
                   {segment.status || 'MT'}
                 </Badge>
-                {segment.origin && (
-                  <Badge variant="outline" className="text-[10px] py-0 h-4">
-                    {segment.origin}
-                  </Badge>
-                )}
               </div>
             )}
             <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
