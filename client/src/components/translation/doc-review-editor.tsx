@@ -202,7 +202,8 @@ export function DocReviewEditor({
     setEditedValue,
     selectSegmentForEditing: originalSelectForEditing,
     updateSegment,
-    cancelEditing
+    cancelEditing,
+    toggleStatus
   } = useEditingState(segments, fileId);
   
   // 수정된 선택 함수 - 하이라이트 기능 추가
@@ -600,6 +601,7 @@ export function DocReviewEditor({
                             onSelectForEditing={() => selectSegmentForEditing(segment)}
                             onSave={() => customUpdateSegment(segment.id, editedValue)}
                             onCancel={customCancelEditing}
+                            onToggleStatus={() => toggleStatus(segment.id, segment.target || '')}
                             isDocumentMode={true}
                             showStatusInEditor={true}
                             className={cn(
