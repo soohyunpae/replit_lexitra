@@ -141,6 +141,7 @@ export function DocReviewEditor({
     };
     
     segments.forEach(segment => {
+      // If segment has a valid status, use it
       if (segment.status && counts[segment.status] !== undefined) {
         counts[segment.status]++;
       } else {
@@ -150,6 +151,7 @@ export function DocReviewEditor({
     });
     
     setStatusCounts(counts);
+    console.log("Status counts updated:", counts);
   }, [segments]);
   
   // Calculate progress percentages
