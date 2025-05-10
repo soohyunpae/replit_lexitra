@@ -381,20 +381,28 @@ export function DocReviewEditor({
                   group.length > 1 ? "border" : ""
                 )}
               >
-                <div className="px-3 py-0">
+                <div className="px-3 py-2 prose prose-lg max-w-none">
                   {group.map((segment, segmentIndex) => (
-                    <DocSegment
-                      key={`source-${segment.id}`}
-                      segment={segment}
-                      isSource={true}
-                      isEditing={editingId === segment.id}
-                      isDocumentMode={true}
-                      className={cn(
-                        segmentIndex === 0 ? "" : "mt-0",
-                        segmentIndex === group.length - 1 ? "" : "mb-0",
-                        editingId === segment.id ? "bg-muted/50" : ""
-                      )}
-                    />
+                    <React.Fragment key={`source-${segment.id}`}>
+                      <DocSegment
+                        segment={segment}
+                        isSource={true}
+                        isEditing={editingId === segment.id}
+                        isDocumentMode={true}
+                        className={cn(
+                          "py-0 mr-0 border-0",
+                          editingId === segment.id ? "bg-muted/50" : ""
+                        )}
+                      />
+                      {/* 스페이스 추가 (마지막 세그먼트가 아니고 줄바꿈이 없는 경우에만) */}
+                      {segmentIndex < group.length - 1 && 
+                       !segment.source.endsWith('\n') && 
+                       !segment.source.endsWith('.') && 
+                       !segment.source.endsWith('?') && 
+                       !segment.source.endsWith('!') && 
+                       !segment.source.endsWith(':') && 
+                       !segment.source.endsWith(';') && " "}
+                    </React.Fragment>
                   ))}
                 </div>
               </div>
@@ -437,25 +445,35 @@ export function DocReviewEditor({
                   group.length > 1 ? "border" : ""
                 )}
               >
-                <div className="px-3 py-0">
+                <div className="px-3 py-2 prose prose-lg max-w-none">
                   {group.map((segment, segmentIndex) => (
-                    <DocSegment
-                      key={`target-${segment.id}`}
-                      segment={segment}
-                      isSource={false}
-                      isEditing={editingId === segment.id}
-                      editedValue={editingId === segment.id ? editedValue : segment.target || ''}
-                      onEditValueChange={setEditedValue}
-                      onSelectForEditing={() => selectSegmentForEditing(segment)}
-                      onSave={() => updateSegment(segment.id, editedValue)}
-                      onCancel={cancelEditing}
-                      isDocumentMode={true}
-                      className={cn(
-                        segmentIndex === 0 ? "" : "mt-0",
-                        segmentIndex === group.length - 1 ? "" : "mb-0"
-                      )}
-                      showStatusInEditor={true}
-                    />
+                    <React.Fragment key={`target-${segment.id}`}>
+                      <DocSegment
+                        segment={segment}
+                        isSource={false}
+                        isEditing={editingId === segment.id}
+                        editedValue={editingId === segment.id ? editedValue : segment.target || ''}
+                        onEditValueChange={setEditedValue}
+                        onSelectForEditing={() => selectSegmentForEditing(segment)}
+                        onSave={() => updateSegment(segment.id, editedValue)}
+                        onCancel={cancelEditing}
+                        isDocumentMode={true}
+                        className={cn(
+                          "py-0 mr-0 border-0",
+                          editingId === segment.id ? "bg-accent/30" : ""
+                        )}
+                        showStatusInEditor={true}
+                      />
+                      {/* 스페이스 추가 (마지막 세그먼트가 아니고 줄바꿈이 없는 경우에만) */}
+                      {segmentIndex < group.length - 1 && 
+                       segment.target && 
+                       !segment.target.endsWith('\n') && 
+                       !segment.target.endsWith('.') && 
+                       !segment.target.endsWith('?') && 
+                       !segment.target.endsWith('!') && 
+                       !segment.target.endsWith(':') && 
+                       !segment.target.endsWith(';') && " "}
+                    </React.Fragment>
                   ))}
                 </div>
               </div>
