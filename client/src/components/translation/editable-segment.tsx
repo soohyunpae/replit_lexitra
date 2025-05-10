@@ -223,45 +223,7 @@ export function EditableSegment({
             placeholder="Enter translation..."
           />
           
-          {/* 저장 관련 버튼들 - X 버튼 추가 */}
-          <div className="absolute bottom-2 right-2 flex space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                
-                // 텍스트 수정 여부 확인
-                const isTextChanged = value !== segment.target;
-                
-                // MT, 100%, Fuzzy에서 수정했을 경우 origin 변경
-                const needsOriginChange = isTextChanged && 
-                  (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
-                
-                // 이미 Reviewed였는데 수정했을 경우 Edited로 변경
-                let newStatus = segment.status;
-                if (isTextChanged && segment.status === "Reviewed") {
-                  newStatus = "Edited";
-                }
-                
-                // 인증된 API 요청으로 서버에 업데이트
-                if (onUpdate) {
-                  onUpdate(
-                    value,
-                    newStatus,
-                    needsOriginChange ? "HT" : segment.origin
-                  );
-                  
-                  // 상태 업데이트 로그
-                  console.log('Saved segment:', segment.id, value);
-                }
-              }}
-              className="h-7 w-7 p-0 rounded-full bg-white dark:bg-neutral-900 border border-border shadow-sm"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Save and Close</span>
-            </Button>
-          </div>
+          
         </div>
       ) : (
         <div className="font-mono text-sm whitespace-pre-wrap break-words min-h-[60px] h-full w-full">
