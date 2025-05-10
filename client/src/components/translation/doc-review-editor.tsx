@@ -360,7 +360,7 @@ export function DocReviewEditor({
         <div className="flex justify-between items-center mb-1">
           <span className="text-xs">Translation Progress</span>
           <div className="flex items-center gap-1">
-            <span className="text-xs font-medium mr-1">
+            <span className="text-xs font-medium mr-1 block">
               {statusCounts['Reviewed'] || 0} of {totalSegments} segments
             </span>
           </div>
