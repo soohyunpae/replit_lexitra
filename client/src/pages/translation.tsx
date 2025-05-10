@@ -408,28 +408,25 @@ export default function Translation() {
   return (
     <MainLayout title={`Translating: ${file.name}`}>
       <div className="flex flex-col h-full overflow-hidden">
-        <div className="border-b bg-card px-4 py-2">
+        <div className="border-b bg-card px-6 py-4">
+          <h1 className="text-2xl font-semibold mb-4">
+            Project: {file.name}
+          </h1>
           <Tabs 
             value={editorMode} 
             onValueChange={(value) => handleModeChange(value as 'segment' | 'doc')}
             className="w-full"
           >
-            <div className="flex items-center justify-between">
-              <TabsList className="grid w-[400px] grid-cols-2">
-                <TabsTrigger value="segment" className="flex items-center gap-2">
-                  <Blocks className="h-4 w-4" />
-                  <span>Segment Editor</span>
-                </TabsTrigger>
-                <TabsTrigger value="doc" className="flex items-center gap-2">
-                  <LayoutTemplate className="h-4 w-4" />
-                  <span>Document View</span>
-                </TabsTrigger>
-              </TabsList>
-              
-              <div className="text-sm text-muted-foreground">
-                {project.sourceLanguage} → {project.targetLanguage}
-              </div>
-            </div>
+            <TabsList className="grid w-[400px] grid-cols-2">
+              <TabsTrigger value="segment" className="flex items-center gap-2">
+                <Blocks className="h-4 w-4" />
+                <span>Segment Editor</span>
+              </TabsTrigger>
+              <TabsTrigger value="doc" className="flex items-center gap-2">
+                <LayoutTemplate className="h-4 w-4" />
+                <span>Document View</span>
+              </TabsTrigger>
+            </TabsList>
           </Tabs>
         </div>
         
