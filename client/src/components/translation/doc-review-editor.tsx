@@ -530,7 +530,7 @@ export function DocReviewEditor({
                 {segmentGroups.map((group, groupIndex) => (
                   <div 
                     key={`target-group-${groupIndex}`} 
-                    className="paragraph-block mb-6 relative" 
+                    className="paragraph-block mb-6 relative hover:bg-muted/5 transition-colors duration-150 p-2 -mx-2 rounded-md" 
                     data-paragraph-id={groupIndex}
                   >
                     <div className="inline-flex flex-wrap">
@@ -549,7 +549,7 @@ export function DocReviewEditor({
                             showStatusInEditor={true}
                             className={cn(
                               "py-0 mr-0 border-0",
-                              editingId === segment.id ? "bg-accent/30" : ""
+                              editingId === segment.id ? "bg-accent/30 rounded px-1" : ""
                             )}
                           />
                           {/* 문장 연결 - 항상 공백 추가하여 부드럽게 연결 (마지막 세그먼트가 아닌 경우) */}
@@ -557,7 +557,7 @@ export function DocReviewEditor({
                         </span>
                       ))}
                     </div>
-                    <div className="absolute -left-3 top-0 opacity-10 text-xs font-mono">
+                    <div className="absolute -left-3 top-0 opacity-20 text-xs font-mono text-muted-foreground">
                       ¶{groupIndex+1}
                     </div>
                   </div>

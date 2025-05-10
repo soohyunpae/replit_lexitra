@@ -76,6 +76,8 @@ export function DocSegment({
             className
           )}
           data-segment-id={segment.id}
+          data-status={segment.status}
+          data-origin={segment.origin}
         >
           {segment.source}
         </span>
@@ -92,34 +94,61 @@ export function DocSegment({
               value={editedValue}
               onChange={(e) => onEditValueChange?.(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="min-h-[80px] resize-none border-accent"
+              className="min-h-[80px] p-2 resize-both border-accent shadow-sm"
               placeholder="Enter translation..."
               autoFocus
             />
             {showStatusInEditor && (
-              <div className="absolute top-2 right-2 flex items-center gap-1 text-xs opacity-80 bg-background/90 rounded-md p-1">
-                <span>{segment.status}</span>
-                <Separator orientation="vertical" className="h-3" />
-                <span>{segment.origin || 'None'}</span>
+              <div className="absolute top-2 right-2 flex items-center gap-1 text-xs bg-background/90 rounded-md p-1 shadow-sm border border-border/50">
+                <Badge variant={segment.status === 'Reviewed' ? "default" : "outline"}
+                  className={cn(
+                    "text-xs font-normal h-5",
+                    segment.status === 'Reviewed' ? "bg-green-600/80 hover:bg-green-600/90" : "",
+                    segment.status === 'Rejected' ? "border-red-500 text-red-500" : ""
+                  )}
+                >
+                  {segment.status || 'Draft'}
+                </Badge>
+                {segment.origin && (
+                  <Badge variant="secondary" className="text-xs font-normal h-5">
+                    {segment.origin}
+                  </Badge>
+                )}
               </div>
             )}
-            <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
-              <Button onClick={onCancel} variant="ghost" size="icon" className="h-7 w-7">
-                <X className="h-3.5 w-3.5" />
-              </Button>
-              <Button onClick={onSave} variant="ghost" size="icon" className="h-7 w-7">
-                <Check className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-              </Button>
+            <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-background/80 backdrop-blur-sm rounded-md border border-border/50 shadow-sm">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button onClick={onCancel} variant="ghost" size="icon" className="h-7 w-7">
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Cancel (Esc)</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button onClick={onSave} variant="ghost" size="icon" className="h-7 w-7">
+                    <Check className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Save (Ctrl+Enter)</TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </span>
       );
     } else {
+      // 상태에 따른 스타일 적용
+      const hasTranslation = !!segment.target;
+      
       return (
         <span 
           className={cn(
             "font-serif text-base inline cursor-text", 
             "selection:bg-blue-100 dark:selection:bg-blue-900",
+            !hasTranslation && "text-muted-foreground italic",
+            hasTranslation && segment.status === 'Reviewed' && "text-green-700 dark:text-green-400",
+            hasTranslation && segment.status === 'Rejected' && "text-red-700 dark:text-red-400",
             className
           )}
           onClick={onSelectForEditing}
@@ -127,9 +156,7 @@ export function DocSegment({
           data-status={segment.status}
           data-origin={segment.origin}
         >
-          {segment.target || (
-            <span className="text-muted-foreground italic">Click to add translation</span>
-          )}
+          {segment.target || "Click to add translation"}
         </span>
       );
     }
