@@ -20,6 +20,42 @@ import mammoth from "mammoth";
 const REPO_ROOT = process.cwd();
 console.log('Repository root:', REPO_ROOT);
 
+// DOCX 파일을 처리하는 유틸리티 함수
+interface DocxProcessingResult {
+  text: string;
+  error?: string;
+}
+
+// Base64로 인코딩된 DOCX 파일 콘텐츠를 텍스트로 변환
+async function extractTextFromBase64Docx(base64Content: string): Promise<DocxProcessingResult> {
+  try {
+    // Base64 접두사 제거 (있는 경우)
+    const content = base64Content.replace(/^\[BASE64:[^\]]+\]/, '');
+    
+    // Base64 문자열을 버퍼로 변환
+    const buffer = Buffer.from(content, 'base64');
+    
+    // Mammoth를 사용하여 DOCX에서 텍스트 추출
+    const result = await mammoth.extractRawText({ buffer });
+    return {
+      text: result.value,
+      error: result.messages.length > 0 ? result.messages.map(m => m.message).join(', ') : undefined
+    };
+  } catch (error) {
+    console.error('Error extracting text from DOCX:', error);
+    return {
+      text: '',
+      error: error instanceof Error ? error.message : String(error)
+    };
+  }
+}
+
+// 파일이 DOCX인지 확인하는 유틸리티 함수
+function isDocxContent(content: string): boolean {
+  return content.startsWith('[BASE64:application/vnd.openxmlformats-officedocument.wordprocessingml.document]') ||
+         content.startsWith('[BASE64:application/msword]');
+}
+
 // 필요한 모든 디렉토리를 생성하는 함수
 function ensureDirectories() {
   const directories = [
@@ -1573,9 +1609,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return sentences.length > 0 ? sentences : [text.trim()];
       };
       
-      // First split by lines, then split each line into sentences
-      const contentLines = fileData.content.split(/\r?\n/).filter(line => line.trim().length > 0);
+      // 파일 내용 처리 (DOCX 또는 일반 텍스트)
+      let processedContent = fileData.content;
       let segments: {source: string, status: string, fileId: number}[] = [];
+      
+      // DOCX 파일인 경우 텍스트 추출
+      if (isDocxContent(fileData.content)) {
+        console.log(`처리 중: DOCX 파일 감지됨 (${file.name})`);
+        try {
+          const extractionResult = await extractTextFromBase64Docx(fileData.content);
+          if (extractionResult.text) {
+            console.log(`DOCX 텍스트 추출 성공: ${extractionResult.text.substring(0, 100)}...`);
+            processedContent = extractionResult.text;
+            
+            // DOCX 처리 성공 로그
+            if (extractionResult.error) {
+              console.warn(`DOCX 처리 중 경고: ${extractionResult.error}`);
+            }
+          } else {
+            console.error(`DOCX 텍스트 추출 실패: ${extractionResult.error || 'Unknown error'}`);
+          }
+        } catch (docxError) {
+          console.error('DOCX 처리 오류:', docxError);
+        }
+      }
+      
+      // 콘텐츠 줄 분할 및 세그먼트 생성
+      const contentLines = processedContent.split(/\r?\n/).filter(line => line.trim().length > 0);
       
       // Process each line
       for (const line of contentLines) {
