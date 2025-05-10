@@ -1050,7 +1050,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             if (segments.length > 0) {
               console.log(`Creating ${segments.length} segments for file ID ${file.id}`);
-              await db.insert(schema.translationUnits).values(segments);
+              // 세그먼트 먼저 저장
+              const savedSegments = await db.insert(schema.translationUnits).values(segments).returning();
+              
+              // 프로젝트 정보 가져오기 (언어 정보 필요)
+              const projectInfo = await db.query.projects.findFirst({
+                where: eq(schema.projects.id, file.projectId)
+              });
+              
+              if (projectInfo) {
+                // 번역 메모리 준비
+                const tmMatches = await db.query.translationMemory.findMany({
+                  where: and(
+                    eq(schema.translationMemory.sourceLanguage, projectInfo.sourceLanguage),
+                    eq(schema.translationMemory.targetLanguage, projectInfo.targetLanguage)
+                  ),
+                  limit: 100
+                });
+                
+                // 용어집 준비
+                const glossaryTerms = await db.query.glossary.findMany({
+                  where: and(
+                    eq(schema.glossary.sourceLanguage, projectInfo.sourceLanguage),
+                    eq(schema.glossary.targetLanguage, projectInfo.targetLanguage)
+                  ),
+                  limit: 100
+                });
+                
+                // 각 세그먼트에 대해 자동 번역 실행 및 업데이트
+                for (const segment of savedSegments) {
+                  try {
+                    // TM 매칭 찾기
+                    const relevantTmMatches = tmMatches.filter(tm => 
+                      calculateSimilarity(segment.source, tm.source) > 0.7
+                    ).slice(0, 5);
+                    
+                    // 용어집 매칭 찾기
+                    const relevantTerms = glossaryTerms.filter(term => 
+                      segment.source.toLowerCase().includes(term.source.toLowerCase())
+                    );
+                    
+                    // TM 컨텍스트 준비
+                    const context = relevantTmMatches.map(match => 
+                      `${match.source} => ${match.target}`
+                    );
+                    
+                    // GPT 번역 실행
+                    const translationResult = await translateWithGPT({
+                      source: segment.source,
+                      sourceLanguage: projectInfo.sourceLanguage,
+                      targetLanguage: projectInfo.targetLanguage,
+                      context: context.length > 0 ? context : undefined,
+                      glossaryTerms: relevantTerms.length > 0 ? relevantTerms.map(term => ({
+                        source: term.source,
+                        target: term.target
+                      })) : undefined
+                    });
+                    
+                    // 번역 결과 업데이트
+                    await db.update(schema.translationUnits)
+                      .set({ 
+                        target: translationResult.target,
+                        origin: 'MT',
+                        updatedAt: new Date()
+                      })
+                      .where(eq(schema.translationUnits.id, segment.id));
+                    
+                    // 번역 진행 상황 로깅 (100개 이상일 경우 10개마다 로깅)
+                    if (savedSegments.length > 100 && savedSegments.indexOf(segment) % 10 === 0) {
+                      console.log(`Translated ${savedSegments.indexOf(segment) + 1}/${savedSegments.length} segments for file ID ${file.id}`);
+                    }
+                  } catch (error) {
+                    console.error(`Error translating segment ${segment.id}:`, error);
+                  }
+                }
+                
+                console.log(`Completed translation for all ${savedSegments.length} segments in file ID ${file.id}`);
+              }
             }
           }
         }
