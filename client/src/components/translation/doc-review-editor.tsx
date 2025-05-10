@@ -4,15 +4,17 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { 
   Save, Download, Languages, Eye, EyeOff, Check, X,
-  ArrowUp, ArrowDown, Smartphone, Monitor, FileText
+  ArrowUp, ArrowDown, Smartphone, Monitor, FileText, 
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
-import { TranslationUnit } from '@/types';
+import { TranslationUnit, TranslationMemory, Glossary } from '@/types';
 import { DocSegment } from './doc-segment';
 import { useEditingState } from '@/hooks/useEditingState';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useMobile } from '@/hooks/use-mobile';
+import { SidePanel } from './side-panel';
 
 interface DocReviewEditorProps {
   fileName: string;
@@ -22,6 +24,8 @@ interface DocReviewEditorProps {
   onSave?: () => void;
   onExport?: () => void;
   fileId?: number; // fileId는 선택적으로 변경
+  tmMatches?: TranslationMemory[];
+  glossaryTerms?: Glossary[];
 }
 
 // 세그먼트가 연속되어야 하는지 판단하는 함수
@@ -91,13 +95,16 @@ export function DocReviewEditor({
   segments = [],
   onSave,
   onExport,
-  fileId = 0 // 기본값 제공
+  fileId = 0, // 기본값 제공
+  tmMatches = [],
+  glossaryTerms = []
 }: DocReviewEditorProps) {
   const { toast } = useToast();
   const isMobile = useMobile();
   const [showSource, setShowSource] = useState(true);
   const [scrollSyncEnabled, setScrollSyncEnabled] = useState(true);
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
+  const [showSidePanel, setShowSidePanel] = useState(true);
   
   // 문서 보기를 위해 세그먼트를 그룹화
   const segmentGroups = groupSegmentsByParagraphs(segments);
@@ -276,6 +283,21 @@ export function DocReviewEditor({
               )}
             </Button>
           </div>
+          
+          {/* Side panel toggle button */}
+          <Button
+            size="sm"
+            variant={showSidePanel ? "default" : "outline"}
+            onClick={() => setShowSidePanel(!showSidePanel)}
+            className="gap-1.5"
+            title={showSidePanel ? "Hide side panel" : "Show side panel"}
+          >
+            {showSidePanel ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </Button>
           
           {/* Device layout toggle button (just visual indicator for demo) */}
           <Button

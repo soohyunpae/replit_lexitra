@@ -24,6 +24,7 @@ interface SidePanelProps {
   targetLanguage: string;
   onSegmentUpdated?: (id: number, newTarget: string) => void;
   previousVersions?: Record<number, string>;
+  showStatusInfo?: boolean;
 }
 
 interface TmMatchProps {
@@ -91,7 +92,7 @@ function TmMatch({ match, onUse, sourceSimilarity, highlightTerms = [] }: TmMatc
 }
 
 // Segment Status Info Component
-function StatusInfoPanel({ segment }: { segment: TranslationUnit | null }) {
+function StatusInfoPanel({ segment }: { segment: TranslationUnit | null | undefined }) {
   if (!segment) {
     return (
       <div className="bg-muted/50 rounded-md p-4 text-center text-muted-foreground">
@@ -267,7 +268,8 @@ export function SidePanel({
   sourceLanguage,
   targetLanguage,
   onSegmentUpdated,
-  previousVersions: propPreviousVersions
+  previousVersions: propPreviousVersions,
+  showStatusInfo = false
 }: SidePanelProps) {
   const [activeTab, setActiveTab] = useState("tm");
   const [tmSearchQuery, setTmSearchQuery] = useState("");
@@ -400,8 +402,8 @@ export function SidePanel({
         
         <TabsContent value="tm" className="flex-1 overflow-auto">
           <div className="p-4">
-            {/* Segment Status Info Panel */}
-            {activeTab === "tm" && <StatusInfoPanel segment={selectedSegment} />}
+            {/* Segment Status Info Panel - 요청에 따라 제거 */}
+            {activeTab === "tm" && showStatusInfo && <StatusInfoPanel segment={selectedSegment} />}
           
             <div className="text-sm font-medium mb-2">Translation Memory</div>
             
