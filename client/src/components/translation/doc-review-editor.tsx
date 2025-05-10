@@ -565,13 +565,13 @@ export function DocReviewEditor({
                             editedValue={editingId === segment.id ? editedValue : segment.target || ''}
                             onEditValueChange={setEditedValue}
                             onSelectForEditing={() => selectSegmentForEditing(segment)}
-                            onSave={() => updateSegment(segment.id, editedValue)}
-                            onCancel={cancelEditing}
+                            onSave={() => customUpdateSegment(segment.id, editedValue)}
+                            onCancel={customCancelEditing}
                             isDocumentMode={true}
                             showStatusInEditor={true}
                             className={cn(
                               "py-0 mr-0 border-0",
-                              editingId === segment.id ? "bg-accent/30 rounded px-1" : ""
+                              (editingId === segment.id || highlightedSegmentId === segment.id) ? "bg-accent/30 rounded px-1" : ""
                             )}
                           />
                           {/* 일반 문서처럼 보이도록 공백 추가 */}
