@@ -410,30 +410,19 @@ export default function Translation() {
       <div className="flex flex-col h-full">
         <div className="border-b bg-card px-6 py-4 flex-shrink-0">
           {/* Breadcrumb Navigation and Save Button */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <h1 className="text-lg font-semibold">
-                Project {project.id}: {project.name} / {file.name}
-              </h1>
-            </div>
-            
-            <Button 
-              variant="default" 
-              size="sm" 
-              className="flex items-center"
-              onClick={() => saveProject.mutate()}
-            >
-              <FileX className="h-4 w-4 mr-1" />
-              Save
-            </Button>
+          <div className="mb-4">
+            <h1 className="text-lg font-semibold">
+              Project {project.id}: {project.name} / {file.name}
+            </h1>
           </div>
           
-          {/* Tabs */}
-          <Tabs 
-            value={editorMode} 
-            onValueChange={(value) => handleModeChange(value as 'segment' | 'doc')}
-            className="w-full"
-          >
+          {/* Tabs and Save Button */}
+          <div className="flex items-center justify-between">
+            <Tabs 
+              value={editorMode} 
+              onValueChange={(value) => handleModeChange(value as 'segment' | 'doc')}
+              className="w-[400px]"
+            >
             <TabsList className="grid w-[400px] grid-cols-2">
               <TabsTrigger value="segment" className="flex items-center gap-2">
                 <Blocks className="h-4 w-4" />
@@ -445,6 +434,17 @@ export default function Translation() {
               </TabsTrigger>
             </TabsList>
           </Tabs>
+          
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="flex items-center"
+            onClick={() => saveProject.mutate()}
+          >
+            <FileX className="h-4 w-4 mr-1" />
+            Save
+          </Button>
+          </div>
         </div>
         
         <div className="flex-1 overflow-auto">
