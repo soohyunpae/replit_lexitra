@@ -195,6 +195,10 @@ export function DocSegment({
                       // 저장과 동시에 Reviewed로 마크
                       const newStatus = "Reviewed";
                       
+                      // MT, 100%, Fuzzy일 경우 origin도 HT로 변경
+                      const needsOriginChange = (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
+                      const newOrigin = needsOriginChange ? "HT" : segment.origin;
+                      
                       try {
                         // API 요청을 통해 실제 서버에 업데이트
                         await fetch(`/api/segments/${segment.id}`, {
@@ -205,7 +209,7 @@ export function DocSegment({
                           body: JSON.stringify({
                             target: editedValue,
                             status: newStatus,
-                            origin: segment.origin
+                            origin: newOrigin
                           })
                         });
                         

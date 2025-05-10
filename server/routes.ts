@@ -2091,10 +2091,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateSchema = z.object({
         target: z.string().optional(),
         status: z.string().optional(),
-        comment: z.string().optional()
+        comment: z.string().optional(),
+        origin: z.string().optional() // Add origin field to the schema
       });
       
       const data = updateSchema.parse(req.body);
+      console.log(`Updating segment ${id} with data:`, data); // Add logging for debugging
       const [updatedSegment] = await db
         .update(schema.translationUnits)
         .set({
