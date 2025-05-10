@@ -69,7 +69,13 @@ export function DocSegment({
     if (isSource) {
       return (
         <span 
-          className={cn("font-serif text-base inline", isEditing && "bg-muted/20", className)}
+          className={cn(
+            "font-serif text-base inline", 
+            "selection:bg-blue-100 dark:selection:bg-blue-900",
+            isEditing && "bg-muted/20", 
+            className
+          )}
+          data-segment-id={segment.id}
         >
           {segment.source}
         </span>
@@ -111,8 +117,15 @@ export function DocSegment({
     } else {
       return (
         <span 
-          className={cn("font-serif text-base inline cursor-text", className)}
+          className={cn(
+            "font-serif text-base inline cursor-text", 
+            "selection:bg-blue-100 dark:selection:bg-blue-900",
+            className
+          )}
           onClick={onSelectForEditing}
+          data-segment-id={segment.id}
+          data-status={segment.status}
+          data-origin={segment.origin}
         >
           {segment.target || (
             <span className="text-muted-foreground italic">Click to add translation</span>
@@ -153,11 +166,6 @@ export function DocSegment({
         {segment.status && (
           <Badge variant="outline" className="text-[10px] py-0 h-4">
             {segment.status}
-          </Badge>
-        )}
-        {segment.origin && (
-          <Badge variant="outline" className="text-[10px] py-0 h-4">
-            {segment.origin}
           </Badge>
         )}
       </div>

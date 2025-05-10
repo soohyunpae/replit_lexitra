@@ -46,9 +46,32 @@ function shouldBeConnected(
   // 현재 세그먼트의 마지막 문자
   const lastChar = currentSegment.source.trim().slice(-1);
   
+  // 특정 종료 문자로 끝나는 문장 검사
+  const sentenceEndingChars = ['.', '?', '!', ':', ';'];
+  
+  // 특정 키워드 다음에 문단이 끝난다고 가정
+  const paragraphEndingKeywords = [
+    "Fig.", "Fig", "Figure", "TABLE", "Table", 
+    "NOTE", "Note", "결론", "결과", "요약", "개요",
+    "Abstract", "ABSTRACT", "INTRODUCTION", "Introduction",
+    "BACKGROUND", "Background", "METHODS", "Methods",
+    "RESULTS", "Results", "DISCUSSION", "Discussion",
+    "CONCLUSION", "Conclusion", "REFERENCES", "References"
+  ];
+  
+  // 단락 끝으로 처리할 패턴
+  const paragraphEndingPattern = new RegExp(`(${paragraphEndingKeywords.join('|')})\\s*$`, 'i');
+  
   // 마침표, 물음표, 느낌표, 콜론 등으로 끝나면 연결하지 않음 (문단 구분)
-  if (['.', '?', '!', ':', ';'].includes(lastChar)) {
-    return false;
+  if (sentenceEndingChars.includes(lastChar) && !paragraphEndingPattern.test(currentSegment.source)) {
+    // 일부 약어 처리를 위한 예외 (예: e.g., i.e., etc.)
+    const abbreviations = ['e.g', 'i.e', 'etc', 'vs', 'cf', 'fig', 'inc', 'ltd', 'co', 'Dr', 'Mr', 'Mrs', 'Ms', 'Jr'];
+    const lastWord = currentSegment.source.trim().split(/\s+/).pop()?.toLowerCase() || '';
+    const isAbbreviation = abbreviations.some(abbr => lastWord.includes(`${abbr}.`));
+    
+    if (!isAbbreviation) {
+      return false;
+    }
   }
   
   // 줄바꿈이 있으면 연결하지 않음
@@ -67,6 +90,37 @@ function shouldBeConnected(
 
 // 세그먼트 그룹화 함수
 function groupSegmentsByParagraphs(segments: TranslationUnit[]): TranslationUnit[][] {
+  // 세그먼트에 특별한 문단 정보(paragraphId)가 있는지 확인
+  const hasParagraphInfo = segments.some(segment => 
+    segment.comment && segment.comment.includes('paragraphId:')
+  );
+  
+  // 문단 정보가 있으면 그것을 이용하여 그룹화
+  if (hasParagraphInfo) {
+    const groups: Record<string, TranslationUnit[]> = {};
+    
+    // 문단 ID별로 분류
+    segments.forEach(segment => {
+      const match = segment.comment?.match(/paragraphId:(\d+)/);
+      const paragraphId = match ? match[1] : 'default';
+      
+      if (!groups[paragraphId]) {
+        groups[paragraphId] = [];
+      }
+      groups[paragraphId].push(segment);
+    });
+    
+    // 문단 ID 순서대로 정렬하여 반환
+    return Object.entries(groups)
+      .sort(([a], [b]) => {
+        if (a === 'default') return 1;
+        if (b === 'default') return -1;
+        return parseInt(a) - parseInt(b);
+      })
+      .map(([_, segmentGroup]) => segmentGroup);
+  }
+  
+  // 문단 정보가 없으면 텍스트 특성을 기반으로 그룹화
   const groups: TranslationUnit[][] = [];
   let currentGroup: TranslationUnit[] = [];
   
@@ -85,7 +139,27 @@ function groupSegmentsByParagraphs(segments: TranslationUnit[]): TranslationUnit
     groups.push(currentGroup);
   }
   
-  return groups;
+  // 매우 작은 그룹은 가능하면 병합 (예: 1-2 개 세그먼트만 있는 그룹)
+  const mergedGroups: TranslationUnit[][] = [];
+  let temp: TranslationUnit[] = [];
+  
+  groups.forEach((group, i) => {
+    // 작은 그룹(1-2개 세그먼트)이 있고, 이전 그룹이 있으면 병합 고려
+    if (group.length <= 2 && temp.length > 0 && temp.length < 5) {
+      temp = [...temp, ...group];
+    } else {
+      if (temp.length > 0) {
+        mergedGroups.push(temp);
+      }
+      temp = [...group];
+    }
+  });
+  
+  if (temp.length > 0) {
+    mergedGroups.push(temp);
+  }
+  
+  return mergedGroups.length > 0 ? mergedGroups : groups;
 }
 
 export function DocReviewEditor({
@@ -391,24 +465,33 @@ export function DocReviewEditor({
             <div className="bg-card/30 rounded-md shadow-sm overflow-hidden border p-5">
               <div className="prose prose-lg max-w-none font-serif">
                 {segmentGroups.map((group, groupIndex) => (
-                  <p key={`source-group-${groupIndex}`} className="mb-4">
-                    {group.map((segment, segmentIndex) => (
-                      <React.Fragment key={`source-${segment.id}`}>
-                        <DocSegment
-                          segment={segment}
-                          isSource={true}
-                          isEditing={editingId === segment.id}
-                          isDocumentMode={true}
-                          className={cn(
-                            "py-0 mr-0 border-0",
-                            editingId === segment.id ? "bg-muted/50" : ""
-                          )}
-                        />
-                        {/* 문장 연결 - 항상 공백 추가하여 부드럽게 연결 (마지막 세그먼트가 아닌 경우) */}
-                        {segmentIndex < group.length - 1 && " "}
-                      </React.Fragment>
-                    ))}
-                  </p>
+                  <div 
+                    key={`source-group-${groupIndex}`} 
+                    className="paragraph-block mb-6 relative" 
+                    data-paragraph-id={groupIndex}
+                  >
+                    <div className="inline-flex flex-wrap">
+                      {group.map((segment, segmentIndex) => (
+                        <React.Fragment key={`source-${segment.id}`}>
+                          <DocSegment
+                            segment={segment}
+                            isSource={true}
+                            isEditing={editingId === segment.id}
+                            isDocumentMode={true}
+                            className={cn(
+                              "py-0 mr-0 border-0",
+                              editingId === segment.id ? "bg-muted/50" : ""
+                            )}
+                          />
+                          {/* 문장 연결 - 항상 공백 추가하여 부드럽게 연결 (마지막 세그먼트가 아닌 경우) */}
+                          {segmentIndex < group.length - 1 && " "}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                    <div className="absolute -left-3 top-0 opacity-10 text-xs font-mono">
+                      ¶{groupIndex+1}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -445,30 +528,39 @@ export function DocReviewEditor({
             <div className="bg-card/30 rounded-md shadow-sm overflow-hidden border p-5">
               <div className="prose prose-lg max-w-none font-serif">
                 {segmentGroups.map((group, groupIndex) => (
-                  <p key={`target-group-${groupIndex}`} className="mb-4">
-                    {group.map((segment, segmentIndex) => (
-                      <React.Fragment key={`target-${segment.id}`}>
-                        <DocSegment
-                          segment={segment}
-                          isSource={false}
-                          isEditing={editingId === segment.id}
-                          editedValue={editingId === segment.id ? editedValue : segment.target || ''}
-                          onEditValueChange={setEditedValue}
-                          onSelectForEditing={() => selectSegmentForEditing(segment)}
-                          onSave={() => updateSegment(segment.id, editedValue)}
-                          onCancel={cancelEditing}
-                          isDocumentMode={true}
-                          showStatusInEditor={true}
-                          className={cn(
-                            "py-0 mr-0 border-0",
-                            editingId === segment.id ? "bg-accent/30" : ""
-                          )}
-                        />
-                        {/* 문장 연결 - 항상 공백 추가하여 부드럽게 연결 (마지막 세그먼트가 아닌 경우) */}
-                        {segmentIndex < group.length - 1 && " "}
-                      </React.Fragment>
-                    ))}
-                  </p>
+                  <div 
+                    key={`target-group-${groupIndex}`} 
+                    className="paragraph-block mb-6 relative" 
+                    data-paragraph-id={groupIndex}
+                  >
+                    <div className="inline-flex flex-wrap">
+                      {group.map((segment, segmentIndex) => (
+                        <React.Fragment key={`target-${segment.id}`}>
+                          <DocSegment
+                            segment={segment}
+                            isSource={false}
+                            isEditing={editingId === segment.id}
+                            editedValue={editingId === segment.id ? editedValue : segment.target || ''}
+                            onEditValueChange={setEditedValue}
+                            onSelectForEditing={() => selectSegmentForEditing(segment)}
+                            onSave={() => updateSegment(segment.id, editedValue)}
+                            onCancel={cancelEditing}
+                            isDocumentMode={true}
+                            showStatusInEditor={true}
+                            className={cn(
+                              "py-0 mr-0 border-0",
+                              editingId === segment.id ? "bg-accent/30" : ""
+                            )}
+                          />
+                          {/* 문장 연결 - 항상 공백 추가하여 부드럽게 연결 (마지막 세그먼트가 아닌 경우) */}
+                          {segmentIndex < group.length - 1 && " "}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                    <div className="absolute -left-3 top-0 opacity-10 text-xs font-mono">
+                      ¶{groupIndex+1}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
