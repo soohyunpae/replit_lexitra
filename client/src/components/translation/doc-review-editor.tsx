@@ -356,10 +356,10 @@ export function DocReviewEditor({
   return (
     <div className="flex flex-col h-full w-full">
       {/* Progress bar with controls */}
-      <div className="px-3 py-3 bg-muted/30 border-b">
-        <div className="flex items-center gap-4">
+      <div className="bg-card border-b border-border py-2 px-4">
+        <div className="flex items-center gap-2 mb-1.5">
           <div className="flex-1">
-            <div className="h-2.5 rounded-full bg-muted overflow-hidden flex">
+            <div className="h-2.5 rounded-full bg-secondary overflow-hidden flex">
               <div 
                 className="h-full bg-green-500" 
                 style={{ width: `${reviewedPercentage}%` }}
@@ -386,7 +386,7 @@ export function DocReviewEditor({
                 size="sm"
                 variant={scrollSyncEnabled ? "default" : "outline"}
                 onClick={() => setScrollSyncEnabled(!scrollSyncEnabled)}
-                className="gap-1.5 h-8"
+                className="gap-1.5 h-7 text-xs"
               >
                 {scrollSyncEnabled ? (
                   <>
@@ -407,13 +407,13 @@ export function DocReviewEditor({
               size="sm"
               variant={showSidePanel ? "default" : "outline"}
               onClick={() => setShowSidePanel(!showSidePanel)}
-              className="h-8 w-8 p-0"
+              className="h-7 w-7 p-0"
               title={showSidePanel ? "Hide side panel" : "Show side panel"}
             >
               {showSidePanel ? (
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-3.5 w-3.5" />
               ) : (
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-3.5 w-3.5" />
               )}
             </Button>
             
@@ -422,12 +422,12 @@ export function DocReviewEditor({
               size="sm"
               variant="ghost"
               title="Current layout mode"
-              className="opacity-70 h-8 w-8 p-0"
+              className="opacity-70 h-7 w-7 p-0"
             >
               {isMobile ? (
-                <Smartphone className="h-4 w-4" />
+                <Smartphone className="h-3.5 w-3.5" />
               ) : (
-                <Monitor className="h-4 w-4" />
+                <Monitor className="h-3.5 w-3.5" />
               )}
             </Button>
           </div>
