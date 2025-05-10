@@ -402,14 +402,8 @@ export function DocReviewEditor({
                             editingId === segment.id ? "bg-muted/50" : ""
                           )}
                         />
-                        {/* 스페이스 추가 (마지막 세그먼트가 아니고 문장 부호로 끝나지 않을 때) */}
-                        {segmentIndex < group.length - 1 && 
-                        !segment.source.endsWith('\n') && 
-                        !segment.source.endsWith('.') && 
-                        !segment.source.endsWith('?') && 
-                        !segment.source.endsWith('!') && 
-                        !segment.source.endsWith(':') && 
-                        !segment.source.endsWith(';') && " "}
+                        {/* 문장 연결 - 항상 공백 추가하여 부드럽게 연결 (마지막 세그먼트가 아닌 경우) */}
+                        {segmentIndex < group.length - 1 && " "}
                       </React.Fragment>
                     ))}
                   </p>
@@ -462,21 +456,14 @@ export function DocReviewEditor({
                           onSave={() => updateSegment(segment.id, editedValue)}
                           onCancel={cancelEditing}
                           isDocumentMode={true}
+                          showStatusInEditor={true}
                           className={cn(
                             "py-0 mr-0 border-0",
                             editingId === segment.id ? "bg-accent/30" : ""
                           )}
-                          showStatusInEditor={true}
                         />
-                        {/* 스페이스 추가 (마지막 세그먼트가 아니고 문장 부호로 끝나지 않을 때) */}
-                        {segmentIndex < group.length - 1 && 
-                         segment.target && 
-                         !segment.target.endsWith('\n') && 
-                         !segment.target.endsWith('.') && 
-                         !segment.target.endsWith('?') && 
-                         !segment.target.endsWith('!') && 
-                         !segment.target.endsWith(':') && 
-                         !segment.target.endsWith(';') && " "}
+                        {/* 문장 연결 - 항상 공백 추가하여 부드럽게 연결 (마지막 세그먼트가 아닌 경우) */}
+                        {segmentIndex < group.length - 1 && " "}
                       </React.Fragment>
                     ))}
                   </p>
