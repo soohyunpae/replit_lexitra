@@ -191,19 +191,43 @@ export function DocSegment({
                       // X 버튼 클릭 시 항상 현재 내용을 저장하고 창 닫기 (수정 여부 관계없이)
                       const saveAndClose = async () => {
                         try {
+                          // 텍스트 수정 여부 확인
+                          const isTextChanged = editedValue !== segment.target;
+                          
+                          // MT, 100%, Fuzzy에서 수정했을 경우 origin 변경
+                          const needsOriginChange = isTextChanged && 
+                            (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
+                          
+                          // 이미 Reviewed였는데 수정했을 경우 Edited로 변경
+                          let newStatus = segment.status;
+                          if (isTextChanged && segment.status === "Reviewed") {
+                            newStatus = "Edited";
+                          }
+                          
                           // 인증된 API 요청으로 서버에 업데이트
                           const response = await apiRequest(
                             'PATCH',
                             `/api/segments/${segment.id}`,
                             {
                               target: editedValue,
-                              status: segment.status,
-                              origin: segment.origin
+                              status: newStatus,
+                              origin: needsOriginChange ? "HT" : segment.origin
                             }
                           );
                           
+                          if (!response.ok) {
+                            throw new Error(`Server responded with status: ${response.status}`);
+                          }
+                          
+                          const updatedSegment = await response.json();
+                          console.log('Saved segment:', updatedSegment);
+                          
                           // 로컬 상태 업데이트
-                          onUpdate?.(editedValue, segment.status, segment.origin);
+                          onUpdate?.(
+                            updatedSegment.target || editedValue, 
+                            updatedSegment.status, 
+                            updatedSegment.origin
+                          );
                         } catch (error) {
                           console.error("Failed to save segment:", error);
                         }
