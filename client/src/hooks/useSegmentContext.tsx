@@ -49,28 +49,31 @@ function useSegmentUpdateMutation(fileId: number | null) {
       // 이전 데이터 백업
       const previousSegments = queryClient.getQueryData<TranslationUnit[]>(['segments', fileId]);
       
-      // 세그먼트가 존재하는지 확인
-      if (previousSegments) {
-        const currentSegment = previousSegments.find(s => s.id === segmentId);
-        if (!currentSegment) {
-          console.error(`Segment with ID ${segmentId} not found`);
-          return { previousSegments };
+      // 세그먼트 존재 여부와 상관없이 무조건 낙관적 업데이트 시도
+      queryClient.setQueryData<TranslationUnit[]>(['segments', fileId], (old = []) => {
+        // 세그먼트가 없을 경우 그대로 반환
+        if (!old || old.length === 0) {
+          console.warn(`No segments found in cache for fileId ${fileId}`);
+          return old;
         }
-        
-        // 낙관적으로 캐시 업데이트
-        queryClient.setQueryData<TranslationUnit[]>(['segments', fileId], (old = []) => {
-          return old.map(segment => {
-            if (segment.id === segmentId) {
-              return { 
-                ...segment, 
-                ...data,
-                updatedAt: new Date().toISOString()
-              };
-            }
-            return segment;
-          });
+          
+        // 세그먼트가 있으면 해당 세그먼트 업데이트
+        const segmentExists = old.some(s => s.id === segmentId);
+        if (!segmentExists) {
+          console.warn(`Segment with ID ${segmentId} not found in cache, but continuing with update`);
+        }
+          
+        return old.map(segment => {
+          if (segment.id === segmentId) {
+            return { 
+              ...segment, 
+              ...data,
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return segment;
         });
-      }
+      });
       
       // 이전 데이터 반환 (롤백용)
       return { previousSegments };
@@ -166,16 +169,8 @@ export function SegmentProvider({
     segmentId: number, 
     newData: Partial<TranslationUnit>
   ): void => {
-    // 이미 캐시에 있는 세그먼트 조회
-    const segments = segmentsQuery.data || [];
-    const currentSegment = segments.find((s: TranslationUnit) => s.id === segmentId);
-    
-    if (!currentSegment) {
-      console.error(`Segment with ID ${segmentId} not found`);
-      return;
-    }
-    
-    // 낙관적 UI 업데이트는 onMutate에서 처리
+    // 낙관적 UI 업데이트는 onMutate에서 처리하므로
+    // 캐시에 세그먼트가 없는 경우도 허용해 처리 진행
     // 여기서는 디바운스된 API 호출만 수행
     debouncedUpdateSegmentImpl(segmentId, newData);
     
@@ -183,7 +178,7 @@ export function SegmentProvider({
     if (newData.target) {
       recordSegmentHistory(segmentId, newData.target);
     }
-  }, [segmentsQuery.data, debouncedUpdateSegmentImpl, recordSegmentHistory]);
+  }, [debouncedUpdateSegmentImpl, recordSegmentHistory]);
 
   // 컨텍스트 값 정의
   const contextValue: SegmentContextType = {
