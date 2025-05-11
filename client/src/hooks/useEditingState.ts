@@ -69,8 +69,13 @@ export function useEditingState(
         onSegmentUpdate(updatedSegment);
       }
       
-      // 편집 창은 닫지 않음 - 중요
+      // 상태가 Reviewed로 변경되면 편집 창을 닫음
       console.log(`Status toggled to ${newStatus}`, updatedSegment);
+      
+      // Reviewed 상태로 변경되면 편집 창 닫기
+      if (newStatus === "Reviewed") {
+        setEditingId(null);
+      }
       
       return updatedSegment;
     } catch (error) {

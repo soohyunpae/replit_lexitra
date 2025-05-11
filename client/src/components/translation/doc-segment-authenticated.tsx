@@ -268,7 +268,11 @@ export function DocSegment({
                           updatedSegment.origin,
                         );
 
-                        // 토글 후 편집 모드 유지
+                        // Document View에서는 Reviewed 상태로 변경 시 에디터 창 닫기
+                        if (newStatus === "Reviewed") {
+                          onUpdate?.(updatedSegment.target, updatedSegment.status, updatedSegment.origin);
+                          onCancel?.(); // 에디터 창 닫기
+                        }
                       } catch (error) {
                         console.error(
                           "Failed to toggle segment status:",
