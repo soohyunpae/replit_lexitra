@@ -257,11 +257,13 @@ export function DocSegment({
                         );
 
                         // 서버로부터 최종 업데이트된 데이터로 다시 UI 업데이트
-                        onUpdate?.(
-                          updatedSegment.target || editedValue,
-                          updatedSegment.status,
-                          updatedSegment.origin,
-                        );
+                        if (onUpdate) {
+                          onUpdate(
+                            String(updatedSegment.target || editedValue),
+                            updatedSegment.status,
+                            updatedSegment.origin
+                          );
+                        }
 
                         // Document View에서는 Reviewed 상태로 변경 시 에디터 창 닫기
                         if (newStatus === "Reviewed") {
@@ -455,11 +457,13 @@ export function DocSegment({
                   const newOrigin = needsOriginChange ? "HT" : segment.origin;
                   
                   // 즉시 UI 업데이트 (낙관적 업데이트) - 사용자에게 바로 피드백 제공
-                  onUpdate?.(
-                    editedValue,
-                    newStatus,
-                    newOrigin
-                  );
+                  if (onUpdate) {
+                    onUpdate(
+                      editedValue,
+                      newStatus,
+                      newOrigin
+                    );
+                  }
 
                   // 백그라운드에서 서버에 업데이트
                   const updateSegment = async () => {
@@ -587,11 +591,13 @@ export function DocSegment({
                             : segment.origin;
                         
                         // 즉시 UI 업데이트 (낙관적 업데이트) - 사용자에게 바로 피드백 제공
-                        onUpdate?.(
-                          String(segment.target || ""),
-                          newStatus,
-                          newOrigin,
-                        );
+                        if (onUpdate) {
+                          onUpdate(
+                            String(segment.target || ""), 
+                            newStatus,
+                            newOrigin
+                          );
+                        }
 
                         // 백그라운드에서 서버에 업데이트
                         const updateStatus = async () => {
@@ -617,22 +623,26 @@ export function DocSegment({
                             const updatedSegment = await response.json();
 
                             // 서버에서 반환된 최종 데이터로 UI 다시 업데이트
-                            onUpdate?.(
-                              updatedSegment.target,
-                              updatedSegment.status,
-                              updatedSegment.origin,
-                            );
+                            if (onUpdate) {
+                              onUpdate(
+                                String(updatedSegment.target || ""),
+                                updatedSegment.status,
+                                updatedSegment.origin
+                              );
+                            }
                           } catch (error) {
                             console.error(
                               "Failed to toggle segment status:",
                               error,
                             );
                             // 오류 발생 시 원래 상태로 복원
-                            onUpdate?.(
-                              String(segment.target || ""),
-                              segment.status,
-                              segment.origin,
-                            );
+                            if (onUpdate) {
+                              onUpdate(
+                                String(segment.target || ""),
+                                segment.status,
+                                segment.origin
+                              );
+                            }
                           }
                         };
 
