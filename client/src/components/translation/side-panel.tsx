@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Search, X, Database, Lightbulb, MessageSquare, MessageSquarePlus, 
   History, FileSearch, CheckCircle, XCircle, AlertCircle, PenLine,
-  Bot, User, PenSquare, Circle, Info
+  Bot, User, PenSquare, Circle, Info, Loader2
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { type TranslationMemory, type Glossary, type TranslationUnit } from "@/types";
@@ -14,6 +14,7 @@ import { searchGlossaryTerms } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "@/hooks/use-toast";
 
 interface SidePanelProps {
   tmMatches: TranslationMemory[];
