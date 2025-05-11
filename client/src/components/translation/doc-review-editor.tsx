@@ -409,54 +409,6 @@ export function DocReviewEditor({
           <div className="text-xs font-medium text-muted-foreground whitespace-nowrap">
             {statusCounts["Reviewed"] || 0}/{segments.length} Reviewed
           </div>
-          
-          <div className="flex items-center gap-2 ml-1">
-            {/* Select All Checkbox */}
-            <div className="flex items-center space-x-1.5">
-              <Checkbox
-                id="doc-toggle-select-all"
-                checked={false}
-                className="h-3.5 w-3.5 rounded"
-                onCheckedChange={() => {
-                  // This is a placeholder for future functionality
-                  // No bulk selection is implemented for document view yet
-                  toast({
-                    title: "Feature unavailable",
-                    description: "Bulk selection is not available in document view.",
-                  });
-                }}
-              />
-              <div className="flex items-center">
-                <label
-                  htmlFor="doc-toggle-select-all"
-                  className="text-xs font-medium ml-1 cursor-pointer"
-                >
-                  Select All
-                </label>
-              </div>
-            </div>
-        
-            {/* Desktop-only controls */}
-            <div className="hidden md:flex items-center gap-2">
-              <Button
-                size="sm"
-                variant={scrollSyncEnabled ? "default" : "outline"}
-                onClick={() => setScrollSyncEnabled(!scrollSyncEnabled)}
-                className="gap-1.5 h-7 text-xs"
-              >
-                {scrollSyncEnabled ? (
-                  <>
-                    <Check className="h-3.5 w-3.5" />
-                    <span>Sync Scroll</span>
-                  </>
-                ) : (
-                  <>
-                    <X className="h-3.5 w-3.5" />
-                    <span>Sync Scroll</span>
-                  </>
-                )}
-              </Button>
-            </div>
             
             {/* Side panel toggle button */}
             <Button

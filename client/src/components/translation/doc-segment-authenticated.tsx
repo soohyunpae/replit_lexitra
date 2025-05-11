@@ -223,9 +223,7 @@ export function DocSegment({
 
                         // 상태 토글 (Reviewed <-> Edited)
                         const newStatus =
-                          segment.status === "Reviewed"
-                            ? "Edited"
-                            : "Reviewed";
+                          segment.status === "Reviewed" ? "Edited" : "Reviewed";
 
                         // MT, 100%, Fuzzy에서 수정했을 경우 origin 변경
                         const needsOriginChange =
@@ -290,7 +288,14 @@ export function DocSegment({
                       : "",
                   )}
                 >
-                  <Check className={cn("h-3.5 w-3.5", segment.status === "Reviewed" ? "text-white" : "text-green-600")} />
+                  <Check
+                    className={cn(
+                      "h-3.5 w-3.5",
+                      segment.status === "Reviewed"
+                        ? "text-white"
+                        : "text-green-600",
+                    )}
+                  />
                 </Button>
               </div>
             </div>
@@ -502,16 +507,6 @@ export function DocSegment({
                       : "text-green-600",
                   )}
                 />
-              </Button>
-
-              {/* X 버튼: 취소 */}
-              <Button
-                onClick={onCancel}
-                size="sm"
-                variant="outline"
-                className="h-7 w-7 p-0 rounded-full"
-              >
-                <X className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
