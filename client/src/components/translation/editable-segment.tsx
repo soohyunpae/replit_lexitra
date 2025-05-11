@@ -125,38 +125,32 @@ export function EditableSegment(props: EditableSegmentProps) {
 
   // Update textarea height when segment source or target changes or on mount
   useEffect(() => {
-    if (!isSource && textareaRef.current) {
-      // Use setTimeout to ensure DOM is ready
-      setTimeout(() => {
-        textareaRef.current!.style.height = "auto";
-        textareaRef.current!.style.height = `${textareaRef.current!.scrollHeight}px`;
-      }, 0);
+    // 커스텀 훅의 adjustHeight 함수를 사용하여 필요할 때 높이 조정
+    if (!isSource) {
+      // 타겟 텍스트의 경우 커스텀 훅에서 자동으로 리사이징 처리
+      adjustHeight();
     }
+    
+    // 소스 텍스트도 높이 자동 조정 (소스 텍스트에는 직접 처리)
     if (isSource && sourceTextareaRef.current) {
-      // Also update source textarea height on mount and changes
-      setTimeout(() => {
-        sourceTextareaRef.current!.style.height = "auto";
-        sourceTextareaRef.current!.style.height = `${sourceTextareaRef.current!.scrollHeight}px`;
-      }, 0);
+      sourceTextareaRef.current.style.height = "0px";
+      sourceTextareaRef.current.style.height = `${sourceTextareaRef.current.scrollHeight}px`;
     }
-  }, [liveSegment.source, liveSegment.target, isSource]);
+  }, [liveSegment.source, liveSegment.target, isSource, adjustHeight]);
   
-  // Add window resize event listener to recalculate textarea height
+  // 윈도우 리사이즈 이벤트는 커스텀 훅에서 자동으로 처리하므로 별도 구현 필요 없음
+  // 소스 텍스트 textarea에만 리사이즈 이벤트 추가 (타겟은 훅에서 처리)
   useEffect(() => {
-    const resizeHandler = () => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
-        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-      }
-      if (sourceTextareaRef.current) {
-        sourceTextareaRef.current.style.height = "auto";
+    const resizeSourceArea = () => {
+      if (isSource && sourceTextareaRef.current) {
+        sourceTextareaRef.current.style.height = "0px";
         sourceTextareaRef.current.style.height = `${sourceTextareaRef.current.scrollHeight}px`;
       }
     };
 
-    window.addEventListener("resize", resizeHandler);
-    return () => window.removeEventListener("resize", resizeHandler);
-  }, []);
+    window.addEventListener("resize", resizeSourceArea);
+    return () => window.removeEventListener("resize", resizeSourceArea);
+  }, [isSource]);
 
   // Get status badge color based on status
   const getStatusColor = (status: string): string => {
@@ -234,9 +228,11 @@ export function EditableSegment(props: EditableSegmentProps) {
               className="w-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] pb-[28px] text-sm leading-relaxed"
               style={{
                 lineHeight: "1.6",
-                overflow: "hidden",
+                overflow: "hidden", 
                 boxShadow: "none",
-                outline: "none"
+                outline: "none",
+                minHeight: "0px", // 자동 높이 조절 개선을 위해 minHeight 0으로 설정
+                transition: "none" // 높이 변경 시 부드러운 전환 방지하여 성능 향상
               }}
               placeholder="Enter translation..."
             />
@@ -290,7 +286,9 @@ export function EditableSegment(props: EditableSegmentProps) {
                 lineHeight: "1.6",
                 overflow: "hidden",
                 boxShadow: "none",
-                outline: "none"
+                outline: "none",
+                minHeight: "0px", // 자동 높이 조절 개선을 위해 minHeight 0으로 설정
+                transition: "none" // 높이 변경 시 부드러운 전환 방지하여 성능 향상
               }}
               placeholder={isSource ? "No source text" : "No translation yet"}
             />
