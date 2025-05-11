@@ -215,28 +215,23 @@ export function DocSegment({
                   onClick={(e) => {
                     e.stopPropagation(); // 이벤트 전파 방지
 
-                    // 현재 내용을 저장하고 상태 변경
+                    // 버튼 클릭 시 즉시 로컬 상태 업데이트 (낙관적 UI 업데이트)
+                    const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
+                    const needsOriginChange = 
+                      editedValue !== segment.target &&
+                      (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
+                    const newOrigin = needsOriginChange ? "HT" : segment.origin;
+                    
+                    // 낙관적 UI 업데이트 - 사용자에게 즉시 피드백 제공
+                    onUpdate?.(
+                      editedValue,
+                      newStatus,
+                      newOrigin,
+                    );
+
+                    // 서버에 변경사항 저장 (백그라운드에서 비동기 처리)
                     const saveAndToggleStatus = async () => {
                       try {
-                        // 텍스트 수정 여부 확인
-                        const isTextChanged = editedValue !== segment.target;
-
-                        // 상태 토글 (Reviewed <-> Edited)
-                        const newStatus =
-                          segment.status === "Reviewed"
-                            ? "Edited"
-                            : "Reviewed";
-
-                        // MT, 100%, Fuzzy에서 수정했을 경우 origin 변경
-                        const needsOriginChange =
-                          isTextChanged &&
-                          (segment.origin === "MT" ||
-                            segment.origin === "100%" ||
-                            segment.origin === "Fuzzy");
-                        const newOrigin = needsOriginChange
-                          ? "HT"
-                          : segment.origin;
-
                         // 인증된 API 요청으로 서버에 업데이트
                         const response = await apiRequest(
                           "PATCH",
@@ -261,7 +256,7 @@ export function DocSegment({
                           updatedSegment,
                         );
 
-                        // 로컬 상태 업데이트
+                        // 서버로부터 최종 업데이트된 데이터로 다시 UI 업데이트
                         onUpdate?.(
                           updatedSegment.target || editedValue,
                           updatedSegment.status,
@@ -270,13 +265,18 @@ export function DocSegment({
 
                         // Document View에서는 Reviewed 상태로 변경 시 에디터 창 닫기
                         if (newStatus === "Reviewed") {
-                          onUpdate?.(updatedSegment.target, updatedSegment.status, updatedSegment.origin);
                           onCancel?.(); // 에디터 창 닫기
                         }
                       } catch (error) {
                         console.error(
                           "Failed to toggle segment status:",
                           error,
+                        );
+                        // 오류 발생 시 원래 상태로 복원
+                        onUpdate?.(
+                          segment.target || "",
+                          segment.status,
+                          segment.origin,
                         );
                       }
                     };
@@ -288,13 +288,16 @@ export function DocSegment({
                     segment.status === "Reviewed" ? "default" : "outline"
                   }
                   className={cn(
-                    "h-7 w-7 p-0 rounded-full",
+                    "h-7 w-7 p-0 rounded-full transition-colors duration-200",
                     segment.status === "Reviewed"
                       ? "bg-green-600 hover:bg-green-700"
-                      : "",
+                      : "hover:bg-green-100 dark:hover:bg-green-900/30",
                   )}
                 >
-                  <Check className={cn("h-3.5 w-3.5", segment.status === "Reviewed" ? "text-white" : "text-green-600")} />
+                  <Check className={cn(
+                    "h-3.5 w-3.5 transition-colors duration-200", 
+                    segment.status === "Reviewed" ? "text-white" : "text-green-600"
+                  )} />
                 </Button>
               </div>
             </div>
@@ -447,24 +450,32 @@ export function DocSegment({
                       segment.origin === "100%" ||
                       segment.origin === "Fuzzy");
 
-                  // 상태 토글 (Reviewed <-> Edited)
+                  // 상태 토글 계산
+                  const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
+                  const newOrigin = needsOriginChange ? "HT" : segment.origin;
+                  
+                  // 즉시 UI 업데이트 (낙관적 업데이트) - 사용자에게 바로 피드백 제공
+                  onUpdate?.(
+                    editedValue,
+                    newStatus,
+                    newOrigin
+                  );
+
+                  // 백그라운드에서 서버에 업데이트
                   const updateSegment = async () => {
                     try {
-                      const newStatus =
-                        segment.status === "Reviewed" ? "Edited" : "Reviewed";
-
                       // 인증된 API 요청으로 서버에 업데이트
                       const response = await apiRequest(
                         "PATCH",
                         `/api/segments/${segment.id}`,
                         {
-                          target: editedValue,
+                          target: editedValue, 
                           status: newStatus,
-                          origin: needsOriginChange ? "HT" : segment.origin,
+                          origin: newOrigin,
                         },
                       );
 
-                      // 응답이 성공적이면 로컬 상태도 업데이트
+                      // 응답이 성공적이면 서버에서 반환된 최종 데이터로 업데이트
                       if (response.ok) {
                         const updatedSegment = await response.json();
                         console.log(
@@ -478,11 +489,19 @@ export function DocSegment({
                           updatedSegment.origin,
                         );
                         onSave?.(); // 편집 모드 종료
+                      } else {
+                        throw new Error(`Server responded with status: ${response.status}`);
                       }
                     } catch (error) {
                       console.error(
                         "Failed to save segment with status change:",
                         error,
+                      );
+                      // 오류 발생 시 원래 상태로 복원
+                      onUpdate?.(
+                        segment.target || "",
+                        segment.status,
+                        segment.origin,
                       );
                     }
                   };
@@ -492,15 +511,15 @@ export function DocSegment({
                 size="sm"
                 variant={segment.status === "Reviewed" ? "default" : "outline"}
                 className={cn(
-                  "h-7 w-7 p-0 rounded-full",
+                  "h-7 w-7 p-0 rounded-full transition-colors duration-200",
                   segment.status === "Reviewed"
                     ? "bg-green-600 hover:bg-green-700"
-                    : "",
+                    : "hover:bg-green-100 dark:hover:bg-green-900/30",
                 )}
               >
                 <Check
                   className={cn(
-                    "h-4 w-4",
+                    "h-4 w-4 transition-colors duration-200",
                     segment.status === "Reviewed"
                       ? "text-white"
                       : "text-green-600",
@@ -556,11 +575,8 @@ export function DocSegment({
                       if (onToggleStatus) {
                         onToggleStatus();
                       } else {
-                        // 기존 토글 로직 사용 (폴백)
-                        const newStatus =
-                          segment.status === "Reviewed" ? "Edited" : "Reviewed";
-
-                        // MT, 100%, Fuzzy일 경우 origin도 HT로 변경
+                        // 상태 변경 계산
+                        const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
                         const needsOriginChange =
                           segment.origin === "MT" ||
                           segment.origin === "100%" ||
@@ -569,7 +585,15 @@ export function DocSegment({
                           newStatus === "Reviewed" && needsOriginChange
                             ? "HT"
                             : segment.origin;
+                        
+                        // 즉시 UI 업데이트 (낙관적 업데이트) - 사용자에게 바로 피드백 제공
+                        onUpdate?.(
+                          String(segment.target || ""),
+                          newStatus,
+                          newOrigin,
+                        );
 
+                        // 백그라운드에서 서버에 업데이트
                         const updateStatus = async () => {
                           try {
                             // 인증된 API 요청으로 서버에 업데이트
@@ -592,7 +616,7 @@ export function DocSegment({
 
                             const updatedSegment = await response.json();
 
-                            // 로컬 상태 업데이트 - 서버에서 반환된 값으로 업데이트
+                            // 서버에서 반환된 최종 데이터로 UI 다시 업데이트
                             onUpdate?.(
                               updatedSegment.target,
                               updatedSegment.status,
@@ -602,6 +626,12 @@ export function DocSegment({
                             console.error(
                               "Failed to toggle segment status:",
                               error,
+                            );
+                            // 오류 발생 시 원래 상태로 복원
+                            onUpdate?.(
+                              String(segment.target || ""),
+                              segment.status,
+                              segment.origin,
                             );
                           }
                         };
@@ -614,13 +644,16 @@ export function DocSegment({
                       segment.status === "Reviewed" ? "default" : "outline"
                     }
                     className={cn(
-                      "h-6 w-6 p-0 rounded-full",
+                      "h-6 w-6 p-0 rounded-full transition-colors duration-200",
                       segment.status === "Reviewed"
                         ? "bg-green-600 hover:bg-green-700"
-                        : "",
+                        : "hover:bg-green-100 dark:hover:bg-green-900/30",
                     )}
                   >
-                    <Check className="h-4 w-4" />
+                    <Check className={cn(
+                      "h-4 w-4 transition-colors duration-200", 
+                      segment.status === "Reviewed" ? "text-white" : "text-green-600"
+                    )} />
                   </Button>
                 </div>
               )}
