@@ -168,7 +168,7 @@ export function EditableSegment(props: EditableSegmentProps) {
       {/* grid 기반 레이아웃 적용 */}
       {!isSource ? (
         <div className="grid grid-cols-[min-content_1fr] gap-x-4">
-          {/* 체크박스만 왼쪽에 배치 */}
+          {/* 번역문 왼쪽은 체크박스만 배치 (세그먼트 번호 없음) */}
           <div className="flex items-center justify-end w-8 h-[60px]">
             {onCheckChange && (
               <div onClick={handleCheckboxClick}>
@@ -224,9 +224,9 @@ export function EditableSegment(props: EditableSegmentProps) {
         </div>
       ) : (
         <div className="grid grid-cols-[min-content_1fr] gap-x-4">
-          {/* 왼쪽 여백 영역 (체크박스와 동일한 너비) */}
-          <div className="w-8 h-[60px]">
-            {/* 세그먼트 번호는 제거 */}
+          {/* 원문 왼쪽에는 세그먼트 번호 유지 */}
+          <div className="flex items-center justify-end w-8 h-[60px] text-xs text-gray-500 pr-1 font-mono">
+            {index}
           </div>
           
           {/* 원문 텍스트 */}
