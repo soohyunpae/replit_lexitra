@@ -206,7 +206,7 @@ export function EditableSegment(props: EditableSegmentProps) {
               ref={textareaRef}
               value={value}
               onChange={handleTextareaChange}
-              className="min-h-[50px] w-full font-mono resize-none focus-visible:ring-0 overflow-hidden no-scrollbar pt-[2px] pb-[28px] text-sm plaintext-textarea"
+              className="w-full font-mono resize-none focus-visible:ring-0 overflow-hidden no-scrollbar pt-[2px] pb-[28px] text-sm plaintext-textarea"
               placeholder="Enter translation..."
             />
 
@@ -253,7 +253,7 @@ export function EditableSegment(props: EditableSegmentProps) {
             <Textarea
               value={value || ""}
               readOnly
-              className="min-h-[50px] w-full font-mono resize-none overflow-hidden no-scrollbar pt-[2px] text-sm read-only-plaintext"
+              className="w-full font-mono resize-none overflow-hidden no-scrollbar pt-[2px] text-sm read-only-plaintext"
               placeholder={isSource ? "No source text" : "No translation yet"}
             />
           </div>

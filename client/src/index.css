@@ -159,6 +159,9 @@
     box-shadow: none;
     outline: none;
     padding: 0;
+    min-height: 70px;
+    height: auto;
+    overflow-y: hidden;
   }
   
   .plaintext-textarea:focus {
@@ -177,6 +180,9 @@
     padding: 0;
     color: inherit;
     cursor: default;
+    min-height: 70px;
+    height: auto;
+    overflow-y: hidden;
   }
 }
 
