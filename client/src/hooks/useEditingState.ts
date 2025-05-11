@@ -7,8 +7,7 @@ import { queryClient } from "@/lib/queryClient";
 export function useEditingState(
   segments: TranslationUnit[],
   fileId: number = 0,
-  onSegmentUpdate?: (updatedSegment: TranslationUnit) => void,
-  saveMode: SaveMode = 'auto'
+  onSegmentUpdate?: (updatedSegment: TranslationUnit) => void
 ) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editedValue, setEditedValue] = useState<string>('');
@@ -83,18 +82,9 @@ export function useEditingState(
     }
   }, [segments, fileId, onSegmentUpdate]);
 
-  // Save state type to determine auto/manual save mode
-type SaveMode = 'auto' | 'manual';
-
-// Import debounce from lodash
-import { debounce } from 'lodash';
-
-const debouncedUpdate = useCallback(
+  const debouncedUpdate = useCallback(
   debounce(async (segmentId: number, newValue: string, segment: TranslationUnit) => {
-    if (!segment) return;
-    
     try {
-      console.log("Debounced save triggered for segment:", segmentId);
       const response = await apiRequest(
         "PATCH", 
         `/api/segments/${segmentId}`, 
@@ -127,15 +117,6 @@ const updateSegment = useCallback(async (segmentId: number, newValue: string) =>
       setEditingId(null);
       return;
     }
-
-    // Update local state immediately
-    updateLocalSegment(segmentId, { target: newValue });
-
-    // Handle save based on mode
-    if (saveMode === 'auto') {
-      debouncedUpdate(segmentId, newValue, segment);
-    }
-    // Manual mode - only save when explicitly called
     
     // Immediate local update
     updateLocalSegment(segmentId, { target: newValue });
