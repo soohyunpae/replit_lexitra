@@ -4,7 +4,10 @@ export type WebSocketStatus = 'connecting' | 'open' | 'closed' | 'error';
 
 interface WebSocketMessage {
   type: string;
-  data: any;
+  data?: any;
+  fileId?: number;
+  segment?: any;
+  [key: string]: any; // Allow additional properties
 }
 
 interface UseWebSocketOptions {
