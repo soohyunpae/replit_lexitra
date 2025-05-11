@@ -47,6 +47,7 @@ export function EditableSegment(props: EditableSegmentProps) {
     isSource ? liveSegment.source : liveSegment.target || "",
   );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const sourceTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   // origin이 undefined인 경우 처리를 위한 헬퍼 함수
   const isOriginInList = (
@@ -122,7 +123,7 @@ export function EditableSegment(props: EditableSegmentProps) {
     }
   };
 
-  // Update textarea height when segment target changes or on mount
+  // Update textarea height when segment source or target changes or on mount
   useEffect(() => {
     if (!isSource && textareaRef.current) {
       // Use setTimeout to ensure DOM is ready
@@ -131,7 +132,14 @@ export function EditableSegment(props: EditableSegmentProps) {
         textareaRef.current!.style.height = `${textareaRef.current!.scrollHeight}px`;
       }, 0);
     }
-  }, [liveSegment.target, isSource]);
+    if (isSource && sourceTextareaRef.current) {
+      // Also update source textarea height on mount and changes
+      setTimeout(() => {
+        sourceTextareaRef.current!.style.height = "auto";
+        sourceTextareaRef.current!.style.height = `${sourceTextareaRef.current!.scrollHeight}px`;
+      }, 0);
+    }
+  }, [liveSegment.source, liveSegment.target, isSource]);
   
   // Add window resize event listener to recalculate textarea height
   useEffect(() => {
@@ -139,6 +147,10 @@ export function EditableSegment(props: EditableSegmentProps) {
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
         textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      }
+      if (sourceTextareaRef.current) {
+        sourceTextareaRef.current.style.height = "auto";
+        sourceTextareaRef.current.style.height = `${sourceTextareaRef.current.scrollHeight}px`;
       }
     };
 
@@ -270,6 +282,7 @@ export function EditableSegment(props: EditableSegmentProps) {
           {/* 원문 텍스트 - textarea로 변경하고 읽기 전용으로 설정 */}
           <div className="relative">
             <Textarea
+              ref={sourceTextareaRef}
               value={value || ""}
               readOnly
               className="w-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] text-sm leading-relaxed"
