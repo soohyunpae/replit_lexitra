@@ -356,29 +356,22 @@ export function DocSegment({
                 }
               }}
               onKeyDown={handleKeyDown}
-              className="min-h-[100px] font-serif text-base resize-none"
+              className="min-h-[100px] font-serif text-base resize-none pr-12 pb-12"
               placeholder="Enter translation..."
             />
             
-            {/* 편집 액션 버튼들 */}
-            <div className="flex justify-end gap-2 mt-2">
-              {/* X 버튼: 저장하지 않고 취소 */}
-              <Button onClick={onCancel} size="sm" variant="outline">
-                <X className="h-4 w-4 mr-1" />
-                Cancel
-              </Button>
-              
-              {/* 체크 버튼: 상태와 함께 저장 */}
+            {/* 텍스트 영역 내부에 버튼 배치 */}
+            <div className="absolute bottom-2 right-2 flex gap-2">
+              {/* 체크 버튼: 상태 토글 */}
               <Button 
                 onClick={() => {
                   // 텍스트가 수정되었으면서 MT/100%/Fuzzy였으면 origin을 HT로 변경
                   const needsOriginChange = editedValue !== segment.target && 
                     (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
                   
-                  // 저장하면서 Reviewed 상태로 변경
+                  // 상태 토글 (Reviewed <-> Edited)
                   const updateSegment = async () => {
                     try {
-                      // 상태 토글 (Reviewed <-> Edited)
                       const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
                       
                       // 인증된 API 요청으로 서버에 업데이트 
@@ -409,10 +402,21 @@ export function DocSegment({
                 size="sm" 
                 variant={segment.status === "Reviewed" ? "default" : "outline"}
                 className={cn(
+                  "h-8 w-8 p-0 rounded-full", 
                   segment.status === "Reviewed" ? "bg-green-600 hover:bg-green-700" : ""
                 )}
               >
                 <Check className={cn("h-4 w-4", segment.status === "Reviewed" ? "text-white" : "text-green-600")}/>
+              </Button>
+              
+              {/* X 버튼: 취소 */}
+              <Button 
+                onClick={onCancel} 
+                size="sm" 
+                variant="outline" 
+                className="h-8 w-8 p-0 rounded-full"
+              >
+                <X className="h-4 w-4" />
               </Button>
             </div>
           </div>
