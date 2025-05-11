@@ -187,7 +187,7 @@ export function EditableSegment(props: EditableSegmentProps) {
               ref={textareaRef}
               value={value}
               onChange={handleTextareaChange}
-              className="min-h-[60px] w-full font-mono resize-none focus-visible:ring-offset-0 focus-visible:ring-1 overflow-hidden no-scrollbar py-0 pt-[2px]"
+              className="min-h-[60px] w-full font-mono resize-none focus-visible:ring-offset-0 focus-visible:ring-1 overflow-hidden no-scrollbar pt-[2px] pb-[24px]"
               placeholder="Enter translation..."
             />
             
