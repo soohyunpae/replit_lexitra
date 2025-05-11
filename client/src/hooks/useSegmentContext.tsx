@@ -1,7 +1,7 @@
 import { createContext, useContext, ReactNode, useState, useEffect, useCallback, useMemo } from 'react';
 import { TranslationUnit } from '../types';
 import { apiRequest } from '@/lib/queryClient';
-import debounce from 'lodash.debounce';
+import { useDebouncedCallback } from './useDebounce';
 
 // 컨텍스트 타입 정의
 type SegmentContextType = {
@@ -16,8 +16,8 @@ type SegmentContextType = {
 // 컨텍스트 생성
 const SegmentContext = createContext<SegmentContextType | undefined>(undefined);
 
-// 디바운스 지연 시간 (ms)
-const DEBOUNCE_DELAY = 600;
+// 디바운스 지연 시간 (ms) - 키 입력에 더 빠르게 반응하도록 값 줄임
+const DEBOUNCE_DELAY = 300;
 
 // 컨텍스트 프로바이더 컴포넌트
 export function SegmentProvider({ 
@@ -109,24 +109,19 @@ export function SegmentProvider({
     }
   }, [segments]);
 
-  // 디바운스된 업데이트 함수 생성
-  const debouncedUpdateSegmentImpl = useMemo(() => 
-    debounce(async (segmentId: number, newData: Partial<TranslationUnit>) => {
+  // 디바운스된 API 업데이트 함수 - 커스텀 훅 사용
+  const debouncedUpdateSegmentImpl = useDebouncedCallback(
+    async (segmentId: number, newData: Partial<TranslationUnit>) => {
       try {
         console.log(`Sending debounced update for segment ${segmentId}:`, newData);
         await updateSegment(segmentId, newData);
       } catch (error) {
         console.error(`Debounced update for segment ${segmentId} failed:`, error);
       }
-    }, DEBOUNCE_DELAY), 
-  [updateSegment]);
-  
-  // 컴포넌트 언마운트 시 디바운스 취소 처리
-  useEffect(() => {
-    return () => {
-      debouncedUpdateSegmentImpl.cancel();
-    };
-  }, [debouncedUpdateSegmentImpl]);
+    }, 
+    DEBOUNCE_DELAY,
+    [updateSegment]
+  );
   
   // 타입스크립트에 맞게 정의 (void 반환하는 래퍼 함수)
   const debouncedUpdateSegment = useCallback((
@@ -140,8 +135,10 @@ export function SegmentProvider({
       return;
     }
 
-    // 낙관적 UI 업데이트 (즉시 반영)
+    // 낙관적 UI 업데이트 (즉시 반영) - 낙관적 UI 업데이트 로직 최적화
     const updatedSegment = { ...currentSegment, ...newData };
+    
+    // 이전 상태를 덮어쓰지 않도록 함수형 업데이트 패턴 사용
     setSegments(prevSegments => 
       prevSegments.map(segment => 
         segment.id === segmentId ? updatedSegment : segment
