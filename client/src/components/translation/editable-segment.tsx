@@ -181,7 +181,7 @@ export function EditableSegment(props: EditableSegmentProps) {
 
   return (
     <div
-      className={`rounded-md py-1 px-2 mb-1 h-full w-full ${liveSegment.status === "Reviewed" ? "bg-blue-50 dark:bg-blue-950/30" : isSelected ? "bg-accent/90" : "bg-card"} transition-colors ${!isSource && !liveSegment.target ? "border border-dashed border-yellow-400" : ""}`}
+      className={`rounded-md py-0.5 px-2 mb-[1px] h-full w-full ${liveSegment.status === "Reviewed" ? "bg-blue-50 dark:bg-blue-950/30" : isSelected ? "bg-accent/90" : "bg-card"} transition-colors ${!isSource && !liveSegment.target ? "border border-dashed border-yellow-400" : ""}`}
       onClick={onSelect}
     >
       {/* grid 기반 레이아웃 적용 */}
