@@ -14,9 +14,16 @@ import {
   Check, X, MessageCircle, FileEdit, Save, Download,
   Languages, Eye, EyeOff, Smartphone, Monitor, FileText,
   ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
-  RotateCw,
+  RotateCw, Users, UserPlus, Activity, MessageSquare,
   Wifi, WifiOff
 } from 'lucide-react';
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface QueryBasedEditorProps {
   fileId: number;
@@ -42,6 +49,11 @@ export function QueryBasedEditor({
   const [editedValue, setEditedValue] = useState<string>('');
   const [showSource, setShowSource] = useState(true);
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
+  
+  // Real-time collaboration state
+  const [activeUsers, setActiveUsers] = useState<number>(1); // Default to 1 (current user)
+  const [recentUpdates, setRecentUpdates] = useState<Array<{id: number, timestamp: number}>>([]);
+  const [showCollaborationInfo, setShowCollaborationInfo] = useState<boolean>(false);
   
   // WebSocket connection for real-time updates
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -83,7 +95,29 @@ export function QueryBasedEditor({
               segment.id === data.segment.id ? data.segment : segment
             );
           });
+          
+          // 실시간 업데이트 알림 관리 - 최근 업데이트 추가 및 최대 5개 유지
+          setRecentUpdates(prev => {
+            const newUpdates = [
+              { id: data.segment.id, timestamp: Date.now() },
+              ...prev.filter(update => update.id !== data.segment.id)
+            ].slice(0, 5);
+            return newUpdates;
+          });
+          
+          // 상태 카운트 업데이트 표시
+          toast({
+            title: '실시간 업데이트',
+            description: `세그먼트 #${data.segment.id}가 다른 사용자에 의해 업데이트되었습니다.`,
+            variant: 'default',
+          });
         }
+      } else if (data.type === 'userCount' && typeof data.count === 'number') {
+        // 현재 활성 사용자 수 업데이트
+        setActiveUsers(data.count);
+      } else if (data.type === 'info') {
+        // 서버 정보 메시지 표시
+        console.log('WebSocket info message:', data.message);
       }
     },
     onClose: () => {
@@ -385,6 +419,28 @@ export function QueryBasedEditor({
               </Badge>
             )}
             
+            {/* 협업 정보 표시 버튼 */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex items-center gap-1"
+                    onClick={() => setShowCollaborationInfo(!showCollaborationInfo)}
+                  >
+                    <Users className="h-4 w-4" />
+                    <span className="font-medium">{activeUsers}</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {activeUsers > 1 
+                    ? `현재 ${activeUsers}명의 사용자가 이 파일을 편집 중입니다.` 
+                    : '현재 다른 사용자가 연결되어 있지 않습니다.'}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
             <Button size="sm" variant="ghost" onClick={() => setShowSource(!showSource)}>
               {showSource ? <Eye className="w-4 h-4 mr-1" /> : <EyeOff className="w-4 h-4 mr-1" />}
               {showSource ? '원본 숨기기' : '원본 보기'}
@@ -402,6 +458,35 @@ export function QueryBasedEditor({
           </div>
           <Progress value={calculateProgress()} className="h-2" />
         </div>
+        
+        {/* 협업 활동 표시 */}
+        {showCollaborationInfo && (
+          <div className="mb-2 p-2 bg-slate-50 dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-sm font-semibold flex items-center gap-1">
+                <Activity className="h-3.5 w-3.5" /> 실시간 협업 활동
+              </h3>
+              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setShowCollaborationInfo(false)}>
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            {recentUpdates.length > 0 ? (
+              <div className="space-y-1 text-xs">
+                {recentUpdates.map((update, index) => (
+                  <div key={index} className="flex items-center gap-1 text-muted-foreground">
+                    <MessageSquare className="h-3 w-3" />
+                    <span>세그먼트 #{update.id}가 업데이트됨</span>
+                    <span className="text-xs ml-auto">
+                      {new Date(update.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">아직 다른 사용자의 변경사항이 없습니다.</p>
+            )}
+          </div>
+        )}
         
         {/* 상태 필터 뱃지 */}
         <div className="flex flex-wrap gap-2 mt-2">
