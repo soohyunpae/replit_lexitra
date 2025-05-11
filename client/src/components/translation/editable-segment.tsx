@@ -206,12 +206,12 @@ export function EditableSegment(props: EditableSegmentProps) {
               ref={textareaRef}
               value={value}
               onChange={handleTextareaChange}
-              className="w-full font-mono resize-none focus-visible:ring-0 overflow-hidden no-scrollbar pt-[2px] pb-[28px] text-sm plaintext-textarea"
+              className="w-full font-mono resize-none focus-visible:ring-0 overflow-hidden no-scrollbar pt-[2px] text-sm plaintext-textarea"
               placeholder="Enter translation..."
             />
 
-            {/* 상태 뱃지를 번역문 안에 표시 - 체크 버튼 제거 및 기능 통합 */}
-            <div className="absolute bottom-2 right-2">
+            {/* 상태 뱃지를 번역문 오른쪽에 표시 - 체크 버튼 제거 및 기능 통합 */}
+            <div className="absolute right-2 top-0">
               <span
                 className={`text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer transition ${getStatusColor(liveSegment.status)}`}
                 onClick={(e) => {
