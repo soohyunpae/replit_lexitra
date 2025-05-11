@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Check, X, Languages } from "lucide-react";
 import { TranslationUnit, StatusType, OriginType } from "@/types";
 import { useSegmentContext } from "@/hooks/useSegmentContext";
+import { useAutoResize } from "@/hooks/useAutoResize";
 
 interface EditableSegmentProps {
   segment: TranslationUnit;
@@ -46,7 +47,9 @@ export function EditableSegment(props: EditableSegmentProps) {
   const [value, setValue] = useState(
     isSource ? liveSegment.source : liveSegment.target || "",
   );
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // 자동 리사이징 훅 사용
+  const { textareaRef, adjustHeight } = useAutoResize(value);
   const sourceTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   // origin이 undefined인 경우 처리를 위한 헬퍼 함수
@@ -116,11 +119,8 @@ export function EditableSegment(props: EditableSegmentProps) {
       onUpdate(newValue, newStatus as string, newOrigin as string);
     }
 
-    // 리사이즈
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
+    // 커스텀 훅의 adjustHeight 함수를 사용하여 리사이즈
+    adjustHeight();
   };
 
   // Update textarea height when segment source or target changes or on mount
