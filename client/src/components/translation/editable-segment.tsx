@@ -132,6 +132,19 @@ export function EditableSegment(props: EditableSegmentProps) {
       }, 0);
     }
   }, [liveSegment.target, isSource]);
+  
+  // Add window resize event listener to recalculate textarea height
+  useEffect(() => {
+    const resizeHandler = () => {
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      }
+    };
+
+    window.addEventListener("resize", resizeHandler);
+    return () => window.removeEventListener("resize", resizeHandler);
+  }, []);
 
   // Get status badge color based on status
   const getStatusColor = (status: string): string => {
