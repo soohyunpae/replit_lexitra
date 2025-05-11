@@ -30,6 +30,22 @@ const useSegmentUpdateMutation = (fileId: number | null) => {
       segmentId: number;
       data: Partial<TranslationUnit>;
     }) => {
+      // 1. 세그먼트가 존재하는지 먼저 확인 (404 방지)
+      const validateResponse = await apiRequest(
+        'GET',
+        `/api/segments/${segmentId}`
+      );
+      
+      // 세그먼트가 존재하지 않으면 일찍 에러 발생
+      if (!validateResponse.ok) {
+        if (validateResponse.status === 404) {
+          throw new Error(`Segment with ID ${segmentId} does not exist`);
+        } else {
+          throw new Error(`Failed to validate segment: ${validateResponse.status}`);
+        }
+      }
+      
+      // 2. 존재하면 업데이트 진행
       const response = await apiRequest(
         'PATCH',
         `/api/segments/${segmentId}`,

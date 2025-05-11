@@ -2086,6 +2086,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET 단일 세그먼트 조회 엔드포인트 추가
+  app.get(`${apiPrefix}/segments/:id`, verifyToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // 세그먼트 조회
+      const segment = await db.query.translationUnits.findFirst({
+        where: eq(schema.translationUnits.id, id)
+      });
+      
+      if (!segment) {
+        return res.status(404).json({ message: 'Segment not found' });
+      }
+      
+      return res.json(segment);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+
   app.patch(`${apiPrefix}/segments/:id`, verifyToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
