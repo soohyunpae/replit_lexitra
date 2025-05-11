@@ -143,29 +143,26 @@ export function DocSegment({
                 value={editedValue}
                 onChange={(e) => {
                   const newValue = e.target.value;
-                  // Immediate UI update
+                  // Only update local state on change
                   onEditValueChange?.(newValue);
+                }}
+                onBlur={(e) => {
+                  const newValue = e.target.value;
+                  if (!onUpdate) return;
 
-                  // Local state update without API call
-                  if (onUpdate) {
-                    const isValueChanged = newValue !== segment.target;
-                    if (!isValueChanged) return;
+                  const isValueChanged = newValue !== segment.target;
+                  if (!isValueChanged) return;
 
-                    const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
-                    const newOrigin = needsOriginChange ? "HT" : segment.origin;
+                  const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
+                  const newOrigin = needsOriginChange ? "HT" : segment.origin;
 
-                    // 이미 Reviewed였는데 편집하면 Edited로 변경, MT/100%/Fuzzy였는데 편집하면 Edited로 변경
-                    let newStatus = segment.status;
-                    if (isValueChanged) {
-                      if (segment.status === "Reviewed") {
-                        newStatus = "Edited";
-                      } else if (segment.status === "MT" || segment.status === "100%" || segment.status === "Fuzzy") {
-                        newStatus = "Edited";
-                      }
-
-                      onUpdate(newValue, newStatus, newOrigin);
-                    }
+                  let newStatus = segment.status;
+                  if (segment.status === "Reviewed" || ["MT", "100%", "Fuzzy"].includes(segment.status)) {
+                    newStatus = "Edited";
                   }
+
+                  // Only trigger update on blur
+                  onUpdate(newValue, newStatus, newOrigin);
                 }}
                 onKeyDown={handleKeyDown}
                 className="w-full p-2 pt-2 pb-12 resize-none border-0 shadow-none bg-transparent font-serif text-base"
