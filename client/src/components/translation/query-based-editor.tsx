@@ -179,6 +179,15 @@ export function QueryBasedEditor({
         queryKey: [`/api/files/${fileId}`]
       });
       
+      // WebSocket을 통해 다른 사용자에게 업데이트 알림
+      if (wsStatus === 'open') {
+        sendMessage({
+          type: 'segmentUpdate',
+          fileId,
+          segment: data,
+        });
+      }
+      
       // 상태 업데이트 후 편집 모드 종료
       setEditingId(null);
       
