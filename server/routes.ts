@@ -2131,6 +2131,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Notify WebSocket clients about the segment update
+      if (updatedSegment.fileId && (global as any).notifySegmentUpdate) {
+        const notified = (global as any).notifySegmentUpdate(
+          updatedSegment.fileId, 
+          updatedSegment
+        );
+        console.log(`WebSocket notification for segment ${id} ${notified ? 'sent' : 'not sent (no subscribers)'}`);
+      }
+      
       return res.json(updatedSegment);
     } catch (error) {
       return handleApiError(res, error);
@@ -2843,6 +2852,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Create HTTP server
   const httpServer = createServer(app);
+  
+  // Setup WebSocket server on the same HTTP server but with a distinct path
+  // to avoid conflicts with Vite's websocket
+  const wss = new WebSocketServer({ 
+    server: httpServer, 
+    path: '/ws' 
+  });
+  
+  // This will track connected clients by file ID for selective updates
+  const connectedClients = new Map<number, Set<WebSocket>>();
+  
+  // WebSocket connection handling
+  wss.on('connection', (ws: WebSocket) => {
+    console.log('WebSocket client connected');
+    let subscribedFileId: number | null = null;
+    
+    // Process incoming messages
+    ws.on('message', (message: string) => {
+      try {
+        const data = JSON.parse(message);
+        console.log('Received message:', data);
+        
+        // Handle file subscription
+        if (data.type === 'subscribe' && data.fileId) {
+          // Track which file this client is subscribed to
+          subscribedFileId = data.fileId;
+          
+          // Create a new set for this file if it doesn't exist
+          if (!connectedClients.has(data.fileId)) {
+            connectedClients.set(data.fileId, new Set());
+          }
+          
+          // Add this connection to the file's set
+          connectedClients.get(data.fileId)?.add(ws);
+          
+          console.log(`Client subscribed to file ID: ${data.fileId}`);
+          console.log(`Total subscribers for file: ${connectedClients.get(data.fileId)?.size}`);
+          
+          // Acknowledge the subscription
+          ws.send(JSON.stringify({
+            type: 'subscribed',
+            fileId: data.fileId
+          }));
+        }
+        
+        // Broadcast segment update to other clients
+        if (data.type === 'segmentUpdate' && data.fileId && data.segment) {
+          const fileClients = connectedClients.get(data.fileId);
+          
+          if (fileClients) {
+            console.log(`Broadcasting segment update to ${fileClients.size - 1} other clients`);
+            
+            // Send to all clients except the sender
+            fileClients.forEach(client => {
+              if (client !== ws && client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({
+                  type: 'segmentUpdate',
+                  segment: data.segment
+                }));
+              }
+            });
+          }
+        }
+        
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
+    });
+    
+    // Handle disconnection
+    ws.on('close', () => {
+      console.log('WebSocket client disconnected');
+      
+      // Remove from subscribed file
+      if (subscribedFileId !== null) {
+        const fileClients = connectedClients.get(subscribedFileId);
+        if (fileClients) {
+          fileClients.delete(ws);
+          
+          // If no clients left, remove the file entry
+          if (fileClients.size === 0) {
+            connectedClients.delete(subscribedFileId);
+          }
+          
+          console.log(`Client unsubscribed from file ID: ${subscribedFileId}`);
+          console.log(`Remaining subscribers: ${fileClients.size}`);
+        }
+      }
+    });
+    
+    // Handle errors
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+    });
+    
+    // Send welcome message
+    ws.send(JSON.stringify({
+      type: 'info',
+      message: 'Connected to Lexitra translation server',
+      timestamp: new Date().toISOString()
+    }));
+  });
+  
+  // Also add a global function to notify clients about segment updates
+  // This will be used by the API endpoints to notify clients
+  (global as any).notifySegmentUpdate = (fileId: number, segment: any) => {
+    const fileClients = connectedClients.get(fileId);
+    
+    if (fileClients && fileClients.size > 0) {
+      console.log(`Notifying ${fileClients.size} clients about segment update from API`);
+      
+      fileClients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: 'segmentUpdate',
+            segment
+          }));
+        }
+      });
+      
+      return true;
+    }
+    
+    return false;
+  };
+  
   return httpServer;
 }

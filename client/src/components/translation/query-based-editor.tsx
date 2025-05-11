@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { TranslationUnit, StatusType, OriginType } from '@/types';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { DocSegment } from './doc-segment-authenticated';
 import { useToast } from '@/hooks/use-toast';
+import { useWebSocket } from '@/hooks/useWebSocket';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -13,7 +14,8 @@ import {
   Check, X, MessageCircle, FileEdit, Save, Download,
   Languages, Eye, EyeOff, Smartphone, Monitor, FileText,
   ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
-  RotateCw
+  RotateCw,
+  Wifi, WifiOff
 } from 'lucide-react';
 
 interface QueryBasedEditorProps {
@@ -40,6 +42,60 @@ export function QueryBasedEditor({
   const [editedValue, setEditedValue] = useState<string>('');
   const [showSource, setShowSource] = useState(true);
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
+  
+  // WebSocket connection for real-time updates
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${protocol}//${window.location.host}/ws`;
+  
+  const {
+    status: wsStatus,
+    sendMessage,
+    lastMessage,
+    connect: wsConnect,
+    disconnect: wsDisconnect
+  } = useWebSocket(wsUrl, {
+    onOpen: () => {
+      console.log('WebSocket connected');
+      sendMessage({
+        type: 'subscribe',
+        fileId
+      });
+      
+      toast({
+        title: '실시간 연결됨',
+        description: '다른 편집자의 변경사항이 자동으로 표시됩니다.',
+        variant: 'default',
+      });
+    },
+    onMessage: (data) => {
+      if (data.type === 'segmentUpdate' && data.segment && data.segment.fileId === fileId) {
+        // 다른 사용자의 세그먼트 업데이트를 받았을 때 처리
+        console.log('Received segment update via WebSocket:', data.segment);
+        
+        // 업데이트된 세그먼트가 지금 편집 중인 세그먼트가 아닌 경우에만 적용
+        // (편집 중인 세그먼트는 로컬 상태가 우선)
+        if (data.segment.id !== editingId) {
+          // React Query의 쿼리 캐시 업데이트
+          queryClient.setQueryData(['segments', fileId], (oldData: TranslationUnit[] | undefined) => {
+            if (!oldData) return oldData;
+            
+            return oldData.map(segment => 
+              segment.id === data.segment.id ? data.segment : segment
+            );
+          });
+        }
+      }
+    },
+    onClose: () => {
+      console.log('WebSocket disconnected');
+      toast({
+        title: '실시간 연결 종료됨',
+        description: '다른 편집자의 변경사항이 더 이상 자동으로 표시되지 않습니다.',
+        variant: 'destructive',
+      });
+    },
+    reconnectAttempts: 5
+  });
 
   // React Query를 사용하여 세그먼트 데이터 가져오기
   const {
