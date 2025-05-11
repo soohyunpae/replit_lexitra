@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileX, AlertTriangle, LayoutTemplate, Blocks } from "lucide-react";
+import { SegmentProvider } from "@/hooks/useSegmentContext";
 
 // Extended File type with segments for the translation interface
 interface ExtendedFile extends File {
@@ -448,28 +449,30 @@ export default function Translation() {
         </div>
         
         <div className="flex-1 overflow-auto">
-          {editorMode === 'segment' ? (
-            <NewTranslationEditor
-              fileName={file.name}
-              sourceLanguage={project.sourceLanguage}
-              targetLanguage={project.targetLanguage}
-              segments={(file as ExtendedFile).segments || []}
-              onSave={() => saveProject.mutate()}
-              onExport={() => exportProject.mutate()}
-            />
-          ) : (
-            <DocReviewEditor
-              fileName={file.name}
-              sourceLanguage={project.sourceLanguage}
-              targetLanguage={project.targetLanguage}
-              segments={(file as ExtendedFile).segments || []}
-              onSave={() => saveProject.mutate()}
-              onExport={() => exportProject.mutate()}
-              fileId={Number(fileId)}
-              tmMatches={tmMatches}
-              glossaryTerms={glossaryTerms}
-            />
-          )}
+          <SegmentProvider initialSegments={(file as ExtendedFile).segments || []}>
+            {editorMode === 'segment' ? (
+              <NewTranslationEditor
+                fileName={file.name}
+                sourceLanguage={project.sourceLanguage}
+                targetLanguage={project.targetLanguage}
+                segments={(file as ExtendedFile).segments || []}
+                onSave={() => saveProject.mutate()}
+                onExport={() => exportProject.mutate()}
+              />
+            ) : (
+              <DocReviewEditor
+                fileName={file.name}
+                sourceLanguage={project.sourceLanguage}
+                targetLanguage={project.targetLanguage}
+                segments={(file as ExtendedFile).segments || []}
+                onSave={() => saveProject.mutate()}
+                onExport={() => exportProject.mutate()}
+                fileId={Number(fileId)}
+                tmMatches={tmMatches}
+                glossaryTerms={glossaryTerms}
+              />
+            )}
+          </SegmentProvider>
         </div>
       </div>
     </MainLayout>

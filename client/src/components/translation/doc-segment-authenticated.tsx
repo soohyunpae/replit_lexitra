@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { TranslationUnit, StatusType, OriginType } from '@/types';
 import { cn } from '@/lib/utils';
 import { apiRequest } from '@/lib/queryClient';
+import { useSegmentContext } from '@/hooks/useSegmentContext';
 
 // 인증 문제를 해결한 DocSegment 컴포넌트 수정 버전
 // 모든 fetch 호출을 apiRequest로 교체하여 인증 요청 지원
@@ -343,7 +344,9 @@ export function DocSegment({
                     // 부모로부터 전달된 토글 함수 사용
                     onToggleStatus();
                   } else {
-                    // 기존 토글 로직 사용 (폴백)
+                    // 공유 컨텍스트를 사용한 상태 업데이트
+                    const { updateSegment: contextUpdateSegment } = useSegmentContext();
+                    
                     const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
                     
                     // MT, 100%, Fuzzy일 경우 origin도 HT로 변경
@@ -352,29 +355,41 @@ export function DocSegment({
                     
                     const updateStatus = async () => {
                       try {
-                        // 인증된 API 요청으로 서버에 업데이트
-                        const response = await apiRequest(
-                          'PATCH',
-                          `/api/segments/${segment.id}`,
-                          {
-                            target: segment.target,
-                            status: newStatus,
-                            origin: newOrigin
-                          }
-                        );
+                        // 공유 컨텍스트의 업데이트 함수 사용
+                        const updatedSegment = await contextUpdateSegment(segment.id, {
+                          target: segment.target,
+                          status: newStatus,
+                          origin: newOrigin
+                        });
                         
-                        // 응답 확인 및 에러 처리 추가
-                        if (!response.ok) {
-                          throw new Error(`Server responded with status: ${response.status}`);
-                        }
+                        console.log('Updated segment with shared context:', updatedSegment);
                         
-                        const updatedSegment = await response.json();
-                        console.log('Updated segment:', updatedSegment);
-                        
-                        // 로컬 상태 업데이트 - 서버에서 반환된 값으로 업데이트
+                        // 로컬 컴포넌트 상태도 업데이트 (필요한 경우)
                         onUpdate?.(updatedSegment.target || segment.target || "", updatedSegment.status, updatedSegment.origin);
                       } catch (error) {
                         console.error("Failed to toggle segment status:", error);
+                        
+                        // 에러 발생 시 폴백으로 기존 방식 사용
+                        try {
+                          const response = await apiRequest(
+                            'PATCH',
+                            `/api/segments/${segment.id}`,
+                            {
+                              target: segment.target,
+                              status: newStatus,
+                              origin: newOrigin
+                            }
+                          );
+                          
+                          if (!response.ok) {
+                            throw new Error(`Server responded with status: ${response.status}`);
+                          }
+                          
+                          const updatedSegment = await response.json();
+                          onUpdate?.(updatedSegment.target || segment.target || "", updatedSegment.status, updatedSegment.origin);
+                        } catch (fallbackError) {
+                          console.error("Fallback also failed:", fallbackError);
+                        }
                       }
                     };
                     

@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useMobile } from '@/hooks/use-mobile';
 import { SidePanel } from './side-panel';
+import { useSegmentContext } from '@/hooks/useSegmentContext';
 
 interface DocReviewEditorProps {
   fileName: string;
@@ -197,6 +198,9 @@ export function DocReviewEditor({
   // Keep track of which panel was scrolled last
   const lastScrolledPanel = useRef<'left' | 'right' | null>(null);
   
+  // 공유 세그먼트 컨텍스트 사용
+  const { updateSegment: contextUpdateSegment } = useSegmentContext();
+  
   // Use our custom hook for managing editing state
   const {
     editingId,
@@ -234,9 +238,9 @@ export function DocReviewEditor({
     originalCancelEditing();
   };
   
-  // 수정된 저장 함수 - 하이라이트 제거 및 상태 업데이트
+  // 수정된 저장 함수 - 하이라이트 제거 및 상태 업데이트 (공유 컨텍스트 사용)
   const originalUpdateSegment = updateSegment;
-  const customUpdateSegment = (id: number, value: string) => {
+  const customUpdateSegment = async (id: number, value: string) => {
     // 현재 편집 중인 세그먼트 찾기
     const segment = segments.find(s => s.id === id);
     if (segment) {
@@ -244,17 +248,42 @@ export function DocReviewEditor({
       const isValueChanged = value !== segment.target;
       
       // 값이 변경되었고 상태가 'Reviewed'였다면 'Edited'로 변경
+      let newStatus = segment.status;
       if (isValueChanged && segment.status === 'Reviewed') {
+        newStatus = 'Edited';
         setSegmentStatuses(prev => ({
           ...prev,
           [id]: 'Edited'
         }));
       }
+      
+      try {
+        // 공유 컨텍스트의 업데이트 함수 사용
+        await contextUpdateSegment(id, {
+          target: value,
+          status: newStatus,
+          origin: isValueChanged && newStatus === 'Edited' ? 'HT' : segment.origin
+        });
+        
+        // UI 상태 업데이트
+        setHighlightedSegmentId(null);
+      } catch (error) {
+        console.error("Failed to update segment:", error);
+        toast({
+          title: "Error",
+          description: "Failed to update segment",
+          variant: "destructive"
+        });
+        
+        // 에러 발생 시 폴백으로 원래 방식 사용
+        originalUpdateSegment(id, value);
+        setHighlightedSegmentId(null);
+      }
+    } else {
+      // 세그먼트를 찾지 못한 경우 원래 방식으로 폴백
+      originalUpdateSegment(id, value);
+      setHighlightedSegmentId(null);
     }
-    
-    // 원래 업데이트 함수 호출
-    originalUpdateSegment(id, value);
-    setHighlightedSegmentId(null);
   };
   
   // Update status counts when segments change

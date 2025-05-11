@@ -28,6 +28,7 @@ import {
   type StatusType,
 } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import { useSegmentContext } from "@/hooks/useSegmentContext";
 import {
   Select,
   SelectContent,
@@ -275,14 +276,15 @@ export function NewTranslationEditor({
     }
   };
 
-  // Handle segment update
+  // Handle segment update - 공유 컨텍스트 사용
+  const { updateSegment: contextUpdateSegment } = useSegmentContext();
+  
   const handleSegmentUpdate = async (
     id: number,
     target: string,
     status?: string,
     origin?: string,
   ) => {
-    // Update segment in database
     try {
       // Find current segment to check if it was modified
       const currentSegment = localSegments.find((s) => s.id === id);
@@ -295,7 +297,6 @@ export function NewTranslationEditor({
       }
 
       // Set origin to HT if this is a human edit and it's marked as Reviewed
-      // Only update origin if explicitly provided or if it's a human edit
       let updatedOrigin = origin;
       if (!updatedOrigin && wasModified) {
         // If segment was manually edited, set origin to HT
@@ -306,47 +307,19 @@ export function NewTranslationEditor({
             : currentSegment?.origin;
       }
 
-      const payload: any = {
+      // 공유 컨텍스트의 업데이트 함수 사용
+      const updatedSegment = await contextUpdateSegment(id, {
         target,
-        status: updatedStatus || "MT", // Ensure status is always a string value
-      };
+        status: updatedStatus || "MT",
+        origin: updatedOrigin,
+      });
 
-      if (updatedOrigin) {
-        payload.origin = updatedOrigin;
-      }
-
-      const response = await apiRequest(
-        "PATCH",
-        `/api/segments/${id}`,
-        payload,
-      );
-
-      const updatedSegment = await response.json();
-
-      // Update local state with type-safe approach
-      setLocalSegments((prev) =>
-        prev.map((segment) => {
-          if (segment.id === id) {
-            return {
-              ...segment,
-              target,
-              status: (updatedStatus as string) || "MT", // Type assertion to fix TypeScript error
-              origin: updatedOrigin || segment.origin || "MT",
-              modified: true, // Mark as modified
-            };
-          }
-          return segment;
-        }),
-      );
-
-      // If this is the currently selected segment being updated,
-      // update history tracking if the translation changed
+      // 히스토리 트래킹 - 공유 컨텍스트에도 이 기능을 추가할 수 있음
       const oldTarget = currentSegment?.target;
       if (selectedSegmentId === id && oldTarget && oldTarget !== target) {
         console.log("Recording segment history for:", id, target);
 
-        // Only store the previous version if it doesn't already exist
-        // This ensures we keep the original version, not intermediate ones
+        // 이전 버전이 없을 경우에만 저장
         if (!previousVersions[id]) {
           setPreviousVersions((prev) => ({
             ...prev,
