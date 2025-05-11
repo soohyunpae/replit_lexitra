@@ -153,22 +153,40 @@ export function EditableSegment({
       className={`rounded-md p-3 mb-3 h-full w-full flex flex-col ${segment.status === "Reviewed" ? "bg-blue-50 dark:bg-blue-950/30" : isSelected ? "bg-accent/90" : "bg-card"} transition-colors ${!isSource && !segment.target ? "border border-dashed border-yellow-400" : ""}`}
       onClick={onSelect}
     >
-      <div className="flex justify-between items-start mb-2">
-        <div className="flex items-center">
-          {!isSource && onCheckChange && (
-            <div className="mr-2" onClick={handleCheckboxClick}>
-              <Checkbox 
-                checked={isChecked} 
-                onCheckedChange={onCheckChange}
-                className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-              />
-            </div>
-          )}
-          <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded-md mr-2">{index}</span>
-          {!isSource && (
-            <div className="flex items-center space-x-1.5">
+      {/* 원문과 번역문을 나란히 배치 */}
+      {!isSource ? (
+        <div className="flex">
+          {/* 번역문 입력 영역 */}
+          <div className="flex-grow relative">
+            <Textarea
+              ref={textareaRef}
+              value={value}
+              onChange={handleTextareaChange}
+              className="min-h-[60px] font-mono resize-none focus-visible:ring-offset-0 focus-visible:ring-1 overflow-hidden no-scrollbar"
+              placeholder="Enter translation..."
+            />
+          </div>
+          
+          {/* 오른쪽 컨트롤 열 */}
+          <div className="ml-2 pl-2 flex flex-col items-center justify-start min-w-[80px] border-l border-border">
+            {/* 세그먼트 번호 */}
+            <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded-md mb-2 w-full text-center">{index}</span>
+            
+            {/* 체크박스 */}
+            {onCheckChange && (
+              <div className="mb-2" onClick={handleCheckboxClick}>
+                <Checkbox 
+                  checked={isChecked} 
+                  onCheckedChange={onCheckChange}
+                  className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                />
+              </div>
+            )}
+            
+            {/* 상태 뱃지 */}
+            <div className="mb-2 w-full flex justify-center">
               <span 
-                className={`text-xs px-1.5 py-0.5 rounded-md ${getStatusColor(segment.status)} cursor-pointer`}
+                className={`text-xs px-1.5 py-0.5 rounded-md ${getStatusColor(segment.status)} cursor-pointer w-full text-center`}
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleStatus();
@@ -177,25 +195,25 @@ export function EditableSegment({
               >
                 {segment.status}
               </span>
-              {/* Removed the Modified badge as per requirements */}
             </div>
-          )}
-        </div>
-        
-        {!isSource && (
-          <div className="flex space-x-1">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleStatus();
-              }} 
-              className="h-7 w-7 p-0"
-              title={`Mark as ${segment.status === "Reviewed" ? "Edited" : "Reviewed"}`}
-            >
-              <Check className={`h-4 w-4 ${segment.status === "Reviewed" ? "text-green-600" : "text-muted-foreground"}`} />
-            </Button>
+            
+            {/* 체크 버튼 */}
+            <div className="flex justify-center mb-1">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleStatus();
+                }} 
+                className="h-7 w-7 p-0"
+                title={`Mark as ${segment.status === "Reviewed" ? "Edited" : "Reviewed"}`}
+              >
+                <Check className={`h-4 w-4 ${segment.status === "Reviewed" ? "text-green-600" : "text-muted-foreground"}`} />
+              </Button>
+            </div>
+            
+            {/* MT 번역 버튼 */}
             {!segment.target && onTranslateWithGPT && (
               <Button 
                 variant="ghost" 
@@ -210,20 +228,6 @@ export function EditableSegment({
               </Button>
             )}
           </div>
-        )}
-      </div>
-      
-      {!isSource ? (
-        <div className="relative">
-          <Textarea
-            ref={textareaRef}
-            value={value}
-            onChange={handleTextareaChange}
-            className="min-h-[60px] font-mono resize-none focus-visible:ring-offset-0 focus-visible:ring-1 overflow-hidden no-scrollbar pb-10"
-            placeholder="Enter translation..."
-          />
-          
-          
         </div>
       ) : (
         <div className="font-mono text-sm whitespace-pre-wrap break-words min-h-[60px] h-full w-full">
