@@ -91,7 +91,7 @@ export function DocSegment({
   }, [isEditing, editedValue]);
   
   // Handle keyboard shortcuts
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = React.useCallback((e: React.KeyboardEvent) => {
     // Save on Ctrl+Enter or Cmd+Enter
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && onSave) {
       e.preventDefault();
@@ -103,7 +103,10 @@ export function DocSegment({
       e.preventDefault();
       onCancel();
     }
-  };
+  }, [onSave, onCancel]);
+
+  // Memoize the status check to prevent unnecessary re-renders
+  const isReviewed = React.useMemo(() => segment.status === 'Reviewed', [segment.status]);
   
   // Document mode display
   if (isDocumentMode) {

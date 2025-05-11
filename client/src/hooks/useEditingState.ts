@@ -40,8 +40,15 @@ export function useEditingState(
     const needsOriginChange = (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
     const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : segment.origin;
 
-    // Optimistic update
-    updateLocalSegment(segmentId, { status: newStatus, origin: newOrigin });
+    // Batch updates together
+    const updates = { status: newStatus, origin: newOrigin, target: currentTarget };
+    updateLocalSegment(segmentId, updates);
+    
+    // Pre-warm cache
+    queryClient.setQueryData([`/api/segments/${segmentId}`], {
+      ...segment,
+      ...updates
+    });
 
     try {
       const response = await apiRequest(
