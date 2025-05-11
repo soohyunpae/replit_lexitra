@@ -100,9 +100,24 @@ const useSegmentUpdateMutation = (fileId: number | null) => {
         });
       }
     },
-    // 에러 발생 시 롤백
+    // 에러 발생 시 롤백 및 상세 에러 처리
     onError: (error, variables, context) => {
       console.error('Error updating segment:', error);
+      
+      // 사용자 친화적 에러 메시지 표시
+      let errorMessage = 'Failed to update segment';
+      if (error instanceof Error) {
+        if (error.message.includes('404') || error.message.includes('not found')) {
+          errorMessage = `Segment ID ${variables.segmentId} not found. Please refresh the page.`;
+          console.warn('Segment not found error - this might happen if the segment was deleted or the ID is incorrect');
+        }
+      }
+      
+      // Toast 메시지 표시 (전역 함수 직접 호출 대신 컴포넌트에서 처리할 수 있게 이벤트 발생)
+      const errorEvent = new CustomEvent('segmentUpdateError', { 
+        detail: { message: errorMessage, segmentId: variables.segmentId }
+      });
+      window.dispatchEvent(errorEvent);
       
       // 이전 상태로 롤백
       if (context?.previousSegments) {
