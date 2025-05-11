@@ -13,7 +13,6 @@ import Home from "@/pages/home";
 import Projects from "@/pages/projects";
 import Project from "@/pages/project";
 import Translation from "@/pages/translation";
-import QueryTranslation from "@/pages/query-translation"; // 새 React Query 기반 번역 페이지
 import GlossariesIndex from "@/pages/glossaries";
 // Removed import for entries page
 // Removed import for resources page
@@ -61,9 +60,6 @@ function Router() {
       <ProtectedRoute path="/projects" component={Projects} />
       <ProtectedRoute path="/projects/:id" component={Project} />
       <ProtectedRoute path="/translation/:fileId" component={Translation} />
-      
-      {/* 새로운 React Query 기반 번역 페이지 */}
-      <ProtectedRoute path="/query-translation/:fileId" component={QueryTranslation} />
       
       {/* New unified glossary page */}
       <ProtectedRoute path="/glossaries" component={GlossariesUnified} />

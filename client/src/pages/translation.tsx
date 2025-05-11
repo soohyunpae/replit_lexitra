@@ -449,7 +449,7 @@ export default function Translation() {
         </div>
         
         <div className="flex-1 overflow-auto">
-          <SegmentProvider fileId={Number(fileId)}>
+          <SegmentProvider initialSegments={(file as ExtendedFile).segments || []}>
             {editorMode === 'segment' ? (
               <NewTranslationEditor
                 fileName={file.name}

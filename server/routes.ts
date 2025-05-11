@@ -14,7 +14,6 @@ import { isAdmin, isResourceOwnerOrAdmin, canManageProject, errorHandler } from 
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { WebSocketServer, WebSocket } from "ws";
 
 // 파일 경로를 위한 변수 설정
 const REPO_ROOT = process.cwd();
@@ -2081,26 +2080,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const fileStream = fs.createReadStream(filePath);
       fileStream.pipe(res);
-    } catch (error) {
-      return handleApiError(res, error);
-    }
-  });
-
-  // GET 단일 세그먼트 조회 엔드포인트 추가
-  app.get(`${apiPrefix}/segments/:id`, verifyToken, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      
-      // 세그먼트 조회
-      const segment = await db.query.translationUnits.findFirst({
-        where: eq(schema.translationUnits.id, id)
-      });
-      
-      if (!segment) {
-        return res.status(404).json({ message: 'Segment not found' });
-      }
-      
-      return res.json(segment);
     } catch (error) {
       return handleApiError(res, error);
     }
