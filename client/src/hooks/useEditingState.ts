@@ -82,7 +82,33 @@ export function useEditingState(
     }
   }, [segments, fileId, onSegmentUpdate]);
 
-  const updateSegment = useCallback(async (segmentId: number, newValue: string) => {
+  const debouncedUpdate = useCallback(
+  debounce(async (segmentId: number, newValue: string, segment: TranslationUnit) => {
+    try {
+      const response = await apiRequest(
+        "PATCH", 
+        `/api/segments/${segmentId}`, 
+        { 
+          target: newValue,
+          status: segment.status,
+          origin: segment.origin
+        }
+      );
+      
+      const updatedSegment = await response.json();
+      queryClient.setQueryData([`/api/segments/${segmentId}`], updatedSegment);
+      
+      if (onSegmentUpdate) {
+        onSegmentUpdate(updatedSegment);
+      }
+    } catch (error) {
+      console.error('Error updating segment:', error);
+    }
+  }, 500),
+  [onSegmentUpdate]
+);
+
+const updateSegment = useCallback(async (segmentId: number, newValue: string) => {
     const segment = segments.find(s => s.id === segmentId);
     if (!segment) return;
 
@@ -91,6 +117,12 @@ export function useEditingState(
       setEditingId(null);
       return;
     }
+    
+    // Immediate local update
+    updateLocalSegment(segmentId, { target: newValue });
+    
+    // Debounced API call
+    debouncedUpdate(segmentId, newValue, segment);
 
     const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
     const newOrigin = isValueChanged && needsOriginChange ? "HT" : segment.origin;
