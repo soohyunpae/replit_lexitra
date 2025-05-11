@@ -83,10 +83,11 @@ export function useEditingState(
     }
   }, [segments, fileId, onSegmentUpdate]);
 
-  import debounce from 'lodash/debounce';
-
-// Save state type to determine auto/manual save mode
+  // Save state type to determine auto/manual save mode
 type SaveMode = 'auto' | 'manual';
+
+// Import debounce from lodash
+import { debounce } from 'lodash';
 
 const debouncedUpdate = useCallback(
   debounce(async (segmentId: number, newValue: string, segment: TranslationUnit) => {
