@@ -1,0 +1,74 @@
+# ✅ Segment Editor UI 개선안 (Lexitra)
+
+이 문서는 Lexitra의 Segment Editor 모드에서 UI 복잡도를 줄이고, 사용성과 시각적 정렬을 개선하기 위한 구체적인 개선 방안을 정리한 것이다.
+
+---
+
+## 🎯 주요 목표
+
+- 원문과 번역문을 나란히 대조하며 작업하기 쉬운 인터페이스
+- 불필요한 시각적 요소를 줄여 깔끔한 레이아웃 제공
+- 주요 컨트롤 요소는 명확하게, 부가적 정보는 작고 정돈되게 유지
+- 상태 관리 워크플로우를 간결하게 통합
+
+---
+
+## ✅ UI 구성 변경 제안
+
+### 1. 세그먼트 번호
+- 기존: 우측에 배치되어 눈에 잘 띄지 않음
+- 변경: 원문 열 왼쪽에 별도 column을 추가해 그곳에 고정, `text-xs text-gray-400 text-right w-6` 등으로 작게 정렬
+- 선택용 체크박스도 이 열에 함께 배치
+
+```tsx
+<div className="flex items-center justify-end w-8 text-xs text-gray-400 pr-1">
+  <input type="checkbox" checked={selected} onChange={...} />
+  {segmentIndex}
+</div>
+```
+
+---
+
+### 2. 원문/번역문 정렬
+- grid 기반 레이아웃으로 1:1 비율 유지: `grid-cols-[min-content_1fr_1fr]`
+- 중앙 분할선을 드래그해 비율 조정도 가능하도록 확장 가능
+- 각 세그먼트는 한 줄에 세 부분으로 구성: 번호 / 원문 / 번역문
+- row 높이 통일로 시각적으로 비교가 쉬움
+
+---
+
+### 3. 체크 버튼 제거 → 상태 뱃지와 기능 통합
+- 기존의 별도 `✔` 버튼 제거
+- 상태 뱃지를 클릭하면 상태 변경 기능 수행
+- 뱃지는 번역문 영역 내부, 하단에 위치함
+- 클릭 규칙:
+  - `MT`, `Fuzzy`, `100%`, `Edited` → 클릭하면 `Reviewed`로 변경
+  - `Reviewed` → 클릭하면 `Edited`로 변경
+  - `Rejected` → 클릭 불가 (시각 표시만)
+
+```tsx
+<span
+  className={`text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer transition
+    ${statusClassMap[segment.status]}`}
+  onClick={() => {
+    if (segment.status === 'Rejected') return;
+    const newStatus = segment.status === 'Reviewed' ? 'Edited' : 'Reviewed';
+    updateSegment(segment.id, { status: newStatus });
+  }}
+>
+  {segment.status}
+</span>
+```
+
+---
+
+## 🧪 기대 효과
+
+- 컨트롤 수 최소화 → UI 밀도 감소
+- 작업 흐름 중심 버튼만 남겨 사용자 집중도 향상
+- 상태별 색상과 뱃지 유지로 시각적 일관성 제공
+- 모바일 대응 및 텍스트 비교 편의성 향상
+
+---
+
+이 개선안은 실제 SegmentEditor 및 DocReviewEditor에 동일하게 적용할 수 있으며, 컴포넌트 수준에서도 재사용 가능한 구조로 정리 가능하다.

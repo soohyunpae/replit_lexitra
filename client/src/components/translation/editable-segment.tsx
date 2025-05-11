@@ -46,6 +46,11 @@ export function EditableSegment(props: EditableSegmentProps) {
   const [value, setValue] = useState(isSource ? liveSegment.source : liveSegment.target || "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
+  // origin이 undefined인 경우 처리를 위한 헬퍼 함수
+  const isOriginInList = (origin: string | undefined, list: string[]): boolean => {
+    return !!origin && list.includes(origin);
+  };
+  
   // 최신 데이터 동기화
   useEffect(() => {
     if (!isSource) {
@@ -64,10 +69,10 @@ export function EditableSegment(props: EditableSegmentProps) {
   const toggleStatus = () => {
     if (!isSource && onUpdate) {
       const newStatus = liveSegment.status === "Reviewed" ? "Edited" : "Reviewed";
-      const needsOriginChange = STATUS_NEED_CHANGE.includes(liveSegment.origin);
-      const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : liveSegment.origin;
+      const needsOriginChange = isOriginInList(liveSegment.origin, STATUS_NEED_CHANGE);
+      const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : liveSegment.origin || "HT";
       
-      onUpdate(value, newStatus, newOrigin);
+      onUpdate(value, newStatus, newOrigin as string);
     }
   };
   
@@ -78,17 +83,17 @@ export function EditableSegment(props: EditableSegmentProps) {
     
     if (!isSource && onUpdate) {
       const isValueChanged = newValue !== liveSegment.target;
-      const needsOriginChange = STATUS_NEED_CHANGE.includes(liveSegment.origin);
-      const newOrigin = isValueChanged && needsOriginChange ? "HT" : liveSegment.origin;
+      const needsOriginChange = isOriginInList(liveSegment.origin, STATUS_NEED_CHANGE);
+      const newOrigin = isValueChanged && needsOriginChange ? "HT" : liveSegment.origin || "HT";
       
-      let newStatus = liveSegment.status;
+      let newStatus = liveSegment.status || "Edited";
       if (isValueChanged) {
-        if (liveSegment.status === "Reviewed" || STATUS_NEED_CHANGE.includes(liveSegment.status)) {
+        if (liveSegment.status === "Reviewed" || isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)) {
           newStatus = "Edited";
         }
       }
       
-      onUpdate(newValue, newStatus, newOrigin);
+      onUpdate(newValue, newStatus as string, newOrigin as string);
     }
     
     // 리사이즈
@@ -157,31 +162,19 @@ export function EditableSegment(props: EditableSegmentProps) {
 
   return (
     <div
-      className={`rounded-md p-3 mb-3 h-full w-full flex flex-col ${liveSegment.status === "Reviewed" ? "bg-blue-50 dark:bg-blue-950/30" : isSelected ? "bg-accent/90" : "bg-card"} transition-colors ${!isSource && !liveSegment.target ? "border border-dashed border-yellow-400" : ""}`}
+      className={`rounded-md p-3 mb-3 h-full w-full ${liveSegment.status === "Reviewed" ? "bg-blue-50 dark:bg-blue-950/30" : isSelected ? "bg-accent/90" : "bg-card"} transition-colors ${!isSource && !liveSegment.target ? "border border-dashed border-yellow-400" : ""}`}
       onClick={onSelect}
     >
-      {/* 원문과 번역문을 나란히 배치 */}
+      {/* grid 기반 레이아웃 적용 */}
       {!isSource ? (
-        <div className="flex">
-          {/* 번역문 입력 영역 */}
-          <div className="flex-grow relative">
-            <Textarea
-              ref={textareaRef}
-              value={value}
-              onChange={handleTextareaChange}
-              className="min-h-[60px] font-mono resize-none focus-visible:ring-offset-0 focus-visible:ring-1 overflow-hidden no-scrollbar"
-              placeholder="Enter translation..."
-            />
-          </div>
-          
-          {/* 오른쪽 컨트롤 열 */}
-          <div className="ml-2 pl-2 flex flex-col items-center justify-start min-w-[80px] border-l border-border">
-            {/* 세그먼트 번호 */}
-            <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded-md mb-2 w-full text-center">{index}</span>
+        <div className="grid grid-cols-[min-content_1fr] gap-x-4">
+          {/* 세그먼트 번호와 체크박스를 왼쪽에 배치 */}
+          <div className="flex flex-col items-end justify-start space-y-2 w-8 text-xs text-gray-400 pr-1">
+            <span className="font-mono">{index}</span>
             
             {/* 체크박스 */}
             {onCheckChange && (
-              <div className="mb-2" onClick={handleCheckboxClick}>
+              <div onClick={handleCheckboxClick}>
                 <Checkbox 
                   checked={isChecked} 
                   onCheckedChange={onCheckChange}
@@ -189,60 +182,64 @@ export function EditableSegment(props: EditableSegmentProps) {
                 />
               </div>
             )}
+          </div>
+          
+          {/* 번역문 입력 영역 */}
+          <div className="relative">
+            <Textarea
+              ref={textareaRef}
+              value={value}
+              onChange={handleTextareaChange}
+              className="min-h-[60px] w-full font-mono resize-none focus-visible:ring-offset-0 focus-visible:ring-1 overflow-hidden no-scrollbar"
+              placeholder="Enter translation..."
+            />
             
-            {/* 상태 뱃지 - 최신 데이터 참조 */}
-            <div className="mb-2 w-full flex justify-center">
+            {/* 상태 뱃지를 번역문 안에 표시 - 체크 버튼 제거 및 기능 통합 */}
+            <div className="absolute bottom-2 right-2">
               <span 
-                className={`text-xs px-1.5 py-0.5 rounded-md ${getStatusColor(liveSegment.status)} cursor-pointer w-full text-center`}
+                className={`text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer transition ${getStatusColor(liveSegment.status)}`}
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (liveSegment.status === 'Rejected') return; // Rejected는 클릭 불가
                   toggleStatus();
                 }}
                 title={`Click to toggle status (${liveSegment.status === "Reviewed" ? "Edited" : "Reviewed"})`}
               >
                 {liveSegment.status}
               </span>
+              
+              {/* MT 번역 버튼만 유지 */}
+              {!liveSegment.target && onTranslateWithGPT && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTranslateWithGPT();
+                  }} 
+                  className="h-7 w-7 p-0 ml-1"
+                >
+                  <Languages className="h-4 w-4" />
+                </Button>
+              )}
             </div>
-            
-            {/* 체크 버튼 - 최신 데이터 참조 */}
-            <div className="flex justify-center mb-1">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleStatus();
-                }} 
-                className="h-7 w-7 p-0"
-                title={`Mark as ${liveSegment.status === "Reviewed" ? "Edited" : "Reviewed"}`}
-              >
-                <Check className={`h-4 w-4 ${liveSegment.status === "Reviewed" ? "text-green-600" : "text-muted-foreground"}`} />
-              </Button>
-            </div>
-            
-            {/* MT 번역 버튼 - 최신 데이터 참조 */}
-            {!liveSegment.target && onTranslateWithGPT && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTranslateWithGPT();
-                }} 
-                className="h-7 w-7 p-0"
-              >
-                <Languages className="h-4 w-4" />
-              </Button>
-            )}
           </div>
         </div>
       ) : (
-        <div className="font-mono text-sm whitespace-pre-wrap break-words min-h-[60px] h-full w-full">
-          {value || (
-            <span className="text-muted-foreground italic">
-              {isSource ? "No source text" : "No translation yet"}
-            </span>
-          )}
+        <div className="grid grid-cols-[min-content_1fr] gap-x-4">
+          {/* 원문 세그먼트 번호 */}
+          <div className="flex items-start justify-end w-8 text-xs text-gray-400 pr-1 font-mono">
+            {index}
+          </div>
+          
+          {/* 원문 텍스트 */}
+          <div className="font-mono text-sm whitespace-pre-wrap break-words min-h-[60px]">
+            {value || (
+              <span className="text-muted-foreground italic">
+                {isSource ? "No source text" : "No translation yet"}
+              </span>
+            )}
+          </div>
         </div>
       )}
     </div>
