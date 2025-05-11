@@ -20,7 +20,8 @@ const SegmentContext = createContext<SegmentContextType | undefined>(undefined);
 const DEBOUNCE_DELAY = 300;
 
 // 세그먼트 업데이트 mutation 훅
-function useSegmentUpdateMutation(fileId: number | null) {
+// 컴포넌트가 아닌 함수에 대해서는 이름을 변경하지 않도록 하여 Hot Reload 문제 해결
+const useSegmentUpdateMutation = (fileId: number | null) => {
   return useMutation({
     mutationFn: async ({
       segmentId,
@@ -112,13 +113,14 @@ function useSegmentUpdateMutation(fileId: number | null) {
 }
 
 // 컨텍스트 프로바이더 컴포넌트 - React Query 기반으로 변경
-export function SegmentProvider({ 
+// 컨텍스트 프로바이더 컴포넌트 정의 - Hot Reload 호환성을 위해 명명된 함수 표현식 사용
+const SegmentProvider = ({ 
   children, 
   fileId
 }: { 
   children: ReactNode;
   fileId: number | null; 
-}) {
+}) => {
   // 세그먼트 데이터를 위한 React Query
   const segmentsQuery = useQuery<TranslationUnit[]>({
     queryKey: ['segments', fileId],
@@ -204,3 +206,6 @@ export function useSegmentContext() {
   }
   return context;
 }
+
+// 명시적으로 컨텍스트와 프로바이더 내보내기
+export { SegmentContext, SegmentProvider };
