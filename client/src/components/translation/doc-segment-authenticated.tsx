@@ -487,11 +487,13 @@ export function DocSegment({
                           newStatus,
                           updatedSegment,
                         );
-                        onUpdate?.(
-                          updatedSegment.target,
-                          updatedSegment.status,
-                          updatedSegment.origin,
-                        );
+                        if (onUpdate) {
+                          onUpdate(
+                            String(updatedSegment.target || ""),
+                            updatedSegment.status,
+                            updatedSegment.origin
+                          );
+                        }
                         onSave?.(); // 편집 모드 종료
                       } else {
                         throw new Error(`Server responded with status: ${response.status}`);
