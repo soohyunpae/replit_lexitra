@@ -222,7 +222,9 @@ export function EditableSegment(props: EditableSegmentProps) {
               className="w-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] pb-[28px] text-sm leading-relaxed"
               style={{
                 lineHeight: "1.6",
-                overflow: "hidden"
+                overflow: "hidden",
+                boxShadow: "none",
+                outline: "none"
               }}
               placeholder="Enter translation..."
             />
@@ -273,7 +275,9 @@ export function EditableSegment(props: EditableSegmentProps) {
               className="w-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] text-sm leading-relaxed"
               style={{
                 lineHeight: "1.6",
-                overflow: "hidden"
+                overflow: "hidden",
+                boxShadow: "none",
+                outline: "none"
               }}
               placeholder={isSource ? "No source text" : "No translation yet"}
             />
