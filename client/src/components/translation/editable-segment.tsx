@@ -32,15 +32,16 @@ export function EditableSegment(props: EditableSegmentProps) {
     onCheckChange,
   } = props;
 
-  // 공유 컨텍스트에서 최신 데이터 참조
-  const { segments } = useSegmentContext();
+  // 공유 컨텍스트에서 최신 데이터 참조 - React Query 기반으로 변경
+  const { segmentsQuery } = useSegmentContext();
+  const segments = segmentsQuery.data || [];
 
   // 상태 및 원본 변경 여부 확인을 위한 상수
   const STATUS_NEED_CHANGE = ["MT", "100%", "Fuzzy"];
 
   // 최신 세그먼트 데이터 사용 - context에서 찾아 항상 최신 상태 유지
   const liveSegment = useMemo(
-    () => segments.find((s) => s.id === segment.id) || segment,
+    () => segments.find((s: TranslationUnit) => s.id === segment.id) || segment,
     [segments, segment.id],
   );
 
