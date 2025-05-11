@@ -151,6 +151,33 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  
+  /* Plaintext 스타일의 textarea (편집 가능한 버전) */
+  .plaintext-textarea {
+    border: none;
+    background-color: transparent;
+    box-shadow: none;
+    outline: none;
+    padding: 0;
+  }
+  
+  .plaintext-textarea:focus {
+    border: none;
+    background-color: transparent;
+    box-shadow: none;
+    outline: none;
+  }
+  
+  /* 읽기 전용 plaintext 스타일 */
+  .read-only-plaintext {
+    border: none;
+    background-color: transparent;
+    box-shadow: none;
+    outline: none;
+    padding: 0;
+    color: inherit;
+    cursor: default;
+  }
 }
 
 @layer components {

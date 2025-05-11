@@ -206,7 +206,7 @@ export function EditableSegment(props: EditableSegmentProps) {
               ref={textareaRef}
               value={value}
               onChange={handleTextareaChange}
-              className="min-h-[50px] w-full font-mono resize-none focus-visible:ring-offset-0 focus-visible:ring-1 overflow-hidden no-scrollbar pt-[2px] pb-[28px]"
+              className="min-h-[50px] w-full font-mono resize-none focus-visible:ring-0 overflow-hidden no-scrollbar pt-[2px] pb-[28px] text-sm plaintext-textarea"
               placeholder="Enter translation..."
             />
 
@@ -248,13 +248,14 @@ export function EditableSegment(props: EditableSegmentProps) {
             {index}
           </div>
 
-          {/* 원문 텍스트 */}
-          <div className="font-mono text-sm whitespace-pre-wrap break-words min-h-[50px] pt-[2px]">
-            {value || (
-              <span className="text-muted-foreground italic">
-                {isSource ? "No source text" : "No translation yet"}
-              </span>
-            )}
+          {/* 원문 텍스트 - textarea로 변경하고 읽기 전용으로 설정 */}
+          <div className="relative">
+            <Textarea
+              value={value || ""}
+              readOnly
+              className="min-h-[50px] w-full font-mono resize-none overflow-hidden no-scrollbar pt-[2px] text-sm read-only-plaintext"
+              placeholder={isSource ? "No source text" : "No translation yet"}
+            />
           </div>
         </div>
       )}
