@@ -168,8 +168,8 @@ export function EditableSegment(props: EditableSegmentProps) {
       {/* grid 기반 레이아웃 적용 */}
       {!isSource ? (
         <div className="grid grid-cols-[min-content_1fr] gap-x-4">
-          {/* 번역문 왼쪽은 체크박스만 배치 (세그먼트 번호 없음) */}
-          <div className="flex items-center justify-end w-8 h-[60px]">
+          {/* 번역문 왼쪽은 체크박스만 배치 (세그먼트 번호 없음) - 위쪽 정렬 */}
+          <div className="flex items-start justify-end w-8 pt-[4px]">
             {onCheckChange && (
               <div onClick={handleCheckboxClick}>
                 <Checkbox 
@@ -181,13 +181,13 @@ export function EditableSegment(props: EditableSegmentProps) {
             )}
           </div>
           
-          {/* 번역문 입력 영역 */}
+          {/* 번역문 입력 영역 - 패딩 제거하여 텍스트 줄 정렬 */}
           <div className="relative">
             <Textarea
               ref={textareaRef}
               value={value}
               onChange={handleTextareaChange}
-              className="min-h-[60px] w-full font-mono resize-none focus-visible:ring-offset-0 focus-visible:ring-1 overflow-hidden no-scrollbar"
+              className="min-h-[60px] w-full font-mono resize-none focus-visible:ring-offset-0 focus-visible:ring-1 overflow-hidden no-scrollbar py-0 pt-[2px]"
               placeholder="Enter translation..."
             />
             
@@ -224,8 +224,8 @@ export function EditableSegment(props: EditableSegmentProps) {
         </div>
       ) : (
         <div className="grid grid-cols-[min-content_1fr] gap-x-4">
-          {/* 원문 왼쪽에는 세그먼트 번호 유지 */}
-          <div className="flex items-center justify-end w-8 h-[60px] text-xs text-gray-500 pr-1 font-mono">
+          {/* 원문 왼쪽에는 세그먼트 번호 유지 - 위쪽 정렬 */}
+          <div className="flex items-start justify-end w-8 text-xs text-gray-500 pr-1 font-mono pt-[4px]">
             {index}
           </div>
           
