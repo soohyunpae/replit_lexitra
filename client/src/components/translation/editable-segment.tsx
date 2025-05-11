@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Check, X, Languages } from "lucide-react";
 import { TranslationUnit, StatusType, OriginType } from "@/types";
+import { useSegmentContext } from "@/hooks/useSegmentContext";
 
 interface EditableSegmentProps {
   segment: TranslationUnit;
@@ -28,8 +29,17 @@ export function EditableSegment({
   isChecked,
   onCheckChange
 }: EditableSegmentProps) {
-  // Source is not editable, target is always directly editable
-  const [value, setValue] = useState(isSource ? segment.source : segment.target || "");
+  // 공유 컨텍스트에서 최신 세그먼트 데이터 참조
+  const { segments } = useSegmentContext();
+  
+  // 최신 세그먼트 데이터 사용 (props.segment 대신 context에서 찾아서 사용)
+  const liveSegment = useMemo(
+    () => segments.find((s) => s.id === segment.id) || segment,
+    [segments, segment.id]
+  );
+  
+  // Source is not editable, target is always directly editable - 최신 데이터 참조
+  const [value, setValue] = useState(isSource ? liveSegment.source : liveSegment.target || "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // Auto-focus textarea when selected
@@ -39,27 +49,27 @@ export function EditableSegment({
     }
   }, [isSelected, isSource]);
   
-  // Toggle status between current status and "Reviewed"
+  // Toggle status between current status and "Reviewed" - 최신 데이터 참조
   const toggleStatus = () => {
     if (!isSource && onUpdate) {
       // Toggle between current status and Reviewed
-      const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
+      const newStatus = liveSegment.status === "Reviewed" ? "Edited" : "Reviewed";
       // Also update origin to HT if it's MT, 100%, or Fuzzy and status is toggled to Reviewed
-      const needsOriginChange = (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
-      const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : segment.origin;
+      const needsOriginChange = (liveSegment.origin === "MT" || liveSegment.origin === "100%" || liveSegment.origin === "Fuzzy");
+      const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : liveSegment.origin;
       
       onUpdate(value, newStatus, newOrigin);
     }
   };
   
-  // Update value when segment target changes (to sync with external changes)
+  // Update value when segment target changes (to sync with external changes) - 최신 데이터 참조
   useEffect(() => {
     if (!isSource) {
-      setValue(segment.target || "");
+      setValue(liveSegment.target || "");
     }
-  }, [segment.target, isSource]);
+  }, [liveSegment.target, isSource]);
   
-  // Auto-resize textarea as content grows
+  // Auto-resize textarea as content grows - 최신 데이터 참조
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setValue(newValue);
@@ -67,16 +77,16 @@ export function EditableSegment({
     // Automatically update as user types (change origin to HT when edited)
     if (!isSource && onUpdate) {
       // If value is different from original target and origin was MT, 100%, or Fuzzy, change to HT
-      const isValueChanged = newValue !== segment.target;
-      const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
-      const newOrigin = isValueChanged && needsOriginChange ? "HT" : segment.origin;
+      const isValueChanged = newValue !== liveSegment.target;
+      const needsOriginChange = liveSegment.origin === "MT" || liveSegment.origin === "100%" || liveSegment.origin === "Fuzzy";
+      const newOrigin = isValueChanged && needsOriginChange ? "HT" : liveSegment.origin;
       
       // Automatically change status to Edited if it was MT/100%/Fuzzy/Reviewed and user is editing it
-      let newStatus = segment.status;
+      let newStatus = liveSegment.status;
       if (isValueChanged) {
-        if (segment.status === "Reviewed") {
+        if (liveSegment.status === "Reviewed") {
           newStatus = "Edited";
-        } else if (segment.status === "MT" || segment.status === "100%" || segment.status === "Fuzzy") {
+        } else if (liveSegment.status === "MT" || liveSegment.status === "100%" || liveSegment.status === "Fuzzy") {
           newStatus = "Edited";
         }
       }
@@ -91,7 +101,7 @@ export function EditableSegment({
     }
   };
   
-  // Update textarea height when segment target changes or on mount
+  // Update textarea height when segment target changes or on mount - 최신 데이터 참조
   useEffect(() => {
     if (!isSource && textareaRef.current) {
       // Use setTimeout to ensure DOM is ready
@@ -100,7 +110,7 @@ export function EditableSegment({
         textareaRef.current!.style.height = `${textareaRef.current!.scrollHeight}px`;
       }, 0);
     }
-  }, [segment.target, isSource]);
+  }, [liveSegment.target, isSource]);
   
   // Get status badge color based on status
   const getStatusColor = (status: string): string => {
@@ -150,7 +160,7 @@ export function EditableSegment({
 
   return (
     <div
-      className={`rounded-md p-3 mb-3 h-full w-full flex flex-col ${segment.status === "Reviewed" ? "bg-blue-50 dark:bg-blue-950/30" : isSelected ? "bg-accent/90" : "bg-card"} transition-colors ${!isSource && !segment.target ? "border border-dashed border-yellow-400" : ""}`}
+      className={`rounded-md p-3 mb-3 h-full w-full flex flex-col ${liveSegment.status === "Reviewed" ? "bg-blue-50 dark:bg-blue-950/30" : isSelected ? "bg-accent/90" : "bg-card"} transition-colors ${!isSource && !liveSegment.target ? "border border-dashed border-yellow-400" : ""}`}
       onClick={onSelect}
     >
       {/* 원문과 번역문을 나란히 배치 */}
@@ -183,21 +193,21 @@ export function EditableSegment({
               </div>
             )}
             
-            {/* 상태 뱃지 */}
+            {/* 상태 뱃지 - 최신 데이터 참조 */}
             <div className="mb-2 w-full flex justify-center">
               <span 
-                className={`text-xs px-1.5 py-0.5 rounded-md ${getStatusColor(segment.status)} cursor-pointer w-full text-center`}
+                className={`text-xs px-1.5 py-0.5 rounded-md ${getStatusColor(liveSegment.status)} cursor-pointer w-full text-center`}
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleStatus();
                 }}
-                title={`Click to toggle status (${segment.status === "Reviewed" ? "Edited" : "Reviewed"})`}
+                title={`Click to toggle status (${liveSegment.status === "Reviewed" ? "Edited" : "Reviewed"})`}
               >
-                {segment.status}
+                {liveSegment.status}
               </span>
             </div>
             
-            {/* 체크 버튼 */}
+            {/* 체크 버튼 - 최신 데이터 참조 */}
             <div className="flex justify-center mb-1">
               <Button 
                 variant="ghost" 
@@ -207,14 +217,14 @@ export function EditableSegment({
                   toggleStatus();
                 }} 
                 className="h-7 w-7 p-0"
-                title={`Mark as ${segment.status === "Reviewed" ? "Edited" : "Reviewed"}`}
+                title={`Mark as ${liveSegment.status === "Reviewed" ? "Edited" : "Reviewed"}`}
               >
-                <Check className={`h-4 w-4 ${segment.status === "Reviewed" ? "text-green-600" : "text-muted-foreground"}`} />
+                <Check className={`h-4 w-4 ${liveSegment.status === "Reviewed" ? "text-green-600" : "text-muted-foreground"}`} />
               </Button>
             </div>
             
-            {/* MT 번역 버튼 */}
-            {!segment.target && onTranslateWithGPT && (
+            {/* MT 번역 버튼 - 최신 데이터 참조 */}
+            {!liveSegment.target && onTranslateWithGPT && (
               <Button 
                 variant="ghost" 
                 size="sm" 
