@@ -37,6 +37,8 @@ interface TmMatchProps {
 
 // TM Match Component
 function TmMatch({ match, onUse, sourceSimilarity, highlightTerms = [] }: TmMatchProps) {
+  const [isApplying, setIsApplying] = useState(false);
+  
   // Function to highlight terms in the text
   const highlightText = (text: string) => {
     if (!highlightTerms.length) return text;
@@ -67,6 +69,36 @@ function TmMatch({ match, onUse, sourceSimilarity, highlightTerms = [] }: TmMatc
     );
   };
   
+  // 최적화된 UI 업데이트를 위한 함수
+  const handleUseTranslation = useCallback(() => {
+    setIsApplying(true);
+    
+    try {
+      // 즉시 UI 피드백을 위해 바로 번역 적용
+      onUse(match.target);
+      
+      // 성공 토스트 메시지 표시
+      toast({
+        title: "번역 적용됨",
+        description: "선택한 번역이 세그먼트에 적용되었습니다.",
+        variant: "default",
+      });
+    } catch (error) {
+      // 오류 발생시 토스트 메시지 표시
+      toast({
+        title: "번역 적용 실패",
+        description: "번역을 적용하는 중 오류가 발생했습니다. 다시 시도해주세요.",
+        variant: "destructive",
+      });
+      console.error("번역 적용 중 오류:", error);
+    } finally {
+      // 시각적 피드백을 위해 약간의 딜레이 후 버튼 상태 복원
+      setTimeout(() => {
+        setIsApplying(false);
+      }, 500);
+    }
+  }, [match.target, onUse]);
+  
   return (
     <div className="bg-accent/50 rounded-md p-3 mb-3">
       <div className="mb-1">
@@ -82,10 +114,21 @@ function TmMatch({ match, onUse, sourceSimilarity, highlightTerms = [] }: TmMatc
         <Button 
           size="sm" 
           variant="ghost" 
-          className="h-6 text-xs" 
-          onClick={() => onUse(match.target)}
+          className={cn(
+            "h-6 text-xs transition-all duration-200",
+            isApplying && "bg-primary/10"
+          )}
+          onClick={handleUseTranslation}
+          disabled={isApplying}
         >
-          Use Translation
+          {isApplying ? (
+            <>
+              <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
+              적용 중...
+            </>
+          ) : (
+            "Use Translation"
+          )}
         </Button>
       </div>
     </div>
@@ -219,6 +262,38 @@ function StatusInfoPanel({ segment }: { segment: TranslationUnit | null | undefi
 
 // Glossary Term Component
 function GlossaryTerm({ term, onUse }: { term: Glossary, onUse: (term: string) => void }) {
+  const [isApplying, setIsApplying] = useState(false);
+  
+  // 최적화된 UI 업데이트를 위한 함수
+  const handleUseTerm = useCallback(() => {
+    setIsApplying(true);
+    
+    try {
+      // 즉시 UI 피드백을 위해 바로 용어 적용
+      onUse(term.target);
+      
+      // 성공 토스트 메시지 표시
+      toast({
+        title: "용어 적용됨",
+        description: "선택한 용어가 세그먼트에 적용되었습니다.",
+        variant: "default",
+      });
+    } catch (error) {
+      // 오류 발생시 토스트 메시지 표시
+      toast({
+        title: "용어 적용 실패",
+        description: "용어를 적용하는 중 오류가 발생했습니다. 다시 시도해주세요.",
+        variant: "destructive",
+      });
+      console.error("용어 적용 중 오류:", error);
+    } finally {
+      // 시각적 피드백을 위해 약간의 딜레이 후 버튼 상태 복원
+      setTimeout(() => {
+        setIsApplying(false);
+      }, 500);
+    }
+  }, [term.target, onUse]);
+  
   return (
     <div className="bg-accent/50 rounded-md p-3 mb-3">
       <div className="flex justify-between items-center mb-1">
@@ -234,10 +309,21 @@ function GlossaryTerm({ term, onUse }: { term: Glossary, onUse: (term: string) =
         <Button 
           size="sm" 
           variant="ghost" 
-          className="h-6 text-xs" 
-          onClick={() => onUse(term.target)}
+          className={cn(
+            "h-6 text-xs transition-all duration-200",
+            isApplying && "bg-primary/10"
+          )}
+          onClick={handleUseTerm}
+          disabled={isApplying}
         >
-          Use Term
+          {isApplying ? (
+            <>
+              <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
+              적용 중...
+            </>
+          ) : (
+            "Use Term"
+          )}
         </Button>
       </div>
     </div>
