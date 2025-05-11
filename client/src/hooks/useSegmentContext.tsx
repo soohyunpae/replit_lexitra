@@ -1,18 +1,23 @@
-import { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, ReactNode, useState, useEffect, useCallback, useMemo } from 'react';
 import { TranslationUnit } from '../types';
 import { apiRequest } from '@/lib/queryClient';
+import debounce from 'lodash.debounce';
 
 // 컨텍스트 타입 정의
 type SegmentContextType = {
   segments: TranslationUnit[];
   setSegments: (segments: TranslationUnit[]) => void;
   updateSegment: (segmentId: number, newData: Partial<TranslationUnit>) => Promise<TranslationUnit>;
+  debouncedUpdateSegment: (segmentId: number, newData: Partial<TranslationUnit>) => void;
   loading: boolean;
   error: Error | null;
 };
 
 // 컨텍스트 생성
 const SegmentContext = createContext<SegmentContextType | undefined>(undefined);
+
+// 디바운스 지연 시간 (ms)
+const DEBOUNCE_DELAY = 600;
 
 // 컨텍스트 프로바이더 컴포넌트
 export function SegmentProvider({ 
@@ -25,6 +30,7 @@ export function SegmentProvider({
   const [segments, setSegments] = useState<TranslationUnit[]>(initialSegments);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [pendingUpdates, setPendingUpdates] = useState<Record<number, boolean>>({});
 
   // 초기 세그먼트 설정
   useEffect(() => {
@@ -55,6 +61,8 @@ export function SegmentProvider({
 
       // API 호출
       setLoading(true);
+      setPendingUpdates(prev => ({ ...prev, [segmentId]: true }));
+      
       const response = await apiRequest(
         'PATCH',
         `/api/segments/${segmentId}`,
@@ -77,11 +85,22 @@ export function SegmentProvider({
       );
 
       setLoading(false);
+      setPendingUpdates(prev => {
+        const updated = { ...prev };
+        delete updated[segmentId];
+        return updated;
+      });
+      
       return serverData;
     } catch (error) {
       console.error('Error updating segment:', error);
       setError(error instanceof Error ? error : new Error(String(error)));
       setLoading(false);
+      setPendingUpdates(prev => {
+        const updated = { ...prev };
+        delete updated[segmentId];
+        return updated;
+      });
       
       // 에러 발생 시, 원래 상태로 롤백
       setSegments(prevSegments => [...prevSegments]);
@@ -90,11 +109,55 @@ export function SegmentProvider({
     }
   }, [segments]);
 
+  // 디바운스된 업데이트 함수 생성
+  const debouncedUpdateSegmentImpl = useMemo(() => 
+    debounce(async (segmentId: number, newData: Partial<TranslationUnit>) => {
+      try {
+        console.log(`Sending debounced update for segment ${segmentId}:`, newData);
+        await updateSegment(segmentId, newData);
+      } catch (error) {
+        console.error(`Debounced update for segment ${segmentId} failed:`, error);
+      }
+    }, DEBOUNCE_DELAY), 
+  [updateSegment]);
+  
+  // 컴포넌트 언마운트 시 디바운스 취소 처리
+  useEffect(() => {
+    return () => {
+      debouncedUpdateSegmentImpl.cancel();
+    };
+  }, [debouncedUpdateSegmentImpl]);
+  
+  // 타입스크립트에 맞게 정의 (void 반환하는 래퍼 함수)
+  const debouncedUpdateSegment = useCallback((
+    segmentId: number, 
+    newData: Partial<TranslationUnit>
+  ): void => {
+    // 현재 세그먼트 찾기
+    const currentSegment = segments.find(s => s.id === segmentId);
+    if (!currentSegment) {
+      console.error(`Segment with ID ${segmentId} not found`);
+      return;
+    }
+
+    // 낙관적 UI 업데이트 (즉시 반영)
+    const updatedSegment = { ...currentSegment, ...newData };
+    setSegments(prevSegments => 
+      prevSegments.map(segment => 
+        segment.id === segmentId ? updatedSegment : segment
+      )
+    );
+    
+    // 디바운스된 API 호출
+    debouncedUpdateSegmentImpl(segmentId, newData);
+  }, [segments, debouncedUpdateSegmentImpl]);
+
   // 컨텍스트 값 정의
   const contextValue: SegmentContextType = {
     segments,
     setSegments,
     updateSegment,
+    debouncedUpdateSegment,
     loading,
     error
   };
