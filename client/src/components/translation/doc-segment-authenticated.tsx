@@ -141,24 +141,32 @@ export function DocSegment({
                 value={editedValue}
                 onChange={(e) => {
                   const newValue = e.target.value;
+                  // UI 상태만 업데이트 (API 호출은 하지 않음)
                   onEditValueChange?.(newValue);
                   
-                  // 자동 상태 업데이트 - 편집할 때 segment.target과 다르면 상태 업데이트
+                  // 자동 상태 업데이트 로직 (컨텍스트의 debouncedUpdateSegment 호출)
                   if (onUpdate) {
                     const isValueChanged = newValue !== segment.target;
-                    const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
-                    const newOrigin = isValueChanged && needsOriginChange ? "HT" : segment.origin;
                     
-                    // 이미 Reviewed였는데 편집하면 Edited로 변경, MT/100%/Fuzzy였는데 편집하면 Edited로 변경
-                    let newStatus = segment.status;
                     if (isValueChanged) {
+                      const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
+                      const newOrigin = needsOriginChange ? "HT" : segment.origin;
+                      
+                      // 이미 Reviewed였는데 편집하면 Edited로 변경, MT/100%/Fuzzy였는데 편집하면 Edited로 변경
+                      let newStatus = segment.status;
                       if (segment.status === "Reviewed") {
                         newStatus = "Edited";
                       } else if (segment.status === "MT" || segment.status === "100%" || segment.status === "Fuzzy") {
                         newStatus = "Edited";
                       }
                       
-                      onUpdate(newValue, newStatus, newOrigin);
+                      // 공유 컨텍스트의 디바운스된 업데이트 함수 사용
+                      const { debouncedUpdateSegment } = useSegmentContext();
+                      debouncedUpdateSegment(segment.id, {
+                        target: newValue,
+                        status: newStatus,
+                        origin: newOrigin
+                      });
                     }
                   }
                 }}
@@ -460,9 +468,28 @@ export function DocSegment({
                 const value = e.target.value;
                 onEditValueChange?.(value);
                 
-                // 자동으로 Reviewed 상태에서 Edited 상태로 변경 로직 (필요시)
-                if (onUpdate && segment.status === "Reviewed" && value !== segment.target) {
-                  onUpdate(value, "Edited", segment.origin);
+                // 세그먼트 컨텍스트 사용
+                const { debouncedUpdateSegment } = useSegmentContext();
+                const isValueChanged = value !== segment.target;
+                
+                if (isValueChanged) {
+                  // 상태 및 origin 결정
+                  const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
+                  const newOrigin = needsOriginChange ? "HT" : segment.origin;
+                  
+                  let newStatus = segment.status;
+                  if (segment.status === "Reviewed") {
+                    newStatus = "Edited";
+                  } else if (segment.status === "MT" || segment.status === "100%" || segment.status === "Fuzzy") {
+                    newStatus = "Edited";
+                  }
+                  
+                  // 디바운스된 업데이트 실행
+                  debouncedUpdateSegment(segment.id, {
+                    target: value,
+                    status: newStatus,
+                    origin: newOrigin
+                  });
                 }
               }}
               onKeyDown={handleKeyDown}
