@@ -194,7 +194,7 @@ export function EditableSegment(props: EditableSegmentProps) {
 
   return (
     <div
-      className={`rounded-md py-0.5 px-2 mb-[1px] h-full w-full ${liveSegment.status === "Reviewed" ? "bg-blue-50 dark:bg-blue-950/30" : isSelected ? "bg-accent/90" : "bg-card"} transition-colors ${!isSource && !liveSegment.target ? "border border-dashed border-yellow-400" : ""}`}
+      className={`rounded-md py-0.5 px-2 mb-[6px] h-full w-full relative ${liveSegment.status === "Reviewed" ? "bg-blue-50 dark:bg-blue-950/30" : isSelected ? "bg-accent/90" : "bg-card"} transition-colors ${!isSource && !liveSegment.target ? "border border-dashed border-yellow-400" : ""}`}
       onClick={onSelect}
     >
       {/* grid 기반 레이아웃 적용 */}
@@ -219,7 +219,7 @@ export function EditableSegment(props: EditableSegmentProps) {
               ref={textareaRef}
               value={value}
               onChange={handleTextareaChange}
-              className="w-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] pb-[28px] text-sm leading-relaxed"
+              className="w-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] pb-[4px] text-sm leading-relaxed"
               style={{
                 lineHeight: "1.6",
                 overflow: "hidden"
@@ -227,8 +227,8 @@ export function EditableSegment(props: EditableSegmentProps) {
               placeholder="Enter translation..."
             />
 
-            {/* 상태 뱃지를 번역문 안에 표시 - 체크 버튼 제거 및 기능 통합 */}
-            <div className="absolute bottom-2 right-2">
+            {/* 상태 뱃지를 번역문 아래에 표시 - 체크 버튼 제거 및 기능 통합 */}
+            <div className="absolute top-full right-2 mt-1">
               <span
                 className={`text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer transition ${getStatusColor(liveSegment.status)}`}
                 onClick={(e) => {
