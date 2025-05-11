@@ -14,6 +14,7 @@ import { isAdmin, isResourceOwnerOrAdmin, canManageProject, errorHandler } from 
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { WebSocketServer, WebSocket } from "ws";
 
 // 파일 경로를 위한 변수 설정
 const REPO_ROOT = process.cwd();

@@ -1246,7 +1246,7 @@ export default function Project() {
                             {formatDate(file.updatedAt || file.createdAt)}
                           </div>
 
-                          <div className="flex justify-end">
+                          <div className="flex justify-end space-x-2">
                             <Button
                               onClick={() =>
                                 navigate(`/translation/${file.id}`)
@@ -1272,6 +1272,25 @@ export default function Project() {
                                     project.claimedBy !== user?.id
                                   ? "Claimed by Another User"
                                   : "Open Editor"}
+                            </Button>
+                            
+                            {/* React Query 기반 에디터 링크 */}
+                            <Button
+                              onClick={() =>
+                                navigate(`/query-translation/${file.id}`)
+                              }
+                              disabled={
+                                project.status === "Unclaimed" ||
+                                (project.status === "Claimed" &&
+                                  project.claimedBy !== user?.id &&
+                                  user?.role !== "admin")
+                              }
+                              variant="outline"
+                              className="flex items-center gap-1"
+                              title="Open with React Query based editor (better performance)"
+                            >
+                              <span className="hidden sm:inline">Query Editor</span>
+                              <span className="inline sm:hidden">Query</span>
                             </Button>
                           </div>
                         </div>
