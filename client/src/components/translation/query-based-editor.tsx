@@ -370,6 +370,21 @@ export function QueryBasedEditor({
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold">{fileName || `File ID: ${fileId}`}</h2>
           <div className="flex items-center space-x-2">
+            {/* WebSocket 연결 상태 표시 */}
+            {wsStatus === 'open' ? (
+              <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 flex items-center gap-1 px-2 py-1">
+                <Wifi className="h-3 w-3" /> 실시간 연결됨
+              </Badge>
+            ) : wsStatus === 'connecting' ? (
+              <Badge variant="outline" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 flex items-center gap-1 px-2 py-1">
+                <RotateCw className="h-3 w-3 animate-spin" /> 연결 중...
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 flex items-center gap-1 px-2 py-1 cursor-pointer" onClick={wsConnect}>
+                <WifiOff className="h-3 w-3" /> 오프라인 (클릭하여 재연결)
+              </Badge>
+            )}
+            
             <Button size="sm" variant="ghost" onClick={() => setShowSource(!showSource)}>
               {showSource ? <Eye className="w-4 h-4 mr-1" /> : <EyeOff className="w-4 h-4 mr-1" />}
               {showSource ? '원본 숨기기' : '원본 보기'}
