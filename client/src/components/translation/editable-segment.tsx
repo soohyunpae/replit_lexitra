@@ -75,7 +75,7 @@ export function EditableSegment(props: EditableSegmentProps) {
     }
   }, [isSelected, isSource]);
 
-  // 상태 변경
+  // 상태 변경 - React Query 활용
   const toggleStatus = () => {
     if (!isSource && onUpdate) {
       const newStatus =
@@ -89,11 +89,19 @@ export function EditableSegment(props: EditableSegmentProps) {
           ? "HT"
           : liveSegment.origin || "HT";
 
+      // UI 업데이트를 위해 기존 onUpdate 유지
       onUpdate(value, newStatus, newOrigin as string);
+      
+      // 서버 업데이트를 React Query로 처리
+      debouncedUpdateSegment(liveSegment.id, {
+        target: value,
+        status: newStatus,
+        origin: newOrigin as OriginType
+      });
     }
   };
 
-  // 텍스트 변경 핸들러
+  // 텍스트 변경 핸들러 - React Query 활용
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setValue(newValue);
@@ -117,7 +125,15 @@ export function EditableSegment(props: EditableSegmentProps) {
         }
       }
 
+      // UI 업데이트를 위해 기존 onUpdate 유지
       onUpdate(newValue, newStatus as string, newOrigin as string);
+      
+      // 텍스트 입력 중 매번 서버 업데이트는 비효율적이므로 디바운스된 함수 사용
+      debouncedUpdateSegment(liveSegment.id, {
+        target: newValue,
+        status: newStatus as StatusType,
+        origin: newOrigin as OriginType
+      });
     }
 
     // 커스텀 훅의 adjustHeight 함수를 사용하여 리사이즈
