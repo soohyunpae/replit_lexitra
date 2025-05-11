@@ -45,6 +45,7 @@ export function DocSegment({
   showStatusInEditor = false, // 기본값은 false
 }: DocSegmentProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { debouncedUpdateSegment } = useSegmentContext(); // 컴포넌트 상단에서 훅 호출
   
   // 상태 토글 기능 추가
   const toggleStatus = () => {
@@ -161,7 +162,6 @@ export function DocSegment({
                       }
                       
                       // 공유 컨텍스트의 디바운스된 업데이트 함수 사용
-                      const { debouncedUpdateSegment } = useSegmentContext();
                       debouncedUpdateSegment(segment.id, {
                         target: newValue,
                         status: newStatus,
@@ -468,8 +468,7 @@ export function DocSegment({
                 const value = e.target.value;
                 onEditValueChange?.(value);
                 
-                // 세그먼트 컨텍스트 사용
-                const { debouncedUpdateSegment } = useSegmentContext();
+                // 자동 상태 업데이트 로직
                 const isValueChanged = value !== segment.target;
                 
                 if (isValueChanged) {
