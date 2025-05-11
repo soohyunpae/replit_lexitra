@@ -181,7 +181,7 @@ export function EditableSegment(props: EditableSegmentProps) {
 
   return (
     <div
-      className={`rounded-md p-2 mb-1 h-full w-full ${liveSegment.status === "Reviewed" ? "bg-blue-50 dark:bg-blue-950/30" : isSelected ? "bg-accent/90" : "bg-card"} transition-colors ${!isSource && !liveSegment.target ? "border border-dashed border-yellow-400" : ""}`}
+      className={`rounded-md py-1 px-2 mb-1 h-full w-full ${liveSegment.status === "Reviewed" ? "bg-blue-50 dark:bg-blue-950/30" : isSelected ? "bg-accent/90" : "bg-card"} transition-colors ${!isSource && !liveSegment.target ? "border border-dashed border-yellow-400" : ""}`}
       onClick={onSelect}
     >
       {/* grid 기반 레이아웃 적용 */}
@@ -249,7 +249,7 @@ export function EditableSegment(props: EditableSegmentProps) {
           </div>
 
           {/* 원문 텍스트 */}
-          <div className="font-mono text-sm whitespace-pre-wrap break-words min-h-[60px]">
+          <div className="font-mono text-sm whitespace-pre-wrap break-words min-h-[50px] pt-[2px]">
             {value || (
               <span className="text-muted-foreground italic">
                 {isSource ? "No source text" : "No translation yet"}
