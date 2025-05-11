@@ -227,8 +227,8 @@ export function EditableSegment(props: EditableSegmentProps) {
               placeholder="Enter translation..."
             />
 
-            {/* 상태 뱃지를 오른쪽에 표시 - 체크 버튼 제거 및 기능 통합 */}
-            <div className="absolute top-0 right-2">
+            {/* 상태 뱃지를 번역문 아래에 표시 - 체크 버튼 제거 및 기능 통합 */}
+            <div className="absolute top-full right-2 mt-1">
               <span
                 className={`text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer transition ${getStatusColor(liveSegment.status)}`}
                 onClick={(e) => {
