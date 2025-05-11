@@ -208,92 +208,90 @@ export function DocSegment({
                 }}
               />
 
-              {/* 텍스트 영역 내부 하단에 버튼 푸터 영역 배치 */}
-              <div className="absolute bottom-0 left-0 right-0 h-10 bg-muted/20 border-t border-border/30 flex items-center justify-end px-2">
+              {/* 텍스트 영역 내부에 버튼 직접 배치 - 더 가까이 배치 */}
+              <div className="absolute bottom-1 right-1 flex gap-1">
                 {/* 토글 버튼만 유지 */}
-                <div className="flex gap-2">
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation(); // 이벤트 전파 방지
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation(); // 이벤트 전파 방지
 
-                      // 현재 내용을 저장하고 상태 변경
-                      const saveAndToggleStatus = async () => {
-                        try {
-                          // 텍스트 수정 여부 확인
-                          const isTextChanged = editedValue !== segment.target;
+                    // 현재 내용을 저장하고 상태 변경
+                    const saveAndToggleStatus = async () => {
+                      try {
+                        // 텍스트 수정 여부 확인
+                        const isTextChanged = editedValue !== segment.target;
 
-                          // 상태 토글 (Reviewed <-> Edited)
-                          const newStatus =
-                            segment.status === "Reviewed"
-                              ? "Edited"
-                              : "Reviewed";
+                        // 상태 토글 (Reviewed <-> Edited)
+                        const newStatus =
+                          segment.status === "Reviewed"
+                            ? "Edited"
+                            : "Reviewed";
 
-                          // MT, 100%, Fuzzy에서 수정했을 경우 origin 변경
-                          const needsOriginChange =
-                            isTextChanged &&
-                            (segment.origin === "MT" ||
-                              segment.origin === "100%" ||
-                              segment.origin === "Fuzzy");
-                          const newOrigin = needsOriginChange
-                            ? "HT"
-                            : segment.origin;
+                        // MT, 100%, Fuzzy에서 수정했을 경우 origin 변경
+                        const needsOriginChange =
+                          isTextChanged &&
+                          (segment.origin === "MT" ||
+                            segment.origin === "100%" ||
+                            segment.origin === "Fuzzy");
+                        const newOrigin = needsOriginChange
+                          ? "HT"
+                          : segment.origin;
 
-                          // 인증된 API 요청으로 서버에 업데이트
-                          const response = await apiRequest(
-                            "PATCH",
-                            `/api/segments/${segment.id}`,
-                            {
-                              target: editedValue,
-                              status: newStatus,
-                              origin: newOrigin,
-                            },
-                          );
+                        // 인증된 API 요청으로 서버에 업데이트
+                        const response = await apiRequest(
+                          "PATCH",
+                          `/api/segments/${segment.id}`,
+                          {
+                            target: editedValue,
+                            status: newStatus,
+                            origin: newOrigin,
+                          },
+                        );
 
-                          if (!response.ok) {
-                            throw new Error(
-                              `Server responded with status: ${response.status}`,
-                            );
-                          }
-
-                          const updatedSegment = await response.json();
-                          console.log(
-                            "Status toggled to",
-                            newStatus,
-                            updatedSegment,
-                          );
-
-                          // 로컬 상태 업데이트
-                          onUpdate?.(
-                            updatedSegment.target || editedValue,
-                            updatedSegment.status,
-                            updatedSegment.origin,
-                          );
-
-                          // 토글 후 편집 모드 유지
-                        } catch (error) {
-                          console.error(
-                            "Failed to toggle segment status:",
-                            error,
+                        if (!response.ok) {
+                          throw new Error(
+                            `Server responded with status: ${response.status}`,
                           );
                         }
-                      };
 
-                      saveAndToggleStatus();
-                    }}
-                    size="sm"
-                    variant={
-                      segment.status === "Reviewed" ? "default" : "outline"
-                    }
-                    className={cn(
-                      "h-8 w-8 p-0 rounded-full",
-                      segment.status === "Reviewed"
-                        ? "bg-green-600 hover:bg-green-700"
-                        : "",
-                    )}
-                  >
-                    <Check className={cn("h-4 w-4", segment.status === "Reviewed" ? "text-white" : "text-green-600")} />
-                  </Button>
-                </div>
+                        const updatedSegment = await response.json();
+                        console.log(
+                          "Status toggled to",
+                          newStatus,
+                          updatedSegment,
+                        );
+
+                        // 로컬 상태 업데이트
+                        onUpdate?.(
+                          updatedSegment.target || editedValue,
+                          updatedSegment.status,
+                          updatedSegment.origin,
+                        );
+
+                        // 토글 후 편집 모드 유지
+                      } catch (error) {
+                        console.error(
+                          "Failed to toggle segment status:",
+                          error,
+                        );
+                      }
+                    };
+
+                    saveAndToggleStatus();
+                  }}
+                  size="sm"
+                  variant={
+                    segment.status === "Reviewed" ? "default" : "outline"
+                  }
+                  className={cn(
+                    "h-7 w-7 p-0 rounded-full",
+                    segment.status === "Reviewed"
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "",
+                  )}
+                >
+                  <Check className={cn("h-3.5 w-3.5", segment.status === "Reviewed" ? "text-white" : "text-green-600")} />
+                </Button>
               </div>
             </div>
           </div>
@@ -429,12 +427,12 @@ export function DocSegment({
                 }
               }}
               onKeyDown={handleKeyDown}
-              className="min-h-[100px] font-serif text-base resize-none pr-12 pb-12"
+              className="min-h-[100px] font-serif text-base resize-none pr-7 pb-7"
               placeholder="Enter translation..."
             />
 
             {/* 텍스트 영역 내부에 버튼 배치 */}
-            <div className="absolute bottom-2 right-2 flex gap-2">
+            <div className="absolute bottom-1 right-1 flex gap-1">
               {/* 체크 버튼: 상태 토글 */}
               <Button
                 onClick={() => {
@@ -490,7 +488,7 @@ export function DocSegment({
                 size="sm"
                 variant={segment.status === "Reviewed" ? "default" : "outline"}
                 className={cn(
-                  "h-8 w-8 p-0 rounded-full",
+                  "h-7 w-7 p-0 rounded-full",
                   segment.status === "Reviewed"
                     ? "bg-green-600 hover:bg-green-700"
                     : "",
@@ -511,9 +509,9 @@ export function DocSegment({
                 onClick={onCancel}
                 size="sm"
                 variant="outline"
-                className="h-8 w-8 p-0 rounded-full"
+                className="h-7 w-7 p-0 rounded-full"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
