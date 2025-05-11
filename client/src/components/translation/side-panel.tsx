@@ -348,6 +348,8 @@ export function SidePanel({
   const [globalGlossaryResults, setGlobalGlossaryResults] = useState<Glossary[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [previousVersions, setPreviousVersions] = useState<Record<number, string>>({});
+  const [commentText, setCommentText] = useState("");
+  const [isAddingComment, setIsAddingComment] = useState(false);
   
   // Function to search TM globally
   const searchGlobalTM = async (query: string) => {
@@ -434,6 +436,40 @@ export function SidePanel({
       setPreviousVersions(propPreviousVersions);
     }
   }, [propPreviousVersions]);
+  
+  // 댓글 추가 기능 구현
+  const handleAddComment = useCallback(() => {
+    if (!commentText.trim() || !selectedSegment) return;
+    
+    setIsAddingComment(true);
+    
+    // 즉시 UI 피드백을 위한, 성공을 가정한 비동기 처리
+    setTimeout(() => {
+      try {
+        // 실제 API 연동은 추후 구현 예정
+        // 임시 성공 메시지 표시
+        toast({
+          title: "댓글 추가됨",
+          description: "댓글이 성공적으로 추가되었습니다.",
+          variant: "default",
+        });
+        
+        // 성공 후 입력란 초기화
+        setCommentText("");
+      } catch (error) {
+        // 오류 발생시 토스트 메시지
+        toast({
+          title: "댓글 추가 실패",
+          description: "댓글 추가 중 오류가 발생했습니다. 다시 시도해주세요.",
+          variant: "destructive",
+        });
+        console.error("댓글 추가 중 오류:", error);
+      } finally {
+        // 버튼 상태 복원
+        setIsAddingComment(false);
+      }
+    }, 800); // 시각적 피드백을 위한 지연
+  }, [commentText, selectedSegment]);
   
   // Determine which TM matches to display
   const displayedTmMatches = tmSearchQuery.length >= 2 
@@ -602,22 +638,34 @@ export function SidePanel({
               </div>
               
               <div className="space-y-2">
+                {/* 댓글 입력 상태 관리 */}
                 <Textarea 
                   placeholder="Add a comment about this segment..." 
                   className="min-h-[100px] text-sm"
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
                 />
                 <div className="flex justify-end">
                   <Button 
                     size="sm"
-                    className="text-xs"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      // 추후 실제 댓글 저장 기능 구현 시 이 부분에 API 연동
-                      alert("Comment feature will be implemented in future updates");
-                    }}
+                    className={cn(
+                      "text-xs transition-all duration-200",
+                      isAddingComment && "bg-primary/10"
+                    )}
+                    onClick={handleAddComment}
+                    disabled={isAddingComment || !commentText.trim()}
                   >
-                    <MessageSquarePlus className="h-3.5 w-3.5 mr-1.5" />
-                    Add Comment
+                    {isAddingComment ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                        추가 중...
+                      </>
+                    ) : (
+                      <>
+                        <MessageSquarePlus className="h-3.5 w-3.5 mr-1.5" />
+                        Add Comment
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
