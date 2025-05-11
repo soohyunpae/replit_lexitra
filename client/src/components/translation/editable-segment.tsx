@@ -33,7 +33,7 @@ export function EditableSegment(props: EditableSegmentProps) {
   } = props;
 
   // 공유 컨텍스트에서 최신 데이터 참조 - React Query 기반으로 변경
-  const { segmentsQuery } = useSegmentContext();
+  const { segmentsQuery, debouncedUpdateSegment } = useSegmentContext();
   const segments = segmentsQuery.data || [];
 
   // 상태 및 원본 변경 여부 확인을 위한 상수

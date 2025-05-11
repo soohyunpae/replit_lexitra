@@ -117,7 +117,7 @@ export function SegmentProvider({
   fileId: number | null; 
 }) {
   // 세그먼트 데이터를 위한 React Query
-  const segmentsQuery = useQuery({
+  const segmentsQuery = useQuery<TranslationUnit[]>({
     queryKey: ['segments', fileId],
     queryFn: async () => {
       if (!fileId) return [];
@@ -168,7 +168,7 @@ export function SegmentProvider({
   ): void => {
     // 이미 캐시에 있는 세그먼트 조회
     const segments = segmentsQuery.data || [];
-    const currentSegment = segments.find(s => s.id === segmentId);
+    const currentSegment = segments.find((s: TranslationUnit) => s.id === segmentId);
     
     if (!currentSegment) {
       console.error(`Segment with ID ${segmentId} not found`);
