@@ -275,65 +275,7 @@ export function DocSegment({
               {segment.target || "Click to add translation"}
             </span>
             
-            {/* 상태 버튼 추가 - 세그먼트 호버 시에만 보임 */}
-            {hasTranslation && (
-              <Button
-                size="sm"
-                variant={segment.status === "Reviewed" ? "default" : "outline"} 
-                className={cn(
-                  "ml-1 inline-flex opacity-0 group-hover:opacity-100 transition-opacity h-6 px-2 py-0",
-                  segment.status === "Reviewed" ? "bg-green-600 hover:bg-green-700" : ""
-                )}
-                onClick={(e) => {
-                  e.stopPropagation(); // 편집 모드 진입 방지
-                  
-                  if (onToggleStatus) {
-                    // 부모로부터 전달된 토글 함수 사용
-                    onToggleStatus();
-                  } else {
-                    const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
-                    
-                    // MT, 100%, Fuzzy일 경우 origin도 HT로 변경
-                    const needsOriginChange = (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
-                    const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : segment.origin;
-                    
-                    const updateStatus = async () => {
-                      try {
-                        // 인증된 API 요청으로 서버에 업데이트
-                        const response = await apiRequest(
-                          'PATCH',
-                          `/api/segments/${segment.id}`,
-                          {
-                            target: segment.target,
-                            status: newStatus,
-                            origin: newOrigin
-                          }
-                        );
-                        
-                        if (!response.ok) {
-                          throw new Error(`Server responded with status: ${response.status}`);
-                        }
-                        
-                        const updatedSegment = await response.json();
-                        console.log('Status toggled to', newStatus, updatedSegment);
-                        
-                        // 로컬 상태 업데이트
-                        onUpdate?.(updatedSegment.target, updatedSegment.status, updatedSegment.origin);
-                      } catch (error) {
-                        console.error("Failed to toggle segment status:", error);
-                      }
-                    };
-                    
-                    updateStatus();
-                  }
-                }}
-              >
-                <Check className="h-3.5 w-3.5 mr-1" />
-                <span className="text-xs whitespace-nowrap">
-                  {segment.status === 'Reviewed' ? 'Reviewed' : 'Review'}
-                </span>
-              </Button>
-            )}
+            {/* 버튼 제거 */}
           </span>
         );
       }
@@ -436,13 +378,16 @@ export function DocSegment({
                   // 저장하면서 Reviewed 상태로 변경
                   const updateSegment = async () => {
                     try {
+                      // 상태 토글 (Reviewed <-> Edited)
+                      const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
+                      
                       // 인증된 API 요청으로 서버에 업데이트 
                       const response = await apiRequest(
                         'PATCH',
                         `/api/segments/${segment.id}`,
                         {
                           target: editedValue,
-                          status: "Reviewed",
+                          status: newStatus,
                           origin: needsOriginChange ? "HT" : segment.origin
                         }
                       );
@@ -450,6 +395,7 @@ export function DocSegment({
                       // 응답이 성공적이면 로컬 상태도 업데이트
                       if (response.ok) {
                         const updatedSegment = await response.json();
+                        console.log('Status toggled to', newStatus, updatedSegment);
                         onUpdate?.(updatedSegment.target, updatedSegment.status, updatedSegment.origin);
                         onSave?.(); // 편집 모드 종료
                       }
@@ -461,10 +407,12 @@ export function DocSegment({
                   updateSegment();
                 }}
                 size="sm" 
-                variant="default"
+                variant={segment.status === "Reviewed" ? "default" : "outline"}
+                className={cn(
+                  segment.status === "Reviewed" ? "bg-green-600 hover:bg-green-700" : ""
+                )}
               >
-                <Check className="h-4 w-4 mr-1" />
-                Save & Review
+                <Check className={cn("h-4 w-4", segment.status === "Reviewed" ? "text-white" : "text-green-600")}/>
               </Button>
             </div>
           </div>
@@ -539,24 +487,19 @@ export function DocSegment({
                       }
                     }}
                     size="sm" 
-                    variant="ghost" 
-                    className="h-6 w-6 p-0 rounded-full"
+                    variant={segment.status === "Reviewed" ? "default" : "outline"}
+                    className={cn(
+                      "h-6 w-6 p-0 rounded-full",
+                      segment.status === "Reviewed" ? "bg-green-600 hover:bg-green-700" : ""
+                    )}
                   >
-                    <span className="sr-only">Toggle Status</span>
+                    <Check className="h-4 w-4" />
                   </Button>
                 </div>
               )}
             </div>
             
-            {/* 상태 토글 버튼 - 호버 시에만 표시 */}
-            {segment.target && segment.status === 'Reviewed' && (
-              <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Badge variant="default" className="text-[10px] font-normal h-5 px-2 bg-green-600">
-                  <Check className="h-3 w-3 mr-1" />
-                  Reviewed
-                </Badge>
-              </div>
-            )}
+            {/* Reviewed 배지 제거 */}
           </div>
         )}
       </div>
