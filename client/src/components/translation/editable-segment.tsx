@@ -18,75 +18,72 @@ interface EditableSegmentProps {
   onCheckChange?: (checked: boolean) => void;
 }
 
-export function EditableSegment({
-  segment,
-  index,
-  isSource,
-  isSelected,
-  onSelect,
-  onUpdate,
-  onTranslateWithGPT,
-  isChecked,
-  onCheckChange
-}: EditableSegmentProps) {
-  // 공유 컨텍스트에서 최신 세그먼트 데이터 참조
+export function EditableSegment(props: EditableSegmentProps) {
+  const {
+    segment,
+    index,
+    isSource,
+    isSelected,
+    onSelect,
+    onUpdate,
+    onTranslateWithGPT,
+    isChecked,
+    onCheckChange
+  } = props;
+  
+  // 공유 컨텍스트에서 최신 데이터 참조
   const { segments } = useSegmentContext();
   
-  // 최신 세그먼트 데이터 사용 (props.segment 대신 context에서 찾아서 사용)
+  // 상태 및 원본 변경 여부 확인을 위한 상수
+  const STATUS_NEED_CHANGE = ["MT", "100%", "Fuzzy"];
+  
+  // 최신 세그먼트 데이터 사용 - context에서 찾아 항상 최신 상태 유지
   const liveSegment = useMemo(
-    () => segments.find((s) => s.id === segment.id) || segment,
+    () => segments.find(s => s.id === segment.id) || segment,
     [segments, segment.id]
   );
   
-  // Source is not editable, target is always directly editable - 최신 데이터 참조
   const [value, setValue] = useState(isSource ? liveSegment.source : liveSegment.target || "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
-  // Auto-focus textarea when selected
-  useEffect(() => {
-    if (!isSource && isSelected && textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [isSelected, isSource]);
-  
-  // Toggle status between current status and "Reviewed" - 최신 데이터 참조
-  const toggleStatus = () => {
-    if (!isSource && onUpdate) {
-      // Toggle between current status and Reviewed
-      const newStatus = liveSegment.status === "Reviewed" ? "Edited" : "Reviewed";
-      // Also update origin to HT if it's MT, 100%, or Fuzzy and status is toggled to Reviewed
-      const needsOriginChange = (liveSegment.origin === "MT" || liveSegment.origin === "100%" || liveSegment.origin === "Fuzzy");
-      const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : liveSegment.origin;
-      
-      onUpdate(value, newStatus, newOrigin);
-    }
-  };
-  
-  // Update value when segment target changes (to sync with external changes) - 최신 데이터 참조
+  // 최신 데이터 동기화
   useEffect(() => {
     if (!isSource) {
       setValue(liveSegment.target || "");
     }
   }, [liveSegment.target, isSource]);
   
-  // Auto-resize textarea as content grows - 최신 데이터 참조
+  // 자동 포커스
+  useEffect(() => {
+    if (!isSource && isSelected && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [isSelected, isSource]);
+  
+  // 상태 변경
+  const toggleStatus = () => {
+    if (!isSource && onUpdate) {
+      const newStatus = liveSegment.status === "Reviewed" ? "Edited" : "Reviewed";
+      const needsOriginChange = STATUS_NEED_CHANGE.includes(liveSegment.origin);
+      const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : liveSegment.origin;
+      
+      onUpdate(value, newStatus, newOrigin);
+    }
+  };
+  
+  // 텍스트 변경 핸들러
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setValue(newValue);
     
-    // Automatically update as user types (change origin to HT when edited)
     if (!isSource && onUpdate) {
-      // If value is different from original target and origin was MT, 100%, or Fuzzy, change to HT
       const isValueChanged = newValue !== liveSegment.target;
-      const needsOriginChange = liveSegment.origin === "MT" || liveSegment.origin === "100%" || liveSegment.origin === "Fuzzy";
+      const needsOriginChange = STATUS_NEED_CHANGE.includes(liveSegment.origin);
       const newOrigin = isValueChanged && needsOriginChange ? "HT" : liveSegment.origin;
       
-      // Automatically change status to Edited if it was MT/100%/Fuzzy/Reviewed and user is editing it
       let newStatus = liveSegment.status;
       if (isValueChanged) {
-        if (liveSegment.status === "Reviewed") {
-          newStatus = "Edited";
-        } else if (liveSegment.status === "MT" || liveSegment.status === "100%" || liveSegment.status === "Fuzzy") {
+        if (liveSegment.status === "Reviewed" || STATUS_NEED_CHANGE.includes(liveSegment.status)) {
           newStatus = "Edited";
         }
       }
@@ -94,14 +91,14 @@ export function EditableSegment({
       onUpdate(newValue, newStatus, newOrigin);
     }
     
-    // Resize textarea to fit content
+    // 리사이즈
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   };
   
-  // Update textarea height when segment target changes or on mount - 최신 데이터 참조
+  // Update textarea height when segment target changes or on mount
   useEffect(() => {
     if (!isSource && textareaRef.current) {
       // Use setTimeout to ensure DOM is ready
