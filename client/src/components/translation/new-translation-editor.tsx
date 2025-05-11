@@ -751,8 +751,8 @@ export function NewTranslationEditor({
                 </Select>
               </div>
 
-              {/* Select All Checkbox - 순서 변경됨 */}
-              <div className="flex items-center space-x-1.5 ml-auto">
+              {/* Select All Checkbox */}
+              <div className="flex items-center space-x-1.5">
                 <Checkbox
                   id="toggle-select-all"
                   checked={

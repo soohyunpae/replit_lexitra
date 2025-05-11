@@ -38,19 +38,19 @@ function shouldBeConnected(
 ): boolean {
   // 다음 세그먼트가 없으면 연결하지 않음
   if (!nextSegment) return false;
-
+  
   // 양쪽 모두 텍스트가 있는지 확인
   const currentHasText = currentSegment.source && currentSegment.source.trim().length > 0;
   const nextHasText = nextSegment.source && nextSegment.source.trim().length > 0;
-
+  
   if (!currentHasText || !nextHasText) return false;
-
+  
   // 현재 세그먼트의 마지막 문자
   const lastChar = currentSegment.source.trim().slice(-1);
-
+  
   // 특정 종료 문자로 끝나는 문장 검사
   const sentenceEndingChars = ['.', '?', '!', ':', ';'];
-
+  
   // 특정 키워드 다음에 문단이 끝난다고 가정
   const paragraphEndingKeywords = [
     "Fig.", "Fig", "Figure", "TABLE", "Table", 
@@ -60,33 +60,33 @@ function shouldBeConnected(
     "RESULTS", "Results", "DISCUSSION", "Discussion",
     "CONCLUSION", "Conclusion", "REFERENCES", "References"
   ];
-
+  
   // 단락 끝으로 처리할 패턴
   const paragraphEndingPattern = new RegExp(`(${paragraphEndingKeywords.join('|')})\\s*$`, 'i');
-
+  
   // 마침표, 물음표, 느낌표, 콜론 등으로 끝나면 연결하지 않음 (문단 구분)
   if (sentenceEndingChars.includes(lastChar) && !paragraphEndingPattern.test(currentSegment.source)) {
     // 일부 약어 처리를 위한 예외 (예: e.g., i.e., etc.)
     const abbreviations = ['e.g', 'i.e', 'etc', 'vs', 'cf', 'fig', 'inc', 'ltd', 'co', 'Dr', 'Mr', 'Mrs', 'Ms', 'Jr'];
     const lastWord = currentSegment.source.trim().split(/\s+/).pop()?.toLowerCase() || '';
     const isAbbreviation = abbreviations.some(abbr => lastWord.includes(`${abbr}.`));
-
+    
     if (!isAbbreviation) {
       return false;
     }
   }
-
+  
   // 줄바꿈이 있으면 연결하지 않음
   if (currentSegment.source.includes('\n') || nextSegment.source.includes('\n')) {
     return false;
   }
-
+  
   // 항목으로 시작하는 경우 (번호, 글머리 기호 등)
   const bulletPattern = /^\s*[-•*]|\s*\d+\.\s+/;
   if (nextSegment.source.match(bulletPattern)) {
     return false;
   }
-
+  
   return true;
 }
 
@@ -96,22 +96,22 @@ function groupSegmentsByParagraphs(segments: TranslationUnit[]): TranslationUnit
   const hasParagraphInfo = segments.some(segment => 
     segment.comment && segment.comment.includes('paragraphId:')
   );
-
+  
   // 문단 정보가 있으면 그것을 이용하여 그룹화
   if (hasParagraphInfo) {
     const groups: Record<string, TranslationUnit[]> = {};
-
+    
     // 문단 ID별로 분류
     segments.forEach(segment => {
       const match = segment.comment?.match(/paragraphId:(\d+)/);
       const paragraphId = match ? match[1] : 'default';
-
+      
       if (!groups[paragraphId]) {
         groups[paragraphId] = [];
       }
       groups[paragraphId].push(segment);
     });
-
+    
     // 문단 ID 순서대로 정렬하여 반환
     return Object.entries(groups)
       .sort(([a], [b]) => {
@@ -121,30 +121,30 @@ function groupSegmentsByParagraphs(segments: TranslationUnit[]): TranslationUnit
       })
       .map(([_, segmentGroup]) => segmentGroup);
   }
-
+  
   // 문단 정보가 없으면 텍스트 특성을 기반으로 그룹화
   const groups: TranslationUnit[][] = [];
   let currentGroup: TranslationUnit[] = [];
-
+  
   segments.forEach((segment, index) => {
     currentGroup.push(segment);
-
+    
     // 연결되지 않아야 하면 새 그룹 시작
     if (!shouldBeConnected(segment, segments[index + 1], segments)) {
       groups.push([...currentGroup]);
       currentGroup = [];
     }
   });
-
+  
   // 마지막 그룹이 있으면 추가
   if (currentGroup.length > 0) {
     groups.push(currentGroup);
   }
-
+  
   // 매우 작은 그룹은 가능하면 병합 (예: 1-2 개 세그먼트만 있는 그룹)
   const mergedGroups: TranslationUnit[][] = [];
   let temp: TranslationUnit[] = [];
-
+  
   groups.forEach((group, i) => {
     // 작은 그룹(1-2개 세그먼트)이 있고, 이전 그룹이 있으면 병합 고려
     if (group.length <= 2 && temp.length > 0 && temp.length < 5) {
@@ -156,11 +156,11 @@ function groupSegmentsByParagraphs(segments: TranslationUnit[]): TranslationUnit
       temp = [...group];
     }
   });
-
+  
   if (temp.length > 0) {
     mergedGroups.push(temp);
   }
-
+  
   return mergedGroups.length > 0 ? mergedGroups : groups;
 }
 
@@ -183,20 +183,20 @@ export function DocReviewEditor({
   const [showSidePanel, setShowSidePanel] = useState(true);
   // 문장 하이라이트를 위한 상태 변수 추가
   const [highlightedSegmentId, setHighlightedSegmentId] = useState<number | null>(null);
-
+  
   // 문서 보기를 위해 세그먼트를 그룹화
   const segmentGroups = groupSegmentsByParagraphs(segments);
-
+  
   // References for the panels to sync scrolling
   const leftPanelRef = useRef<HTMLDivElement>(null);
   const rightPanelRef = useRef<HTMLDivElement>(null);
-
+  
   // Track if user is currently scrolling a panel to prevent infinite loop
   const isUserScrolling = useRef(false);
-
+  
   // Keep track of which panel was scrolled last
   const lastScrolledPanel = useRef<'left' | 'right' | null>(null);
-
+  
   // Use our custom hook for managing editing state
   const {
     editingId,
@@ -207,16 +207,16 @@ export function DocReviewEditor({
     cancelEditing,
     toggleStatus
   } = useEditingState(segments, fileId);
-
+  
   // 수정된 선택 함수 - 하이라이트 기능 추가
   const selectSegmentForEditing = (segment: TranslationUnit) => {
     setHighlightedSegmentId(segment.id);
     originalSelectForEditing(segment);
   };
-
+  
   // 세그먼트의 상태를 추적하기 위한 로컬 상태
   const [segmentStatuses, setSegmentStatuses] = useState<Record<number, string>>({});
-
+  
   // 수정된 취소 함수 - 하이라이트 제거
   const originalCancelEditing = cancelEditing;
   const customCancelEditing = () => {
@@ -233,7 +233,7 @@ export function DocReviewEditor({
     }
     originalCancelEditing();
   };
-
+  
   // 수정된 저장 함수 - 하이라이트 제거 및 상태 업데이트
   const originalUpdateSegment = updateSegment;
   const customUpdateSegment = (id: number, value: string) => {
@@ -242,7 +242,7 @@ export function DocReviewEditor({
     if (segment) {
       // 값이 변경되었는지 확인
       const isValueChanged = value !== segment.target;
-
+      
       // 값이 변경되었고 상태가 'Reviewed'였다면 'Edited'로 변경
       if (isValueChanged && segment.status === 'Reviewed') {
         setSegmentStatuses(prev => ({
@@ -251,12 +251,12 @@ export function DocReviewEditor({
         }));
       }
     }
-
+    
     // 원래 업데이트 함수 호출
     originalUpdateSegment(id, value);
     setHighlightedSegmentId(null);
   };
-
+  
   // Update status counts when segments change
   useEffect(() => {
     const counts: Record<string, number> = {
@@ -267,7 +267,7 @@ export function DocReviewEditor({
       'Reviewed': 0,
       'Rejected': 0
     };
-
+    
     segments.forEach(segment => {
       // If segment has a valid status, use it
       if (segment.status && counts[segment.status] !== undefined) {
@@ -277,75 +277,75 @@ export function DocReviewEditor({
         counts['MT']++;
       }
     });
-
+    
     setStatusCounts(counts);
     console.log("Status counts updated:", counts);
   }, [segments]);
-
+  
   // Calculate progress percentages
   const totalSegments = segments.length;
   const reviewedPercentage = totalSegments > 0 
     ? (statusCounts['Reviewed'] || 0) / totalSegments * 100 
     : 0;
-
+    
   // Combine all non-reviewed, non-rejected statuses for the progress bar
   // This includes MT, 100%, Fuzzy, and Edited
   const inProgressCount = (statusCounts['MT'] || 0) + 
     (statusCounts['100%'] || 0) + 
     (statusCounts['Fuzzy'] || 0) + 
     (statusCounts['Edited'] || 0);
-
+    
   const inProgressPercentage = totalSegments > 0 
     ? inProgressCount / totalSegments * 100 
     : 0;
-
+    
   const rejectedPercentage = totalSegments > 0 
     ? (statusCounts['Rejected'] || 0) / totalSegments * 100 
     : 0;
-
+  
   // Sync scroll between panels
   useEffect(() => {
     if (!scrollSyncEnabled) return;
-
+    
     const handleScroll = (e: Event) => {
       if (isUserScrolling.current) return;
       isUserScrolling.current = true;
-
+      
       const target = e.target as HTMLDivElement;
       const isLeftPanel = target === leftPanelRef.current;
       const isRightPanel = target === rightPanelRef.current;
-
+      
       if (!isLeftPanel && !isRightPanel) {
         isUserScrolling.current = false;
         return;
       }
-
+      
       lastScrolledPanel.current = isLeftPanel ? 'left' : 'right';
-
+      
       if (isLeftPanel && rightPanelRef.current) {
         rightPanelRef.current.scrollTop = target.scrollTop;
       } else if (isRightPanel && leftPanelRef.current) {
         leftPanelRef.current.scrollTop = target.scrollTop;
       }
-
+      
       // Reset after a short delay
       setTimeout(() => {
         isUserScrolling.current = false;
       }, 50);
     };
-
+    
     const leftPanel = leftPanelRef.current;
     const rightPanel = rightPanelRef.current;
-
+    
     if (leftPanel) leftPanel.addEventListener('scroll', handleScroll);
     if (rightPanel) rightPanel.addEventListener('scroll', handleScroll);
-
+    
     return () => {
       if (leftPanel) leftPanel.removeEventListener('scroll', handleScroll);
       if (rightPanel) rightPanel.removeEventListener('scroll', handleScroll);
     };
   }, [scrollSyncEnabled]);
-
+  
   // Handle save action
   const handleSave = () => {
     onSave?.();
@@ -354,7 +354,7 @@ export function DocReviewEditor({
       description: "Your translations have been saved successfully."
     });
   };
-
+  
   return (
     <div className="flex flex-col h-full w-full overflow-auto">
       {/* Progress bar with controls */}
@@ -376,11 +376,11 @@ export function DocReviewEditor({
               />
             </div>
           </div>
-
+          
           <div className="text-xs font-medium text-muted-foreground whitespace-nowrap">
             {statusCounts["Reviewed"] || 0}/{segments.length} Reviewed
           </div>
-
+          
           <div className="flex items-center gap-2 ml-1">
             {/* Select All Checkbox */}
             <div className="flex items-center space-x-1.5">
@@ -406,7 +406,7 @@ export function DocReviewEditor({
                 </label>
               </div>
             </div>
-
+        
             {/* Desktop-only controls */}
             <div className="hidden md:flex items-center gap-2">
               <Button
@@ -428,7 +428,7 @@ export function DocReviewEditor({
                 )}
               </Button>
             </div>
-
+            
             {/* Side panel toggle button */}
             <Button
               size="sm"
@@ -443,7 +443,7 @@ export function DocReviewEditor({
                 <ChevronLeft className="h-3.5 w-3.5" />
               )}
             </Button>
-
+            
             {/* Device layout toggle button (just visual indicator for demo) */}
             <Button
               size="sm"
@@ -460,7 +460,7 @@ export function DocReviewEditor({
           </div>
         </div>
       </div>
-
+      
       {/* Document Editor Area */}
       <div 
         className={cn(
@@ -492,7 +492,7 @@ export function DocReviewEditor({
               </Button>
             </div>
           )}
-
+          
           {/* Source segments as continuous document */}
           <div className="p-4">
             <div className="bg-card/30 rounded-md shadow-sm overflow-hidden border p-5">
@@ -530,7 +530,7 @@ export function DocReviewEditor({
             </div>
           </div>
         </div>
-
+        
         {/* Target Panel */}
         <div 
           className={cn(
@@ -555,7 +555,7 @@ export function DocReviewEditor({
               </Button>
             </div>
           )}
-
+          
           {/* Target segments as continuous document */}
           <div className="p-4">
             <div className="bg-card/30 rounded-md shadow-sm overflow-hidden border p-5">
@@ -604,7 +604,7 @@ export function DocReviewEditor({
             </div>
           </div>
         </div>
-
+        
         {/* Side Panel - Only shown when enabled */}
         {!isMobile && showSidePanel && (
           <SidePanel

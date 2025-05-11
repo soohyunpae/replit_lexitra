@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, X, MessageCircle, FileEdit, CircuitBoard, CircleSlash, UserCheck, Circle } from 'lucide-react';
+import { Check, X, MessageCircle, FileEdit, CircuitBoard, CircleSlash, CircleCheck, UserCheck, Circle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -44,32 +44,32 @@ export function DocSegment({
   showStatusInEditor = false, // 기본값은 false
 }: DocSegmentProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
+  
   // 상태 토글 기능 추가
   const toggleStatus = () => {
     if (!isSource && onUpdate) {
       // Reviewed와 현재 상태 간 토글
       const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
-
+      
       // MT, 100%, Fuzzy일 경우 origin도 HT로 변경
       const needsOriginChange = (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
       const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : segment.origin;
-
+      
       onUpdate(editedValue, newStatus, newOrigin);
     }
   };
-
+  
   // Auto-focus textarea when editing begins
   useEffect(() => {
     if (isEditing && textareaRef.current) {
       textareaRef.current.focus();
-
+      
       // Place cursor at the end of the text
       const length = textareaRef.current.value.length;
       textareaRef.current.setSelectionRange(length, length);
     }
   }, [isEditing]);
-
+  
   // 텍스트 영역 자동 높이 조절
   useLayoutEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -80,34 +80,31 @@ export function DocSegment({
           textarea.style.height = `${textarea.scrollHeight}px`;
         }
       };
-
+      
       // 초기 로드 시 높이 조절
       adjustHeight();
-
+      
       // 윈도우 리사이즈 시 높이 재조정
       window.addEventListener('resize', adjustHeight);
       return () => window.removeEventListener('resize', adjustHeight);
     }
   }, [isEditing, editedValue]);
-
+  
   // Handle keyboard shortcuts
-  const handleKeyDown = React.useCallback((e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     // Save on Ctrl+Enter or Cmd+Enter
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && onSave) {
       e.preventDefault();
       onSave();
     }
-
+    
     // Cancel on Escape
     if (e.key === 'Escape' && onCancel) {
       e.preventDefault();
       onCancel();
     }
-  }, [onSave, onCancel]);
-
-  // Memoize the status check to prevent unnecessary re-renders
-  const isReviewed = React.useMemo(() => segment.status === 'Reviewed', [segment.status]);
-
+  };
+  
   // Document mode display
   if (isDocumentMode) {
     // Source panel in document mode
@@ -128,14 +125,14 @@ export function DocSegment({
         </span>
       );
     }
-
+    
     // Target panel in document mode
     if (isEditing) {
       return (
         <span className={cn("relative font-serif", className)}>
           <div className="relative my-1">
             {/* 불필요한 상태 뱃지 제거 - 푸터 영역에 통합 */}
-
+            
             {/* 문서 모드에서 텍스트 영역 - 자동 높이 조절 */}
             <div className="relative bg-accent/20 shadow-sm rounded-md">
               <Textarea
@@ -143,17 +140,14 @@ export function DocSegment({
                 value={editedValue}
                 onChange={(e) => {
                   const newValue = e.target.value;
-                  // Immediate UI update
                   onEditValueChange?.(newValue);
-
-                  // Local state update without API call
+                  
+                  // 자동 상태 업데이트 - 편집할 때 segment.target과 다르면 상태 업데이트
                   if (onUpdate) {
                     const isValueChanged = newValue !== segment.target;
-                    if (!isValueChanged) return;
-
                     const needsOriginChange = segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy";
-                    const newOrigin = needsOriginChange ? "HT" : segment.origin;
-
+                    const newOrigin = isValueChanged && needsOriginChange ? "HT" : segment.origin;
+                    
                     // 이미 Reviewed였는데 편집하면 Edited로 변경, MT/100%/Fuzzy였는데 편집하면 Edited로 변경
                     let newStatus = segment.status;
                     if (isValueChanged) {
@@ -162,7 +156,7 @@ export function DocSegment({
                       } else if (segment.status === "MT" || segment.status === "100%" || segment.status === "Fuzzy") {
                         newStatus = "Edited";
                       }
-
+                      
                       onUpdate(newValue, newStatus, newOrigin);
                     }
                   }
@@ -173,7 +167,7 @@ export function DocSegment({
                 autoFocus
                 style={{ height: 'auto', minHeight: '80px', overflow: 'hidden' }}
               />
-
+              
               {/* 텍스트 영역 내부 하단에 버튼 푸터 영역 배치 */}
               <div className="absolute bottom-0 left-0 right-0 h-10 bg-muted/20 border-t border-border/30 flex items-center justify-between px-2">
                 {/* 왼쪽에 상태 뱃지 */}
@@ -189,7 +183,7 @@ export function DocSegment({
                     {editedValue !== segment.target ? 'Edited' : segment.status || 'Draft'}
                   </Badge>
                 </div>
-
+                
                 {/* 오른쪽에 버튼들 */}
                 <div className="flex gap-2">
                   <Button 
@@ -199,17 +193,17 @@ export function DocSegment({
                         try {
                           // 텍스트 수정 여부 확인
                           const isTextChanged = editedValue !== segment.target;
-
+                          
                           // MT, 100%, Fuzzy에서 수정했을 경우 origin 변경
                           const needsOriginChange = isTextChanged && 
                             (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
-
+                          
                           // 이미 Reviewed였는데 수정했을 경우 Edited로 변경
                           let newStatus = segment.status;
                           if (isTextChanged && segment.status === "Reviewed") {
                             newStatus = "Edited";
                           }
-
+                          
                           // 인증된 API 요청으로 서버에 업데이트
                           const response = await apiRequest(
                             'PATCH',
@@ -220,14 +214,14 @@ export function DocSegment({
                               origin: needsOriginChange ? "HT" : segment.origin
                             }
                           );
-
+                          
                           if (!response.ok) {
                             throw new Error(`Server responded with status: ${response.status}`);
                           }
-
+                          
                           const updatedSegment = await response.json();
                           console.log('Saved segment:', updatedSegment);
-
+                          
                           // 로컬 상태 업데이트
                           onUpdate?.(
                             updatedSegment.target || editedValue, 
@@ -237,11 +231,11 @@ export function DocSegment({
                         } catch (error) {
                           console.error("Failed to save segment:", error);
                         }
-
+                        
                         // 편집 모드 종료 - 항상 실행
                         onCancel?.();
                       };
-
+                      
                       saveAndClose();
                     }}
                     size="sm" 
@@ -251,7 +245,7 @@ export function DocSegment({
                     <X className="h-4 w-4" />
                     <span className="sr-only">Save and Close</span>
                   </Button>
-
+                  
                   <Button 
                     onClick={(e) => {
                       e.stopPropagation(); // 이벤트 전파 방지
@@ -261,11 +255,11 @@ export function DocSegment({
                       } else {
                         // 기존 토글 로직 사용
                         const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
-
+                        
                         // MT, 100%, Fuzzy일 경우 origin도 HT로 변경
                         const needsOriginChange = (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
                         const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : segment.origin;
-
+                        
                         const updateStatus = async () => {
                           try {
                             // 인증된 API 요청으로 서버에 업데이트
@@ -278,15 +272,15 @@ export function DocSegment({
                                 origin: newOrigin
                               }
                             );
-
+                            
                             // 응답 확인 및 에러 처리 추가
                             if (!response.ok) {
                               throw new Error(`Server responded with status: ${response.status}`);
                             }
-
+                            
                             const updatedSegment = await response.json();
                             console.log('Updated segment:', updatedSegment);
-
+                            
                             // 로컬 상태 업데이트 - 서버에서 반환된 값으로 업데이트
                             onUpdate?.(updatedSegment.target || editedValue, updatedSegment.status, updatedSegment.origin);
                             // 중요: onSave 호출하지 않음 - 편집 상태를 유지하기 위해
@@ -294,7 +288,7 @@ export function DocSegment({
                             console.error("Failed to update segment status:", error);
                           }
                         };
-
+                        
                         updateStatus();
                       }
                     }}
@@ -314,7 +308,7 @@ export function DocSegment({
     } else {
       // 상태에 따른 스타일 적용
       const hasTranslation = !!segment.target;
-
+      
       // 문서 모드에서 뱃지 표시 방식 변경 (인라인으로 표시)
       if (isDocumentMode) {
         return (
@@ -337,25 +331,25 @@ export function DocSegment({
             >
               {segment.target || "Click to add translation"}
             </span>
-
+            
             {/* 상태 버튼 추가 - 세그먼트 호버 시에만 보임 */}
             {hasTranslation && (
               <span 
                 className="ml-1 inline-flex opacity-0 group-hover:opacity-100 transition-opacity"
                 onClick={(e) => {
                   e.stopPropagation(); // 편집 모드 진입 방지
-
+                  
                   if (onToggleStatus) {
                     // 부모로부터 전달된 토글 함수 사용
                     onToggleStatus();
                   } else {
                     // 기존 토글 로직 사용 (폴백)
                     const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
-
+                    
                     // MT, 100%, Fuzzy일 경우 origin도 HT로 변경
                     const needsOriginChange = (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
                     const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : segment.origin;
-
+                    
                     const updateStatus = async () => {
                       try {
                         // 인증된 API 요청으로 서버에 업데이트
@@ -368,33 +362,37 @@ export function DocSegment({
                             origin: newOrigin
                           }
                         );
-
+                        
                         // 응답 확인 및 에러 처리 추가
                         if (!response.ok) {
                           throw new Error(`Server responded with status: ${response.status}`);
                         }
-
+                        
                         const updatedSegment = await response.json();
                         console.log('Updated segment:', updatedSegment);
-
+                        
                         // 로컬 상태 업데이트 - 서버에서 반환된 값으로 업데이트
                         onUpdate?.(updatedSegment.target || segment.target || "", updatedSegment.status, updatedSegment.origin);
                       } catch (error) {
                         console.error("Failed to toggle segment status:", error);
                       }
                     };
-
+                    
                     updateStatus();
                   }
                 }}
               >
-                {/* 원 아이콘 제거 */}
+                {segment.status === 'Reviewed' ? (
+                  <CircleCheck className="h-4 w-4 text-green-600" />
+                ) : (
+                  <Circle className="h-4 w-4 text-muted-foreground" />
+                )}
               </span>
             )}
           </span>
         );
       }
-
+      
       // 기본 표시 방식
       return (
         <span 
@@ -416,7 +414,7 @@ export function DocSegment({
       );
     }
   }
-
+  
   // Standard mode (table or editor) display
   if (isEditing) {
     return (
@@ -435,7 +433,7 @@ export function DocSegment({
             </Badge>
           </div>
         )}
-
+        
         {isSource ? (
           <div className="font-serif text-base p-2 bg-accent/20 rounded-md">{segment.source}</div>
         ) : (
@@ -446,7 +444,7 @@ export function DocSegment({
               onChange={(e) => {
                 const value = e.target.value;
                 onEditValueChange?.(value);
-
+                
                 // 자동으로 Reviewed 상태에서 Edited 상태로 변경 로직 (필요시)
                 if (onUpdate && segment.status === "Reviewed" && value !== segment.target) {
                   onUpdate(value, "Edited", segment.origin);
@@ -456,7 +454,7 @@ export function DocSegment({
               className="min-h-[100px] font-serif text-base resize-none"
               placeholder="Enter translation..."
             />
-
+            
             {/* 편집 액션 버튼들 */}
             <div className="flex justify-end gap-2 mt-2">
               {/* X 버튼: 저장하지 않고 취소 */}
@@ -464,14 +462,14 @@ export function DocSegment({
                 <X className="h-4 w-4 mr-1" />
                 Cancel
               </Button>
-
+              
               {/* 체크 버튼: 상태와 함께 저장 */}
               <Button 
                 onClick={() => {
                   // 텍스트가 수정되었으면서 MT/100%/Fuzzy였으면 origin을 HT로 변경
                   const needsOriginChange = editedValue !== segment.target && 
                     (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
-
+                  
                   // 저장하면서 Reviewed 상태로 변경
                   const updateSegment = async () => {
                     try {
@@ -496,7 +494,7 @@ export function DocSegment({
                       console.error("Failed to save segment with status change:", error);
                     }
                   };
-
+                  
                   updateSegment();
                 }}
                 size="sm" 
@@ -527,7 +525,7 @@ export function DocSegment({
           >
             <div className="flex justify-between">
               <div>{segment.target || "Click to add translation"}</div>
-
+              
               {/* 호버 시 표시되는 액션 버튼들 */}
               {segment.target && (
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1 absolute top-1 right-1">
@@ -535,18 +533,18 @@ export function DocSegment({
                   <Button
                     onClick={(e) => {
                       e.stopPropagation(); // 부모 클릭 이벤트 방지
-
+                      
                       // 부모로부터 전달된 토글 함수 있으면 사용
                       if (onToggleStatus) {
                         onToggleStatus();
                       } else {
                         // 기존 토글 로직 사용 (폴백)
                         const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
-
+                        
                         // MT, 100%, Fuzzy일 경우 origin도 HT로 변경
                         const needsOriginChange = (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
                         const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : segment.origin;
-
+                        
                         const updateStatus = async () => {
                           try {
                             // 인증된 API 요청으로 서버에 업데이트
@@ -559,21 +557,21 @@ export function DocSegment({
                                 origin: newOrigin
                               }
                             );
-
+                            
                             // 응답 확인 및 에러 처리 추가
                             if (!response.ok) {
                               throw new Error(`Server responded with status: ${response.status}`);
                             }
-
+                            
                             const updatedSegment = await response.json();
-
+                            
                             // 로컬 상태 업데이트 - 서버에서 반환된 값으로 업데이트
                             onUpdate?.(updatedSegment.target, updatedSegment.status, updatedSegment.origin);
                           } catch (error) {
                             console.error("Failed to toggle segment status:", error);
                           }
                         };
-
+                        
                         updateStatus();
                       }
                     }}
@@ -586,7 +584,7 @@ export function DocSegment({
                 </div>
               )}
             </div>
-
+            
             {/* 상태와 기원 정보 표시 푸터 */}
             {segment.target && (
               <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
@@ -599,7 +597,7 @@ export function DocSegment({
                 >
                   {segment.status || 'Draft'}
                 </Badge>
-
+                
                 {segment.origin && (
                   <Badge variant="outline" className="text-[10px] font-normal h-4 px-1">
                     {segment.origin}
