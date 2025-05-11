@@ -206,7 +206,11 @@ export function EditableSegment(props: EditableSegmentProps) {
               ref={textareaRef}
               value={value}
               onChange={handleTextareaChange}
-              className="w-full font-mono resize-none focus-visible:ring-0 overflow-hidden no-scrollbar pt-[2px] pb-[28px] text-sm plaintext-textarea"
+              className="w-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] pb-[28px] text-sm leading-relaxed"
+              style={{
+                lineHeight: "1.6",
+                overflow: "hidden"
+              }}
               placeholder="Enter translation..."
             />
 
@@ -253,7 +257,11 @@ export function EditableSegment(props: EditableSegmentProps) {
             <Textarea
               value={value || ""}
               readOnly
-              className="w-full font-mono resize-none overflow-hidden no-scrollbar pt-[2px] text-sm read-only-plaintext"
+              className="w-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] text-sm leading-relaxed"
+              style={{
+                lineHeight: "1.6",
+                overflow: "hidden"
+              }}
               placeholder={isSource ? "No source text" : "No translation yet"}
             />
           </div>
