@@ -198,7 +198,7 @@ export function DocSegment({
                   }
                 }}
                 onKeyDown={handleKeyDown}
-                className="w-full p-2 pt-2 pb-12 resize-none border-0 shadow-none bg-transparent font-serif text-base"
+                className="w-full p-2 pr-8 pb-4 resize-none border-0 shadow-none bg-transparent font-serif text-base"
                 placeholder="Enter translation..."
                 autoFocus
                 style={{
@@ -209,7 +209,7 @@ export function DocSegment({
               />
 
               {/* 텍스트 영역 내부에 버튼 직접 배치 - 더 가까이 배치 */}
-              <div className="absolute bottom-1 right-1 flex gap-1">
+              <div className="absolute bottom-0.5 right-0.5 flex gap-1">
                 {/* 토글 버튼만 유지 */}
                 <Button
                   onClick={(e) => {
@@ -427,12 +427,12 @@ export function DocSegment({
                 }
               }}
               onKeyDown={handleKeyDown}
-              className="min-h-[100px] font-serif text-base resize-none pr-7 pb-7"
+              className="min-h-[100px] font-serif text-base resize-none pr-8 pb-4"
               placeholder="Enter translation..."
             />
 
             {/* 텍스트 영역 내부에 버튼 배치 */}
-            <div className="absolute bottom-1 right-1 flex gap-1">
+            <div className="absolute bottom-0.5 right-0.5 flex gap-1">
               {/* 체크 버튼: 상태 토글 */}
               <Button
                 onClick={() => {

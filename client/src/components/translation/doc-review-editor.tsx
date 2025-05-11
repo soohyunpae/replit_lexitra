@@ -179,7 +179,7 @@ export function DocReviewEditor({
   const { toast } = useToast();
   const isMobile = useMobile();
   const [showSource, setShowSource] = useState(true);
-  const [scrollSyncEnabled, setScrollSyncEnabled] = useState(true);
+  // scrollSync 기능 제거
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [showSidePanel, setShowSidePanel] = useState(true);
   // 문장 하이라이트를 위한 상태 변수 추가
@@ -332,48 +332,7 @@ export function DocReviewEditor({
     ? (statusCounts['Rejected'] || 0) / totalSegments * 100 
     : 0;
   
-  // Sync scroll between panels
-  useEffect(() => {
-    if (!scrollSyncEnabled) return;
-    
-    const handleScroll = (e: Event) => {
-      if (isUserScrolling.current) return;
-      isUserScrolling.current = true;
-      
-      const target = e.target as HTMLDivElement;
-      const isLeftPanel = target === leftPanelRef.current;
-      const isRightPanel = target === rightPanelRef.current;
-      
-      if (!isLeftPanel && !isRightPanel) {
-        isUserScrolling.current = false;
-        return;
-      }
-      
-      lastScrolledPanel.current = isLeftPanel ? 'left' : 'right';
-      
-      if (isLeftPanel && rightPanelRef.current) {
-        rightPanelRef.current.scrollTop = target.scrollTop;
-      } else if (isRightPanel && leftPanelRef.current) {
-        leftPanelRef.current.scrollTop = target.scrollTop;
-      }
-      
-      // Reset after a short delay
-      setTimeout(() => {
-        isUserScrolling.current = false;
-      }, 50);
-    };
-    
-    const leftPanel = leftPanelRef.current;
-    const rightPanel = rightPanelRef.current;
-    
-    if (leftPanel) leftPanel.addEventListener('scroll', handleScroll);
-    if (rightPanel) rightPanel.addEventListener('scroll', handleScroll);
-    
-    return () => {
-      if (leftPanel) leftPanel.removeEventListener('scroll', handleScroll);
-      if (rightPanel) rightPanel.removeEventListener('scroll', handleScroll);
-    };
-  }, [scrollSyncEnabled]);
+  // 스크롤 동기화 기능 제거
   
   // Handle save action
   const handleSave = () => {
@@ -411,53 +370,6 @@ export function DocReviewEditor({
           </div>
           
           <div className="flex items-center gap-2 ml-1">
-            {/* Select All Checkbox */}
-            <div className="flex items-center space-x-1.5">
-              <Checkbox
-                id="doc-toggle-select-all"
-                checked={false}
-                className="h-3.5 w-3.5 rounded"
-                onCheckedChange={() => {
-                  // This is a placeholder for future functionality
-                  // No bulk selection is implemented for document view yet
-                  toast({
-                    title: "Feature unavailable",
-                    description: "Bulk selection is not available in document view.",
-                  });
-                }}
-              />
-              <div className="flex items-center">
-                <label
-                  htmlFor="doc-toggle-select-all"
-                  className="text-xs font-medium ml-1 cursor-pointer"
-                >
-                  Select All
-                </label>
-              </div>
-            </div>
-        
-            {/* Desktop-only controls */}
-            <div className="hidden md:flex items-center gap-2">
-              <Button
-                size="sm"
-                variant={scrollSyncEnabled ? "default" : "outline"}
-                onClick={() => setScrollSyncEnabled(!scrollSyncEnabled)}
-                className="gap-1.5 h-7 text-xs"
-              >
-                {scrollSyncEnabled ? (
-                  <>
-                    <Check className="h-3.5 w-3.5" />
-                    <span>Sync Scroll</span>
-                  </>
-                ) : (
-                  <>
-                    <X className="h-3.5 w-3.5" />
-                    <span>Sync Scroll</span>
-                  </>
-                )}
-              </Button>
-            </div>
-            
             {/* Side panel toggle button */}
             <Button
               size="sm"
