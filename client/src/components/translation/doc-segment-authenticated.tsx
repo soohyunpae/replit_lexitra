@@ -21,7 +21,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { TranslationUnit, StatusType, OriginType } from "@/types";
 import { cn } from "@/lib/utils";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useSegmentContext } from "@/hooks/useSegmentContext";
 
 // 인증 문제를 해결한 DocSegment 컴포넌트 수정 버전
@@ -487,6 +487,17 @@ export function DocSegment({
                           newStatus,
                           updatedSegment,
                         );
+                        
+                        // React Query 캐시 무효화하여 UI가 최신 상태로 유지되도록 함
+                        if (segment.fileId) {
+                          queryClient.invalidateQueries({
+                            queryKey: ['segments', segment.fileId]
+                          });
+                          queryClient.invalidateQueries({
+                            queryKey: [`/api/files/${segment.fileId}/segments`]
+                          });
+                        }
+                        
                         if (onUpdate) {
                           onUpdate(
                             String(updatedSegment.target || ""),

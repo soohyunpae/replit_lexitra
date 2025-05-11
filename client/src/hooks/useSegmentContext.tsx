@@ -1,6 +1,6 @@
 import { createContext, useContext, ReactNode, useState, useEffect, useCallback, useMemo } from 'react';
 import { TranslationUnit } from '../types';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useDebouncedCallback } from './useDebounce';
 
 // 컨텍스트 타입 정의
@@ -83,6 +83,16 @@ export function SegmentProvider({
           segment.id === segmentId ? serverData : segment
         )
       );
+      
+      // React Query 캐시 무효화
+      if (serverData.fileId) {
+        queryClient.invalidateQueries({
+          queryKey: ['segments', serverData.fileId]
+        });
+        queryClient.invalidateQueries({
+          queryKey: [`/api/files/${serverData.fileId}/segments`]
+        });
+      }
 
       setLoading(false);
       setPendingUpdates(prev => {
@@ -114,7 +124,17 @@ export function SegmentProvider({
     async (segmentId: number, newData: Partial<TranslationUnit>) => {
       try {
         console.log(`Sending debounced update for segment ${segmentId}:`, newData);
-        await updateSegment(segmentId, newData);
+        const updatedSegment = await updateSegment(segmentId, newData);
+        
+        // React Query 캐시 무효화 (이중으로 보장)
+        if (updatedSegment.fileId) {
+          queryClient.invalidateQueries({
+            queryKey: ['segments', updatedSegment.fileId]
+          });
+          queryClient.invalidateQueries({
+            queryKey: [`/api/files/${updatedSegment.fileId}/segments`]
+          });
+        }
       } catch (error) {
         console.error(`Debounced update for segment ${segmentId} failed:`, error);
       }
