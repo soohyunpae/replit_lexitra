@@ -186,41 +186,12 @@ export function DocReviewEditor({
   
   // React Query로 segments 관리
   const { 
-    segments, 
+    segments = [], 
     isLoading, 
     isError, 
     updateSegment: reactQueryUpdateSegment,
     debouncedUpdateSegment 
   } = useSegments(fileId);
-  
-  // 로딩 상태 표시
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-pulse text-center">
-          <div className="h-8 w-40 bg-accent rounded-full mx-auto mb-4"></div>
-          <div className="h-4 w-60 bg-accent rounded-full mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
-  
-  // 에러 상태 표시
-  if (isError) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <AlertCircle className="h-10 w-10 text-destructive mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Failed to load segments</h3>
-          <p className="text-muted-foreground mb-4">There was an error loading translation segments.</p>
-          <Button onClick={() => window.location.reload()}>Retry</Button>
-        </div>
-      </div>
-    );
-  }
-  
-  // 문서 보기를 위해 세그먼트를 그룹화
-  const segmentGroups = groupSegmentsByParagraphs(segments);
   
   // References for the panels to sync scrolling
   const leftPanelRef = useRef<HTMLDivElement>(null);
@@ -251,6 +222,35 @@ export function DocReviewEditor({
   
   // 세그먼트의 상태를 추적하기 위한 로컬 상태
   const [segmentStatuses, setSegmentStatuses] = useState<Record<number, string>>({});
+  
+  // 문서 보기를 위해 세그먼트를 그룹화 (조건부로 호출하지 않고 항상 호출)
+  const segmentGroups = groupSegmentsByParagraphs(segments);
+  
+  // 로딩 상태 표시
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-pulse text-center">
+          <div className="h-8 w-40 bg-accent rounded-full mx-auto mb-4"></div>
+          <div className="h-4 w-60 bg-accent rounded-full mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  // 에러 상태 표시
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <AlertCircle className="h-10 w-10 text-destructive mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Failed to load segments</h3>
+          <p className="text-muted-foreground mb-4">There was an error loading translation segments.</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
   
   // 수정된 취소 함수 - 하이라이트 제거
   const originalCancelEditing = cancelEditing;
