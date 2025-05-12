@@ -1,0 +1,69 @@
+좋아, 지금 상황과 해결 방향을 Replit AI가 이해할 수 있도록 명확하게 정리해줄게:
+
+⸻
+
+📌 요청: Document View 저장 로직을 Segment Editor와 동일한 React Query 방식으로 통합해 주세요
+
+⸻
+
+✅ 현재 문제
+
+In the Document View editor (doc-segment-authenticated.tsx),
+clicking the “X” (close) button or status badge does not persist text or status changes,
+even though onUpdate() is being called.
+
+Root Cause:
+	•	onUpdate() in this component does not use React Query or mutation hooks, so changes are not sent to the server or cached.
+	•	As a result, changes appear to be lost until a page reload.
+	•	Segment Editor uses useMutation and queryClient.invalidateQueries(), which ensures server sync + UI update.
+	•	Document View still relies on local context/state update only, not server sync.
+
+⸻
+
+✅ What to do
+
+Please refactor doc-segment-authenticated.tsx so that:
+	1.	Saving a segment (from the close button or status badge) calls a mutation function:
+	•	It should PATCH /api/segments/:id with target, status, origin
+	•	Then call queryClient.invalidateQueries(["segments"]) to refresh the cached data
+	2.	This should behave identically to Segment Editor’s update flow:
+	•	Use useMutation from React Query
+	•	Optimistically reflect changes or re-render on mutation success
+	3.	Remove or ignore the current onUpdate() prop in this component — it is no longer necessary if you apply mutation directly.
+
+⸻
+
+🔧 Mutation example
+
+You can reuse this example logic inside doc-segment-authenticated.tsx:
+
+const mutation = useMutation(
+  (data) => apiRequest("PATCH", `/api/segments/${data.id}`, data),
+  {
+    onSuccess: () => {
+      queryClient.invalidateQueries(["segments"]);
+    },
+  }
+);
+
+Usage in close handler:
+
+mutation.mutate({
+  id: segment.id,
+  target: editedValue,
+  status: localStatus,
+  origin: newOrigin,
+});
+
+
+⸻
+
+✅ Expected Result
+	•	✅ Clicking the status badge toggles the segment status and persists the change
+	•	✅ Clicking the close (X) button saves any text edits or status changes and closes the drawer
+	•	✅ All changes are immediately visible in the UI without needing a reload
+
+⸻
+
+이렇게 전달하면 Replit AI도 문맥과 기술적 맥락을 정확히 이해하고, 바로 수정에 들어갈 수 있을 거야.
+필요하다면 이 내용을 바로 복사해서 Replit 대화창에 붙여넣으면 돼.

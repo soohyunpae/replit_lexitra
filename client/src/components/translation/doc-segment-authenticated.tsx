@@ -22,6 +22,8 @@ import { Separator } from "@/components/ui/separator";
 import { TranslationUnit, StatusType, OriginType } from "@/types";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
+import { useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 
 // 인증 문제를 해결한 DocSegment 컴포넌트 수정 버전
 // 모든 fetch 호출을 apiRequest로 교체하여 인증 요청 지원
@@ -61,14 +63,33 @@ export function DocSegment({
   // Local status state - moved outside of conditional rendering
   const [localStatus, setLocalStatus] = useState(segment.status);
   
+  // React Query Mutation 설정
+  const updateSegmentMutation = useMutation({
+    mutationFn: (data: { id: number, target: string, status: string, origin: string | null | undefined }) => 
+      apiRequest("PATCH", `/api/segments/${data.id}`, {
+        target: data.target,
+        status: data.status,
+        origin: data.origin || null
+      }),
+    onSuccess: () => {
+      // 성공 시 segments 쿼리 캐시 무효화 (UI 갱신)
+      queryClient.invalidateQueries({ queryKey: ["segments"] });
+    },
+    onError: (error) => {
+      console.error("Failed to update segment:", error);
+      // 오류 시 이전 상태로 복원 (UI 롤백)
+      setLocalStatus(segment.status);
+    }
+  });
+  
   // Keep local state in sync with props - moved outside conditional
   useEffect(() => {
     setLocalStatus(segment.status);
   }, [segment.status]);
 
-  // 상태 토글 기능 추가
+  // 상태 토글 기능 추가 - React Query 사용으로 변경
   const toggleStatus = () => {
-    if (!isSource && onUpdate) {
+    if (!isSource) {
       // Reviewed와 현재 상태 간 토글
       const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
 
@@ -80,7 +101,18 @@ export function DocSegment({
       const newOrigin =
         newStatus === "Reviewed" && needsOriginChange ? "HT" : segment.origin;
 
-      onUpdate(editedValue, newStatus, newOrigin);
+      // UI 즉시 업데이트 (낙관적 UI 업데이트)
+      setLocalStatus(newStatus);
+      
+      // mutation 호출하여 서버에 업데이트
+      updateSegmentMutation.mutate({
+        id: segment.id,
+        target: editedValue || "",
+        status: newStatus,
+        origin: newOrigin
+      });
+      
+      // 원래 onUpdate 호출은 제거 (이제 불필요)
     }
   };
 
@@ -236,7 +268,7 @@ export function DocSegment({
                         // Toggle status (Reviewed <-> Edited)
                         const newStatus = localStatus === "Reviewed" ? "Edited" : "Reviewed";
                         
-                        // Update local state immediately for UI
+                        // Update local state immediately for UI (낙관적 업데이트)
                         setLocalStatus(newStatus);
                         
                         // 원본이 MT, 100%, Fuzzy인 경우에만 origin 변경 필요
@@ -244,46 +276,17 @@ export function DocSegment({
                           (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
                         const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : segment.origin;
                         
-                        // Background server update - 현재 텍스트 그대로 유지하고 상태만 변경
-                        const updateSegmentStatus = async () => {
-                          try {
-                            // 여기서 중요: 텍스트(target) 값으로 현재 editedValue가 아닌 
-                            // 원래 segment.target 값을 사용 (문서 요구사항)
-                            const response = await apiRequest(
-                              "PATCH",
-                              `/api/segments/${segment.id}`,
-                              {
-                                target: segment.target || "", // 텍스트 변경 없음
-                                status: newStatus,           // 상태만 변경
-                                origin: newOrigin,
-                              },
-                            );
-                            
-                            if (!response.ok) {
-                              throw new Error(`Server responded with status: ${response.status}`);
-                            }
-                            
-                            const updatedSegment = await response.json();
-                            console.log("Status toggled to", newStatus, updatedSegment);
-                            
-                            // 중요: 여기에서 queryClient를 사용하여 segments 쿼리를 무효화
-                            // 이렇게 하면 UI가 자동으로 새로운 데이터로 업데이트됨
-                            import('@/lib/queryClient').then(module => {
-                              const { queryClient } = module;
-                              // 쿼리 무효화 - 모든 세그먼트 관련 쿼리 갱신
-                              queryClient.invalidateQueries({ queryKey: ["segments"] });
-                            });
-                            
-                            // Don't auto-close the editor when changing status
-                            // Status change is just a toggle, editor stays open
-                          } catch (error) {
-                            console.error("Failed to toggle segment status:", error);
-                            // Revert on error
-                            setLocalStatus(segment.status);
-                          }
-                        };
+                        // 중요: 텍스트(target) 값으로 현재 editedValue가 아닌 
+                        // 원래 segment.target 값을 사용 (문서 요구사항)
+                        // React Query Mutation 사용하여 API 호출 + 캐시 업데이트
+                        updateSegmentMutation.mutate({
+                          id: segment.id,
+                          target: segment.target || "", // 텍스트 변경 없음, 상태만 변경
+                          status: newStatus,
+                          origin: newOrigin || ""
+                        });
                         
-                        updateSegmentStatus();
+                        console.log("Status toggled to", newStatus);
                       }}
                     >
                       {localStatus || "Draft"}
