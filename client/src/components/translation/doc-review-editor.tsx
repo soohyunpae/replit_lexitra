@@ -425,19 +425,7 @@ export function DocReviewEditor({
               )}
             </Button>
             
-            {/* Device layout toggle button (just visual indicator for demo) */}
-            <Button
-              size="sm"
-              variant="ghost"
-              title="Current layout mode"
-              className="opacity-70 h-7 w-7 p-0"
-            >
-              {isMobile ? (
-                <Smartphone className="h-3.5 w-3.5" />
-              ) : (
-                <Monitor className="h-3.5 w-3.5" />
-              )}
-            </Button>
+            {/* Device layout toggle button removed as requested */}
           </div>
         </div>
       </div>

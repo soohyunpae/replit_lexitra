@@ -378,9 +378,7 @@ export function DocSegment({
                 "font-serif text-base inline cursor-text",
                 "selection:bg-blue-100 dark:selection:bg-blue-900",
                 !hasTranslation && "text-muted-foreground italic",
-                hasTranslation &&
-                  segment.status === "Reviewed" &&
-                  "text-green-700 dark:text-green-400",
+                // 상태에 따른 텍스트 색상 변경 제거 (Reviewed 상태일 때 초록색 제거)
                 hasTranslation &&
                   segment.status === "Rejected" &&
                   "text-red-700 dark:text-red-400",
@@ -403,9 +401,7 @@ export function DocSegment({
             "font-serif text-base inline cursor-text",
             "selection:bg-blue-100 dark:selection:bg-blue-900",
             !hasTranslation && "text-muted-foreground italic",
-            hasTranslation &&
-              segment.status === "Reviewed" &&
-              "text-green-700 dark:text-green-400",
+            // 상태에 따른 텍스트 색상 변경 제거 (Reviewed 상태일 때 초록색 제거)
             hasTranslation &&
               segment.status === "Rejected" &&
               "text-red-700 dark:text-red-400",
