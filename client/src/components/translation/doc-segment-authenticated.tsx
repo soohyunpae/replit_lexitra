@@ -146,22 +146,144 @@ export function DocSegment({
 
     // Target panel in document mode
     if (isEditing) {
+      // State for local UI updates without waiting for prop changes
+      const [localStatus, setLocalStatus] = useState(segment.status);
+      
+      // Keep local state in sync with props
+      useEffect(() => {
+        setLocalStatus(segment.status);
+      }, [segment.status]);
+      
       return (
         <span className={cn("relative font-serif", className)}>
           <div className="relative my-1">
-            {/* 불필요한 상태 뱃지 제거 - 푸터 영역에 통합 */}
+            {/* Status Badge and Controls Bar */}
+            <div className="flex items-center gap-2 mb-1">
+              {/* Clickable Status Badge */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant={localStatus === "Reviewed" ? "default" : "outline"}
+                    className={cn(
+                      "text-xs cursor-pointer transition-colors",
+                      localStatus === "Reviewed"
+                        ? "bg-green-600 hover:bg-green-700"
+                        : "border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30",
+                      localStatus === "Rejected"
+                        ? "border-red-500 text-red-500"
+                        : ""
+                    )}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      
+                      // Toggle status
+                      const newStatus = localStatus === "Reviewed" ? "Edited" : "Reviewed";
+                      
+                      // Update local state immediately for UI
+                      setLocalStatus(newStatus);
+                      
+                      // Check if origin needs to change
+                      const needsOriginChange = 
+                        editedValue !== segment.target &&
+                        (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
+                      const newOrigin = needsOriginChange ? "HT" : segment.origin;
+                      
+                      // Optimistic UI update through parent
+                      onUpdate?.(
+                        editedValue,
+                        newStatus,
+                        newOrigin,
+                      );
+                      
+                      // Background server update
+                      const updateSegmentStatus = async () => {
+                        try {
+                          const response = await apiRequest(
+                            "PATCH",
+                            `/api/segments/${segment.id}`,
+                            {
+                              target: editedValue,
+                              status: newStatus,
+                              origin: newOrigin,
+                            },
+                          );
+                          
+                          if (!response.ok) {
+                            throw new Error(`Server responded with status: ${response.status}`);
+                          }
+                          
+                          const updatedSegment = await response.json();
+                          console.log("Status toggled to", newStatus, updatedSegment);
+                          
+                          // Final update with server data
+                          if (onUpdate) {
+                            onUpdate(
+                              String(updatedSegment.target || editedValue),
+                              updatedSegment.status,
+                              updatedSegment.origin
+                            );
+                          }
+                          
+                          // Document View - automatically close editor if status changed to Reviewed
+                          if (newStatus === "Reviewed") {
+                            onCancel?.(); // Close the editor
+                          }
+                        } catch (error) {
+                          console.error("Failed to toggle segment status:", error);
+                          // Revert on error
+                          setLocalStatus(segment.status);
+                          onUpdate?.(
+                            segment.target || "",
+                            segment.status,
+                            segment.origin,
+                          );
+                        }
+                      };
+                      
+                      updateSegmentStatus();
+                    }}
+                  >
+                    {localStatus || "Draft"}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Click to toggle between Edited and Reviewed</p>
+                </TooltipContent>
+              </Tooltip>
+              
+              {/* Close Button */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 w-6 p-0 rounded-full hover:bg-muted"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Close editor without changing status
+                      onCancel?.();
+                    }}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Close editor (no status change)</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
 
-            {/* 문서 모드에서 텍스트 영역 - 자동 높이 조절 */}
+            {/* Text area with auto-height adjustment */}
             <div className="relative bg-accent/20 shadow-sm rounded-md">
               <Textarea
                 ref={textareaRef}
                 value={editedValue}
                 onChange={(e) => {
                   const newValue = e.target.value;
-                  // UI 상태만 업데이트 (API 호출은 하지 않음)
+                  // Update UI state
                   onEditValueChange?.(newValue);
 
-                  // 자동 상태 업데이트 로직 (컨텍스트의 debouncedUpdateSegment 호출)
+                  // Automatic status update logic
                   if (onUpdate) {
                     const isValueChanged = newValue !== segment.target;
 
@@ -174,27 +296,29 @@ export function DocSegment({
                         ? "HT"
                         : segment.origin;
 
-                      // 이미 Reviewed였는데 편집하면 Edited로 변경, MT/100%/Fuzzy였는데 편집하면 Edited로 변경
-                      let newStatus = segment.status;
-                      if (segment.status === "Reviewed") {
+                      // Change status to Edited if needed
+                      let newStatus = localStatus;
+                      if (localStatus === "Reviewed") {
                         newStatus = "Edited";
+                        // Update local state to reflect change
+                        setLocalStatus("Edited");
                       } else if (
-                        segment.status === "MT" ||
-                        segment.status === "100%" ||
-                        segment.status === "Fuzzy"
+                        localStatus === "MT" ||
+                        localStatus === "100%" ||
+                        localStatus === "Fuzzy"
                       ) {
                         newStatus = "Edited";
+                        // Update local state to reflect change
+                        setLocalStatus("Edited");
                       }
 
-                      // 부모 컴포넌트에서 전달받은 onUpdate 함수 사용 (존재하는 경우에만)
-                      if (onUpdate) {
-                        onUpdate(newValue, newStatus, newOrigin);
-                      }
+                      // Update through parent component
+                      onUpdate(newValue, newStatus, newOrigin);
                     }
                   }
                 }}
                 onKeyDown={handleKeyDown}
-                className="w-full p-2 pr-8 pb-4 resize-none border-0 shadow-none bg-transparent font-serif text-base"
+                className="w-full p-2 resize-none border-0 shadow-none bg-transparent font-serif text-base"
                 placeholder="Enter translation..."
                 autoFocus
                 style={{
@@ -203,101 +327,6 @@ export function DocSegment({
                   overflow: "hidden",
                 }}
               />
-
-              {/* 텍스트 영역 내부에 버튼 직접 배치 - 더 가까이 배치 */}
-              <div className="absolute bottom-0.5 right-0.5 flex gap-1">
-                {/* 토글 버튼만 유지 */}
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation(); // 이벤트 전파 방지
-
-                    // 버튼 클릭 시 즉시 로컬 상태 업데이트 (낙관적 UI 업데이트)
-                    const newStatus = segment.status === "Reviewed" ? "Edited" : "Reviewed";
-                    const needsOriginChange = 
-                      editedValue !== segment.target &&
-                      (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
-                    const newOrigin = needsOriginChange ? "HT" : segment.origin;
-                    
-                    // 낙관적 UI 업데이트 - 사용자에게 즉시 피드백 제공
-                    onUpdate?.(
-                      editedValue,
-                      newStatus,
-                      newOrigin,
-                    );
-
-                    // 서버에 변경사항 저장 (백그라운드에서 비동기 처리)
-                    const saveAndToggleStatus = async () => {
-                      try {
-                        // 인증된 API 요청으로 서버에 업데이트
-                        const response = await apiRequest(
-                          "PATCH",
-                          `/api/segments/${segment.id}`,
-                          {
-                            target: editedValue,
-                            status: newStatus,
-                            origin: newOrigin,
-                          },
-                        );
-
-                        if (!response.ok) {
-                          throw new Error(
-                            `Server responded with status: ${response.status}`,
-                          );
-                        }
-
-                        const updatedSegment = await response.json();
-                        console.log(
-                          "Status toggled to",
-                          newStatus,
-                          updatedSegment,
-                        );
-
-                        // 서버로부터 최종 업데이트된 데이터로 다시 UI 업데이트
-                        if (onUpdate) {
-                          onUpdate(
-                            String(updatedSegment.target || editedValue),
-                            updatedSegment.status,
-                            updatedSegment.origin
-                          );
-                        }
-
-                        // Document View에서는 Reviewed 상태로 변경 시 에디터 창 닫기
-                        if (newStatus === "Reviewed") {
-                          onCancel?.(); // 에디터 창 닫기
-                        }
-                      } catch (error) {
-                        console.error(
-                          "Failed to toggle segment status:",
-                          error,
-                        );
-                        // 오류 발생 시 원래 상태로 복원
-                        onUpdate?.(
-                          segment.target || "",
-                          segment.status,
-                          segment.origin,
-                        );
-                      }
-                    };
-
-                    saveAndToggleStatus();
-                  }}
-                  size="sm"
-                  variant={
-                    segment.status === "Reviewed" ? "default" : "outline"
-                  }
-                  className={cn(
-                    "h-7 w-7 p-0 rounded-full transition-colors duration-200",
-                    segment.status === "Reviewed"
-                      ? "bg-green-600 hover:bg-green-700"
-                      : "hover:bg-green-100 dark:hover:bg-green-900/30",
-                  )}
-                >
-                  <Check className={cn(
-                    "h-3.5 w-3.5 transition-colors duration-200", 
-                    segment.status === "Reviewed" ? "text-white" : "text-green-600"
-                  )} />
-                </Button>
-              </div>
             </div>
           </div>
         </span>
