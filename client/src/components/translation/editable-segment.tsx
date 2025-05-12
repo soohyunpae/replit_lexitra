@@ -96,12 +96,21 @@ export function EditableSegment(props: EditableSegmentProps) {
     if (sourceTextarea) sourceTextarea.style.height = 'auto';
     if (targetTextarea) targetTextarea.style.height = 'auto';
     
-    // 두 영역의 스크롤 높이 계산
-    const sourceHeight = sourceTextarea ? Math.max(sourceTextarea.scrollHeight, 40) : 0;
-    const targetHeight = targetTextarea ? Math.max(targetTextarea.scrollHeight, 40) : 0;
+    // 두 영역의 스크롤 높이 계산 - 항상 일정한 라인 높이 보장
+    // 24px은 한 줄의 기본 높이 (font-size 16px * line-height 1.5)
+    const oneLineHeight = 24;
+    const minHeight = 48; // 최소 2줄 높이로 고정
     
-    // 둘 중 더 큰 높이로 설정 (최소 40px)
-    const calculatedHeight = Math.max(sourceHeight, targetHeight, 40);
+    // 스크롤 높이를 라인 높이의 배수로 설정하여 일관성 유지
+    const sourceHeight = sourceTextarea 
+      ? Math.max(Math.ceil(sourceTextarea.scrollHeight / oneLineHeight) * oneLineHeight, minHeight) 
+      : 0;
+    const targetHeight = targetTextarea 
+      ? Math.max(Math.ceil(targetTextarea.scrollHeight / oneLineHeight) * oneLineHeight, minHeight) 
+      : 0;
+    
+    // 둘 중 더 큰 높이로 설정 (최소 2줄 높이)
+    const calculatedHeight = Math.max(sourceHeight, targetHeight, minHeight);
     
     // 해당 세그먼트 ID에 대한 현재 저장된 높이 확인
     const currentMaxHeight = segmentHeightsMap.get(segment.id) || 0;
@@ -284,7 +293,7 @@ export function EditableSegment(props: EditableSegmentProps) {
   return (
     <div
       className={cn(
-        "mb-2 w-full rounded-md px-2 pt-1 pb-1 transition-colors",
+        "mb-1 w-full rounded-md px-2 py-1 transition-colors flex flex-col justify-center",
         liveSegment.status === "Reviewed"
           ? "bg-blue-50 dark:bg-blue-950/30"
           : isSelected
@@ -294,6 +303,10 @@ export function EditableSegment(props: EditableSegmentProps) {
           !liveSegment.target &&
           "border border-dashed border-yellow-400",
       )}
+      style={{ 
+        minHeight: '48px', // 최소 2줄 높이 유지
+        boxSizing: 'border-box' 
+      }}
       onClick={onSelect}
     >
       {!isSource ? (
@@ -323,6 +336,8 @@ export function EditableSegment(props: EditableSegmentProps) {
               className="w-full resize-none bg-transparent py-1 pb-8 text-sm leading-relaxed shadow-none font-mono border-none focus-visible:ring-0 focus:ring-0 overflow-hidden"
               style={{
                 lineHeight: "1.6",
+                minHeight: "24px",
+                padding: "4px 0",
                 boxShadow: "none",
                 outline: "none",
                 transition: "none"
@@ -380,6 +395,8 @@ export function EditableSegment(props: EditableSegmentProps) {
               className="resize-none overflow-hidden bg-transparent py-1 text-sm font-mono leading-relaxed text-foreground shadow-none outline-none w-full h-auto min-h-[40px] border-none focus-visible:ring-0 focus:ring-0"
               style={{
                 lineHeight: "1.6",
+                minHeight: "24px",
+                padding: "4px 0",
                 boxShadow: "none",
                 outline: "none",
                 transition: "none",
