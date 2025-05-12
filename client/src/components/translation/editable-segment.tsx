@@ -61,72 +61,45 @@ export function EditableSegment(props: EditableSegmentProps) {
     }
   }, [isSelected, isSource]);
 
-  // 세그먼트 데이터나 텍스트 값 변경시 레이아웃 처리 이후 높이 동기화
-  useLayoutEffect(() => {
-    // 요소가 완전히 마운트되고 DOM에 반영된 후에 실행되도록 requestAnimationFrame 사용
+  // 텍스트 영역 자동 높이 조절 함수
+  const synchronizeHeights = React.useCallback(() => {
+    // 번역문 textarea 요소의 높이 자동 조절
     requestAnimationFrame(() => {
-      const sourceEl = sourceContainerRef.current;
-      const targetEl = targetContainerRef.current;
       const textareaEl = textareaRef.current;
-      if (!sourceEl || !targetEl || !textareaEl) return;
+      if (!textareaEl) return;
 
-      // 정확한 높이 측정을 위해 초기화
-      textareaEl.style.height = "auto";
-      sourceEl.style.height = "auto";
-      targetEl.style.height = "auto";
-
-      // 실제 스크롤 높이(콘텐츠 전체 높이) 측정
-      const sourceHeight = sourceEl.scrollHeight;
-      const textareaHeight = textareaEl.scrollHeight;
-
-      // 둘 중 더 큰 값으로 높이 설정 (최소 120px)
-      const maxHeight = Math.max(sourceHeight, textareaHeight, 120);
-
-      // 양쪽 컨테이너와 textarea에 동일한 높이 적용
-      textareaEl.style.height = `${maxHeight}px`;
-      sourceEl.style.height = `${maxHeight}px`;
-      targetEl.style.height = `${maxHeight}px`;
+      // 먼저, 높이를 auto로 설정해서 스크롤 높이를 정확히 계산할 수 있게 함
+      textareaEl.style.height = 'auto';
+      
+      // 그런 다음 콘텐츠 높이에 맞게 조절 (최소 40px 보장)
+      const newHeight = Math.max(textareaEl.scrollHeight, 40);
+      textareaEl.style.height = `${newHeight}px`;
     });
-  }, [value, segment.source]);
+  }, []);
+
+  // 텍스트 값이 변경될 때마다 높이 재계산
+  useLayoutEffect(() => {
+    synchronizeHeights();
+  }, [value, synchronizeHeights]);
+  
+  // 컴포넌트 마운트 시 한 번 실행
+  useEffect(() => {
+    synchronizeHeights();
+  }, [synchronizeHeights]);
 
   // 창 크기 변경시 높이 동기화
   useEffect(() => {
-    // 동일한 높이 동기화 로직을 사용하는 리사이즈 핸들러
+    // 윈도우 리사이즈 이벤트 핸들러
     const handleResize = () => {
-      requestAnimationFrame(() => {
-        const sourceEl = sourceContainerRef.current;
-        const targetEl = targetContainerRef.current;
-        const textareaEl = textareaRef.current;
-        if (!sourceEl || !targetEl || !textareaEl) return;
-  
-        // 정확한 높이 측정을 위해 초기화
-        textareaEl.style.height = "auto";
-        sourceEl.style.height = "auto";
-        targetEl.style.height = "auto";
-  
-        // 실제 스크롤 높이(콘텐츠 전체 높이) 측정
-        const sourceHeight = sourceEl.scrollHeight;
-        const textareaHeight = textareaEl.scrollHeight;
-  
-        // 둘 중 더 큰 값으로 높이 설정 (최소 120px)
-        const maxHeight = Math.max(sourceHeight, textareaHeight, 120);
-  
-        // 양쪽 컨테이너와 textarea에 동일한 높이 적용
-        textareaEl.style.height = `${maxHeight}px`;
-        sourceEl.style.height = `${maxHeight}px`;
-        targetEl.style.height = `${maxHeight}px`;
-      });
+      synchronizeHeights();
     };
-
-    // 초기에 한 번 실행 - 컴포넌트 마운트 직후
-    handleResize();
     
     // 윈도우 리사이즈 이벤트 리스너 추가
     window.addEventListener("resize", handleResize);
     
     // 클린업 - 컴포넌트 언마운트 시 리스너 제거
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [synchronizeHeights]);
 
   // 헬퍼 함수 - origin이 리스트에 있는지 확인
   const isOriginInList = (
@@ -232,9 +205,9 @@ export function EditableSegment(props: EditableSegmentProps) {
       onClick={onSelect}
     >
       {!isSource ? (
-        <div className="flex items-stretch gap-x-2">
+        <div className="flex items-start gap-x-2">
           {/* 번역문 왼쪽은 체크박스만 배치 */}
-          <div className="flex h-full w-6 items-start justify-end pt-[4px]">
+          <div className="flex-shrink-0 w-6 pt-1">
             {onCheckChange && (
               <div onClick={handleCheckboxClick}>
                 <Checkbox
@@ -249,25 +222,24 @@ export function EditableSegment(props: EditableSegmentProps) {
           {/* 번역문 입력 영역 */}
           <div
             ref={targetContainerRef}
-            className="relative flex min-h-[120px] flex-1 items-stretch bg-transparent overflow-hidden"
+            className="flex-grow relative"
           >
             <Textarea
               ref={textareaRef}
               value={value}
               onChange={handleTextareaChange}
-              className="flex-1 resize-none bg-transparent pb-[28px] pt-[2px] text-sm leading-relaxed shadow-none outline-none font-mono w-full border-none focus-visible:ring-0 focus:ring-0 overflow-hidden min-h-[40px]"
+              className="w-full resize-none bg-transparent pt-[2px] pb-8 text-sm leading-relaxed shadow-none font-mono border-none focus-visible:ring-0 focus:ring-0 overflow-hidden"
               style={{
                 lineHeight: "1.6",
-                height: "auto",
                 boxShadow: "none",
                 outline: "none",
-                transition: "none",
+                transition: "none"
               }}
               placeholder="Enter translation..."
             />
 
             {/* 상태 뱃지와 번역 버튼 */}
-            <div className="absolute bottom-2 right-2">
+            <div className="absolute bottom-1 right-1 z-10">
               <span
                 className={`cursor-pointer rounded-full px-2 py-0.5 text-xs font-medium transition ${getStatusColor(liveSegment.status)}`}
                 onClick={(e) => {
@@ -298,21 +270,21 @@ export function EditableSegment(props: EditableSegmentProps) {
           </div>
         </div>
       ) : (
-        <div className="flex items-stretch gap-x-2">
+        <div className="flex items-start gap-x-2">
           {/* 원문 왼쪽에는 세그먼트 번호 */}
-          <div className="flex h-full w-6 items-start justify-end pr-1 pt-[4px] font-mono text-xs text-gray-500">
+          <div className="flex-shrink-0 w-6 text-right pt-1 font-mono text-xs text-gray-500">
             {index}
           </div>
 
           {/* 원문 텍스트 표시 영역 */}
           <div
             ref={sourceContainerRef}
-            className="relative flex min-h-[120px] flex-1 items-stretch bg-transparent overflow-hidden"
+            className="flex-grow overflow-hidden"
           >
             <Textarea
               value={liveSegment.source || ""}
               readOnly
-              className="no-scrollbar flex-1 resize-none overflow-hidden bg-transparent pt-[2px] text-sm font-mono leading-relaxed text-foreground shadow-none outline-none w-full h-auto min-h-[40px] border-none focus-visible:ring-0 focus:ring-0"
+              className="resize-none overflow-hidden bg-transparent pt-[2px] text-sm font-mono leading-relaxed text-foreground shadow-none outline-none w-full border-none focus-visible:ring-0 focus:ring-0"
               style={{
                 lineHeight: "1.6",
                 boxShadow: "none",
