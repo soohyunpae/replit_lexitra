@@ -4,7 +4,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Check, X, Languages } from "lucide-react";
 import { TranslationUnit, StatusType, OriginType } from "@/types";
-import { useAutoResize } from "@/hooks/useAutoResize";
 
 interface EditableSegmentProps {
   segment: TranslationUnit;
@@ -234,7 +233,7 @@ export function EditableSegment(props: EditableSegmentProps) {
           </div>
 
           {/* 번역문 입력 영역 - min-height로 부모 컨테이너에 높이 지정하고 자식은 h-full 사용 */}
-          <div className="relative min-h-[120px] bg-transparent flex items-stretch flex-1">
+          <div ref={rightContainerRef} className="relative min-h-[120px] bg-transparent flex items-stretch flex-1">
             <Textarea
               ref={textareaRef}
               value={value}
@@ -289,10 +288,10 @@ export function EditableSegment(props: EditableSegmentProps) {
           </div>
 
           {/* 원문 텍스트 - min-height로 부모 컨테이너에 높이 지정하고 자식은 h-full 사용 */}
-          <div className="relative min-h-[120px] bg-transparent flex items-stretch flex-1">
+          <div ref={leftContainerRef} className="relative min-h-[120px] bg-transparent flex items-stretch flex-1">
             <Textarea
               ref={sourceTextareaRef}
-              value={value || ""}
+              value={liveSegment.source || ""}
               readOnly
               className="w-full h-full flex-1 font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] text-sm leading-relaxed"
               style={{
