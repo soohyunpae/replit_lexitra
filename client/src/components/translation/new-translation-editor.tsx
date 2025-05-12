@@ -795,6 +795,23 @@ export function NewTranslationEditor({
                 </label>
               </div>
             </div>
+
+            {/* Side panel toggle button - placed at the end */}
+            <div className="ml-auto flex items-center">
+              <Button
+                size="sm"
+                variant={showSidePanel ? "default" : "outline"}
+                onClick={() => setShowSidePanel(!showSidePanel)}
+                className="h-7 w-7 p-0"
+                title={showSidePanel ? "Hide side panel" : "Show side panel"}
+              >
+                {showSidePanel ? (
+                  <ChevronRight className="h-3.5 w-3.5" />
+                ) : (
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
