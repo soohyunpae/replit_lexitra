@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -61,62 +61,66 @@ export function EditableSegment(props: EditableSegmentProps) {
     }
   }, [isSelected, isSource]);
 
-  // 높이 동기화 함수
+  // 높이 동기화 함수 - DOM 업데이트 이후 정확한 높이 계산을 위해 requestAnimationFrame 사용
   const syncHeights = () => {
-    // 타겟과 소스 컨테이너 ref 확인
-    const sourceElement = sourceContainerRef.current;
-    const targetElement = targetContainerRef.current;
-    const textareaElement = textareaRef.current;
-    
-    if (!sourceElement || !targetElement || !textareaElement) return;
-    
-    // 높이 초기화 (정확한 계산을 위해)
-    sourceElement.style.height = "auto";
-    targetElement.style.height = "auto";
-    textareaElement.style.height = "auto";
-    
-    // 스크롤 높이 계산
-    const sourceHeight = sourceElement.scrollHeight;
-    const targetHeight = targetElement.scrollHeight || textareaElement.scrollHeight;
-    const textareaHeight = textareaElement.scrollHeight;
-    
-    // 최대 높이 계산 (최소 120px)
-    const maxHeight = Math.max(sourceHeight, targetHeight, textareaHeight, 120);
-    
-    // 높이 적용
-    sourceElement.style.height = `${maxHeight}px`;
-    targetElement.style.height = `${maxHeight}px`;
-    textareaElement.style.height = `${maxHeight}px`;
+    requestAnimationFrame(() => {
+      const sourceElement = sourceContainerRef.current;
+      const targetElement = targetContainerRef.current;
+      const textareaElement = textareaRef.current;
+      
+      if (!sourceElement || !targetElement || !textareaElement) return;
+      
+      // 높이 초기화 (정확한 계산을 위해)
+      textareaElement.style.height = "auto";
+      sourceElement.style.height = "auto";
+      targetElement.style.height = "auto";
+      
+      // 스크롤 높이 계산 - DOM 반영 후 정확한 값 얻기
+      const textareaHeight = textareaElement.scrollHeight;
+      const sourceHeight = sourceElement.scrollHeight;
+      
+      // 최대 높이 계산 (최소 120px)
+      const maxHeight = Math.max(sourceHeight, textareaHeight, 120);
+      
+      // 높이 적용
+      textareaElement.style.height = `${maxHeight}px`;
+      sourceElement.style.height = `${maxHeight}px`;
+      targetElement.style.height = `${maxHeight}px`;
+    });
   };
   
-  // 세그먼트 변경 및 창 크기 변경시 높이 동기화
+  // 창 크기 변경시 높이 동기화 - 초기 마운트 시 한 번만 실행
   useEffect(() => {
-    const resizeObserver = new ResizeObserver(() => {
-      syncHeights();
-    });
-    
-    // 최초 1회 동기화
-    syncHeights();
-    
     // 윈도우 리사이즈 이벤트 연결
     window.addEventListener("resize", syncHeights);
-    
-    // 텍스트 영역 변화 감시 (가능한 경우)
-    if (textareaRef.current) {
-      resizeObserver.observe(textareaRef.current);
-    }
     
     return () => {
       // 정리 함수
       window.removeEventListener("resize", syncHeights);
-      resizeObserver.disconnect();
     };
   }, []);
   
-  // 세그먼트 데이터 변경시 높이 동기화 (한 번만 실행)
-  useEffect(() => {
-    const timer = setTimeout(syncHeights, 10); 
-    return () => clearTimeout(timer);
+  // 세그먼트 데이터나 텍스트 값 변경시 레이아웃 처리 이후 높이 동기화
+  useLayoutEffect(() => {
+    // DOM 업데이트 후 실행되도록 requestAnimationFrame 내부에서 처리
+    requestAnimationFrame(() => {
+      if (sourceContainerRef.current && targetContainerRef.current && textareaRef.current) {
+        // 높이 초기화를 별도로 한 번 더 수행해 정확한 측정 보장
+        textareaRef.current.style.height = "auto";
+        sourceContainerRef.current.style.height = "auto";
+        targetContainerRef.current.style.height = "auto";
+        
+        // 스크롤 높이 계산
+        const textHeight = textareaRef.current.scrollHeight;
+        const sourceHeight = sourceContainerRef.current.scrollHeight;
+        const maxHeight = Math.max(textHeight, sourceHeight, 120);
+        
+        // 높이 적용
+        textareaRef.current.style.height = `${maxHeight}px`;
+        sourceContainerRef.current.style.height = `${maxHeight}px`;
+        targetContainerRef.current.style.height = `${maxHeight}px`;
+      }
+    });
   }, [liveSegment.source, liveSegment.target, value]);
 
   // 헬퍼 함수 - origin이 리스트에 있는지 확인
@@ -241,7 +245,7 @@ export function EditableSegment(props: EditableSegmentProps) {
               ref={textareaRef}
               value={value}
               onChange={handleTextareaChange}
-              className="no-scrollbar flex-1 resize-none overflow-hidden bg-transparent pb-[28px] pt-[2px] text-sm leading-relaxed shadow-none outline-none font-mono w-full h-full border-none focus-visible:ring-0 focus:ring-0"
+              className="no-scrollbar flex-1 resize-none overflow-hidden bg-transparent pb-[28px] pt-[2px] text-sm leading-relaxed shadow-none outline-none font-mono w-full h-auto min-h-[40px] border-none focus-visible:ring-0 focus:ring-0"
               style={{
                 lineHeight: "1.6",
                 overflow: "hidden", 
@@ -298,7 +302,7 @@ export function EditableSegment(props: EditableSegmentProps) {
             <Textarea
               value={liveSegment.source || ""}
               readOnly
-              className="no-scrollbar flex-1 resize-none overflow-hidden bg-transparent pt-[2px] text-sm font-mono leading-relaxed text-foreground shadow-none outline-none w-full h-full border-none focus-visible:ring-0 focus:ring-0"
+              className="no-scrollbar flex-1 resize-none overflow-hidden bg-transparent pt-[2px] text-sm font-mono leading-relaxed text-foreground shadow-none outline-none w-full h-auto min-h-[40px] border-none focus-visible:ring-0 focus:ring-0"
               style={{
                 lineHeight: "1.6",
                 overflow: "hidden",
