@@ -42,7 +42,7 @@ export function EditableSegment(props: EditableSegmentProps) {
     isSource ? liveSegment.source : liveSegment.target || "",
   );
   
-  // 텍스트 영역 ref
+  // 텍스트 영역과 컨테이너 ref
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const sourceContainerRef = useRef<HTMLDivElement>(null);
   const targetContainerRef = useRef<HTMLDivElement>(null);
@@ -61,51 +61,11 @@ export function EditableSegment(props: EditableSegmentProps) {
     }
   }, [isSelected, isSource]);
 
-  // 높이 동기화 함수 - DOM 업데이트 이후 정확한 높이 계산을 위해 requestAnimationFrame 사용
-  const syncHeights = () => {
-    requestAnimationFrame(() => {
-      const sourceElement = sourceContainerRef.current;
-      const targetElement = targetContainerRef.current;
-      const textareaElement = textareaRef.current;
-      
-      if (!sourceElement || !targetElement || !textareaElement) return;
-      
-      // 높이 초기화 (정확한 계산을 위해)
-      textareaElement.style.height = "auto";
-      sourceElement.style.height = "auto";
-      targetElement.style.height = "auto";
-      
-      // 스크롤 높이 계산 - DOM 반영 후 정확한 값 얻기
-      const textareaHeight = textareaElement.scrollHeight;
-      const sourceHeight = sourceElement.scrollHeight;
-      
-      // 최대 높이 계산 (최소 120px)
-      const maxHeight = Math.max(sourceHeight, textareaHeight, 120);
-      
-      // 높이 적용
-      textareaElement.style.height = `${maxHeight}px`;
-      sourceElement.style.height = `${maxHeight}px`;
-      targetElement.style.height = `${maxHeight}px`;
-    });
-  };
-  
-  // 창 크기 변경시 높이 동기화 - 초기 마운트 시 한 번만 실행
-  useEffect(() => {
-    // 윈도우 리사이즈 이벤트 연결
-    window.addEventListener("resize", syncHeights);
-    
-    return () => {
-      // 정리 함수
-      window.removeEventListener("resize", syncHeights);
-    };
-  }, []);
-  
   // 세그먼트 데이터나 텍스트 값 변경시 레이아웃 처리 이후 높이 동기화
   useLayoutEffect(() => {
-    // DOM 업데이트 후 실행되도록 requestAnimationFrame 내부에서 처리
     requestAnimationFrame(() => {
       if (sourceContainerRef.current && targetContainerRef.current && textareaRef.current) {
-        // 높이 초기화를 별도로 한 번 더 수행해 정확한 측정 보장
+        // 높이 초기화를 먼저 수행해 정확한 측정 보장
         textareaRef.current.style.height = "auto";
         sourceContainerRef.current.style.height = "auto";
         targetContainerRef.current.style.height = "auto";
@@ -122,6 +82,33 @@ export function EditableSegment(props: EditableSegmentProps) {
       }
     });
   }, [liveSegment.source, liveSegment.target, value]);
+
+  // 창 크기 변경시 높이 동기화
+  useEffect(() => {
+    const handleResize = () => {
+      requestAnimationFrame(() => {
+        if (sourceContainerRef.current && targetContainerRef.current && textareaRef.current) {
+          // 높이 초기화
+          textareaRef.current.style.height = "auto";
+          sourceContainerRef.current.style.height = "auto";
+          targetContainerRef.current.style.height = "auto";
+          
+          // 스크롤 높이 계산
+          const textHeight = textareaRef.current.scrollHeight;
+          const sourceHeight = sourceContainerRef.current.scrollHeight;
+          const maxHeight = Math.max(textHeight, sourceHeight, 120);
+          
+          // 높이 적용
+          textareaRef.current.style.height = `${maxHeight}px`;
+          sourceContainerRef.current.style.height = `${maxHeight}px`;
+          targetContainerRef.current.style.height = `${maxHeight}px`;
+        }
+      });
+    };
+    
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // 헬퍼 함수 - origin이 리스트에 있는지 확인
   const isOriginInList = (
