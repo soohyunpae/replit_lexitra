@@ -32,7 +32,7 @@ export function EditableSegment(props: EditableSegmentProps) {
   } = props;
 
   // 상태 및 원본 변경 여부 확인을 위한 상수
-  const STATUS_NEED_CHANGE = ["MT", "100%", "Fuzzy"];
+  const STATUS_NEED_CHANGE = ["MT", " " + "100%", "Fuzzy"];
 
   // 세그먼트 현재 상태값 로컬 변수 사용
   const liveSegment = segment;
@@ -69,22 +69,20 @@ export function EditableSegment(props: EditableSegmentProps) {
       const targetEl = targetContainerRef.current;
       if (!sourceEl || !textareaEl || !targetEl) return;
 
-      // Reset heights to get natural height
-      textareaEl.style.height = "auto";
-      sourceEl.style.height = "auto";
-      targetEl.style.height = "auto";
+      // Reset heights to measure content
+      sourceEl.style.height = 'auto';
+      targetEl.style.height = 'auto';
+      textareaEl.style.height = 'auto';
 
-      // Get scroll heights (actual content height)
-      const sourceHeight = sourceEl.scrollHeight;
-      const textHeight = textareaEl.scrollHeight;
+      // Get natural heights
+      const sourceContentHeight = sourceEl.scrollHeight;
+      const targetContentHeight = targetEl.scrollHeight;
+      const textareaContentHeight = textareaEl.scrollHeight;
 
-      // Use the larger height for both containers
-      const maxHeight = Math.max(sourceHeight, textHeight);
-
-      // Set both containers and textarea to the same height
-      sourceEl.style.height = `${maxHeight}px`;
-      targetEl.style.height = `${maxHeight}px`;
-      textareaEl.style.height = `${maxHeight}px`;
+      // Use individual heights for better content visibility
+      sourceEl.style.height = `${sourceContentHeight}px`;
+      targetEl.style.height = `${targetContentHeight}px`;
+      textareaEl.style.height = `${textareaContentHeight}px`;
     };
 
     // Initial adjustment
