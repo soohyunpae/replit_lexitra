@@ -202,9 +202,9 @@ export function EditableSegment(props: EditableSegmentProps) {
     >
       {/* grid 기반 레이아웃 적용 */}
       {!isSource ? (
-        <div className="grid grid-cols-[min-content_1fr] gap-x-2">
+        <div className="grid grid-cols-[min-content_1fr] gap-x-2 items-stretch">
           {/* 번역문 왼쪽은 체크박스만 배치 (세그먼트 번호 없음) - 위쪽 정렬 */}
-          <div className="flex items-start justify-end w-6 pt-[4px]">
+          <div className="flex items-start justify-end w-6 pt-[4px] h-full">
             {onCheckChange && (
               <div onClick={handleCheckboxClick}>
                 <Checkbox
@@ -266,9 +266,9 @@ export function EditableSegment(props: EditableSegmentProps) {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-[min-content_1fr] gap-x-2">
+        <div className="grid grid-cols-[min-content_1fr] gap-x-2 items-stretch">
           {/* 원문 왼쪽에는 세그먼트 번호 유지 - 위쪽 정렬 */}
-          <div className="flex items-start justify-end w-6 text-xs text-gray-500 pr-1 font-mono pt-[4px]">
+          <div className="flex items-start justify-end w-6 text-xs text-gray-500 pr-1 font-mono pt-[4px] h-full">
             {index}
           </div>
 
@@ -284,7 +284,7 @@ export function EditableSegment(props: EditableSegmentProps) {
                 overflow: "hidden",
                 boxShadow: "none",
                 outline: "none",
-                minHeight: "0px", // 자동 높이 조절 개선을 위해 minHeight 0으로 설정
+                minHeight: "120px", // 최소 높이 설정으로 좌우 세그먼트 높이 일치
                 transition: "none" // 높이 변경 시 부드러운 전환 방지하여 성능 향상
               }}
               placeholder={isSource ? "No source text" : "No translation yet"}
