@@ -6,7 +6,7 @@ import {
   Save, Download, Languages, Eye, EyeOff, Check, X,
   ArrowUp, ArrowDown, Smartphone, Monitor, FileText, 
   ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
-  RotateCw
+  RotateCw, AlertCircle
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TranslationUnit, TranslationMemory, Glossary } from '@/types';
@@ -270,7 +270,7 @@ export function DocReviewEditor({
   };
   
   // 수정된 저장 함수 - 하이라이트 제거 및 상태 업데이트 (공유 컨텍스트 사용)
-  const originalUpdateSegment = updateSegment;
+  const originalUpdateSegment = editingStateUpdateSegment;
   const customUpdateSegment = async (id: number, value: string) => {
     // 현재 편집 중인 세그먼트 찾기
     const segment = segments.find(s => s.id === id);
@@ -554,7 +554,7 @@ export function DocReviewEditor({
                             onSelectForEditing={() => selectSegmentForEditing(segment)}
                             onSave={() => customUpdateSegment(segment.id, editedValue)}
                             onCancel={customCancelEditing}
-                            onToggleStatus={() => toggleStatus(segment.id, segment.target || '')}
+                            onToggleStatus={() => editingStateToggleStatus(segment.id, segment.target || '')}
                             isDocumentMode={true}
                             showStatusInEditor={true}
                             className={cn(
