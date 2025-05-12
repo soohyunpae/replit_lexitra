@@ -436,10 +436,15 @@ export default function Translation() {
             </TabsList>
           </Tabs>
           
-          <span className="text-sm text-muted-foreground flex items-center">
-            <Check className="h-4 w-4 mr-1 text-green-500" />
-            Auto-saving
-          </span>
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="flex items-center"
+            onClick={() => saveProject.mutate()}
+          >
+            <FileX className="h-4 w-4 mr-1" />
+            Save
+          </Button>
           </div>
         </div>
         
