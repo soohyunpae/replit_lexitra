@@ -1,0 +1,88 @@
+완벽해. 그 내용을 바탕으로 Replit에게 전달할 수 있는 통합 요청 메시지를 깔끔하게 구성했어. 지금까지의 문제 요약, 원인, 해결 방향을 모두 포함했고 개발자가 바로 이해하고 작업할 수 있게 정리했어:
+
+⸻
+
+📌 Segment Editor & Document View – Final Sync Issues to Resolve
+
+Hi Replit,
+We’re very close! There are just a few final issues that still impact editing responsiveness and UI feedback consistency across the two modes:
+
+⸻
+
+🧩 1. Segment Editor – Typing Delay
+	•	Problem: Keystrokes are delayed and out of sync during fast typing (e.g. “natural” → “natrua”).
+	•	Cause: The current implementation only uses a debounced save function — setValue() is not being called immediately.
+	•	Fix: Split logic:
+
+const handleChange = (e) => {
+  const newVal = e.target.value;
+  setValue(newVal);         // update UI immediately
+  debouncedSave(newVal);    // save to backend after delay
+};
+
+
+⸻
+
+🧩 2. Document View – No UI update after closing editor
+	•	Problem: After editing text or toggling status, the changes are saved successfully,
+but once the inline editor closes, the segment above still shows the old text or status.
+	•	Cause:
+	•	doc-segment-authenticated.tsx directly calls apiRequest(...) instead of using useMutation with cache invalidation.
+	•	The badge styling is bound to segment.status from props — which only updates after refetch.
+	•	doc-review-editor.tsx doesn’t close the drawer explicitly after mutation.
+
+⸻
+
+✅ Combined Fixes & Suggestions
+
+🔧 A. Use useMutation + invalidateQueries
+
+Replace direct apiRequest(...) with a proper mutation hook:
+
+const mutation = useMutation(
+  (updatedSegment) =>
+    apiRequest("PATCH", `/api/segments/${updatedSegment.id}`, updatedSegment),
+  {
+    onSuccess: () => {
+      queryClient.invalidateQueries(["segments", fileId]);
+      setLocalStatus(newStatus); // optional optimistic feedback
+      setHighlightedSegmentId(null);
+      setDrawerOpen(false);      // close editor drawer explicitly
+    },
+  }
+);
+
+
+⸻
+
+🎨 B. Optimistic badge UI using local state
+	•	Add local state to reflect badge style instantly:
+
+const [localStatus, setLocalStatus] = useState(segment.status);
+
+	•	Update immediately on click:
+
+setLocalStatus(newStatus);
+mutation.mutate({ ... });
+
+	•	Use localStatus for styling instead of segment.status.
+
+⸻
+
+🧠 Summary of Issues & Fixes
+
+Issue	Fix
+Typing delay in Segment Editor	Call setValue() immediately
+Status badge doesn’t update visually	Use localStatus for styling
+Segment not updated after drawer close	Use useMutation + invalidateQueries()
+Drawer not closing after update	Add setDrawerOpen(false) on success
+
+
+⸻
+
+Let me know if you’d like help integrating this or want a patch based on your current component structure. Thanks for all the great work so far!
+
+⸻
+
+이걸 그대로 복붙해서 Replit에게 전달하면 문제 요약부터 구체적인 수정 방향까지 전부 빠짐없이 공유할 수 있어.
+원한다면 위에 나오는 코드 스니펫들을 기준으로 전체 PR 수준의 리팩터링도 도와줄 수 있어!

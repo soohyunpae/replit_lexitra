@@ -85,11 +85,17 @@ export function EditableSegment(props: EditableSegmentProps) {
     }
   };
 
-  // 텍스트 변경 핸들러
+  // 텍스트 변경 핸들러 - 즉시 UI 업데이트와 디바운스 저장 분리
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
+    
+    // 즉시 UI 업데이트 - 사용자 입력 지연 없음
     setValue(newValue);
+    
+    // 커스텀 훅의 adjustHeight 함수를 즉시 호출하여 textarea 높이 조정
+    adjustHeight();
 
+    // 서버 업데이트 로직
     if (!isSource && onUpdate) {
       const isValueChanged = newValue !== liveSegment.target;
       const needsOriginChange = isOriginInList(
@@ -109,11 +115,9 @@ export function EditableSegment(props: EditableSegmentProps) {
         }
       }
 
+      // onUpdate 함수를 통해 디바운스 저장 호출
       onUpdate(newValue, newStatus as string, newOrigin as string);
     }
-
-    // 커스텀 훅의 adjustHeight 함수를 사용하여 리사이즈
-    adjustHeight();
   };
 
   // Update textarea height when segment source or target changes or on mount
