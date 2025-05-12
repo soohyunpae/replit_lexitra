@@ -6,6 +6,21 @@ import { Languages } from "lucide-react";
 import { TranslationUnit } from "@/types";
 import { cn } from "@/lib/utils";
 
+/**
+ * !!! 중요 !!! 2025-05-12 개선된 세그먼트 높이 동기화 기능
+ * 
+ * 이 코드는 원문과 번역문의 텍스트 높이를 정확히 동기화합니다.
+ * 1. 세그먼트 ID를 기반으로 높이 값을 저장하고 관리
+ * 2. 원문/번역문 간 동일한 높이 유지
+ * 3. 텍스트가 긴 쪽에 맞춰 자동으로 높이 조정
+ * 4. 이벤트 시스템을 통한 동기화
+ * 
+ * 이 기능 수정 시 반드시 동기화 메커니즘 전체를 이해한 후에 변경하세요.
+ * 잘못된 수정은 UI 깨짐과 사용자 경험 저하로 이어집니다.
+ * 
+ * Git Tag: v1.0.1-segment-height-sync
+ */
+
 // 세그먼트 높이 저장하는 전역 맵 (세그먼트 ID → 높이)
 const segmentHeightsMap = new Map<number, number>();
 
@@ -65,7 +80,10 @@ export function EditableSegment(props: EditableSegmentProps) {
     }
   }, [isSelected, isSource]);
 
-  // 세그먼트 높이를 업데이트하는 함수
+  /**
+   * 세그먼트 높이를 업데이트하는 함수 - 2025-05-12 개선
+   * 원문과 번역문의 높이를 계산하고 더 큰 쪽으로 일치시킴
+   */
   const updateSegmentHeight = React.useCallback(() => {
     // 원문과 번역문 textarea 참조 모두 가져오기
     const sourceTextarea = sourceTextareaRef.current;
@@ -266,7 +284,7 @@ export function EditableSegment(props: EditableSegmentProps) {
   return (
     <div
       className={cn(
-        "mb-[1px] w-full rounded-md px-2 py-0.5 transition-colors",
+        "mb-2 w-full rounded-md px-2 pt-1 pb-1 transition-colors",
         liveSegment.status === "Reviewed"
           ? "bg-blue-50 dark:bg-blue-950/30"
           : isSelected
@@ -302,7 +320,7 @@ export function EditableSegment(props: EditableSegmentProps) {
               ref={textareaRef}
               value={value}
               onChange={handleTextareaChange}
-              className="w-full resize-none bg-transparent pt-[2px] pb-8 text-sm leading-relaxed shadow-none font-mono border-none focus-visible:ring-0 focus:ring-0 overflow-hidden"
+              className="w-full resize-none bg-transparent py-1 pb-8 text-sm leading-relaxed shadow-none font-mono border-none focus-visible:ring-0 focus:ring-0 overflow-hidden"
               style={{
                 lineHeight: "1.6",
                 boxShadow: "none",
@@ -359,7 +377,7 @@ export function EditableSegment(props: EditableSegmentProps) {
               ref={sourceTextareaRef}
               value={liveSegment.source || ""}
               readOnly
-              className="resize-none overflow-hidden bg-transparent pt-[2px] text-sm font-mono leading-relaxed text-foreground shadow-none outline-none w-full h-auto min-h-[40px] border-none focus-visible:ring-0 focus:ring-0"
+              className="resize-none overflow-hidden bg-transparent py-1 text-sm font-mono leading-relaxed text-foreground shadow-none outline-none w-full h-auto min-h-[40px] border-none focus-visible:ring-0 focus:ring-0"
               style={{
                 lineHeight: "1.6",
                 boxShadow: "none",
