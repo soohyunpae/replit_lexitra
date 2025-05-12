@@ -703,7 +703,7 @@ export function NewTranslationEditor({
           </div>
 
           <div className="text-xs font-medium text-muted-foreground whitespace-nowrap">
-            {statusCounts["Reviewed"] || 0}/{localSegments.length} Reviewed
+            {statusCounts["Reviewed"] || 0}/{segments?.length || 0} Reviewed
           </div>
 
           <div className="flex items-center gap-4 ml-1">
@@ -762,7 +762,7 @@ export function NewTranslationEditor({
                   id="toggle-select-all"
                   checked={
                     Object.keys(checkedSegments).length > 0 &&
-                    Object.keys(checkedSegments).length === localSegments.length
+                    segments && Object.keys(checkedSegments).length === segments.length
                   }
                   onCheckedChange={(checked) => {
                     if (checked) {
@@ -777,7 +777,7 @@ export function NewTranslationEditor({
                     htmlFor="toggle-select-all"
                     className="text-xs font-medium ml-1 cursor-pointer"
                   >
-                    {checkedCount}/{localSegments.length}
+                    {checkedCount}/{segments?.length || 0}
                   </label>
                 </div>
               </div>
@@ -949,7 +949,7 @@ export function NewTranslationEditor({
             {/* Filtered segments count */}
             {statusFilter !== "all" && (
               <div className="px-4 py-2 text-sm text-muted-foreground text-center border-t border-border bg-muted/20">
-                Showing {filteredSegments.length} of {localSegments.length}{" "}
+                Showing {filteredSegments.length} of {segments?.length || 0}{" "}
                 segments with status "{statusFilter}"
               </div>
             )}
