@@ -77,10 +77,10 @@ export function EditableSegment(props: EditableSegmentProps) {
       // Get scroll heights (actual content height)
       const sourceHeight = sourceEl.scrollHeight;
       const textHeight = textareaEl.scrollHeight;
-      
+
       // Use the larger height for both containers
       const maxHeight = Math.max(sourceHeight, textHeight);
-      
+
       // Set both containers and textarea to the same height
       sourceEl.style.height = `${maxHeight}px`;
       targetEl.style.height = `${maxHeight}px`;
@@ -256,11 +256,11 @@ export function EditableSegment(props: EditableSegmentProps) {
               ref={textareaRef}
               value={value}
               onChange={handleTextareaChange}
-              className="flex-1 resize-none bg-transparent pb-[28px] pt-[2px] text-sm leading-relaxed shadow-none outline-none font-mono w-full border-none focus-visible:ring-0 focus:ring-0"
+              className="flex-1 resize-none bg-transparent pb-[28px] pt-[2px] text-sm leading-relaxed shadow-none outline-none font-mono w-full border-none focus-visible:ring-0 focus:ring-0 overflow-y-hidden"
               style={{
                 lineHeight: "1.6",
-                overflow: "visible",
-                height: "100%",
+                minHeight: "100%",
+                height: "auto",
                 boxShadow: "none",
                 outline: "none",
                 transition: "none",
