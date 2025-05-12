@@ -229,34 +229,33 @@ export function DocSegment({
                       onClick={(e) => {
                         e.stopPropagation();
                         
-                        // Toggle status
+                        // 상태 배지 클릭 - 수정사항:
+                        // 1. 텍스트 변경은 저장하지 않고 
+                        // 2. 상태만 토글하며
+                        // 3. 편집기는 닫지 않음
+                        
+                        // Toggle status (Reviewed <-> Edited)
                         const newStatus = localStatus === "Reviewed" ? "Edited" : "Reviewed";
                         
                         // Update local state immediately for UI
                         setLocalStatus(newStatus);
                         
-                        // Check if origin needs to change
+                        // 원본이 MT, 100%, Fuzzy인 경우에만 origin 변경 필요
                         const needsOriginChange = 
-                          editedValue !== segment.target &&
                           (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
-                        const newOrigin = needsOriginChange ? "HT" : segment.origin;
+                        const newOrigin = (newStatus === "Reviewed" && needsOriginChange) ? "HT" : segment.origin;
                         
-                        // Optimistic UI update through parent
-                        onUpdate?.(
-                          editedValue,
-                          newStatus,
-                          newOrigin,
-                        );
-                        
-                        // Background server update
+                        // Background server update - 현재 텍스트 그대로 유지하고 상태만 변경
                         const updateSegmentStatus = async () => {
                           try {
+                            // 여기서 중요: 텍스트(target) 값으로 현재 editedValue가 아닌 
+                            // 원래 segment.target 값을 사용 (문서 요구사항)
                             const response = await apiRequest(
                               "PATCH",
                               `/api/segments/${segment.id}`,
                               {
-                                target: editedValue,
-                                status: newStatus,
+                                target: segment.target || "", // 텍스트 변경 없음
+                                status: newStatus,           // 상태만 변경
                                 origin: newOrigin,
                               },
                             );
@@ -276,26 +275,12 @@ export function DocSegment({
                               queryClient.invalidateQueries({ queryKey: ["segments"] });
                             });
                             
-                            // Final update with server data
-                            if (onUpdate) {
-                              onUpdate(
-                                String(updatedSegment.target || editedValue),
-                                updatedSegment.status,
-                                updatedSegment.origin
-                              );
-                            }
-                            
-                            // Don't auto-close the editor when changing status (let user decide when to close)
+                            // Don't auto-close the editor when changing status
                             // Status change is just a toggle, editor stays open
                           } catch (error) {
                             console.error("Failed to toggle segment status:", error);
                             // Revert on error
                             setLocalStatus(segment.status);
-                            onUpdate?.(
-                              segment.target || "",
-                              segment.status,
-                              segment.origin,
-                            );
                           }
                         };
                         
