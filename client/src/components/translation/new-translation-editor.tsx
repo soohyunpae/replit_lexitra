@@ -218,33 +218,35 @@ export function NewTranslationEditor({
       if (syncTimeoutId) clearTimeout(syncTimeoutId);
       resizeObserver.disconnect();
     };
-  }, [localSegments.length]);
+  }, [segments?.length]);
 
   // Get selected segment
-  const selectedSegment = selectedSegmentId
-    ? localSegments.find((segment) => segment.id === selectedSegmentId)
+  const selectedSegment = selectedSegmentId && segments
+    ? segments.find((segment) => segment.id === selectedSegmentId)
     : null;
 
   // Calculate progress
-  const completedSegments = localSegments.filter(
-    (segment) => segment.target && segment.target.trim() !== "",
-  ).length;
+  const completedSegments = segments 
+    ? segments.filter((segment) => segment.target && segment.target.trim() !== "").length
+    : 0;
 
   const progressPercentage =
-    localSegments.length > 0
-      ? Math.round((completedSegments / localSegments.length) * 100)
+    segments && segments.length > 0
+      ? Math.round((completedSegments / segments.length) * 100)
       : 0;
 
   // Calculate status counts
   useEffect(() => {
+    if (!segments) return;
+    
     const counts: Record<string, number> = {};
-    localSegments.forEach((segment) => {
+    segments.forEach((segment) => {
       // Use new status types: MT, 100%, Fuzzy, Edited, Reviewed, Rejected
       const status = segment.status || "MT";
       counts[status] = (counts[status] || 0) + 1;
     });
     setStatusCounts(counts);
-  }, [localSegments]);
+  }, [segments]);
 
   // Search TM for selected segment
   const searchTM = async (source: string) => {
@@ -354,7 +356,7 @@ export function NewTranslationEditor({
         modified: true,
       });
 
-      // 히스토리 트래킹 - 공유 컨텍스트에도 이 기능을 추가할 수 있음
+      // 히스토리 트래킹
       const oldTarget = currentSegment?.target;
       if (selectedSegmentId === id && oldTarget && oldTarget !== target) {
         console.log("Recording segment history for:", id, target);
@@ -368,7 +370,7 @@ export function NewTranslationEditor({
         }
       }
 
-      return updatedSegment;
+      // React Query가 업데이트된 값을 자동으로 반환하므로 별도 return이 필요 없음
     } catch (error) {
       console.error("Error updating segment:", error);
       toast({
@@ -382,7 +384,9 @@ export function NewTranslationEditor({
 
   // Handle translation with GPT for a single segment
   const handleTranslateWithGPT = async (id: number) => {
-    const segment = localSegments.find((s) => s.id === id);
+    if (!segments) return;
+    
+    const segment = segments.find((s) => s.id === id);
     if (!segment) return;
 
     try {
@@ -413,8 +417,10 @@ export function NewTranslationEditor({
 
   // Handle batch translation with GPT
   const handleBatchTranslation = async () => {
+    if (!segments) return;
+    
     // Find segments without translation
-    const untranslatedSegments = localSegments.filter(
+    const untranslatedSegments = segments.filter(
       (s) => !s.target || s.target.trim() === "",
     );
 
@@ -466,9 +472,9 @@ export function NewTranslationEditor({
             };
           }
 
-          // Update the counter and refresh the UI
+          // Update the counter - UI will be automatically refreshed by React Query
           setTranslatedCount(i + 1);
-          setLocalSegments([...updatedSegments]);
+          // No need to call setLocalSegments as React Query will handle the updates
         }
       } catch (error) {
         console.error(`Error translating segment ${segment.id}:`, error);
@@ -486,19 +492,13 @@ export function NewTranslationEditor({
   // Implement save file function with TM update for reviewed segments
   const handleSaveFile = async () => {
     try {
-      // Save all segments to database first
-      const savePromises = localSegments.map((segment) => {
-        return apiRequest("PATCH", `/api/segments/${segment.id}`, {
-          target: segment.target || "",
-          status: segment.status,
-          origin: segment.origin || "MT",
-        });
-      });
-
-      await Promise.all(savePromises);
-
+      if (!segments) return;
+      
+      // With React Query, all segment changes are already saved to the database 
+      // immediately through the updateSegment and debouncedUpdateSegment functions
+      
       // Find all reviewed segments to save to TM
-      const reviewedSegments = localSegments.filter(
+      const reviewedSegments = segments.filter(
         (segment) =>
           segment.status === "Reviewed" &&
           segment.target &&
