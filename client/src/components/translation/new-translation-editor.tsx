@@ -675,8 +675,8 @@ export function NewTranslationEditor({
 
   return (
     <main className="flex-1 flex flex-col">
-      {/* Progress bar with integrated controls */}
-      <div className="bg-card border-b border-border py-2 px-4">
+      {/* Progress bar with integrated controls - Fixed at the top */}
+      <div className="bg-card border-b border-border py-2 px-4 sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-2 mb-1.5">
           <div className="flex-1">
             <div className="h-2.5 rounded-full bg-secondary overflow-hidden flex">
@@ -958,25 +958,27 @@ export function NewTranslationEditor({
           </div>
         </div>
 
-        {/* Side panel */}
-        <SidePanel
-          tmMatches={tmMatches}
-          glossaryTerms={glossaryTerms}
-          selectedSegment={selectedSegment}
-          sourceLanguage={sourceLanguage}
-          targetLanguage={targetLanguage}
-          previousVersions={previousVersions}
-          onUseTranslation={(translation: string) => {
-            if (selectedSegmentId) {
-              handleSegmentUpdate(selectedSegmentId, translation, "MT", "MT");
-            }
-          }}
-          onSegmentUpdated={(id: number, newTarget: string) => {
-            // This callback is triggered when a segment is updated
-            // We're using a different approach with previousVersions state instead
-            console.log(`Segment ${id} updated with new target: ${newTarget}`);
-          }}
-        />
+        {/* Side panel - Fixed position */}
+        <div className="sticky top-0 h-screen">
+          <SidePanel
+            tmMatches={tmMatches}
+            glossaryTerms={glossaryTerms}
+            selectedSegment={selectedSegment}
+            sourceLanguage={sourceLanguage}
+            targetLanguage={targetLanguage}
+            previousVersions={previousVersions}
+            onUseTranslation={(translation: string) => {
+              if (selectedSegmentId) {
+                handleSegmentUpdate(selectedSegmentId, translation, "MT", "MT");
+              }
+            }}
+            onSegmentUpdated={(id: number, newTarget: string) => {
+              // This callback is triggered when a segment is updated
+              // We're using a different approach with previousVersions state instead
+              console.log(`Segment ${id} updated with new target: ${newTarget}`);
+            }}
+          />
+        </div>
       </div>
     </main>
   );
