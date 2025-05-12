@@ -268,6 +268,14 @@ export function DocSegment({
                             const updatedSegment = await response.json();
                             console.log("Status toggled to", newStatus, updatedSegment);
                             
+                            // 중요: 여기에서 queryClient를 사용하여 segments 쿼리를 무효화
+                            // 이렇게 하면 UI가 자동으로 새로운 데이터로 업데이트됨
+                            import('@/lib/queryClient').then(module => {
+                              const { queryClient } = module;
+                              // 쿼리 무효화 - 모든 세그먼트 관련 쿼리 갱신
+                              queryClient.invalidateQueries({ queryKey: ["segments"] });
+                            });
+                            
                             // Final update with server data
                             if (onUpdate) {
                               onUpdate(

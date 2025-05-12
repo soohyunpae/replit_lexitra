@@ -214,6 +214,10 @@ export function DocReviewEditor({
   const lastScrolledPanel = useRef<'left' | 'right' | null>(null);
   
   // 5. useEffect hooks - ALL useEffect MUST GO HERE
+  
+  // 이전 상태 값을 저장하는 ref (리렌더링 사이에 지속되지만 변경해도 리렌더링 안 됨)
+  const prevStatusCountsRef = useRef<string>('');
+  
   // Update status counts when segments change
   useEffect(() => {
     const counts: Record<string, number> = {
@@ -235,8 +239,17 @@ export function DocReviewEditor({
       }
     });
     
-    setStatusCounts(counts);
-    console.log("Status counts updated:", counts);
+    // JSON.stringify로 객체 비교 (값만 비교)
+    const newCountsStr = JSON.stringify(counts);
+    
+    // 이전 값(ref에 저장된)과 다를 때만 상태 업데이트
+    if (newCountsStr !== prevStatusCountsRef.current) {
+      setStatusCounts(counts);
+      console.log("Status counts updated:", counts);
+      
+      // 현재 값을 ref에 저장
+      prevStatusCountsRef.current = newCountsStr;
+    }
   }, [segments]);
   
   // == 문서 보기 처리 ==
