@@ -244,12 +244,10 @@ export function EditableSegment(props: EditableSegmentProps) {
               ref={textareaRef}
               value={value}
               onChange={handleTextareaChange}
-              className="no-scrollbar flex-1 resize-y overflow-visible bg-transparent pb-[28px] pt-[2px] text-sm leading-relaxed shadow-none outline-none font-mono w-full border-none focus-visible:ring-0 focus:ring-0"
+              className="no-scrollbar flex-1 resize-none bg-transparent pb-[28px] pt-[2px] text-sm leading-relaxed shadow-none outline-none font-mono w-full h-full border-none focus-visible:ring-0 focus:ring-0"
               style={{
                 lineHeight: "1.6",
-                minHeight: "auto",
-                height: "fit-content",
-                overflow: "hidden",
+                overflow: "auto",
                 boxShadow: "none",
                 outline: "none",
                 transition: "none",
