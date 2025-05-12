@@ -41,9 +41,42 @@ export function EditableSegment(props: EditableSegmentProps) {
     isSource ? liveSegment.source : liveSegment.target || "",
   );
   
-  // 자동 리사이징 훅 사용
-  const { textareaRef, adjustHeight } = useAutoResize(value);
+  // 좌우 컨테이너와 textarea에 대한 ref 추가
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const sourceTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const leftContainerRef = useRef<HTMLDivElement>(null);
+  const rightContainerRef = useRef<HTMLDivElement>(null);
+  
+  // 왼쪽과 오른쪽 세그먼트의 높이를 동기화하는 함수
+  const syncHeights = () => {
+    if (textareaRef.current && sourceTextareaRef.current && leftContainerRef.current && rightContainerRef.current) {
+      // 먼저 textarea의 높이를 내용에 맞게 조정
+      const textarea = textareaRef.current;
+      textarea.style.height = 'auto';
+      const textareaScrollHeight = textarea.scrollHeight;
+      textarea.style.height = `${textareaScrollHeight}px`;
+      
+      // 소스 textarea(readonly)의 높이도 조정
+      const sourceTextarea = sourceTextareaRef.current;
+      sourceTextarea.style.height = 'auto';
+      const sourceScrollHeight = sourceTextarea.scrollHeight;
+      sourceTextarea.style.height = `${sourceScrollHeight}px`;
+      
+      // 두 컨테이너 중 높은 쪽으로 높이 통일
+      const maxHeight = Math.max(textareaScrollHeight, sourceScrollHeight);
+      leftContainerRef.current.style.minHeight = `${maxHeight}px`;
+      rightContainerRef.current.style.minHeight = `${maxHeight}px`;
+      
+      // textarea도 컨테이너 높이에 맞춤
+      textarea.style.height = `${maxHeight}px`;
+      sourceTextarea.style.height = `${maxHeight}px`;
+    }
+  };
+  
+  // 값이 변경될 때마다 높이 동기화
+  useEffect(() => {
+    syncHeights();
+  }, [value, liveSegment.source]);
 
   // origin이 undefined인 경우 처리를 위한 헬퍼 함수
   const isOriginInList = (
@@ -92,8 +125,8 @@ export function EditableSegment(props: EditableSegmentProps) {
     // 즉시 UI 업데이트 - 사용자 입력 지연 없음
     setValue(newValue);
     
-    // 커스텀 훅의 adjustHeight 함수를 즉시 호출하여 textarea 높이 조정
-    adjustHeight();
+    // 비동기로 높이 동기화 함수 호출 (상태 업데이트 후 DOM에 적용된 후 실행)
+    setTimeout(syncHeights, 0);
 
     // 서버 업데이트 로직
     if (!isSource && onUpdate) {
@@ -122,32 +155,16 @@ export function EditableSegment(props: EditableSegmentProps) {
 
   // Update textarea height when segment source or target changes or on mount
   useEffect(() => {
-    // 커스텀 훅의 adjustHeight 함수를 사용하여 필요할 때 높이 조정
-    if (!isSource) {
-      // 타겟 텍스트의 경우 커스텀 훅에서 자동으로 리사이징 처리
-      adjustHeight();
-    }
-    
-    // 소스 텍스트도 높이 자동 조정 (소스 텍스트에는 직접 처리)
-    if (isSource && sourceTextareaRef.current) {
-      sourceTextareaRef.current.style.height = "0px";
-      sourceTextareaRef.current.style.height = `${sourceTextareaRef.current.scrollHeight}px`;
-    }
-  }, [liveSegment.source, liveSegment.target, isSource, adjustHeight]);
+    // 직접 구현한 syncHeights 함수로 높이 동기화
+    syncHeights();
+  }, [liveSegment.source, liveSegment.target, isSource]);
   
-  // 윈도우 리사이즈 이벤트는 커스텀 훅에서 자동으로 처리하므로 별도 구현 필요 없음
-  // 소스 텍스트 textarea에만 리사이즈 이벤트 추가 (타겟은 훅에서 처리)
+  // 윈도우 리사이즈 이벤트에서도 동일한 높이 동기화 로직 사용
   useEffect(() => {
-    const resizeSourceArea = () => {
-      if (isSource && sourceTextareaRef.current) {
-        sourceTextareaRef.current.style.height = "0px";
-        sourceTextareaRef.current.style.height = `${sourceTextareaRef.current.scrollHeight}px`;
-      }
-    };
-
-    window.addEventListener("resize", resizeSourceArea);
-    return () => window.removeEventListener("resize", resizeSourceArea);
-  }, [isSource]);
+    // 윈도우 크기가 변경되면 높이 동기화 다시 수행
+    window.addEventListener("resize", syncHeights);
+    return () => window.removeEventListener("resize", syncHeights);
+  }, []);
 
   // Get status badge color based on status
   const getStatusColor = (status: string): string => {

@@ -1,0 +1,95 @@
+좋아, Replit에게 명확하게 전달할 수 있도록 아래와 같이 변경된 코드와 함께 문제 원인 및 해결 방안을 정리했어:
+
+⸻
+
+📌 요청: Segment Editor에서 좌우 세그먼트 줄 높이 불일치 문제 수정
+
+⸻
+
+❗ 문제 요약
+	•	현재 Segment Editor에서는 좌측 세그먼트(source)는 <div>, 우측 세그먼트(target)는 <Textarea>로 구성되어 있음
+	•	하지만 Textarea의 높이 계산이 정확하지 않아, rightRef.scrollHeight를 기준으로 높이를 맞춰도 양쪽 세그먼트의 줄이 어긋남
+	•	이는 Textarea 내부 요소의 높이가 부모 <div>의 scrollHeight에 반영되지 않기 때문임
+
+⸻
+
+✅ 해결 방안
+	1.	<Textarea>의 scrollHeight를 직접 가져와서 leftRef와 비교
+	2.	양쪽 세그먼트에 가장 큰 높이를 적용
+	3.	textarea.style.height도 수동으로 리사이즈하여 시각적으로도 맞춤
+
+⸻
+
+✅ 변경된 코드 예시 (editable-segment.tsx)
+
+import React, { useEffect, useRef, useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
+
+interface EditableSegmentProps {
+  source: string;
+  target: string;
+  onChange: (newValue: string) => void;
+}
+
+export default function EditableSegment({ source, target, onChange }: EditableSegmentProps) {
+  const [value, setValue] = useState(target);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const leftRef = useRef<HTMLDivElement>(null);
+  const rightRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (leftRef.current && textareaRef.current && rightRef.current) {
+      // 텍스트 영역의 높이를 갱신
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+
+      const leftHeight = leftRef.current.scrollHeight;
+      const textAreaHeight = textareaRef.current.scrollHeight;
+      const maxHeight = Math.max(leftHeight, textAreaHeight);
+
+      // 양쪽 높이 동기화
+      leftRef.current.style.height = `${maxHeight}px`;
+      rightRef.current.style.height = `${maxHeight}px`;
+    }
+  }, [value, source]);
+
+  return (
+    <div className="flex w-full gap-4 items-stretch">
+      {/* 원문 */}
+      <div
+        ref={leftRef}
+        className="w-1/2 p-3 bg-muted rounded-md whitespace-pre-wrap break-words overflow-hidden"
+      >
+        {source}
+      </div>
+
+      {/* 번역문 */}
+      <div
+        ref={rightRef}
+        className="w-1/2 p-3 bg-card rounded-md overflow-hidden"
+      >
+        <Textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => {
+            setValue(e.target.value);
+            onChange(e.target.value);
+          }}
+          className="w-full h-full resize-none min-h-[40px] !overflow-hidden"
+        />
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+🎯 기대 결과
+	•	좌우 세그먼트의 높이가 항상 동일하게 유지되어 시각적으로 줄이 맞춰짐
+	•	긴 문장일수록 줄 어긋남 문제가 완전히 해결됨
+	•	Reflow 없이 자연스러운 줄 정렬 가능
+
+⸻
+
+이 내용을 그대로 복사해서 Replit AI에게 전달하면, 문제를 오해하지 않고 정확하게 구현할 수 있을 거야. 필요하면 적용된 버전도 같이 보내줘!
