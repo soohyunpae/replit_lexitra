@@ -22,7 +22,6 @@ import { Separator } from "@/components/ui/separator";
 import { TranslationUnit, StatusType, OriginType } from "@/types";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
-import { useSegmentContext } from "@/hooks/useSegmentContext";
 
 // 인증 문제를 해결한 DocSegment 컴포넌트 수정 버전
 // 모든 fetch 호출을 apiRequest로 교체하여 인증 요청 지원
@@ -59,7 +58,6 @@ export function DocSegment({
   showStatusInEditor = false, // 기본값은 false
 }: DocSegmentProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { debouncedUpdateSegment } = useSegmentContext(); // 컴포넌트 상단에서 훅 호출
 
   // 상태 토글 기능 추가
   const toggleStatus = () => {
@@ -188,12 +186,8 @@ export function DocSegment({
                         newStatus = "Edited";
                       }
 
-                      // 공유 컨텍스트의 디바운스된 업데이트 함수 사용
-                      debouncedUpdateSegment(segment.id, {
-                        target: newValue,
-                        status: newStatus,
-                        origin: newOrigin,
-                      });
+                      // 부모 컴포넌트에서 전달받은 onUpdate 함수 사용
+                      onUpdate(newValue, newStatus, newOrigin);
                     }
                   }
                 }}
@@ -427,12 +421,8 @@ export function DocSegment({
                     newStatus = "Edited";
                   }
 
-                  // 디바운스된 업데이트 실행
-                  debouncedUpdateSegment(segment.id, {
-                    target: value,
-                    status: newStatus,
-                    origin: newOrigin,
-                  });
+                  // 부모 컴포넌트의 업데이트 함수 호출
+                  onUpdate(value, newStatus, newOrigin);
                 }
               }}
               onKeyDown={handleKeyDown}
