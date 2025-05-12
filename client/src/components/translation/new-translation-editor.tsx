@@ -294,7 +294,9 @@ export function NewTranslationEditor({
   const handleSegmentSelect = async (id: number) => {
     setSelectedSegmentId(id);
 
-    const segment = localSegments.find((s) => s.id === id);
+    if (!segments) return;
+    
+    const segment = segments.find((s) => s.id === id);
     if (segment) {
       // Store the current translation when selecting a segment for history tracking
       if (segment.target) {
@@ -525,11 +527,11 @@ export function NewTranslationEditor({
       }
 
       // No need to manually recalculate status counts here
-      // The useEffect hook will handle it automatically when localSegments changes
+      // The useEffect hook will handle it automatically when segments changes
 
       toast({
         title: "Save Complete",
-        description: `Saved ${localSegments.length} segments. ${reviewedSegments.length} reviewed segments stored to TM.`,
+        description: `Saved ${segments?.length || 0} segments. ${reviewedSegments.length} reviewed segments stored to TM.`,
       });
     } catch (error) {
       console.error("Error saving file:", error);

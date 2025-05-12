@@ -39,8 +39,8 @@ export function useSegments(fileId: number) {
   });
 
   // 디바운스 없이 즉시 업데이트하는 함수
-  const updateSegment = async (segmentId: number, newData: Partial<TranslationUnit>) => {
-    return updateSegmentMutation.mutateAsync({ id: segmentId, ...newData });
+  const updateSegment = async (segmentData: Partial<TranslationUnit> & { id: number }) => {
+    return updateSegmentMutation.mutateAsync(segmentData);
   };
 
   // 디바운스된 API 업데이트 함수
@@ -57,9 +57,9 @@ export function useSegments(fileId: number) {
   );
   
   // 낙관적 UI 업데이트를 포함한 디바운스 함수
+  // 단일 객체 패러미터로 변경 ({id, ...rest}) 형태
   const debouncedUpdateSegment = useCallback((
-    segmentId: number, 
-    newData: Partial<TranslationUnit>
+    segmentData: Partial<TranslationUnit> & { id: number }
   ): void => {
     // 낙관적 UI 업데이트를 위해 현재 캐시된 데이터 수동 업데이트
     // React Query의 setQueryData를 사용하여 캐시 업데이트
