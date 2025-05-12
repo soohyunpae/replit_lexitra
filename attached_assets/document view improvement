@@ -1,0 +1,63 @@
+Segment Editor & Document View Sync — Final Update
+
+This update addresses the editor behavior in Document View, particularly how segment status and text edits are saved when interacting with badges and the close (X) button.
+
+⸻
+
+✅ Final Behavior Summary
+
+1. Status Badge (Edited / Reviewed)
+	•	Function: Toggles the segment’s status field only.
+	•	Behavior:
+	•	Toggles between Reviewed and Edited when clicked.
+	•	Does not save text edits.
+	•	Does not close the editor.
+
+2. Close Button (X)
+	•	Function: Saves the current segment (text + status) and closes the editor.
+	•	Behavior:
+	•	Captures any text edits made in the textarea.
+	•	Persists the current status (whether modified or not).
+	•	Closes the segment editor drawer.
+
+✔️ In other words, clicking the X saves the current full state of the segment (both text and status).
+✔️ If the status badge was clicked before X, that new status is also saved.
+
+🔧 Suggested Code Adjustment
+
+Here’s how you can modify the behavior in code:
+
+```tsx
+// Close button handler
+const handleClose = () => {
+  const isTextChanged = editedValue !== segment.target;
+
+  if (isTextChanged) {
+    // Save updated text with current status
+    onUpdate?.(editedValue, localStatus, segment.origin);
+  }
+  onClose?.(); // Close the drawer
+};
+
+// Status badge toggle handler
+const toggleStatus = () => {
+  const newStatus = localStatus === "Reviewed" ? "Edited" : "Reviewed";
+
+  const needsOriginChange =
+    editedValue !== segment.target &&
+    (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
+
+  const newOrigin = needsOriginChange ? "HT" : segment.origin;
+
+  // Save status change only (not text)
+  onUpdate?.(editedValue, newStatus, newOrigin);
+  setLocalStatus(newStatus);
+};
+```
+
+This ensures:
+- Status badge toggles only affect the status.
+- The close button saves all current changes and exits cleanly.
+
+⸻
+

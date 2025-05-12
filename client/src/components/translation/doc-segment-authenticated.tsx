@@ -310,7 +310,7 @@ export function DocSegment({
                   </TooltipContent>
                 </Tooltip>
                 
-                {/* Close Button */}
+                {/* Close Button - Now saves current state and closes */}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -319,7 +319,16 @@ export function DocSegment({
                       className="h-6 w-6 p-0 rounded-full hover:bg-muted"
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Close editor without changing status
+                        
+                        // 수정된 동작: 현재 텍스트와 상태 저장하고 닫기
+                        const isTextChanged = editedValue !== segment.target;
+
+                        if (isTextChanged) {
+                          // 텍스트 변경이 있으면 현재 상태와 함께 저장
+                          onUpdate?.(editedValue, localStatus, segment.origin);
+                        }
+                        
+                        // 편집기 닫기
                         onCancel?.();
                       }}
                     >
@@ -327,7 +336,7 @@ export function DocSegment({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Close editor (no status change)</p>
+                    <p>Save changes and close editor</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
