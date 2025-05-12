@@ -449,30 +449,29 @@ export default function Translation() {
         </div>
         
         <div className="flex-1 overflow-auto">
-          <SegmentProvider initialSegments={(file as ExtendedFile).segments || []}>
-            {editorMode === 'segment' ? (
-              <NewTranslationEditor
-                fileName={file.name}
-                sourceLanguage={project.sourceLanguage}
-                targetLanguage={project.targetLanguage}
-                segments={(file as ExtendedFile).segments || []}
-                onSave={() => saveProject.mutate()}
-                onExport={() => exportProject.mutate()}
-              />
-            ) : (
-              <DocReviewEditor
-                fileName={file.name}
-                sourceLanguage={project.sourceLanguage}
-                targetLanguage={project.targetLanguage}
-                segments={(file as ExtendedFile).segments || []}
-                onSave={() => saveProject.mutate()}
-                onExport={() => exportProject.mutate()}
-                fileId={Number(fileId)}
-                tmMatches={tmMatches}
-                glossaryTerms={glossaryTerms}
-              />
-            )}
-          </SegmentProvider>
+          {editorMode === 'segment' ? (
+            <NewTranslationEditor
+              fileName={file.name}
+              sourceLanguage={project.sourceLanguage}
+              targetLanguage={project.targetLanguage}
+              segments={(file as ExtendedFile).segments || []}
+              fileId={Number(fileId)} 
+              onSave={() => saveProject.mutate()}
+              onExport={() => exportProject.mutate()}
+            />
+          ) : (
+            <DocReviewEditor
+              fileName={file.name}
+              sourceLanguage={project.sourceLanguage}
+              targetLanguage={project.targetLanguage}
+              segments={(file as ExtendedFile).segments || []}
+              fileId={Number(fileId)}
+              onSave={() => saveProject.mutate()}
+              onExport={() => exportProject.mutate()}
+              tmMatches={tmMatches}
+              glossaryTerms={glossaryTerms}
+            />
+          )}
         </div>
       </div>
     </MainLayout>
