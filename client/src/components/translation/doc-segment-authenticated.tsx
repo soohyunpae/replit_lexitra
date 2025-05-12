@@ -163,42 +163,41 @@ export function DocSegment({
                 value={editedValue}
                 onChange={(e) => {
                   const newValue = e.target.value;
-                  // 즉시 UI 업데이트
+                  // Update UI state
                   onEditValueChange?.(newValue);
 
-                  // Segment Editor와 동일한 방식으로 자동 상태 업데이트 로직 적용
+                  // Automatic status update logic
                   if (onUpdate) {
-                    // 중요: 텍스트 변경 여부와 관계없이 첫 입력 시에 status 변경
-                    // 수정: 최초 입력 시 바로 Reviewed -> Edited 으로 변경되도록
-                    const isTextChanged = newValue !== segment.target;
-                    const isReviewed = segment.status === "Reviewed";
-                    
-                    // Reviewed 상태일 때 무조건 Edited로 변경 (첫 키 입력 즉시)
-                    if (isReviewed) {
-                      // 로컬 상태 즉시 변경
-                      setLocalStatus("Edited");
-                      
-                      // 정보 로깅
-                      console.log("Status immediately changed: Reviewed -> Edited");
-                    }
-                    
-                    // Origin 결정
-                    const needsOriginChange = 
-                      segment.origin === "MT" ||
-                      segment.origin === "100%" ||
-                      segment.origin === "Fuzzy";
-                    const newOrigin = needsOriginChange ? "HT" : segment.origin;
-                    
-                    // 최종 상태 결정
-                    let newStatus = isReviewed ? "Edited" : localStatus;
-                    if (localStatus === "MT" || localStatus === "100%" || localStatus === "Fuzzy") {
-                      newStatus = "Edited";
-                      // 로컬 상태도 함께 업데이트
-                      setLocalStatus("Edited");
-                    }
+                    const isValueChanged = newValue !== segment.target;
 
-                    // 부모 컴포넌트를 통해 업데이트
-                    onUpdate(newValue, newStatus, newOrigin);
+                    if (isValueChanged) {
+                      const needsOriginChange =
+                        segment.origin === "MT" ||
+                        segment.origin === "100%" ||
+                        segment.origin === "Fuzzy";
+                      const newOrigin = needsOriginChange
+                        ? "HT"
+                        : segment.origin;
+
+                      // Change status to Edited if needed
+                      let newStatus = localStatus;
+                      if (localStatus === "Reviewed") {
+                        newStatus = "Edited";
+                        // Update local state to reflect change
+                        setLocalStatus("Edited");
+                      } else if (
+                        localStatus === "MT" ||
+                        localStatus === "100%" ||
+                        localStatus === "Fuzzy"
+                      ) {
+                        newStatus = "Edited";
+                        // Update local state to reflect change
+                        setLocalStatus("Edited");
+                      }
+
+                      // Update through parent component
+                      onUpdate(newValue, newStatus, newOrigin);
+                    }
                   }
                 }}
                 onKeyDown={handleKeyDown}
@@ -435,44 +434,32 @@ export function DocSegment({
                 const value = e.target.value;
                 onEditValueChange?.(value);
 
-                // 중요: Reviewed 상태일 때는 무조건 첫 타이핑에 상태 변경
-                if (segment.status === "Reviewed") {
-                  // 로컬 상태 즉시 변경 (UI에 바로 반영)
-                  setLocalStatus("Edited");
-                  console.log("Status immediately changed: Reviewed -> Edited");
-                  
-                  // 텍스트가 동일하더라도 상태 변경 전송
-                  if (onUpdate) {
-                    const origin = 
-                      (segment.origin === "MT" || 
-                       segment.origin === "100%" || 
-                       segment.origin === "Fuzzy") 
-                      ? "HT" 
-                      : segment.origin;
-                      
-                    onUpdate(value, "Edited", origin);
-                  }
-                }
-                // 일반적인 텍스트 변경 처리
-                else if (value !== segment.target && onUpdate) {
-                  // Origin 결정
+                // 자동 상태 업데이트 로직
+                const isValueChanged = value !== segment.target;
+
+                if (isValueChanged) {
+                  // 상태 및 origin 결정
                   const needsOriginChange =
                     segment.origin === "MT" ||
                     segment.origin === "100%" ||
                     segment.origin === "Fuzzy";
                   const newOrigin = needsOriginChange ? "HT" : segment.origin;
 
-                  // 상태 결정
                   let newStatus = segment.status;
-                  if (segment.status === "MT" || 
-                      segment.status === "100%" || 
-                      segment.status === "Fuzzy") {
+                  if (segment.status === "Reviewed") {
                     newStatus = "Edited";
-                    setLocalStatus("Edited");
+                  } else if (
+                    segment.status === "MT" ||
+                    segment.status === "100%" ||
+                    segment.status === "Fuzzy"
+                  ) {
+                    newStatus = "Edited";
                   }
 
-                  // 부모 컴포넌트를 통해 업데이트
-                  onUpdate(value, newStatus, newOrigin);
+                  // 부모 컴포넌트의 업데이트 함수 호출 (존재하는 경우에만)
+                  if (onUpdate) {
+                    onUpdate(value, newStatus, newOrigin);
+                  }
                 }
               }}
               onKeyDown={handleKeyDown}
