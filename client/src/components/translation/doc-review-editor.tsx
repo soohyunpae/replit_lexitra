@@ -203,6 +203,9 @@ export function DocReviewEditor({
   // Keep track of which panel was scrolled last
   const lastScrolledPanel = useRef<'left' | 'right' | null>(null);
   
+  // 세그먼트의 상태를 추적하기 위한 로컬 상태
+  const [segmentStatuses, setSegmentStatuses] = useState<Record<number, string>>({});
+  
   // Use our custom hook for managing editing state
   const {
     editingId,
@@ -219,9 +222,6 @@ export function DocReviewEditor({
     setHighlightedSegmentId(segment.id);
     originalSelectForEditing(segment);
   };
-  
-  // 세그먼트의 상태를 추적하기 위한 로컬 상태
-  const [segmentStatuses, setSegmentStatuses] = useState<Record<number, string>>({});
   
   // 문서 보기를 위해 세그먼트를 그룹화 (조건부로 호출하지 않고 항상 호출)
   const segmentGroups = groupSegmentsByParagraphs(segments);

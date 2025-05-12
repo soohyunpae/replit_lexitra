@@ -58,6 +58,13 @@ export function DocSegment({
   showStatusInEditor = false, // 기본값은 false
 }: DocSegmentProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Local status state - moved outside of conditional rendering
+  const [localStatus, setLocalStatus] = useState(segment.status);
+  
+  // Keep local state in sync with props - moved outside conditional
+  useEffect(() => {
+    setLocalStatus(segment.status);
+  }, [segment.status]);
 
   // 상태 토글 기능 추가
   const toggleStatus = () => {
@@ -146,14 +153,6 @@ export function DocSegment({
 
     // Target panel in document mode
     if (isEditing) {
-      // State for local UI updates without waiting for prop changes
-      const [localStatus, setLocalStatus] = useState(segment.status);
-      
-      // Keep local state in sync with props
-      useEffect(() => {
-        setLocalStatus(segment.status);
-      }, [segment.status]);
-      
       return (
         <span className={cn("relative font-serif", className)}>
           <div className="relative my-1">
