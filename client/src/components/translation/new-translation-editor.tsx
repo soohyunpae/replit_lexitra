@@ -28,7 +28,7 @@ import {
   type StatusType,
 } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { useSegmentContext } from "@/hooks/useSegmentContext";
+import { useSegments } from "@/hooks/useSegments";
 import {
   Select,
   SelectContent,
@@ -41,7 +41,8 @@ interface TranslationEditorProps {
   fileName: string;
   sourceLanguage: string;
   targetLanguage: string;
-  segments: TranslationUnit[];
+  segments?: TranslationUnit[]; // 기존 호환성 유지
+  fileId: number;
   onSave?: () => void;
   onExport?: () => void;
 }
@@ -50,13 +51,24 @@ export function NewTranslationEditor({
   fileName,
   sourceLanguage,
   targetLanguage,
-  segments = [],
+  segments: propSegments,
+  fileId,
   onSave,
   onExport,
 }: TranslationEditorProps) {
   const { toast } = useToast();
-  const [localSegments, setLocalSegments] =
-    useState<TranslationUnit[]>(segments);
+  
+  // React Query로 segments 상태 관리
+  const { 
+    segments, 
+    isLoading, 
+    isError, 
+    updateSegment,
+    debouncedUpdateSegment,
+    isMutating 
+  } = useSegments(fileId);
+  
+  // 로컬 필터링 상태
   const [filteredSegments, setFilteredSegments] =
     useState<TranslationUnit[]>(segments);
   const [selectedSegmentId, setSelectedSegmentId] = useState<number | null>(
@@ -92,10 +104,30 @@ export function NewTranslationEditor({
   >("infinite");
   const [showFilterPanel, setShowFilterPanel] = useState<boolean>(false);
 
-  // Update local segments when props change
-  useEffect(() => {
-    setLocalSegments(segments);
-  }, [segments]);
+  // 로딩 상태 및 에러 처리
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-pulse text-center">
+          <div className="h-8 w-40 bg-accent rounded-full mx-auto mb-4"></div>
+          <div className="h-4 w-60 bg-accent rounded-full mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <AlertCircle className="h-10 w-10 text-destructive mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Failed to load segments</h3>
+          <p className="text-muted-foreground mb-4">There was an error loading translation segments.</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
 
   // Apply filters and update filtered segments
   useEffect(() => {

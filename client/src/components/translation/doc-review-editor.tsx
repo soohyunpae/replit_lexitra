@@ -17,16 +17,16 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useMobile } from '@/hooks/use-mobile';
 import { SidePanel } from './side-panel';
-import { useSegmentContext } from '@/hooks/useSegmentContext';
+import { useSegments } from '@/hooks/useSegments';
 
 interface DocReviewEditorProps {
   fileName: string;
   sourceLanguage: string;
   targetLanguage: string;
-  segments: TranslationUnit[];
+  segments?: TranslationUnit[]; // 기존 호환성 유지
   onSave?: () => void;
   onExport?: () => void;
-  fileId?: number; // fileId는 선택적으로 변경
+  fileId: number; // 필수 파라미터로 변경
   tmMatches?: TranslationMemory[];
   glossaryTerms?: Glossary[];
 }
