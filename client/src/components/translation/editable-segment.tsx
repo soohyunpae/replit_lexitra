@@ -1,10 +1,9 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Check, X, Languages } from "lucide-react";
 import { TranslationUnit, StatusType, OriginType } from "@/types";
-import { useSegmentContext } from "@/hooks/useSegmentContext";
 import { useAutoResize } from "@/hooks/useAutoResize";
 
 interface EditableSegmentProps {
@@ -32,17 +31,11 @@ export function EditableSegment(props: EditableSegmentProps) {
     onCheckChange,
   } = props;
 
-  // 공유 컨텍스트에서 최신 데이터 참조
-  const { segments } = useSegmentContext();
-
   // 상태 및 원본 변경 여부 확인을 위한 상수
   const STATUS_NEED_CHANGE = ["MT", "100%", "Fuzzy"];
-
-  // 최신 세그먼트 데이터 사용 - context에서 찾아 항상 최신 상태 유지
-  const liveSegment = useMemo(
-    () => segments.find((s) => s.id === segment.id) || segment,
-    [segments, segment.id],
-  );
+  
+  // segment 속성을 직접 사용 (더 이상 context 필요 없음)
+  const liveSegment = segment;
 
   const [value, setValue] = useState(
     isSource ? liveSegment.source : liveSegment.target || "",
