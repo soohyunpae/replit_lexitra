@@ -482,7 +482,7 @@ export function SidePanel({
   return (
     <aside className="w-80 border-l border-border bg-card overflow-auto flex flex-col sticky top-0 h-screen">
       <Tabs defaultValue="tm" value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-        <div className="px-4 py-3 border-b border-border">
+        <div className="px-4 py-3 border-b border-border sticky top-0 bg-card z-50 shadow-md">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="tm" className="flex items-center justify-center">
               <Database className="h-4 w-4 mr-1.5" />
@@ -507,7 +507,7 @@ export function SidePanel({
         </div>
         
         <TabsContent value="tm" className="flex-1 overflow-auto">
-          <div className="p-4">
+          <div className="p-4 pt-5">
             {/* Segment Status Info Panel - 요청에 따라 제거 */}
             {activeTab === "tm" && showStatusInfo && <StatusInfoPanel segment={selectedSegment} />}
           
@@ -567,7 +567,7 @@ export function SidePanel({
         </TabsContent>
         
         <TabsContent value="tb" className="flex-1 overflow-auto">
-          <div className="p-4">
+          <div className="p-4 pt-5">
             <div className="text-sm font-medium mb-2">Terminology Base</div>
             
             <div className="mb-4">
@@ -627,7 +627,7 @@ export function SidePanel({
         </TabsContent>
         
         <TabsContent value="comments" className="flex-1 overflow-auto">
-          <div className="p-4">
+          <div className="p-4 pt-5">
             <div className="text-sm font-medium mb-2">Comments</div>
             
             {/* Removed Active Segment section as requested */}
@@ -679,7 +679,7 @@ export function SidePanel({
         </TabsContent>
         
         <TabsContent value="history" className="flex-1 overflow-auto">
-          <div className="p-4">
+          <div className="p-4 pt-5">
             <div className="text-sm font-medium mb-2">Revision History</div>
             
             {/* Removed Active Segment section as requested */}
