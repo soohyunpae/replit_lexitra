@@ -131,7 +131,9 @@ export function NewTranslationEditor({
 
   // Apply filters and update filtered segments
   useEffect(() => {
-    let filtered = [...localSegments];
+    if (!segments) return;
+    
+    let filtered = [...segments];
 
     // Apply status filter
     if (statusFilter !== "all") {
@@ -147,7 +149,7 @@ export function NewTranslationEditor({
 
     // Reset to page 1 when filters change
     setCurrentPage(1);
-  }, [localSegments, statusFilter, originFilter]);
+  }, [segments, statusFilter, originFilter]);
 
   // Synchronize heights for source and target panels
   useEffect(() => {
@@ -308,8 +310,8 @@ export function NewTranslationEditor({
     }
   };
 
-  // Handle segment update - 공유 컨텍스트 사용
-  const { updateSegment: contextUpdateSegment } = useSegmentContext();
+  // 이미 React Query를 통해 updateSegment가 사용 가능함
+  // updateSegment, debouncedUpdateSegment 자동으로 캐시와 UI 갱신
   
   const handleSegmentUpdate = async (
     id: number,
@@ -318,8 +320,12 @@ export function NewTranslationEditor({
     origin?: string,
   ) => {
     try {
+      if (!segments) return;
+      
       // Find current segment to check if it was modified
-      const currentSegment = localSegments.find((s) => s.id === id);
+      const currentSegment = segments.find((s) => s.id === id);
+      if (!currentSegment) return;
+      
       const wasModified = currentSegment && currentSegment.target !== target;
 
       // If segment was manually edited and no status is provided, set to "Edited"
@@ -339,11 +345,13 @@ export function NewTranslationEditor({
             : currentSegment?.origin;
       }
 
-      // 공유 컨텍스트의 업데이트 함수 사용
-      const updatedSegment = await contextUpdateSegment(id, {
+      // React Query의 debouncedUpdateSegment 사용 - 자동 캐시 업데이트
+      debouncedUpdateSegment({
+        id,
         target,
         status: updatedStatus || "MT",
         origin: updatedOrigin,
+        modified: true,
       });
 
       // 히스토리 트래킹 - 공유 컨텍스트에도 이 기능을 추가할 수 있음
