@@ -202,7 +202,7 @@ export function EditableSegment(props: EditableSegmentProps) {
     >
       {/* grid 기반 레이아웃 적용 */}
       {!isSource ? (
-        <div className="grid grid-cols-[min-content_1fr] gap-x-2 items-stretch">
+        <div className="flex items-stretch gap-x-2">
           {/* 번역문 왼쪽은 체크박스만 배치 (세그먼트 번호 없음) - 위쪽 정렬 */}
           <div className="flex items-start justify-end w-6 pt-[4px] h-full">
             {onCheckChange && (
@@ -216,19 +216,18 @@ export function EditableSegment(props: EditableSegmentProps) {
             )}
           </div>
 
-          {/* 번역문 입력 영역 - 패딩 제거하여 텍스트 줄 정렬 */}
-          <div className="relative">
+          {/* 번역문 입력 영역 - min-height로 부모 컨테이너에 높이 지정하고 자식은 h-full 사용 */}
+          <div className="relative min-h-[120px] bg-transparent flex items-stretch flex-1">
             <Textarea
               ref={textareaRef}
               value={value}
               onChange={handleTextareaChange}
-              className="w-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] pb-[28px] text-sm leading-relaxed"
+              className="w-full h-full flex-1 font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] pb-[28px] text-sm leading-relaxed"
               style={{
                 lineHeight: "1.6",
                 overflow: "hidden", 
                 boxShadow: "none",
                 outline: "none",
-                minHeight: "120px", // 최소 높이 설정으로 좌우 세그먼트 높이 일치
                 transition: "none" // 높이 변경 시 부드러운 전환 방지하여 성능 향상
               }}
               placeholder="Enter translation..."
@@ -266,25 +265,24 @@ export function EditableSegment(props: EditableSegmentProps) {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-[min-content_1fr] gap-x-2 items-stretch">
+        <div className="flex items-stretch gap-x-2">
           {/* 원문 왼쪽에는 세그먼트 번호 유지 - 위쪽 정렬 */}
           <div className="flex items-start justify-end w-6 text-xs text-gray-500 pr-1 font-mono pt-[4px] h-full">
             {index}
           </div>
 
-          {/* 원문 텍스트 - textarea로 변경하고 읽기 전용으로 설정 */}
-          <div className="relative">
+          {/* 원문 텍스트 - min-height로 부모 컨테이너에 높이 지정하고 자식은 h-full 사용 */}
+          <div className="relative min-h-[120px] bg-transparent flex items-stretch flex-1">
             <Textarea
               ref={sourceTextareaRef}
               value={value || ""}
               readOnly
-              className="w-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] text-sm leading-relaxed"
+              className="w-full h-full flex-1 font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] text-sm leading-relaxed"
               style={{
                 lineHeight: "1.6",
                 overflow: "hidden",
                 boxShadow: "none",
                 outline: "none",
-                minHeight: "120px", // 최소 높이 설정으로 좌우 세그먼트 높이 일치
                 transition: "none" // 높이 변경 시 부드러운 전환 방지하여 성능 향상
               }}
               placeholder={isSource ? "No source text" : "No translation yet"}
