@@ -217,12 +217,12 @@ export function EditableSegment(props: EditableSegmentProps) {
           </div>
 
           {/* 번역문 입력 영역 - 패딩 제거하여 텍스트 줄 정렬 */}
-          <div className="relative w-full min-h-[120px] p-3 bg-card rounded-md">
+          <div className="relative">
             <Textarea
               ref={textareaRef}
               value={value}
               onChange={handleTextareaChange}
-              className="w-full h-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] pb-[28px] text-sm leading-relaxed"
+              className="w-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] pb-[28px] text-sm leading-relaxed"
               style={{
                 lineHeight: "1.6",
                 overflow: "hidden", 
@@ -273,12 +273,12 @@ export function EditableSegment(props: EditableSegmentProps) {
           </div>
 
           {/* 원문 텍스트 - textarea로 변경하고 읽기 전용으로 설정 */}
-          <div className="relative w-full min-h-[120px] p-3 bg-muted rounded-md">
+          <div className="relative">
             <Textarea
               ref={sourceTextareaRef}
               value={value || ""}
               readOnly
-              className="w-full h-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] text-sm leading-relaxed"
+              className="w-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] text-sm leading-relaxed"
               style={{
                 lineHeight: "1.6",
                 overflow: "hidden",

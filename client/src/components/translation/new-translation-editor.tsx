@@ -806,7 +806,7 @@ export function NewTranslationEditor({
         <div className="flex-1 flex relative">
           {/* Container with single scrollbar */}
           <div className="flex-1 overflow-auto" id="main-scroll-container">
-            <div className="flex w-full gap-4 items-stretch">
+            <div className="flex w-full items-stretch">
               {/* Source panel - no individual scrollbar */}
               <div className="w-1/2" id="source-panel">
                 <div className="px-4 py-3">
