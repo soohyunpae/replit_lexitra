@@ -58,19 +58,23 @@ export function NewTranslationEditor({
 }: TranslationEditorProps) {
   const { toast } = useToast();
   
+  // Side panel toggle state
+  const [showSidePanel, setShowSidePanel] = useState(true);
+
   // React Query로 segments 상태 관리
-  const { 
-    segments, 
-    isLoading, 
-    isError, 
+  const {
+    segments,
+    isLoading,
+    isError,
     updateSegment,
     debouncedUpdateSegment,
-    isMutating 
+    isMutating,
   } = useSegments(fileId);
-  
+
   // 로컬 필터링 상태
-  const [filteredSegments, setFilteredSegments] =
-    useState<TranslationUnit[]>([]);
+  const [filteredSegments, setFilteredSegments] = useState<TranslationUnit[]>(
+    [],
+  );
   const [selectedSegmentId, setSelectedSegmentId] = useState<number | null>(
     null,
   );
@@ -109,7 +113,7 @@ export function NewTranslationEditor({
   // Apply filters and update filtered segments
   useEffect(() => {
     if (!segments) return;
-    
+
     let filtered = [...segments];
 
     // Apply status filter
@@ -198,13 +202,16 @@ export function NewTranslationEditor({
   }, [segments?.length]);
 
   // Get selected segment
-  const selectedSegment = selectedSegmentId && segments
-    ? segments.find((segment) => segment.id === selectedSegmentId)
-    : null;
+  const selectedSegment =
+    selectedSegmentId && segments
+      ? segments.find((segment) => segment.id === selectedSegmentId)
+      : null;
 
   // Calculate progress
-  const completedSegments = segments 
-    ? segments.filter((segment) => segment.target && segment.target.trim() !== "").length
+  const completedSegments = segments
+    ? segments.filter(
+        (segment) => segment.target && segment.target.trim() !== "",
+      ).length
     : 0;
 
   const progressPercentage =
@@ -215,7 +222,7 @@ export function NewTranslationEditor({
   // Calculate status counts
   useEffect(() => {
     if (!segments) return;
-    
+
     const counts: Record<string, number> = {};
     segments.forEach((segment) => {
       // Use new status types: MT, 100%, Fuzzy, Edited, Reviewed, Rejected
@@ -272,7 +279,7 @@ export function NewTranslationEditor({
     setSelectedSegmentId(id);
 
     if (!segments) return;
-    
+
     const segment = segments.find((s) => s.id === id);
     if (segment) {
       // Store the current translation when selecting a segment for history tracking
@@ -293,7 +300,7 @@ export function NewTranslationEditor({
 
   // 이미 React Query를 통해 updateSegment가 사용 가능함
   // updateSegment, debouncedUpdateSegment 자동으로 캐시와 UI 갱신
-  
+
   const handleSegmentUpdate = async (
     id: number,
     target: string,
@@ -302,11 +309,11 @@ export function NewTranslationEditor({
   ) => {
     try {
       if (!segments) return;
-      
+
       // Find current segment to check if it was modified
       const currentSegment = segments.find((s) => s.id === id);
       if (!currentSegment) return;
-      
+
       const wasModified = currentSegment && currentSegment.target !== target;
 
       // If segment was manually edited and no status is provided, set to "Edited"
@@ -364,7 +371,7 @@ export function NewTranslationEditor({
   // Handle translation with GPT for a single segment
   const handleTranslateWithGPT = async (id: number) => {
     if (!segments) return;
-    
+
     const segment = segments.find((s) => s.id === id);
     if (!segment) return;
 
@@ -397,7 +404,7 @@ export function NewTranslationEditor({
   // Handle batch translation with GPT
   const handleBatchTranslation = async () => {
     if (!segments) return;
-    
+
     // Find segments without translation
     const untranslatedSegments = segments.filter(
       (s) => !s.target || s.target.trim() === "",
@@ -424,7 +431,7 @@ export function NewTranslationEditor({
       });
       return;
     }
-    
+
     const updatedSegments = [...segments];
 
     // Translate segments sequentially to avoid overloading the API
@@ -481,10 +488,10 @@ export function NewTranslationEditor({
   const handleSaveFile = async () => {
     try {
       if (!segments) return;
-      
-      // With React Query, all segment changes are already saved to the database 
+
+      // With React Query, all segment changes are already saved to the database
       // immediately through the updateSegment and debouncedUpdateSegment functions
-      
+
       // Find all reviewed segments to save to TM
       const reviewedSegments = segments.filter(
         (segment) =>
@@ -586,7 +593,7 @@ export function NewTranslationEditor({
       });
 
       await Promise.all(promises);
-      
+
       // React Query를 사용하면 서버에서 변경된 데이터가 자동으로 업데이트됩니다.
       // 쿼리를 명시적으로 무효화하여 최신 데이터를 가져오도록 합니다.
       queryClient.invalidateQueries({ queryKey: ["segments", fileId] });
@@ -659,14 +666,18 @@ export function NewTranslationEditor({
       </div>
     );
   }
-  
+
   if (isError) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <AlertCircle className="h-10 w-10 text-destructive mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Failed to load segments</h3>
-          <p className="text-muted-foreground mb-4">There was an error loading translation segments.</p>
+          <h3 className="text-lg font-semibold mb-2">
+            Failed to load segments
+          </h3>
+          <p className="text-muted-foreground mb-4">
+            There was an error loading translation segments.
+          </p>
           <Button onClick={() => window.location.reload()}>Retry</Button>
         </div>
       </div>
@@ -709,81 +720,97 @@ export function NewTranslationEditor({
           </div>
 
           <div className="flex items-center gap-4 ml-1">
-              <div className="flex items-center gap-3">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="h-7 w-[90px] text-xs">
-                    <SelectValue placeholder="Filter by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Filter by</SelectItem>
-                    <SelectItem value="MT">
-                      MT ({statusCounts["MT"] || 0})
-                    </SelectItem>
-                    <SelectItem value="100%">
-                      100% Match ({statusCounts["100%"] || 0})
-                    </SelectItem>
-                    <SelectItem value="Fuzzy">
-                      Fuzzy Match ({statusCounts["Fuzzy"] || 0})
-                    </SelectItem>
-                    <SelectItem value="Edited">
-                      Edited ({statusCounts["Edited"] || 0})
-                    </SelectItem>
-                    <SelectItem value="Reviewed">
-                      Reviewed ({statusCounts["Reviewed"] || 0})
-                    </SelectItem>
-                    <SelectItem value="Rejected">
-                      Rejected ({statusCounts["Rejected"] || 0})
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+            {/* Side panel toggle button */}
+            <Button
+              size="sm"
+              variant={showSidePanel ? "default" : "outline"}
+              onClick={() => setShowSidePanel(!showSidePanel)}
+              className="h-7 w-7 p-0"
+              title={showSidePanel ? "Hide side panel" : "Show side panel"}
+            >
+              {showSidePanel ? (
+                <ChevronRight className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronLeft className="h-3.5 w-3.5" />
+              )}
+            </Button>
+            
+            <div className="flex items-center gap-3">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-7 w-[90px] text-xs">
+                  <SelectValue placeholder="Filter by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Filter by</SelectItem>
+                  <SelectItem value="MT">
+                    MT ({statusCounts["MT"] || 0})
+                  </SelectItem>
+                  <SelectItem value="100%">
+                    100% Match ({statusCounts["100%"] || 0})
+                  </SelectItem>
+                  <SelectItem value="Fuzzy">
+                    Fuzzy Match ({statusCounts["Fuzzy"] || 0})
+                  </SelectItem>
+                  <SelectItem value="Edited">
+                    Edited ({statusCounts["Edited"] || 0})
+                  </SelectItem>
+                  <SelectItem value="Reviewed">
+                    Reviewed ({statusCounts["Reviewed"] || 0})
+                  </SelectItem>
+                  <SelectItem value="Rejected">
+                    Rejected ({statusCounts["Rejected"] || 0})
+                  </SelectItem>
+                </SelectContent>
+              </Select>
 
-                <Select
-                  onValueChange={(value) => {
-                    if (value !== "none" && checkedCount > 0) {
-                      handleBulkStatusUpdate(value as StatusType);
-                    }
-                  }}
-                >
-                  <SelectTrigger className="h-7 w-[90px] text-xs">
-                    <SelectValue placeholder="Set as..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="MT">MT</SelectItem>
-                    <SelectItem value="100%">100% Match</SelectItem>
-                    <SelectItem value="Fuzzy">Fuzzy Match</SelectItem>
-                    <SelectItem value="Edited">Edited</SelectItem>
-                    <SelectItem value="Reviewed">Reviewed</SelectItem>
-                    <SelectItem value="Rejected">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Select All Checkbox */}
-              <div className="flex items-center space-x-1.5">
-                <Checkbox
-                  id="toggle-select-all"
-                  checked={
-                    Object.keys(checkedSegments).length > 0 &&
-                    segments && Object.keys(checkedSegments).length === segments.length
+              <Select
+                onValueChange={(value) => {
+                  if (value !== "none" && checkedCount > 0) {
+                    handleBulkStatusUpdate(value as StatusType);
                   }
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      handleSelectAll();
-                    } else {
-                      handleUnselectAll();
-                    }
-                  }}
-                />
-                <div className="flex items-center">
-                  <label
-                    htmlFor="toggle-select-all"
-                    className="text-xs font-medium ml-1 cursor-pointer"
-                  >
-                    {checkedCount}/{segments?.length || 0}
-                  </label>
-                </div>
+                }}
+              >
+                <SelectTrigger className="h-7 w-[90px] text-xs">
+                  <SelectValue placeholder="Set as..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MT">MT</SelectItem>
+                  <SelectItem value="100%">100% Match</SelectItem>
+                  <SelectItem value="Fuzzy">Fuzzy Match</SelectItem>
+                  <SelectItem value="Edited">Edited</SelectItem>
+                  <SelectItem value="Reviewed">Reviewed</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Select All Checkbox */}
+            <div className="flex items-center space-x-1.5">
+              <Checkbox
+                id="toggle-select-all"
+                checked={
+                  Object.keys(checkedSegments).length > 0 &&
+                  segments &&
+                  Object.keys(checkedSegments).length === segments.length
+                }
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    handleSelectAll();
+                  } else {
+                    handleUnselectAll();
+                  }
+                }}
+              />
+              <div className="flex items-center">
+                <label
+                  htmlFor="toggle-select-all"
+                  className="text-xs font-medium ml-1 cursor-pointer"
+                >
+                  {checkedCount}/{segments?.length || 0}
+                </label>
               </div>
             </div>
+          </div>
         </div>
       </div>
 
@@ -805,11 +832,14 @@ export function NewTranslationEditor({
         {/* Source and Target panels with single scrollbar */}
         <div className="flex-1 flex relative">
           {/* Container with single scrollbar */}
-          <div className="flex-1 overflow-auto" id="main-scroll-container">
+          <div
+            className="flex-1 overflow-auto pt-[18px]"
+            id="main-scroll-container"
+          >
             <div className="flex w-full items-stretch">
               {/* Source panel - no individual scrollbar */}
               <div className="w-1/2" id="source-panel">
-                <div className="px-4 py-3">
+                <div className="px-4 pt-0 pb-3">
                   {currentSegments.map((segment, index) => (
                     <div
                       key={segment.id}
@@ -833,7 +863,7 @@ export function NewTranslationEditor({
 
               {/* Target panel - no individual scrollbar */}
               <div className="w-1/2" id="target-panel">
-                <div className="px-4 py-3">
+                <div className="px-4 pt-0 pb-3">
                   {currentSegments.map((segment, index) => (
                     <div
                       key={segment.id}
@@ -958,9 +988,10 @@ export function NewTranslationEditor({
           </div>
         </div>
 
-        {/* Side panel - Fixed position with flex layout for sticky tabs */}
-        <div className="flex flex-col sticky top-0 h-screen">
-          <SidePanel
+        {/* Side panel - Only shown when enabled */}
+        {showSidePanel && (
+          <div className="flex flex-col h-full sticky top-[56px] h-fit">
+            <SidePanel
             tmMatches={tmMatches}
             glossaryTerms={glossaryTerms}
             selectedSegment={selectedSegment}
@@ -975,10 +1006,13 @@ export function NewTranslationEditor({
             onSegmentUpdated={(id: number, newTarget: string) => {
               // This callback is triggered when a segment is updated
               // We're using a different approach with previousVersions state instead
-              console.log(`Segment ${id} updated with new target: ${newTarget}`);
+              console.log(
+                `Segment ${id} updated with new target: ${newTarget}`,
+              );
             }}
           />
-        </div>
+          </div>
+        )}
       </div>
     </main>
   );
