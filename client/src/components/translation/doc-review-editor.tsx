@@ -336,30 +336,7 @@ export function DocReviewEditor({
     );
   }
   
-  // Update status counts when segments change
-  useEffect(() => {
-    const counts: Record<string, number> = {
-      'MT': 0,
-      '100%': 0,
-      'Fuzzy': 0,
-      'Edited': 0,
-      'Reviewed': 0,
-      'Rejected': 0
-    };
-    
-    segments.forEach(segment => {
-      // If segment has a valid status, use it
-      if (segment.status && counts[segment.status] !== undefined) {
-        counts[segment.status]++;
-      } else {
-        // Default to MT if status is not recognized
-        counts['MT']++;
-      }
-    });
-    
-    setStatusCounts(counts);
-    console.log("Status counts updated:", counts);
-  }, [segments]);
+  // Status counts are updated in the useEffect at the top of the component
   
   // Calculate progress percentages
   const totalSegments = segments.length;
