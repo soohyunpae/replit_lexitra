@@ -176,15 +176,19 @@ export function DocReviewEditor({
   tmMatches = [],
   glossaryTerms = []
 }: DocReviewEditorProps) {
-  const { toast } = useToast();
-  const isMobile = useMobile();
+  // == React Hooks 정의 - 순서 중요 ==
+  // 1. useState hooks
   const [showSource, setShowSource] = useState(true);
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [showSidePanel, setShowSidePanel] = useState(true);
-  // 문장 하이라이트를 위한 상태 변수 추가
   const [highlightedSegmentId, setHighlightedSegmentId] = useState<number | null>(null);
+  const [segmentStatuses, setSegmentStatuses] = useState<Record<number, string>>({});
   
-  // React Query로 segments 관리
+  // 2. useContext hooks
+  const { toast } = useToast();
+  const isMobile = useMobile();
+  
+  // 3. Custom hooks
   const { 
     segments = [], 
     isLoading, 
@@ -193,67 +197,59 @@ export function DocReviewEditor({
     debouncedUpdateSegment 
   } = useSegments(fileId);
   
-  // References for the panels to sync scrolling
-  const leftPanelRef = useRef<HTMLDivElement>(null);
-  const rightPanelRef = useRef<HTMLDivElement>(null);
-  
-  // Track if user is currently scrolling a panel to prevent infinite loop
-  const isUserScrolling = useRef(false);
-  
-  // Keep track of which panel was scrolled last
-  const lastScrolledPanel = useRef<'left' | 'right' | null>(null);
-  
-  // 세그먼트의 상태를 추적하기 위한 로컬 상태
-  const [segmentStatuses, setSegmentStatuses] = useState<Record<number, string>>({});
-  
-  // Use our custom hook for managing editing state
   const {
     editingId,
     editedValue,
     setEditedValue,
     selectSegmentForEditing: originalSelectForEditing,
     updateSegment: editingStateUpdateSegment,
-    cancelEditing,
+    cancelEditing: originalCancelEditing,
     toggleStatus: editingStateToggleStatus
   } = useEditingState(segments, fileId);
   
-  // 수정된 선택 함수 - 하이라이트 기능 추가
+  // 4. useRef hooks
+  const leftPanelRef = useRef<HTMLDivElement>(null);
+  const rightPanelRef = useRef<HTMLDivElement>(null);
+  const isUserScrolling = useRef(false);
+  const lastScrolledPanel = useRef<'left' | 'right' | null>(null);
+  
+  // 5. useEffect hooks - ALL useEffect MUST GO HERE
+  // Update status counts when segments change
+  useEffect(() => {
+    const counts: Record<string, number> = {
+      'MT': 0,
+      '100%': 0,
+      'Fuzzy': 0,
+      'Edited': 0,
+      'Reviewed': 0,
+      'Rejected': 0
+    };
+    
+    segments.forEach(segment => {
+      // If segment has a valid status, use it
+      if (segment.status && counts[segment.status] !== undefined) {
+        counts[segment.status]++;
+      } else {
+        // Default to MT if status is not recognized
+        counts['MT']++;
+      }
+    });
+    
+    setStatusCounts(counts);
+    console.log("Status counts updated:", counts);
+  }, [segments]);
+  
+  // == 문서 보기 처리 ==
+  const segmentGroups = groupSegmentsByParagraphs(segments);
+  
+  // == 사용자 정의 함수 (hooks 호출 이후에 정의) ==
+  // 하이라이트 기능이 추가된 선택 함수
   const selectSegmentForEditing = (segment: TranslationUnit) => {
     setHighlightedSegmentId(segment.id);
     originalSelectForEditing(segment);
   };
   
-  // 문서 보기를 위해 세그먼트를 그룹화 (조건부로 호출하지 않고 항상 호출)
-  const segmentGroups = groupSegmentsByParagraphs(segments);
-  
-  // 로딩 상태 표시
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-pulse text-center">
-          <div className="h-8 w-40 bg-accent rounded-full mx-auto mb-4"></div>
-          <div className="h-4 w-60 bg-accent rounded-full mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
-  
-  // 에러 상태 표시
-  if (isError) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <AlertCircle className="h-10 w-10 text-destructive mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Failed to load segments</h3>
-          <p className="text-muted-foreground mb-4">There was an error loading translation segments.</p>
-          <Button onClick={() => window.location.reload()}>Retry</Button>
-        </div>
-      </div>
-    );
-  }
-  
-  // 수정된 취소 함수 - 하이라이트 제거
-  const originalCancelEditing = cancelEditing;
+  // 하이라이트 제거가 추가된 취소 함수
   const customCancelEditing = () => {
     setHighlightedSegmentId(null);
     // 원래 세그먼트 상태로 복원
@@ -269,7 +265,7 @@ export function DocReviewEditor({
     originalCancelEditing();
   };
   
-  // 수정된 저장 함수 - React Query 사용으로 전체 마이그레이션
+  // React Query 업데이트 함수를 사용하도록 수정된 저장 함수
   const customUpdateSegment = async (id: number, value: string) => {
     // 현재 편집 중인 세그먼트 찾기
     const segment = segments.find(s => s.id === id);
@@ -312,6 +308,33 @@ export function DocReviewEditor({
       setHighlightedSegmentId(null);
     }
   };
+  
+  // == 조건부 렌더링 ==
+  // 로딩 상태 표시
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-pulse text-center">
+          <div className="h-8 w-40 bg-accent rounded-full mx-auto mb-4"></div>
+          <div className="h-4 w-60 bg-accent rounded-full mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  // 에러 상태 표시
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <AlertCircle className="h-10 w-10 text-destructive mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Failed to load segments</h3>
+          <p className="text-muted-foreground mb-4">There was an error loading translation segments.</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
   
   // Update status counts when segments change
   useEffect(() => {
