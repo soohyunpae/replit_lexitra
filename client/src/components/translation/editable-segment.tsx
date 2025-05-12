@@ -6,6 +6,9 @@ import { Languages } from "lucide-react";
 import { TranslationUnit } from "@/types";
 import { cn } from "@/lib/utils";
 
+// 세그먼트 높이 저장하는 전역 맵 (세그먼트 ID → 높이)
+const segmentHeightsMap = new Map<number, number>();
+
 interface EditableSegmentProps {
   segment: TranslationUnit;
   index: number;
@@ -62,32 +65,79 @@ export function EditableSegment(props: EditableSegmentProps) {
     }
   }, [isSelected, isSource]);
 
-  // 텍스트 영역 자동 높이 조절 함수
+  // 세그먼트 높이를 업데이트하는 함수
+  const updateSegmentHeight = React.useCallback(() => {
+    // 원문과 번역문 textarea 참조 모두 가져오기
+    const sourceTextarea = sourceTextareaRef.current;
+    const targetTextarea = textareaRef.current;
+    
+    // 하나라도 없으면 동기화 불가
+    if (!sourceTextarea && !targetTextarea) return;
+    
+    // 두 영역 높이 초기화 (정확한 스크롤 높이 측정을 위해)
+    if (sourceTextarea) sourceTextarea.style.height = 'auto';
+    if (targetTextarea) targetTextarea.style.height = 'auto';
+    
+    // 두 영역의 스크롤 높이 계산
+    const sourceHeight = sourceTextarea ? Math.max(sourceTextarea.scrollHeight, 40) : 0;
+    const targetHeight = targetTextarea ? Math.max(targetTextarea.scrollHeight, 40) : 0;
+    
+    // 둘 중 더 큰 높이로 설정 (최소 40px)
+    const calculatedHeight = Math.max(sourceHeight, targetHeight, 40);
+    
+    // 해당 세그먼트 ID에 대한 현재 저장된 높이 확인
+    const currentMaxHeight = segmentHeightsMap.get(segment.id) || 0;
+    
+    // 현재 계산된 높이가, 저장된 높이보다 큰 경우 업데이트
+    if (calculatedHeight > currentMaxHeight) {
+      segmentHeightsMap.set(segment.id, calculatedHeight);
+    }
+    
+    // 두 에디터에 최종 높이 적용
+    const finalHeight = segmentHeightsMap.get(segment.id) || calculatedHeight;
+    if (sourceTextarea) sourceTextarea.style.height = `${finalHeight}px`;
+    if (targetTextarea) targetTextarea.style.height = `${finalHeight}px`;
+    
+    // 주변 세그먼트들에게 업데이트 이벤트 발생시키기
+    const event = new CustomEvent('segment-height-changed', { 
+      detail: { segmentId: segment.id, height: finalHeight } 
+    });
+    window.dispatchEvent(event);
+  }, [segment.id]);
+  
+  // 다른 세그먼트의 높이 변경 시 반응
+  useEffect(() => {
+    const handleHeightChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { segmentId, height } = customEvent.detail;
+      
+      // 현재 세그먼트의 높이 업데이트
+      if (segmentId === segment.id) {
+        // 원문 및 번역문 모두 높이 적용
+        if (sourceTextareaRef.current) {
+          sourceTextareaRef.current.style.height = `${height}px`;
+        }
+        if (textareaRef.current) {
+          textareaRef.current.style.height = `${height}px`;
+        }
+      }
+    };
+    
+    // 이벤트 리스너 등록
+    window.addEventListener('segment-height-changed', handleHeightChange);
+    
+    // 클린업
+    return () => {
+      window.removeEventListener('segment-height-changed', handleHeightChange);
+    };
+  }, [segment.id]);
+  
+  // 각 세그먼트 텍스트의 높이 조절
   const synchronizeHeights = React.useCallback(() => {
     requestAnimationFrame(() => {
-      // 두 텍스트 영역 참조 가져오기
-      const targetTextarea = textareaRef.current;
-      const sourceTextarea = sourceTextareaRef.current;
-      
-      // 두 텍스트 영역 중 하나라도 없으면 종료
-      if (!targetTextarea && !sourceTextarea) return;
-      
-      // 높이 측정을 위해 임시로 'auto'로 설정
-      if (targetTextarea) targetTextarea.style.height = 'auto';
-      if (sourceTextarea) sourceTextarea.style.height = 'auto';
-      
-      // 스크롤 높이 계산
-      const targetHeight = targetTextarea ? Math.max(targetTextarea.scrollHeight, 40) : 0;
-      const sourceHeight = sourceTextarea ? Math.max(sourceTextarea.scrollHeight, 40) : 0;
-      
-      // 더 큰 높이를 구함 (최소 40px)
-      const maxHeight = Math.max(targetHeight, sourceHeight, 40);
-      
-      // 두 텍스트 영역의 높이를 동일하게 설정
-      if (targetTextarea) targetTextarea.style.height = `${maxHeight}px`;
-      if (sourceTextarea) sourceTextarea.style.height = `${maxHeight}px`;
+      updateSegmentHeight();
     });
-  }, []);
+  }, [updateSegmentHeight]);
 
   // 텍스트 값이 변경될 때마다 높이 재계산
   useLayoutEffect(() => {
@@ -96,7 +146,19 @@ export function EditableSegment(props: EditableSegmentProps) {
   
   // 컴포넌트 마운트 시 한 번 실행
   useEffect(() => {
+    // 약간의 시간 간격을 두고 여러 번 높이 동기화 시도
+    // 브라우저 렌더링 및 스타일 적용 후 정확한 높이 계산을 위함
     synchronizeHeights();
+    
+    const timers = [
+      setTimeout(() => synchronizeHeights(), 50),
+      setTimeout(() => synchronizeHeights(), 150),
+      setTimeout(() => synchronizeHeights(), 300)
+    ];
+    
+    return () => {
+      timers.forEach(timer => clearTimeout(timer));
+    };
   }, [synchronizeHeights]);
 
   // 창 크기 변경시 높이 동기화
