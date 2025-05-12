@@ -385,8 +385,8 @@ export function DocReviewEditor({
   
   return (
     <div className="flex flex-col h-full w-full overflow-auto">
-      {/* Progress bar with controls */}
-      <div className="bg-card border-b border-border py-2 px-4">
+      {/* Progress bar with controls - Fixed at the top */}
+      <div className="bg-card border-b border-border py-2 px-4 sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-2 mb-1.5">
           <div className="flex-1">
             <div className="h-2.5 rounded-full bg-secondary overflow-hidden flex">
@@ -574,21 +574,23 @@ export function DocReviewEditor({
           </div>
         </div>
         
-        {/* Side Panel - Only shown when enabled */}
+        {/* Side Panel - Only shown when enabled, fixed position */}
         {!isMobile && showSidePanel && (
-          <SidePanel
-            tmMatches={tmMatches}
-            glossaryTerms={glossaryTerms}
-            selectedSegment={segments.find(s => s.id === editingId)}
-            onUseTranslation={(translation) => {
-              if (editingId) {
-                setEditedValue(translation);
-              }
-            }}
-            sourceLanguage={sourceLanguage}
-            targetLanguage={targetLanguage}
-            showStatusInfo={false}
-          />
+          <div className="sticky top-0 h-screen">
+            <SidePanel
+              tmMatches={tmMatches}
+              glossaryTerms={glossaryTerms}
+              selectedSegment={segments.find(s => s.id === editingId)}
+              onUseTranslation={(translation) => {
+                if (editingId) {
+                  setEditedValue(translation);
+                }
+              }}
+              sourceLanguage={sourceLanguage}
+              targetLanguage={targetLanguage}
+              showStatusInfo={false}
+            />
+          </div>
         )}
       </div>
     </div>
