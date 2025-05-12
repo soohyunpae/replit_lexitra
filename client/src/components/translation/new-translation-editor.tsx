@@ -554,7 +554,7 @@ export function NewTranslationEditor({
   // Handle "Select All" for segments
   const handleSelectAll = () => {
     const newCheckedState: Record<number, boolean> = {};
-    localSegments.forEach((segment) => {
+    segments?.forEach((segment: TranslationUnit) => {
       newCheckedState[segment.id] = true;
     });
     setCheckedSegments(newCheckedState);
