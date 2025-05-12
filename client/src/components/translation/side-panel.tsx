@@ -480,9 +480,9 @@ export function SidePanel({
   const glossarySourceTerms = glossaryTerms.map(term => term.source);
   
   return (
-    <aside className="w-80 border-l border-border bg-card flex flex-col sticky top-0 h-screen">
-      <Tabs defaultValue="tm" value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-        <div className="px-4 py-3 border-b border-border sticky top-0 bg-card z-10 shadow-sm">
+    <aside className="w-80 border-l border-border bg-card h-screen flex flex-col sticky top-0">
+      <div className="sticky top-0 left-0 right-0 z-10 bg-card">
+        <div className="px-4 py-3 border-b border-border">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="tm" className="flex items-center justify-center">
               <Database className="h-4 w-4 mr-1.5" />
@@ -505,6 +505,9 @@ export function SidePanel({
             </TabsTrigger>
           </TabsList>
         </div>
+      </div>
+      
+      <Tabs defaultValue="tm" value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
         
         <TabsContent value="tm" className="flex-1 overflow-auto pt-1">
           <div className="p-4">
