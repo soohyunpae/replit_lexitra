@@ -61,31 +61,29 @@ export function EditableSegment(props: EditableSegmentProps) {
     }
   }, [isSelected, isSource]);
 
-  // 세그먼트 데이터나 텍스트 값 변경시 레이아웃 처리 이후 높이 동기화 (수정된 로직)
+  // 세그먼트 데이터나 텍스트 값 변경시 레이아웃 처리 이후 높이 동기화 (scrollHeight 기반)
   useLayoutEffect(() => {
-    requestAnimationFrame(() => {
-      const sourceEl = sourceContainerRef.current;
-      const textareaEl = textareaRef.current;
-      const targetEl = targetContainerRef.current;
-      if (!sourceEl || !textareaEl || !targetEl) return;
+    const sourceEl = sourceContainerRef.current;
+    const targetEl = targetContainerRef.current;
+    const textareaEl = textareaRef.current;
+    if (!sourceEl || !targetEl || !textareaEl) return;
 
-      // Reset heights
-      textareaEl.style.height = "auto";
-      sourceEl.style.height = "auto";
-      targetEl.style.height = "auto";
+    // Reset all heights
+    sourceEl.style.height = "auto";
+    targetEl.style.height = "auto";
+    textareaEl.style.height = "auto";
 
-      const sourceHeight = sourceEl.scrollHeight;
-      const textHeight = textareaEl.scrollHeight;
+    // Determine the tallest scroll height
+    const maxHeight = Math.max(
+      sourceEl.scrollHeight,
+      targetEl.scrollHeight,
+      textareaEl.scrollHeight
+    );
 
-      // Expand only the shorter one
-      if (sourceHeight > textHeight) {
-        textareaEl.style.height = `${sourceHeight}px`;
-        targetEl.style.height = `${sourceHeight}px`;
-      } else {
-        sourceEl.style.height = `${textHeight}px`;
-        targetEl.style.height = `${textHeight}px`;
-      }
-    });
+    // Apply that height to all
+    sourceEl.style.height = `${maxHeight}px`;
+    targetEl.style.height = `${maxHeight}px`;
+    textareaEl.style.height = `${maxHeight}px`;
   }, [value, segment.source]);
 
   // 창 크기 변경시 높이 동기화
@@ -240,13 +238,13 @@ export function EditableSegment(props: EditableSegmentProps) {
           {/* 번역문 입력 영역 */}
           <div
             ref={targetContainerRef}
-            className="relative flex flex-1 items-stretch bg-transparent"
+            className="relative flex h-auto flex-1 items-stretch bg-transparent"
           >
             <Textarea
               ref={textareaRef}
               value={value}
               onChange={handleTextareaChange}
-              className="no-scrollbar flex-1 resize-none overflow-hidden bg-transparent pb-[28px] pt-[2px] text-sm leading-relaxed shadow-none outline-none font-mono w-full h-auto min-h-[100px] border-none focus-visible:ring-0 focus:ring-0"
+              className="no-scrollbar flex-1 resize-none overflow-hidden bg-transparent pb-[28px] pt-[2px] text-sm leading-relaxed shadow-none outline-none font-mono w-full h-auto min-h-[60px] border-none focus-visible:ring-0 focus:ring-0"
               style={{
                 lineHeight: "1.6",
                 overflow: "hidden",
@@ -298,12 +296,12 @@ export function EditableSegment(props: EditableSegmentProps) {
           {/* 원문 텍스트 표시 영역 */}
           <div
             ref={sourceContainerRef}
-            className="relative flex flex-1 items-stretch bg-transparent"
+            className="relative flex h-auto flex-1 items-stretch bg-transparent"
           >
             <Textarea
               value={liveSegment.source || ""}
               readOnly
-              className="no-scrollbar flex-1 resize-none overflow-hidden bg-transparent pt-[2px] text-sm font-mono leading-relaxed text-foreground shadow-none outline-none w-full h-auto min-h-[40px] border-none focus-visible:ring-0 focus:ring-0"
+              className="no-scrollbar flex-1 resize-none overflow-hidden bg-transparent pt-[2px] text-sm font-mono leading-relaxed text-foreground shadow-none outline-none w-full h-auto min-h-[60px] border-none focus-visible:ring-0 focus:ring-0"
               style={{
                 lineHeight: "1.6",
                 overflow: "hidden",
