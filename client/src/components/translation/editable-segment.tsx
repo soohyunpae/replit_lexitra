@@ -79,8 +79,8 @@ export function EditableSegment(props: EditableSegmentProps) {
       const sourceHeight = sourceEl.scrollHeight;
       const textareaHeight = textareaEl.scrollHeight;
 
-      // 둘 중 더 큰 값으로 높이 설정 (최소 120px)
-      const maxHeight = Math.max(sourceHeight, textareaHeight, 120);
+      // 둘 중 더 큰 값으로 높이 설정 (최소 40px)
+      const maxHeight = Math.max(sourceHeight, textareaHeight, 40);
 
       // 양쪽 컨테이너와 textarea에 동일한 높이 적용
       textareaEl.style.height = `${maxHeight}px`;
@@ -108,8 +108,8 @@ export function EditableSegment(props: EditableSegmentProps) {
         const sourceHeight = sourceEl.scrollHeight;
         const textareaHeight = textareaEl.scrollHeight;
   
-        // 둘 중 더 큰 값으로 높이 설정 (최소 120px)
-        const maxHeight = Math.max(sourceHeight, textareaHeight, 120);
+        // 둘 중 더 큰 값으로 높이 설정 (최소 40px)
+        const maxHeight = Math.max(sourceHeight, textareaHeight, 40);
   
         // 양쪽 컨테이너와 textarea에 동일한 높이 적용
         textareaEl.style.height = `${maxHeight}px`;
@@ -249,7 +249,7 @@ export function EditableSegment(props: EditableSegmentProps) {
           {/* 번역문 입력 영역 */}
           <div
             ref={targetContainerRef}
-            className="relative flex min-h-[120px] flex-1 items-stretch bg-transparent overflow-hidden"
+            className="relative flex min-h-[40px] flex-1 items-stretch bg-transparent overflow-hidden"
           >
             <Textarea
               ref={textareaRef}
@@ -307,7 +307,7 @@ export function EditableSegment(props: EditableSegmentProps) {
           {/* 원문 텍스트 표시 영역 */}
           <div
             ref={sourceContainerRef}
-            className="relative flex min-h-[120px] flex-1 items-stretch bg-transparent overflow-hidden"
+            className="relative flex min-h-[40px] flex-1 items-stretch bg-transparent overflow-hidden"
           >
             <Textarea
               value={liveSegment.source || ""}
