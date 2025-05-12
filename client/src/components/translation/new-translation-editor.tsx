@@ -648,6 +648,31 @@ export function NewTranslationEditor({
     {} as Record<string, number>,
   );
 
+  // 로딩 상태 및 에러 처리
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-pulse text-center">
+          <div className="h-8 w-40 bg-accent rounded-full mx-auto mb-4"></div>
+          <div className="h-4 w-60 bg-accent rounded-full mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <AlertCircle className="h-10 w-10 text-destructive mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Failed to load segments</h3>
+          <p className="text-muted-foreground mb-4">There was an error loading translation segments.</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <main className="flex-1 flex flex-col">
       {/* Progress bar with integrated controls */}
