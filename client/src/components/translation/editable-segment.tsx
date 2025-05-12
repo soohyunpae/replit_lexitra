@@ -228,7 +228,7 @@ export function EditableSegment(props: EditableSegmentProps) {
                 overflow: "hidden", 
                 boxShadow: "none",
                 outline: "none",
-                minHeight: "0px", // 자동 높이 조절 개선을 위해 minHeight 0으로 설정
+                minHeight: "120px", // 최소 높이 설정으로 좌우 세그먼트 높이 일치
                 transition: "none" // 높이 변경 시 부드러운 전환 방지하여 성능 향상
               }}
               placeholder="Enter translation..."
