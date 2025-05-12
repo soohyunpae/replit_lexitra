@@ -251,8 +251,6 @@ export function EditableSegment(props: EditableSegmentProps) {
     <div className="absolute bottom-1 right-2 flex items-center gap-2 text-xs">
       {statusBadge}
       {mtButton}
-      {badge}
-      {checkbox}
     </div>
   );
 
@@ -280,7 +278,7 @@ export function EditableSegment(props: EditableSegmentProps) {
         <Textarea
           ref={textareaRef}
           value={value}
-          onChange={(e) => onChange?.(e.target.value)}
+          onChange={!isSource ? handleTextareaChange : undefined}
           className="h-auto min-h-[40px] w-full resize-none overflow-hidden bg-transparent px-0 py-1 text-base leading-relaxed text-foreground shadow-none focus-visible:ring-0"
           readOnly={isSource}
           placeholder={isSource ? "No source text" : "Enter translation..."}
