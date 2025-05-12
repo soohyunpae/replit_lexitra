@@ -217,7 +217,7 @@ export function EditableSegment(props: EditableSegmentProps) {
           </div>
 
           {/* 번역문 입력 영역 - 패딩 제거하여 텍스트 줄 정렬 */}
-          <div className="relative">
+          <div className="relative w-full min-h-[120px] p-3 bg-card rounded-md">
             <Textarea
               ref={textareaRef}
               value={value}
@@ -273,7 +273,7 @@ export function EditableSegment(props: EditableSegmentProps) {
           </div>
 
           {/* 원문 텍스트 - textarea로 변경하고 읽기 전용으로 설정 */}
-          <div className="relative">
+          <div className="relative w-full min-h-[120px] p-3 bg-muted rounded-md">
             <Textarea
               ref={sourceTextareaRef}
               value={value || ""}
