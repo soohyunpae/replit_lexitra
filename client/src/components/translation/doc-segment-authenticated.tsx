@@ -435,38 +435,44 @@ export function DocSegment({
                 const value = e.target.value;
                 onEditValueChange?.(value);
 
-                // 자동 상태 업데이트 로직
-                const isValueChanged = value !== segment.target;
-
-                if (isValueChanged) {
-                  // 상태 및 origin 결정
+                // 중요: Reviewed 상태일 때는 무조건 첫 타이핑에 상태 변경
+                if (segment.status === "Reviewed") {
+                  // 로컬 상태 즉시 변경 (UI에 바로 반영)
+                  setLocalStatus("Edited");
+                  console.log("Status immediately changed: Reviewed -> Edited");
+                  
+                  // 텍스트가 동일하더라도 상태 변경 전송
+                  if (onUpdate) {
+                    const origin = 
+                      (segment.origin === "MT" || 
+                       segment.origin === "100%" || 
+                       segment.origin === "Fuzzy") 
+                      ? "HT" 
+                      : segment.origin;
+                      
+                    onUpdate(value, "Edited", origin);
+                  }
+                }
+                // 일반적인 텍스트 변경 처리
+                else if (value !== segment.target && onUpdate) {
+                  // Origin 결정
                   const needsOriginChange =
                     segment.origin === "MT" ||
                     segment.origin === "100%" ||
                     segment.origin === "Fuzzy";
                   const newOrigin = needsOriginChange ? "HT" : segment.origin;
 
-                  // 중요: 즉시 UI 업데이트를 위해 로컬 상태 업데이트도 필요함
+                  // 상태 결정
                   let newStatus = segment.status;
-                  
-                  // Reviewed 상태인 경우 Edited로 변경 (Segment Editor와 동일한 동작)
-                  if (segment.status === "Reviewed") {
+                  if (segment.status === "MT" || 
+                      segment.status === "100%" || 
+                      segment.status === "Fuzzy") {
                     newStatus = "Edited";
-                    // 로컬 상태도 함께 업데이트
                     setLocalStatus("Edited");
-                    console.log("Status auto-changed from Reviewed to Edited");
-                  } else if (
-                    segment.status === "MT" ||
-                    segment.status === "100%" ||
-                    segment.status === "Fuzzy"
-                  ) {
-                    newStatus = "Edited";
                   }
 
-                  // 부모 컴포넌트의 업데이트 함수 호출 (존재하는 경우에만)
-                  if (onUpdate) {
-                    onUpdate(value, newStatus, newOrigin);
-                  }
+                  // 부모 컴포넌트를 통해 업데이트
+                  onUpdate(value, newStatus, newOrigin);
                 }
               }}
               onKeyDown={handleKeyDown}
