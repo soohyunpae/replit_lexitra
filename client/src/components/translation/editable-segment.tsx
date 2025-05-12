@@ -325,7 +325,7 @@ export function EditableSegment(props: EditableSegmentProps) {
             />
 
             {/* 상태 뱃지와 번역 버튼 */}
-            <div className="absolute bottom-1 right-1 z-10">
+            <div className="absolute bottom-1 right-1 z-[5]">
               <span
                 className={`cursor-pointer rounded-full px-2 py-0.5 text-xs font-medium transition ${getStatusColor(liveSegment.status)}`}
                 onClick={(e) => {
