@@ -296,7 +296,7 @@ export function EditableSegment(props: EditableSegmentProps) {
           {/* 원문 텍스트 표시 영역 */}
           <div
             ref={sourceContainerRef}
-            className="relative flex h-auto flex-1 items-stretch bg-transparent"
+            className="relative flex h-auto flex-1 items-stretch bg-transparent w-full"
           >
             <Textarea
               value={liveSegment.source || ""}
