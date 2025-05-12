@@ -200,98 +200,100 @@ export function EditableSegment(props: EditableSegmentProps) {
       className={`rounded-md py-0.5 px-2 mb-[1px] h-full w-full ${liveSegment.status === "Reviewed" ? "bg-blue-50 dark:bg-blue-950/30" : isSelected ? "bg-accent/90" : "bg-card"} transition-colors ${!isSource && !liveSegment.target ? "border border-dashed border-yellow-400" : ""}`}
       onClick={onSelect}
     >
-      {/* grid 기반 레이아웃 적용 */}
-      {!isSource ? (
-        <div className="grid grid-cols-[min-content_1fr] gap-x-2">
-          {/* 번역문 왼쪽은 체크박스만 배치 (세그먼트 번호 없음) - 위쪽 정렬 */}
-          <div className="flex items-start justify-end w-6 pt-[4px]">
-            {onCheckChange && (
-              <div onClick={handleCheckboxClick}>
+      {/* 새로운 flex 기반 레이아웃 적용 - 원문/번역문 줄 높이 일치를 위한 구조 */}
+      <div className="flex items-stretch w-full">
+        {/* 왼쪽 세그먼트 번호 또는 체크박스 영역 - 위쪽 정렬 */}
+        <div className="flex items-start w-6 pt-[4px] flex-shrink-0">
+          {isSource ? (
+            // 원문인 경우 세그먼트 번호 표시
+            <div className="text-xs text-gray-500 pr-1 font-mono text-right w-full">
+              {index}
+            </div>
+          ) : (
+            // 번역문인 경우 체크박스 표시 (있을 경우)
+            onCheckChange && (
+              <div onClick={handleCheckboxClick} className="flex justify-end w-full">
                 <Checkbox
                   checked={isChecked}
                   onCheckedChange={onCheckChange}
                   className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                 />
               </div>
-            )}
-          </div>
-
-          {/* 번역문 입력 영역 - 패딩 제거하여 텍스트 줄 정렬 */}
-          <div className="relative">
-            <Textarea
-              ref={textareaRef}
-              value={value}
-              onChange={handleTextareaChange}
-              className="w-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] pb-[28px] text-sm leading-relaxed"
-              style={{
-                lineHeight: "1.6",
-                overflow: "hidden", 
-                boxShadow: "none",
-                outline: "none",
-                minHeight: "0px", // 자동 높이 조절 개선을 위해 minHeight 0으로 설정
-                transition: "none" // 높이 변경 시 부드러운 전환 방지하여 성능 향상
-              }}
-              placeholder="Enter translation..."
-            />
-
-            {/* 상태 뱃지를 번역문 안에 표시 - 체크 버튼 제거 및 기능 통합 */}
-            <div className="absolute bottom-2 right-2">
-              <span
-                className={`text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer transition ${getStatusColor(liveSegment.status)}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (liveSegment.status === "Rejected") return; // Rejected는 클릭 불가
-                  toggleStatus();
-                }}
-                title={`Click to toggle status (${liveSegment.status === "Reviewed" ? "Edited" : "Reviewed"})`}
-              >
-                {liveSegment.status}
-              </span>
-
-              {/* MT 번역 버튼만 유지 */}
-              {!liveSegment.target && onTranslateWithGPT && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onTranslateWithGPT();
-                  }}
-                  className="h-7 w-7 p-0 ml-1"
-                >
-                  <Languages className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          </div>
+            )
+          )}
         </div>
-      ) : (
-        <div className="grid grid-cols-[min-content_1fr] gap-x-2">
-          {/* 원문 왼쪽에는 세그먼트 번호 유지 - 위쪽 정렬 */}
-          <div className="flex items-start justify-end w-6 text-xs text-gray-500 pr-1 font-mono pt-[4px]">
-            {index}
-          </div>
 
-          {/* 원문 텍스트 - textarea로 변경하고 읽기 전용으로 설정 */}
-          <div className="relative">
+        {/* 텍스트 영역 - flex-1로 늘어남 */}
+        <div className="relative flex-1 min-h-[2em]">
+          {isSource ? (
+            // 원문 textarea - 읽기 전용
             <Textarea
               ref={sourceTextareaRef}
               value={value || ""}
               readOnly
-              className="w-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] text-sm leading-relaxed"
+              className="w-full h-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] text-sm leading-relaxed"
               style={{
                 lineHeight: "1.6",
                 overflow: "hidden",
                 boxShadow: "none",
                 outline: "none",
-                minHeight: "0px", // 자동 높이 조절 개선을 위해 minHeight 0으로 설정
-                transition: "none" // 높이 변경 시 부드러운 전환 방지하여 성능 향상
+                minHeight: "0px", 
+                transition: "none"
               }}
-              placeholder={isSource ? "No source text" : "No translation yet"}
+              placeholder="No source text"
             />
-          </div>
+          ) : (
+            // 번역문 입력용 textarea
+            <>
+              <Textarea
+                ref={textareaRef}
+                value={value}
+                onChange={handleTextareaChange}
+                className="w-full h-full font-mono resize-none border-none outline-none focus:ring-0 focus-visible:ring-0 shadow-none bg-transparent overflow-hidden no-scrollbar pt-[2px] pb-[28px] text-sm leading-relaxed"
+                style={{
+                  lineHeight: "1.6",
+                  overflow: "hidden", 
+                  boxShadow: "none",
+                  outline: "none",
+                  minHeight: "0px",
+                  transition: "none"
+                }}
+                placeholder="Enter translation..."
+              />
+
+              {/* 상태 뱃지 - 번역문 textarea 위에 표시 */}
+              <div className="absolute bottom-2 right-2">
+                <span
+                  className={`text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer transition ${getStatusColor(liveSegment.status)}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (liveSegment.status === "Rejected") return; // Rejected는 클릭 불가
+                    toggleStatus();
+                  }}
+                  title={`Click to toggle status (${liveSegment.status === "Reviewed" ? "Edited" : "Reviewed"})`}
+                >
+                  {liveSegment.status}
+                </span>
+
+                {/* MT 번역 버튼 */}
+                {!liveSegment.target && onTranslateWithGPT && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTranslateWithGPT();
+                    }}
+                    className="h-7 w-7 p-0 ml-1"
+                  >
+                    <Languages className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
