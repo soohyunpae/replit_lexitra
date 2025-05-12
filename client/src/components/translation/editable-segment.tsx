@@ -43,7 +43,8 @@ export function EditableSegment(props: EditableSegmentProps) {
   );
 
   // 텍스트 영역과 컨테이너 ref
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null); // 번역문(target) textarea
+  const sourceTextareaRef = useRef<HTMLTextAreaElement>(null); // 원문(source) textarea
   const sourceContainerRef = useRef<HTMLDivElement>(null);
   const targetContainerRef = useRef<HTMLDivElement>(null);
 
@@ -63,17 +64,28 @@ export function EditableSegment(props: EditableSegmentProps) {
 
   // 텍스트 영역 자동 높이 조절 함수
   const synchronizeHeights = React.useCallback(() => {
-    // 번역문 textarea 요소의 높이 자동 조절
     requestAnimationFrame(() => {
-      const textareaEl = textareaRef.current;
-      if (!textareaEl) return;
-
-      // 먼저, 높이를 auto로 설정해서 스크롤 높이를 정확히 계산할 수 있게 함
-      textareaEl.style.height = 'auto';
+      // 두 텍스트 영역 참조 가져오기
+      const targetTextarea = textareaRef.current;
+      const sourceTextarea = sourceTextareaRef.current;
       
-      // 그런 다음 콘텐츠 높이에 맞게 조절 (최소 40px 보장)
-      const newHeight = Math.max(textareaEl.scrollHeight, 40);
-      textareaEl.style.height = `${newHeight}px`;
+      // 두 텍스트 영역 중 하나라도 없으면 종료
+      if (!targetTextarea && !sourceTextarea) return;
+      
+      // 높이 측정을 위해 임시로 'auto'로 설정
+      if (targetTextarea) targetTextarea.style.height = 'auto';
+      if (sourceTextarea) sourceTextarea.style.height = 'auto';
+      
+      // 스크롤 높이 계산
+      const targetHeight = targetTextarea ? Math.max(targetTextarea.scrollHeight, 40) : 0;
+      const sourceHeight = sourceTextarea ? Math.max(sourceTextarea.scrollHeight, 40) : 0;
+      
+      // 더 큰 높이를 구함 (최소 40px)
+      const maxHeight = Math.max(targetHeight, sourceHeight, 40);
+      
+      // 두 텍스트 영역의 높이를 동일하게 설정
+      if (targetTextarea) targetTextarea.style.height = `${maxHeight}px`;
+      if (sourceTextarea) sourceTextarea.style.height = `${maxHeight}px`;
     });
   }, []);
 
@@ -282,9 +294,10 @@ export function EditableSegment(props: EditableSegmentProps) {
             className="flex-grow overflow-hidden"
           >
             <Textarea
+              ref={sourceTextareaRef}
               value={liveSegment.source || ""}
               readOnly
-              className="resize-none overflow-hidden bg-transparent pt-[2px] text-sm font-mono leading-relaxed text-foreground shadow-none outline-none w-full border-none focus-visible:ring-0 focus:ring-0"
+              className="resize-none overflow-hidden bg-transparent pt-[2px] text-sm font-mono leading-relaxed text-foreground shadow-none outline-none w-full h-auto min-h-[40px] border-none focus-visible:ring-0 focus:ring-0"
               style={{
                 lineHeight: "1.6",
                 boxShadow: "none",
