@@ -1,0 +1,76 @@
+import React, { useLayoutEffect, useRef } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { TranslationUnit } from "@/types";
+import { cn } from "@/lib/utils";
+
+interface EditableSegmentProps {
+segment: TranslationUnit;
+isSource: boolean;
+value: string;
+isSelected?: boolean;
+onClick?: () => void;
+onChange?: (val: string) => void;
+badge?: React.ReactNode;
+checkbox?: React.ReactNode;
+}
+
+export function EditableSegment({
+segment,
+isSource,
+value,
+isSelected,
+onClick,
+onChange,
+badge,
+checkbox,
+}: EditableSegmentProps) {
+const textareaRef = useRef<HTMLTextAreaElement>(null);
+const leftRef = useRef<HTMLDivElement>(null);
+const rightRef = useRef<HTMLDivElement>(null);
+
+useLayoutEffect(() => {
+requestAnimationFrame(() => {
+if (textareaRef.current && leftRef.current && rightRef.current) {
+// Reset current heights to auto
+textareaRef.current.style.height = "auto";
+leftRef.current.style.height = "auto";
+rightRef.current.style.height = "auto";
+
+```
+    // Get scroll heights
+    const tHeight = textareaRef.current.scrollHeight;
+    const sHeight = leftRef.current.scrollHeight;
+    const maxHeight = Math.max(tHeight, sHeight);
+
+    // Apply max height to both sides
+    textareaRef.current.style.height = `${maxHeight}px`;
+    leftRef.current.style.height = `${maxHeight}px`;
+    rightRef.current.style.height = `${maxHeight}px`;
+  }
+});
+```
+
+}, \[value, segment.source]);
+
+return (
+\<div
+className={cn(
+"relative flex w-full gap-4 rounded-md p-3 transition-colors",
+isSelected ? "bg-muted" : "bg-background"
+)}
+onClick={onClick}
+\> <div
+     ref={leftRef}
+     className="w-1/2 whitespace-pre-wrap font-light leading-relaxed overflow-hidden"
+   >
+{segment.source} </div> <div ref={rightRef} className="relative w-1/2 overflow-hidden">
+\<Textarea
+ref={textareaRef}
+value={value}
+onChange={(e) => onChange?.(e.target.value)}
+className="h-auto min-h-\[40px] w-full resize-none overflow-hidden bg-transparent px-0 py-1 text-base leading-relaxed text-foreground shadow-none focus-visible\:ring-0"
+/> <div className="absolute bottom-1 right-2 flex items-center gap-2 text-xs">
+{badge}
+{checkbox} </div> </div> </div>
+);
+}

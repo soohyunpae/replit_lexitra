@@ -44,8 +44,8 @@ export function EditableSegment(props: EditableSegmentProps) {
   
   // 텍스트 영역과 컨테이너 ref
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const sourceContainerRef = useRef<HTMLDivElement>(null);
-  const targetContainerRef = useRef<HTMLDivElement>(null);
+  const leftRef = useRef<HTMLDivElement>(null);
+  const rightRef = useRef<HTMLDivElement>(null);
   
   // 최신 데이터 동기화
   useEffect(() => {
@@ -60,48 +60,48 @@ export function EditableSegment(props: EditableSegmentProps) {
       textareaRef.current.focus();
     }
   }, [isSelected, isSource]);
-
-  // 세그먼트 데이터나 텍스트 값 변경시 레이아웃 처리 이후 높이 동기화
+  
+  // 크기 동기화를 위한 useLayoutEffect
   useLayoutEffect(() => {
     requestAnimationFrame(() => {
-      if (sourceContainerRef.current && targetContainerRef.current && textareaRef.current) {
-        // 높이 초기화를 먼저 수행해 정확한 측정 보장
+      if (textareaRef.current && leftRef.current && rightRef.current) {
+        // Reset current heights to auto
         textareaRef.current.style.height = "auto";
-        sourceContainerRef.current.style.height = "auto";
-        targetContainerRef.current.style.height = "auto";
+        leftRef.current.style.height = "auto";
+        rightRef.current.style.height = "auto";
         
-        // 스크롤 높이 계산
-        const textHeight = textareaRef.current.scrollHeight;
-        const sourceHeight = sourceContainerRef.current.scrollHeight;
-        const maxHeight = Math.max(textHeight, sourceHeight, 120);
+        // Get scroll heights
+        const tHeight = textareaRef.current.scrollHeight;
+        const sHeight = leftRef.current.scrollHeight;
+        const maxHeight = Math.max(tHeight, sHeight, 120);
         
-        // 높이 적용
+        // Apply max height to both sides
         textareaRef.current.style.height = `${maxHeight}px`;
-        sourceContainerRef.current.style.height = `${maxHeight}px`;
-        targetContainerRef.current.style.height = `${maxHeight}px`;
+        leftRef.current.style.height = `${maxHeight}px`;
+        rightRef.current.style.height = `${maxHeight}px`;
       }
     });
-  }, [liveSegment.source, liveSegment.target, value]);
-
+  }, [value, liveSegment.source]);
+  
   // 창 크기 변경시 높이 동기화
   useEffect(() => {
     const handleResize = () => {
       requestAnimationFrame(() => {
-        if (sourceContainerRef.current && targetContainerRef.current && textareaRef.current) {
-          // 높이 초기화
+        if (textareaRef.current && leftRef.current && rightRef.current) {
+          // Reset current heights to auto
           textareaRef.current.style.height = "auto";
-          sourceContainerRef.current.style.height = "auto";
-          targetContainerRef.current.style.height = "auto";
+          leftRef.current.style.height = "auto";
+          rightRef.current.style.height = "auto";
           
-          // 스크롤 높이 계산
-          const textHeight = textareaRef.current.scrollHeight;
-          const sourceHeight = sourceContainerRef.current.scrollHeight;
-          const maxHeight = Math.max(textHeight, sourceHeight, 120);
+          // Get scroll heights
+          const tHeight = textareaRef.current.scrollHeight;
+          const sHeight = leftRef.current.scrollHeight;
+          const maxHeight = Math.max(tHeight, sHeight, 120);
           
-          // 높이 적용
+          // Apply max height to both sides
           textareaRef.current.style.height = `${maxHeight}px`;
-          sourceContainerRef.current.style.height = `${maxHeight}px`;
-          targetContainerRef.current.style.height = `${maxHeight}px`;
+          leftRef.current.style.height = `${maxHeight}px`;
+          rightRef.current.style.height = `${maxHeight}px`;
         }
       });
     };
@@ -198,110 +198,95 @@ export function EditableSegment(props: EditableSegmentProps) {
     }
   };
 
+  // 세그먼트 번호 표시
+  const segmentNumber = (
+    <div className="flex h-full w-6 items-start justify-end pr-1 pt-[4px] font-mono text-xs text-gray-500">
+      {index}
+    </div>
+  );
+  
+  // 체크박스 컴포넌트
+  const checkboxComponent = onCheckChange && (
+    <div className="flex h-full w-6 items-start justify-end pt-[4px]" onClick={handleCheckboxClick}>
+      <Checkbox
+        checked={isChecked}
+        onCheckedChange={onCheckChange}
+        className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+      />
+    </div>
+  );
+  
+  // 상태 배지
+  const statusBadge = (
+    <span
+      className={`cursor-pointer rounded-full px-2 py-0.5 text-xs font-medium transition ${getStatusColor(liveSegment.status)}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (liveSegment.status === "Rejected") return;
+        toggleStatus();
+      }}
+      title={`Click to toggle status (${liveSegment.status === "Reviewed" ? "Edited" : "Reviewed"})`}
+    >
+      {liveSegment.status}
+    </span>
+  );
+  
+  // 기계 번역 버튼
+  const mtButton = !liveSegment.target && onTranslateWithGPT && (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={(e) => {
+        e.stopPropagation();
+        onTranslateWithGPT();
+      }}
+      className="ml-1 h-7 w-7 p-0"
+    >
+      <Languages className="h-4 w-4" />
+    </Button>
+  );
+  
+  // 컨트롤 그룹
+  const controls = (
+    <div className="absolute bottom-1 right-2 flex items-center gap-2 text-xs">
+      {statusBadge}
+      {mtButton}
+      {badge}
+      {checkbox}
+    </div>
+  );
+
   return (
     <div
       className={cn(
-        "mb-[1px] w-full rounded-md px-2 py-0.5 transition-colors",
-        liveSegment.status === "Reviewed" ? "bg-blue-50 dark:bg-blue-950/30" : 
-        isSelected ? "bg-accent/90" : "bg-card",
+        "relative flex w-full gap-4 rounded-md p-3 transition-colors",
+        isSelected ? "bg-muted" : "bg-background",
+        liveSegment.status === "Reviewed" && "bg-blue-50 dark:bg-blue-950/30", 
         !isSource && !liveSegment.target && "border border-dashed border-yellow-400"
       )}
       onClick={onSelect}
     >
-      {!isSource ? (
-        <div className="flex items-stretch gap-x-2">
-          {/* 번역문 왼쪽은 체크박스만 배치 */}
-          <div className="flex h-full w-6 items-start justify-end pt-[4px]">
-            {onCheckChange && (
-              <div onClick={handleCheckboxClick}>
-                <Checkbox
-                  checked={isChecked}
-                  onCheckedChange={onCheckChange}
-                  className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* 번역문 입력 영역 */}
-          <div 
-            ref={targetContainerRef} 
-            className="relative flex min-h-[120px] flex-1 items-stretch bg-transparent"
-          >
-            <Textarea
-              ref={textareaRef}
-              value={value}
-              onChange={handleTextareaChange}
-              className="no-scrollbar flex-1 resize-none overflow-hidden bg-transparent pb-[28px] pt-[2px] text-sm leading-relaxed shadow-none outline-none font-mono w-full h-auto min-h-[40px] border-none focus-visible:ring-0 focus:ring-0"
-              style={{
-                lineHeight: "1.6",
-                overflow: "hidden", 
-                boxShadow: "none",
-                outline: "none",
-                transition: "none"
-              }}
-              placeholder="Enter translation..."
-            />
-
-            {/* 상태 뱃지와 번역 버튼 */}
-            <div className="absolute bottom-2 right-2">
-              <span
-                className={`cursor-pointer rounded-full px-2 py-0.5 text-xs font-medium transition ${getStatusColor(liveSegment.status)}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (liveSegment.status === "Rejected") return;
-                  toggleStatus();
-                }}
-                title={`Click to toggle status (${liveSegment.status === "Reviewed" ? "Edited" : "Reviewed"})`}
-              >
-                {liveSegment.status}
-              </span>
-
-              {/* 기계 번역 버튼 */}
-              {!liveSegment.target && onTranslateWithGPT && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onTranslateWithGPT();
-                  }}
-                  className="ml-1 h-7 w-7 p-0"
-                >
-                  <Languages className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-stretch gap-x-2">
-          {/* 원문 왼쪽에는 세그먼트 번호 */}
-          <div className="flex h-full w-6 items-start justify-end pr-1 pt-[4px] font-mono text-xs text-gray-500">
-            {index}
-          </div>
-
-          {/* 원문 텍스트 표시 영역 */}
-          <div 
-            ref={sourceContainerRef} 
-            className="relative flex min-h-[120px] flex-1 items-stretch bg-transparent"
-          >
-            <Textarea
-              value={liveSegment.source || ""}
-              readOnly
-              className="no-scrollbar flex-1 resize-none overflow-hidden bg-transparent pt-[2px] text-sm font-mono leading-relaxed text-foreground shadow-none outline-none w-full h-auto min-h-[40px] border-none focus-visible:ring-0 focus:ring-0"
-              style={{
-                lineHeight: "1.6",
-                overflow: "hidden",
-                boxShadow: "none",
-                outline: "none",
-                transition: "none"
-              }}
-              placeholder="No source text"
-            />
-          </div>
-        </div>
-      )}
+      {/* 왼쪽 세그먼트 영역 - 원문 */}
+      <div
+        ref={leftRef}
+        className="w-1/2 whitespace-pre-wrap font-light leading-relaxed overflow-hidden"
+      >
+        {isSource ? segmentNumber : checkboxComponent}
+        {liveSegment.source}
+      </div>
+      
+      {/* 오른쪽 세그먼트 영역 - 번역문 */}
+      <div ref={rightRef} className="relative w-1/2 overflow-hidden">
+        <Textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => onChange?.(e.target.value)}
+          className="h-auto min-h-[40px] w-full resize-none overflow-hidden bg-transparent px-0 py-1 text-base leading-relaxed text-foreground shadow-none focus-visible:ring-0"
+          readOnly={isSource}
+          placeholder={isSource ? "No source text" : "Enter translation..."}
+        />
+        {controls}
+      </div>
     </div>
   );
 }
