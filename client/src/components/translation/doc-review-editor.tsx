@@ -269,8 +269,7 @@ export function DocReviewEditor({
     originalCancelEditing();
   };
   
-  // 수정된 저장 함수 - 하이라이트 제거 및 상태 업데이트 (공유 컨텍스트 사용)
-  const originalUpdateSegment = editingStateUpdateSegment;
+  // 수정된 저장 함수 - React Query 사용으로 전체 마이그레이션
   const customUpdateSegment = async (id: number, value: string) => {
     // 현재 편집 중인 세그먼트 찾기
     const segment = segments.find(s => s.id === id);
@@ -289,8 +288,9 @@ export function DocReviewEditor({
       }
       
       try {
-        // 공유 컨텍스트의 업데이트 함수 사용
-        await reactQueryUpdateSegment(id, {
+        // React Query의 업데이트 함수 사용 (수정된 형식)
+        await reactQueryUpdateSegment({
+          id,
           target: value,
           status: newStatus,
           origin: isValueChanged && newStatus === 'Edited' ? 'HT' : segment.origin
@@ -305,14 +305,10 @@ export function DocReviewEditor({
           description: "Failed to update segment",
           variant: "destructive"
         });
-        
-        // 에러 발생 시 폴백으로 원래 방식 사용
-        originalUpdateSegment(id, value);
         setHighlightedSegmentId(null);
       }
     } else {
-      // 세그먼트를 찾지 못한 경우 원래 방식으로 폴백
-      originalUpdateSegment(id, value);
+      console.error("Segment not found:", id);
       setHighlightedSegmentId(null);
     }
   };

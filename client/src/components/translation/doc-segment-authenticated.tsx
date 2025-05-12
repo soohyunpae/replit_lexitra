@@ -186,8 +186,10 @@ export function DocSegment({
                         newStatus = "Edited";
                       }
 
-                      // 부모 컴포넌트에서 전달받은 onUpdate 함수 사용
-                      onUpdate(newValue, newStatus, newOrigin);
+                      // 부모 컴포넌트에서 전달받은 onUpdate 함수 사용 (존재하는 경우에만)
+                      if (onUpdate) {
+                        onUpdate(newValue, newStatus, newOrigin);
+                      }
                     }
                   }
                 }}
@@ -421,8 +423,10 @@ export function DocSegment({
                     newStatus = "Edited";
                   }
 
-                  // 부모 컴포넌트의 업데이트 함수 호출
-                  onUpdate(value, newStatus, newOrigin);
+                  // 부모 컴포넌트의 업데이트 함수 호출 (존재하는 경우에만)
+                  if (onUpdate) {
+                    onUpdate(value, newStatus, newOrigin);
+                  }
                 }
               }}
               onKeyDown={handleKeyDown}
