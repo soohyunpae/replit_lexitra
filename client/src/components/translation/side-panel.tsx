@@ -480,34 +480,44 @@ export function SidePanel({
   const glossarySourceTerms = glossaryTerms.map(term => term.source);
   
   return (
-    <aside className="w-80 border-l border-border bg-card h-screen flex flex-col sticky top-0">
-      <div className="sticky top-0 left-0 right-0 z-10 bg-card">
-        <div className="px-4 py-3 border-b border-border">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="tm" className="flex items-center justify-center">
-              <Database className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">TM</span>
-            </TabsTrigger>
+    <aside className="w-80 border-l border-border bg-card h-screen flex flex-col">
+      <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3">
+        <div className="grid w-full grid-cols-4 rounded-md border border-muted p-1 bg-muted">
+          <button 
+            onClick={() => setActiveTab("tm")} 
+            className={`flex items-center justify-center rounded-sm p-1.5 text-xs ${activeTab === "tm" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
+          >
+            <Database className="h-4 w-4 mr-1.5" />
+            <span className="hidden sm:inline">TM</span>
+          </button>
             
-            <TabsTrigger value="tb" className="flex items-center justify-center">
-              <Lightbulb className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">Terms</span>
-            </TabsTrigger>
+          <button 
+            onClick={() => setActiveTab("tb")} 
+            className={`flex items-center justify-center rounded-sm p-1.5 text-xs ${activeTab === "tb" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
+          >
+            <Lightbulb className="h-4 w-4 mr-1.5" />
+            <span className="hidden sm:inline">Terms</span>
+          </button>
             
-            <TabsTrigger value="comments" className="flex items-center justify-center">
-              <MessageSquare className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">Comments</span>
-            </TabsTrigger>
+          <button 
+            onClick={() => setActiveTab("comments")} 
+            className={`flex items-center justify-center rounded-sm p-1.5 text-xs ${activeTab === "comments" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
+          >
+            <MessageSquare className="h-4 w-4 mr-1.5" />
+            <span className="hidden sm:inline">Comments</span>
+          </button>
             
-            <TabsTrigger value="history" className="flex items-center justify-center">
-              <History className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">History</span>
-            </TabsTrigger>
-          </TabsList>
+          <button 
+            onClick={() => setActiveTab("history")} 
+            className={`flex items-center justify-center rounded-sm p-1.5 text-xs ${activeTab === "history" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
+          >
+            <History className="h-4 w-4 mr-1.5" />
+            <span className="hidden sm:inline">History</span>
+          </button>
         </div>
       </div>
       
-      <Tabs defaultValue="tm" value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex-1 overflow-auto">
         
         <TabsContent value="tm" className="flex-1 overflow-auto pt-1">
           <div className="p-4">
@@ -742,7 +752,7 @@ export function SidePanel({
             </div>
           </div>
         </TabsContent>
-      </Tabs>
+      </div>
     </aside>
   );
 }
