@@ -305,12 +305,29 @@ export function DocSegment({
                       onClick={(e) => {
                         e.stopPropagation();
                         
-                        // 수정된 동작: 현재 텍스트와 상태 저장하고 닫기
+                        // 수정된 동작: 항상 현재 텍스트와 상태를 함께 저장하고 닫기
                         const isTextChanged = editedValue !== segment.target;
-
-                        if (isTextChanged) {
-                          // 텍스트 변경이 있으면 현재 상태와 함께 저장
-                          onUpdate?.(editedValue, localStatus, segment.origin);
+                        const isStatusChanged = localStatus !== segment.status;
+                        
+                        // 텍스트 변경 또는 상태 변경이 있는 경우에 저장 진행
+                        if (isTextChanged || isStatusChanged) {
+                          // 수정된 부분: origin 변경 필요 여부 확인
+                          const needsOriginChange = 
+                            isTextChanged && 
+                            (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
+                          
+                          const newOrigin = needsOriginChange ? "HT" : segment.origin;
+                          
+                          // 핵심 수정: 항상 최신 localStatus 사용하고, 텍스트 변경 여부와 관계없이 저장
+                          onUpdate?.(editedValue, localStatus, newOrigin);
+                          
+                          console.log("닫기 버튼으로 저장:", {
+                            text: editedValue, 
+                            status: localStatus, 
+                            origin: newOrigin,
+                            textChanged: isTextChanged,
+                            statusChanged: isStatusChanged
+                          });
                         }
                         
                         // 편집기 닫기
