@@ -2,13 +2,32 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Search, X, Database, Lightbulb, MessageSquare, MessageSquarePlus, 
-  History, FileSearch, CheckCircle, XCircle, AlertCircle, PenLine,
-  Bot, User, PenSquare, Circle, Info, Loader2
+import {
+  Search,
+  X,
+  Database,
+  Lightbulb,
+  MessageSquare,
+  MessageSquarePlus,
+  History,
+  FileSearch,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  PenLine,
+  Bot,
+  User,
+  PenSquare,
+  Circle,
+  Info,
+  Loader2,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { type TranslationMemory, type Glossary, type TranslationUnit } from "@/types";
+import {
+  type TranslationMemory,
+  type Glossary,
+  type TranslationUnit,
+} from "@/types";
 import { apiRequest } from "@/lib/queryClient";
 import { searchGlossaryTerms } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
@@ -36,31 +55,44 @@ interface TmMatchProps {
 }
 
 // TM Match Component
-function TmMatch({ match, onUse, sourceSimilarity, highlightTerms = [] }: TmMatchProps) {
+function TmMatch({
+  match,
+  onUse,
+  sourceSimilarity,
+  highlightTerms = [],
+}: TmMatchProps) {
   const [isApplying, setIsApplying] = useState(false);
-  
+
   // Function to highlight terms in the text
   const highlightText = (text: string) => {
     if (!highlightTerms.length) return text;
-    
+
     // Create a regex to match any of the terms (case insensitive)
-    const regex = new RegExp(`(${highlightTerms.map(term => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
-    
+    const regex = new RegExp(
+      `(${highlightTerms.map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`,
+      "gi",
+    );
+
     // Return the original text if no matches
     if (!regex.test(text)) return text;
-    
+
     // Split the text on matches and create spans with highlights
     const parts = text.split(regex);
     return (
       <>
         {parts.map((part, i) => {
           // Check if part matches any term (case insensitive)
-          const isMatch = highlightTerms.some(term => 
-            part.toLowerCase() === term.toLowerCase()
+          const isMatch = highlightTerms.some(
+            (term) => part.toLowerCase() === term.toLowerCase(),
           );
-          
+
           return isMatch ? (
-            <span key={i} className="bg-yellow-200 dark:bg-yellow-800 rounded px-1">{part}</span>
+            <span
+              key={i}
+              className="bg-yellow-200 dark:bg-yellow-800 rounded px-1"
+            >
+              {part}
+            </span>
           ) : (
             <span key={i}>{part}</span>
           );
@@ -68,15 +100,15 @@ function TmMatch({ match, onUse, sourceSimilarity, highlightTerms = [] }: TmMatc
       </>
     );
   };
-  
+
   // 최적화된 UI 업데이트를 위한 함수
   const handleUseTranslation = useCallback(() => {
     setIsApplying(true);
-    
+
     try {
       // 즉시 UI 피드백을 위해 바로 번역 적용
       onUse(match.target);
-      
+
       // 성공 토스트 메시지 표시
       toast({
         title: "번역 적용됨",
@@ -87,7 +119,8 @@ function TmMatch({ match, onUse, sourceSimilarity, highlightTerms = [] }: TmMatc
       // 오류 발생시 토스트 메시지 표시
       toast({
         title: "번역 적용 실패",
-        description: "번역을 적용하는 중 오류가 발생했습니다. 다시 시도해주세요.",
+        description:
+          "번역을 적용하는 중 오류가 발생했습니다. 다시 시도해주세요.",
         variant: "destructive",
       });
       console.error("번역 적용 중 오류:", error);
@@ -98,7 +131,7 @@ function TmMatch({ match, onUse, sourceSimilarity, highlightTerms = [] }: TmMatc
       }, 500);
     }
   }, [match.target, onUse]);
-  
+
   return (
     <div className="bg-accent/50 rounded-md p-3 mb-3">
       <div className="mb-1">
@@ -111,12 +144,12 @@ function TmMatch({ match, onUse, sourceSimilarity, highlightTerms = [] }: TmMatc
         <div className="text-xs text-muted-foreground">
           <span className="font-semibold">{sourceSimilarity}%</span> Match
         </div>
-        <Button 
-          size="sm" 
-          variant="ghost" 
+        <Button
+          size="sm"
+          variant="ghost"
           className={cn(
             "h-6 text-xs transition-all duration-200",
-            isApplying && "bg-primary/10"
+            isApplying && "bg-primary/10",
           )}
           onClick={handleUseTranslation}
           disabled={isApplying}
@@ -136,12 +169,18 @@ function TmMatch({ match, onUse, sourceSimilarity, highlightTerms = [] }: TmMatc
 }
 
 // Segment Status Info Component
-function StatusInfoPanel({ segment }: { segment: TranslationUnit | null | undefined }) {
+function StatusInfoPanel({
+  segment,
+}: {
+  segment: TranslationUnit | null | undefined;
+}) {
   if (!segment) {
     return (
       <div className="bg-muted/50 rounded-md p-4 text-center text-muted-foreground">
         <Info className="h-5 w-5 mx-auto mb-2 opacity-50" />
-        <p className="text-sm">Select a segment to view its status information</p>
+        <p className="text-sm">
+          Select a segment to view its status information
+        </p>
       </div>
     );
   }
@@ -149,17 +188,17 @@ function StatusInfoPanel({ segment }: { segment: TranslationUnit | null | undefi
   // Get appropriate icon for status
   const getStatusIcon = () => {
     switch (segment.status) {
-      case 'Reviewed':
+      case "Reviewed":
         return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'Rejected':
+      case "Rejected":
         return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'Edited':
+      case "Edited":
         return <PenLine className="h-4 w-4 text-purple-500" />;
-      case '100%':
+      case "100%":
         return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'Fuzzy':
+      case "Fuzzy":
         return <Circle className="h-4 w-4 text-yellow-500" />;
-      case 'MT':
+      case "MT":
       default:
         return <Bot className="h-4 w-4 text-blue-500" />;
     }
@@ -168,36 +207,36 @@ function StatusInfoPanel({ segment }: { segment: TranslationUnit | null | undefi
   // Get color for status badge
   const getStatusColor = () => {
     switch (segment.status) {
-      case 'Reviewed':
+      case "Reviewed":
         return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-900";
-      case 'Rejected':
+      case "Rejected":
         return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-900";
-      case 'Edited':
+      case "Edited":
         return "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-900";
-      case '100%':
+      case "100%":
         return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-900";
-      case 'Fuzzy':
+      case "Fuzzy":
         return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-900";
-      case 'MT':
+      case "MT":
       default:
         return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900";
     }
   };
-  
+
   // Get status description
   const getStatusDescription = () => {
     switch (segment.status) {
-      case 'Reviewed':
+      case "Reviewed":
         return "Final approved version";
-      case 'Rejected':
+      case "Rejected":
         return "Marked as incorrect";
-      case 'Edited':
+      case "Edited":
         return "Modified by human";
-      case '100%':
+      case "100%":
         return "Exact match from TM";
-      case 'Fuzzy':
+      case "Fuzzy":
         return "Partial match from TM";
-      case 'MT':
+      case "MT":
       default:
         return "Machine translated";
     }
@@ -206,18 +245,16 @@ function StatusInfoPanel({ segment }: { segment: TranslationUnit | null | undefi
   return (
     <div className="bg-card rounded-md border p-4 mb-4">
       <h3 className="text-sm font-medium mb-3">Segment Information</h3>
-      
+
       <div className="space-y-3">
         {/* Status */}
         <div className="flex items-start gap-3">
-          <div className="bg-muted/50 rounded-full p-2">
-            {getStatusIcon()}
-          </div>
+          <div className="bg-muted/50 rounded-full p-2">{getStatusIcon()}</div>
           <div className="flex-1">
             <div className="text-xs text-muted-foreground mb-1">Status</div>
             <div className="flex items-center gap-2">
               <Badge className={cn("font-normal", getStatusColor())}>
-                {segment.status || 'MT'}
+                {segment.status || "MT"}
               </Badge>
               <span className="text-xs text-muted-foreground">
                 {getStatusDescription()}
@@ -225,7 +262,7 @@ function StatusInfoPanel({ segment }: { segment: TranslationUnit | null | undefi
             </div>
           </div>
         </div>
-        
+
         {/* Comment */}
         {segment.comment && (
           <div className="flex items-start gap-3">
@@ -240,7 +277,7 @@ function StatusInfoPanel({ segment }: { segment: TranslationUnit | null | undefi
             </div>
           </div>
         )}
-        
+
         {/* Dates */}
         <div className="pt-2">
           <Separator className="mb-3" />
@@ -261,17 +298,23 @@ function StatusInfoPanel({ segment }: { segment: TranslationUnit | null | undefi
 }
 
 // Glossary Term Component
-function GlossaryTerm({ term, onUse }: { term: Glossary, onUse: (term: string) => void }) {
+function GlossaryTerm({
+  term,
+  onUse,
+}: {
+  term: Glossary;
+  onUse: (term: string) => void;
+}) {
   const [isApplying, setIsApplying] = useState(false);
-  
+
   // 최적화된 UI 업데이트를 위한 함수
   const handleUseTerm = useCallback(() => {
     setIsApplying(true);
-    
+
     try {
       // 즉시 UI 피드백을 위해 바로 용어 적용
       onUse(term.target);
-      
+
       // 성공 토스트 메시지 표시
       toast({
         title: "용어 적용됨",
@@ -282,7 +325,8 @@ function GlossaryTerm({ term, onUse }: { term: Glossary, onUse: (term: string) =
       // 오류 발생시 토스트 메시지 표시
       toast({
         title: "용어 적용 실패",
-        description: "용어를 적용하는 중 오류가 발생했습니다. 다시 시도해주세요.",
+        description:
+          "용어를 적용하는 중 오류가 발생했습니다. 다시 시도해주세요.",
         variant: "destructive",
       });
       console.error("용어 적용 중 오류:", error);
@@ -293,7 +337,7 @@ function GlossaryTerm({ term, onUse }: { term: Glossary, onUse: (term: string) =
       }, 500);
     }
   }, [term.target, onUse]);
-  
+
   return (
     <div className="bg-accent/50 rounded-md p-3 mb-3">
       <div className="flex justify-between items-center mb-1">
@@ -306,12 +350,12 @@ function GlossaryTerm({ term, onUse }: { term: Glossary, onUse: (term: string) =
         {term.target}
       </div>
       <div className="flex justify-end">
-        <Button 
-          size="sm" 
-          variant="ghost" 
+        <Button
+          size="sm"
+          variant="ghost"
           className={cn(
             "h-6 text-xs transition-all duration-200",
-            isApplying && "bg-primary/10"
+            isApplying && "bg-primary/10",
           )}
           onClick={handleUseTerm}
           disabled={isApplying}
@@ -339,39 +383,41 @@ export function SidePanel({
   targetLanguage,
   onSegmentUpdated,
   previousVersions: propPreviousVersions,
-  showStatusInfo = false
+  showStatusInfo = false,
 }: SidePanelProps) {
   const [activeTab, setActiveTab] = useState("tm");
   const [tmSearchQuery, setTmSearchQuery] = useState("");
   const [tbSearchQuery, setTbSearchQuery] = useState("");
-  const [globalTmResults, setGlobalTmResults] = useState<TranslationMemory[]>([]);
-  const [globalGlossaryResults, setGlobalGlossaryResults] = useState<Glossary[]>([]);
+  const [globalTmResults, setGlobalTmResults] = useState<TranslationMemory[]>(
+    [],
+  );
+  const [globalGlossaryResults, setGlobalGlossaryResults] = useState<
+    Glossary[]
+  >([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [previousVersions, setPreviousVersions] = useState<Record<number, string>>({});
+  const [previousVersions, setPreviousVersions] = useState<
+    Record<number, string>
+  >({});
   const [commentText, setCommentText] = useState("");
   const [isAddingComment, setIsAddingComment] = useState(false);
-  
+
   // Function to search TM globally
   const searchGlobalTM = async (query: string) => {
     if (!query.trim()) {
       setGlobalTmResults([]);
       return;
     }
-    
+
     setIsSearching(true);
     try {
-      const response = await apiRequest(
-        "POST", 
-        "/api/search_tm", 
-        { 
-          source: query,
-          sourceLanguage,
-          targetLanguage,
-          limit: 10,
-          fuzzy: true
-        }
-      );
-      
+      const response = await apiRequest("POST", "/api/search_tm", {
+        source: query,
+        sourceLanguage,
+        targetLanguage,
+        limit: 10,
+        fuzzy: true,
+      });
+
       const data = await response.json();
       setGlobalTmResults(data);
     } catch (error) {
@@ -381,18 +427,22 @@ export function SidePanel({
       setIsSearching(false);
     }
   };
-  
+
   // Function to search glossary globally
   const searchGlobalGlossary = async (query: string) => {
     if (!query.trim()) {
       setGlobalGlossaryResults([]);
       return;
     }
-    
+
     setIsSearching(true);
     try {
       // Use the dedicated API function instead of making the request directly
-      const results = await searchGlossaryTerms(query, sourceLanguage, targetLanguage);
+      const results = await searchGlossaryTerms(
+        query,
+        sourceLanguage,
+        targetLanguage,
+      );
       setGlobalGlossaryResults(results);
     } catch (error) {
       console.error("Error searching glossary globally:", error);
@@ -401,7 +451,7 @@ export function SidePanel({
       setIsSearching(false);
     }
   };
-  
+
   // Debounced global search when query changes
   useEffect(() => {
     const delaySearch = setTimeout(() => {
@@ -409,10 +459,10 @@ export function SidePanel({
         searchGlobalTM(tmSearchQuery);
       }
     }, 500);
-    
+
     return () => clearTimeout(delaySearch);
   }, [tmSearchQuery, activeTab, sourceLanguage, targetLanguage]);
-  
+
   // Debounced global glossary search
   useEffect(() => {
     const delaySearch = setTimeout(() => {
@@ -420,29 +470,29 @@ export function SidePanel({
         searchGlobalGlossary(tbSearchQuery);
       }
     }, 500);
-    
+
     return () => clearTimeout(delaySearch);
   }, [tbSearchQuery, activeTab, sourceLanguage, targetLanguage]);
-  
+
   // Clear search results when switching tabs
   useEffect(() => {
     setGlobalTmResults([]);
     setGlobalGlossaryResults([]);
   }, [activeTab]);
-  
+
   // Initialize local previous versions state from props
   useEffect(() => {
     if (propPreviousVersions && Object.keys(propPreviousVersions).length > 0) {
       setPreviousVersions(propPreviousVersions);
     }
   }, [propPreviousVersions]);
-  
+
   // 댓글 추가 기능 구현
   const handleAddComment = useCallback(() => {
     if (!commentText.trim() || !selectedSegment) return;
-    
+
     setIsAddingComment(true);
-    
+
     // 즉시 UI 피드백을 위한, 성공을 가정한 비동기 처리
     setTimeout(() => {
       try {
@@ -453,7 +503,7 @@ export function SidePanel({
           description: "댓글이 성공적으로 추가되었습니다.",
           variant: "default",
         });
-        
+
         // 성공 후 입력란 초기화
         setCommentText("");
       } catch (error) {
@@ -470,50 +520,68 @@ export function SidePanel({
       }
     }, 800); // 시각적 피드백을 위한 지연
   }, [commentText, selectedSegment]);
-  
+
   // Determine which TM matches to display
-  const displayedTmMatches = tmSearchQuery.length >= 2 
-    ? globalTmResults 
-    : tmMatches;
-    
+  const displayedTmMatches =
+    tmSearchQuery.length >= 2 ? globalTmResults : tmMatches;
+
   // Get glossary terms for highlighting in TM matches
-  const glossarySourceTerms = glossaryTerms.map(term => term.source);
-  
+  const glossarySourceTerms = glossaryTerms.map((term) => term.source);
+
   return (
-    <aside className="w-80 border-l border-border bg-card flex flex-col h-full">
-      <Tabs defaultValue="tm" value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
+    <aside className="w-80 border-l border-border bg-card h-full flex flex-col overflow-hidden">
+      <Tabs
+        defaultValue="tm"
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="flex flex-col h-full"
+      >
         {/* 고정 탭 영역 - 최상단에 sticky로 고정 */}
         <div className="px-4 py-3 border-b border-border bg-card z-50 shadow-md sticky top-0">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="tm" className="flex items-center justify-center">
+            <TabsTrigger
+              value="tm"
+              className="flex items-center justify-center"
+            >
               <Database className="h-4 w-4 mr-1.5" />
               <span className="hidden sm:inline">TM</span>
             </TabsTrigger>
-            
-            <TabsTrigger value="tb" className="flex items-center justify-center">
+
+            <TabsTrigger
+              value="tb"
+              className="flex items-center justify-center"
+            >
               <Lightbulb className="h-4 w-4 mr-1.5" />
               <span className="hidden sm:inline">Terms</span>
             </TabsTrigger>
-            
-            <TabsTrigger value="comments" className="flex items-center justify-center">
+
+            <TabsTrigger
+              value="comments"
+              className="flex items-center justify-center"
+            >
               <MessageSquare className="h-4 w-4 mr-1.5" />
               <span className="hidden sm:inline">Comments</span>
             </TabsTrigger>
-            
-            <TabsTrigger value="history" className="flex items-center justify-center">
+
+            <TabsTrigger
+              value="history"
+              className="flex items-center justify-center"
+            >
               <History className="h-4 w-4 mr-1.5" />
               <span className="hidden sm:inline">History</span>
             </TabsTrigger>
           </TabsList>
         </div>
-        
+
         <TabsContent value="tm" className="flex-1 overflow-y-auto">
           <div className="p-4 pt-2">
             {/* Segment Status Info Panel - 요청에 따라 제거 */}
-            {activeTab === "tm" && showStatusInfo && <StatusInfoPanel segment={selectedSegment} />}
-          
+            {activeTab === "tm" && showStatusInfo && (
+              <StatusInfoPanel segment={selectedSegment} />
+            )}
+
             <div className="text-sm font-medium mb-2">Translation Memory</div>
-            
+
             <div className="mb-4">
               <div className="relative">
                 <Input
@@ -522,8 +590,8 @@ export function SidePanel({
                   value={tmSearchQuery}
                   onChange={(e) => setTmSearchQuery(e.target.value)}
                 />
-                <div 
-                  className={`absolute right-2 top-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer ${isSearching ? 'animate-spin' : ''}`}
+                <div
+                  className={`absolute right-2 top-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer ${isSearching ? "animate-spin" : ""}`}
                   onClick={() => setTmSearchQuery("")}
                 >
                   {isSearching ? (
@@ -536,20 +604,24 @@ export function SidePanel({
                 </div>
               </div>
               {tmSearchQuery.length > 0 && tmSearchQuery.length < 2 && (
-                <p className="text-xs text-muted-foreground mt-1">Type at least 2 characters to search</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Type at least 2 characters to search
+                </p>
               )}
             </div>
-            
+
             {/* TM Matches list */}
             {displayedTmMatches.length > 0 ? (
               <div className="space-y-4">
                 {displayedTmMatches.map((match, index) => (
-                  <TmMatch 
-                    key={index} 
-                    match={match} 
-                    onUse={onUseTranslation} 
+                  <TmMatch
+                    key={index}
+                    match={match}
+                    onUse={onUseTranslation}
                     sourceSimilarity={
-                      selectedSegment && match.source === selectedSegment.source ? 100 : 85
+                      selectedSegment && match.source === selectedSegment.source
+                        ? 100
+                        : 85
                     }
                     highlightTerms={glossarySourceTerms}
                   />
@@ -557,20 +629,20 @@ export function SidePanel({
               </div>
             ) : (
               <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground">
-                {isSearching ? (
-                  "Searching translation memory..."
-                ) : tmSearchQuery 
-                  ? "No matches found for your search." 
-                  : "No TM matches found for this segment."}
+                {isSearching
+                  ? "Searching translation memory..."
+                  : tmSearchQuery
+                    ? "No matches found for your search."
+                    : "No TM matches found for this segment."}
               </div>
             )}
           </div>
         </TabsContent>
-        
+
         <TabsContent value="tb" className="flex-1 overflow-y-auto">
           <div className="p-4 pt-2">
             <div className="text-sm font-medium mb-2">Terminology Base</div>
-            
+
             <div className="mb-4">
               <div className="relative">
                 <Input
@@ -579,8 +651,8 @@ export function SidePanel({
                   value={tbSearchQuery}
                   onChange={(e) => setTbSearchQuery(e.target.value)}
                 />
-                <div 
-                  className={`absolute right-2 top-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer ${isSearching ? 'animate-spin' : ''}`}
+                <div
+                  className={`absolute right-2 top-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer ${isSearching ? "animate-spin" : ""}`}
                   onClick={() => setTbSearchQuery("")}
                 >
                   {isSearching ? (
@@ -593,65 +665,75 @@ export function SidePanel({
                 </div>
               </div>
               {tbSearchQuery.length > 0 && tbSearchQuery.length < 2 && (
-                <p className="text-xs text-muted-foreground mt-1">Type at least 2 characters to search</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Type at least 2 characters to search
+                </p>
               )}
             </div>
-            
+
             {/* Removed Active Segment section as requested */}
-            
+
             {tbSearchQuery.length >= 2 ? (
               globalGlossaryResults.length > 0 ? (
                 <div className="space-y-3">
                   {globalGlossaryResults.map((term, index) => (
-                    <GlossaryTerm key={index} term={term} onUse={onUseTranslation} />
+                    <GlossaryTerm
+                      key={index}
+                      term={term}
+                      onUse={onUseTranslation}
+                    />
                   ))}
                 </div>
               ) : (
                 <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground">
-                  {isSearching ? "Searching terminology..." : "No terms found for your search."}
+                  {isSearching
+                    ? "Searching terminology..."
+                    : "No terms found for your search."}
                 </div>
               )
+            ) : glossaryTerms.length > 0 ? (
+              <div className="space-y-3">
+                {glossaryTerms.map((term, index) => (
+                  <GlossaryTerm
+                    key={index}
+                    term={term}
+                    onUse={onUseTranslation}
+                  />
+                ))}
+              </div>
             ) : (
-              glossaryTerms.length > 0 ? (
-                <div className="space-y-3">
-                  {glossaryTerms.map((term, index) => (
-                    <GlossaryTerm key={index} term={term} onUse={onUseTranslation} />
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground">
-                  No matching terms found in the glossary for this segment.
-                </div>
-              )
+              <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground">
+                No matching terms found in the glossary for this segment.
+              </div>
             )}
           </div>
         </TabsContent>
-        
+
         <TabsContent value="comments" className="flex-1 overflow-y-auto">
           <div className="p-4 pt-2">
             <div className="text-sm font-medium mb-2">Comments</div>
-            
+
             {/* Removed Active Segment section as requested */}
-            
+
             <div className="space-y-4">
               <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center mb-4">
                 No comments available for this segment. Add a comment below.
               </div>
-              
+
               <div className="space-y-2">
                 {/* 댓글 입력 상태 관리 */}
-                <Textarea 
-                  placeholder="Add a comment about this segment..." 
+                <Textarea
+                  placeholder="Add a comment about this segment..."
                   className="min-h-[100px] text-sm"
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                 />
                 <div className="flex justify-end">
-                  <Button 
+                  <Button
                     size="sm"
                     className={cn(
                       "text-xs transition-all duration-200",
-                      isAddingComment && "bg-primary/10"
+                      isAddingComment && "bg-primary/10",
                     )}
                     onClick={handleAddComment}
                     disabled={isAddingComment || !commentText.trim()}
@@ -670,57 +752,82 @@ export function SidePanel({
                   </Button>
                 </div>
               </div>
-              
+
               <div className="text-xs text-muted-foreground mt-2">
-                <span className="font-medium">Tip:</span> You can use simple Markdown in comments: 
-                **bold**, *italic*, `code`, and • bullet points.
+                <span className="font-medium">Tip:</span> You can use simple
+                Markdown in comments: **bold**, *italic*, `code`, and • bullet
+                points.
               </div>
             </div>
           </div>
         </TabsContent>
-        
+
         <TabsContent value="history" className="flex-1 overflow-y-auto">
           <div className="p-4 pt-2">
             <div className="text-sm font-medium mb-2">Revision History</div>
-            
+
             {/* Removed Active Segment section as requested */}
-            
-            <div className="space-y-3">              
+
+            <div className="space-y-3">
               {selectedSegment ? (
                 <>
                   <div className="border border-border rounded-md overflow-hidden">
                     <div className="bg-accent/30 px-3 py-2 border-b border-border flex justify-between items-center">
                       <div className="text-xs font-medium">Current Version</div>
                       <div className="text-xs text-muted-foreground">
-                        <span className="font-semibold">{selectedSegment.status}</span> • 
-                        <span className="font-semibold ml-1">{selectedSegment.origin}</span>
+                        <span className="font-semibold">
+                          {selectedSegment.status}
+                        </span>{" "}
+                        •
+                        <span className="font-semibold ml-1">
+                          {selectedSegment.origin}
+                        </span>
                       </div>
                     </div>
                     <div className="p-3">
-                      <div className="font-mono text-xs">{selectedSegment.target || "(No translation)"}</div>
+                      <div className="font-mono text-xs">
+                        {selectedSegment.target || "(No translation)"}
+                      </div>
                       <div className="text-xs text-muted-foreground mt-2">
-                        Last modified: {new Date(selectedSegment.updatedAt).toLocaleString()}
+                        Last modified:{" "}
+                        {new Date(selectedSegment.updatedAt).toLocaleString()}
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Only display previous version if it exists and is different from current version */}
-                  {selectedSegment.id && previousVersions[selectedSegment.id] && previousVersions[selectedSegment.id] !== selectedSegment.target ? (
+                  {selectedSegment.id &&
+                  previousVersions[selectedSegment.id] &&
+                  previousVersions[selectedSegment.id] !==
+                    selectedSegment.target ? (
                     <div className="border border-muted rounded-md overflow-hidden opacity-80">
                       <div className="bg-muted/30 px-3 py-2 border-b border-border flex justify-between items-center">
-                        <div className="text-xs font-medium">Previous Version</div>
+                        <div className="text-xs font-medium">
+                          Previous Version
+                        </div>
                         <div className="text-xs text-muted-foreground">
-                          <span className="font-semibold">{selectedSegment.status === 'Reviewed' ? 'Draft' : selectedSegment.status}</span>
+                          <span className="font-semibold">
+                            {selectedSegment.status === "Reviewed"
+                              ? "Draft"
+                              : selectedSegment.status}
+                          </span>
                           {selectedSegment.origin && (
                             <>
                               <span className="mx-1">•</span>
-                              <span className="font-semibold">{selectedSegment.origin === 'HT' ? 'MT' : selectedSegment.origin}</span>
+                              <span className="font-semibold">
+                                {selectedSegment.origin === "HT"
+                                  ? "MT"
+                                  : selectedSegment.origin}
+                              </span>
                             </>
                           )}
                         </div>
                       </div>
                       <div className="p-3">
-                        <div className="font-mono text-xs">{previousVersions[selectedSegment.id] || "(No translation)"}</div>
+                        <div className="font-mono text-xs">
+                          {previousVersions[selectedSegment.id] ||
+                            "(No translation)"}
+                        </div>
                         <div className="text-xs text-muted-foreground mt-2">
                           Last edited: {new Date().toLocaleString()}
                         </div>
@@ -728,7 +835,8 @@ export function SidePanel({
                     </div>
                   ) : (
                     <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center">
-                      No previous versions available for this segment. Previous versions will appear when you edit and save a segment.
+                      No previous versions available for this segment. Previous
+                      versions will appear when you edit and save a segment.
                     </div>
                   )}
                 </>
