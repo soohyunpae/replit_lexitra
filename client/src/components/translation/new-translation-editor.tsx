@@ -720,21 +720,6 @@ export function NewTranslationEditor({
           </div>
 
           <div className="flex items-center gap-4 ml-1">
-            {/* Side panel toggle button */}
-            <Button
-              size="sm"
-              variant={showSidePanel ? "default" : "outline"}
-              onClick={() => setShowSidePanel(!showSidePanel)}
-              className="h-7 w-7 p-0"
-              title={showSidePanel ? "Hide side panel" : "Show side panel"}
-            >
-              {showSidePanel ? (
-                <ChevronRight className="h-3.5 w-3.5" />
-              ) : (
-                <ChevronLeft className="h-3.5 w-3.5" />
-              )}
-            </Button>
-            
             <div className="flex items-center gap-3">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="h-7 w-[90px] text-xs">
