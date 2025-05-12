@@ -436,15 +436,7 @@ export default function Translation() {
             </TabsList>
           </Tabs>
           
-          <Button 
-            variant="default" 
-            size="sm" 
-            className="flex items-center"
-            onClick={() => saveProject.mutate()}
-          >
-            <FileX className="h-4 w-4 mr-1" />
-            Save
-          </Button>
+          
           </div>
         </div>
         
