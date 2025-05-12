@@ -19,7 +19,7 @@ import {
 import { EditableSegment } from "./editable-segment";
 import { Progress } from "@/components/ui/progress";
 import { SidePanel } from "./side-panel";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { saveToTM } from "@/lib/api";
 import {
   type TranslationUnit,
@@ -438,8 +438,17 @@ export function NewTranslationEditor({
     setTranslatedCount(0);
     setTotalToTranslate(untranslatedSegments.length);
 
-    // Create a new array for updates
-    const updatedSegments = [...localSegments];
+    // 현재 segments 데이터로 작업합니다
+    if (!segments) {
+      toast({
+        title: "Error",
+        description: "No segments available to translate",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const updatedSegments = [...segments];
 
     // Translate segments sequentially to avoid overloading the API
     for (let i = 0; i < untranslatedSegments.length; i++) {
@@ -583,7 +592,7 @@ export function NewTranslationEditor({
     // Update segments in parallel
     try {
       const promises = checkedIds.map((id) => {
-        const segment = localSegments.find((s) => s.id === id);
+        const segment = segments?.find((s: TranslationUnit) => s.id === id);
         if (!segment) return Promise.resolve();
 
         // Keep target text, just update status
@@ -600,29 +609,10 @@ export function NewTranslationEditor({
       });
 
       await Promise.all(promises);
-
-      // Update local state
-      const updatedSegments = [...localSegments];
-      checkedIds.forEach((id) => {
-        const index = updatedSegments.findIndex((s) => s.id === id);
-        if (index !== -1) {
-          const origin =
-            status === "Reviewed" &&
-            updatedSegments[index].target &&
-            updatedSegments[index].origin !== "HT"
-              ? "HT"
-              : updatedSegments[index].origin;
-
-          updatedSegments[index] = {
-            ...updatedSegments[index],
-            status,
-            origin,
-          };
-        }
-      });
-
-      // Update local segments - the useEffect hook will handle recalculating status counts
-      setLocalSegments(updatedSegments);
+      
+      // React Query를 사용하면 서버에서 변경된 데이터가 자동으로 업데이트됩니다.
+      // 쿼리를 명시적으로 무효화하여 최신 데이터를 가져오도록 합니다.
+      queryClient.invalidateQueries({ queryKey: ["segments", fileId] });
 
       toast({
         title: "Status Update Complete",
