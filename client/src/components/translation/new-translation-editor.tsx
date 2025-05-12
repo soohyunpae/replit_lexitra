@@ -992,27 +992,27 @@ export function NewTranslationEditor({
 
         {/* Side panel - Only shown when enabled */}
         {showSidePanel && (
-          <div className="flex flex-col h-full sticky top-[56px] h-fit">
+          <div className="flex-none">
             <SidePanel
-            tmMatches={tmMatches}
-            glossaryTerms={glossaryTerms}
-            selectedSegment={selectedSegment}
-            sourceLanguage={sourceLanguage}
-            targetLanguage={targetLanguage}
-            previousVersions={previousVersions}
-            onUseTranslation={(translation: string) => {
-              if (selectedSegmentId) {
-                handleSegmentUpdate(selectedSegmentId, translation, "MT", "MT");
-              }
-            }}
-            onSegmentUpdated={(id: number, newTarget: string) => {
-              // This callback is triggered when a segment is updated
-              // We're using a different approach with previousVersions state instead
-              console.log(
-                `Segment ${id} updated with new target: ${newTarget}`,
-              );
-            }}
-          />
+              tmMatches={tmMatches}
+              glossaryTerms={glossaryTerms}
+              selectedSegment={selectedSegment}
+              sourceLanguage={sourceLanguage}
+              targetLanguage={targetLanguage}
+              previousVersions={previousVersions}
+              onUseTranslation={(translation: string) => {
+                if (selectedSegmentId) {
+                  handleSegmentUpdate(selectedSegmentId, translation, "MT", "MT");
+                }
+              }}
+              onSegmentUpdated={(id: number, newTarget: string) => {
+                // This callback is triggered when a segment is updated
+                // We're using a different approach with previousVersions state instead
+                console.log(
+                  `Segment ${id} updated with new target: ${newTarget}`,
+                );
+              }}
+            />
           </div>
         )}
       </div>
