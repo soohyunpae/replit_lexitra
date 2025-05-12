@@ -211,23 +211,29 @@ export function DocSegment({
                     ) {
                       console.log("텍스트 편집으로 상태 자동 변경:", localStatus, "→ Edited");
                       setLocalStatus("Edited");
-                    }
-                    
-                    // 이제 API 업데이트 준비
-                    if (onUpdate) {
+                      
+                      // 원본이 MT, 100%, Fuzzy인 경우에만 origin 변경 필요
                       const needsOriginChange =
                         segment.origin === "MT" ||
                         segment.origin === "100%" ||
                         segment.origin === "Fuzzy";
-                      const newOrigin = needsOriginChange
-                        ? "HT"
-                        : segment.origin;
+                      const newOrigin = needsOriginChange ? "HT" : segment.origin;
 
-                      // 현재 상태가 Reviewed에서 Edited로 바뀌었으므로
-                      // 업데이트 시 "Edited" 상태로 전달
-                      // debouncedUpdate 호출을 통해 API 저장 (실제 저장은 약간 지연됨)
-                      // 수정된 부분: newStatus 대신 현재 "Edited" 상태로 고정
-                      onUpdate(newValue, "Edited", newOrigin);
+                      // React Query Mutation 사용하여 API 호출 + 캐시 업데이트
+                      // 텍스트 변경 시에는 디바운스 적용 (하단 주석 참고)
+                      // debouncedMutation(segment.id, newValue, "Edited", newOrigin || "");
+                      
+                      // 여기서는 debounce는 구현하지 않고 기존 onUpdate 사용
+                      // 파일 전체를 한꺼번에 리팩토링하면 복잡해지므로 
+                      // 핵심 기능인 닫기/토글 버튼만 mutation으로 교체
+                      if (onUpdate) {
+                        onUpdate(newValue, "Edited", newOrigin);
+                      }
+                    } else {
+                      // 이미 Edited 상태인 경우 상태 변경 없이 내용만 업데이트
+                      if (onUpdate) {
+                        onUpdate(newValue, localStatus, segment.origin);
+                      }
                     }
                   }
                 }}
@@ -321,11 +327,13 @@ export function DocSegment({
                           
                           const newOrigin = needsOriginChange ? "HT" : segment.origin;
                           
-                          // 핵심 수정: 
-                          // 1. React useState의 비동기 특성으로 인해 직접 editedValue 사용
-                          // 2. 항상 최신 localStatus 사용하고, 텍스트 변경 여부와 관계없이 저장
-                          // 3. 원본이 MT/100%/Fuzzy인 경우 origin을 HT로 변경
-                          onUpdate?.(editedValue, localStatus, newOrigin);
+                          // React Query Mutation 사용하여 직접 API 호출 + 캐시 업데이트
+                          updateSegmentMutation.mutate({
+                            id: segment.id,
+                            target: editedValue || "",
+                            status: localStatus,
+                            origin: newOrigin || ""
+                          });
                           
                           console.log("닫기 버튼으로 저장:", {
                             text: editedValue, 
