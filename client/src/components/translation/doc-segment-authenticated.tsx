@@ -156,123 +156,7 @@ export function DocSegment({
       return (
         <span className={cn("relative font-serif", className)}>
           <div className="relative my-1">
-            {/* Status Badge and Controls Bar */}
-            <div className="flex items-center gap-2 mb-1">
-              {/* Clickable Status Badge */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge
-                    variant={localStatus === "Reviewed" ? "default" : "outline"}
-                    className={cn(
-                      "text-xs cursor-pointer transition-colors",
-                      localStatus === "Reviewed"
-                        ? "bg-green-600 hover:bg-green-700"
-                        : "border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30",
-                      localStatus === "Rejected"
-                        ? "border-red-500 text-red-500"
-                        : ""
-                    )}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      
-                      // Toggle status
-                      const newStatus = localStatus === "Reviewed" ? "Edited" : "Reviewed";
-                      
-                      // Update local state immediately for UI
-                      setLocalStatus(newStatus);
-                      
-                      // Check if origin needs to change
-                      const needsOriginChange = 
-                        editedValue !== segment.target &&
-                        (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
-                      const newOrigin = needsOriginChange ? "HT" : segment.origin;
-                      
-                      // Optimistic UI update through parent
-                      onUpdate?.(
-                        editedValue,
-                        newStatus,
-                        newOrigin,
-                      );
-                      
-                      // Background server update
-                      const updateSegmentStatus = async () => {
-                        try {
-                          const response = await apiRequest(
-                            "PATCH",
-                            `/api/segments/${segment.id}`,
-                            {
-                              target: editedValue,
-                              status: newStatus,
-                              origin: newOrigin,
-                            },
-                          );
-                          
-                          if (!response.ok) {
-                            throw new Error(`Server responded with status: ${response.status}`);
-                          }
-                          
-                          const updatedSegment = await response.json();
-                          console.log("Status toggled to", newStatus, updatedSegment);
-                          
-                          // Final update with server data
-                          if (onUpdate) {
-                            onUpdate(
-                              String(updatedSegment.target || editedValue),
-                              updatedSegment.status,
-                              updatedSegment.origin
-                            );
-                          }
-                          
-                          // Document View - automatically close editor if status changed to Reviewed
-                          if (newStatus === "Reviewed") {
-                            onCancel?.(); // Close the editor
-                          }
-                        } catch (error) {
-                          console.error("Failed to toggle segment status:", error);
-                          // Revert on error
-                          setLocalStatus(segment.status);
-                          onUpdate?.(
-                            segment.target || "",
-                            segment.status,
-                            segment.origin,
-                          );
-                        }
-                      };
-                      
-                      updateSegmentStatus();
-                    }}
-                  >
-                    {localStatus || "Draft"}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Click to toggle between Edited and Reviewed</p>
-                </TooltipContent>
-              </Tooltip>
-              
-              {/* Close Button */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 w-6 p-0 rounded-full hover:bg-muted"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Close editor without changing status
-                      onCancel?.();
-                    }}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Close editor (no status change)</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-
-            {/* Text area with auto-height adjustment */}
+            {/* Text area with auto-height adjustment and controls at bottom right */}
             <div className="relative bg-accent/20 shadow-sm rounded-md">
               <Textarea
                 ref={textareaRef}
@@ -317,7 +201,7 @@ export function DocSegment({
                   }
                 }}
                 onKeyDown={handleKeyDown}
-                className="w-full p-2 resize-none border-0 shadow-none bg-transparent font-serif text-base"
+                className="w-full p-2 pb-10 resize-none border-0 shadow-none bg-transparent font-serif text-base"
                 placeholder="Enter translation..."
                 autoFocus
                 style={{
@@ -326,6 +210,119 @@ export function DocSegment({
                   overflow: "hidden",
                 }}
               />
+              {/* Status Badge and Controls Bar - now at the bottom right */}
+              <div className="absolute bottom-2 right-2 flex items-center gap-2 z-10">
+                {/* Clickable Status Badge */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant={localStatus === "Reviewed" ? "default" : "outline"}
+                      className={cn(
+                        "text-xs cursor-pointer transition-colors",
+                        localStatus === "Reviewed"
+                          ? "bg-green-600 hover:bg-green-700"
+                          : "border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30",
+                        localStatus === "Rejected"
+                          ? "border-red-500 text-red-500"
+                          : ""
+                      )}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        
+                        // Toggle status
+                        const newStatus = localStatus === "Reviewed" ? "Edited" : "Reviewed";
+                        
+                        // Update local state immediately for UI
+                        setLocalStatus(newStatus);
+                        
+                        // Check if origin needs to change
+                        const needsOriginChange = 
+                          editedValue !== segment.target &&
+                          (segment.origin === "MT" || segment.origin === "100%" || segment.origin === "Fuzzy");
+                        const newOrigin = needsOriginChange ? "HT" : segment.origin;
+                        
+                        // Optimistic UI update through parent
+                        onUpdate?.(
+                          editedValue,
+                          newStatus,
+                          newOrigin,
+                        );
+                        
+                        // Background server update
+                        const updateSegmentStatus = async () => {
+                          try {
+                            const response = await apiRequest(
+                              "PATCH",
+                              `/api/segments/${segment.id}`,
+                              {
+                                target: editedValue,
+                                status: newStatus,
+                                origin: newOrigin,
+                              },
+                            );
+                            
+                            if (!response.ok) {
+                              throw new Error(`Server responded with status: ${response.status}`);
+                            }
+                            
+                            const updatedSegment = await response.json();
+                            console.log("Status toggled to", newStatus, updatedSegment);
+                            
+                            // Final update with server data
+                            if (onUpdate) {
+                              onUpdate(
+                                String(updatedSegment.target || editedValue),
+                                updatedSegment.status,
+                                updatedSegment.origin
+                              );
+                            }
+                            
+                            // Don't auto-close the editor when changing status (let user decide when to close)
+                            // Status change is just a toggle, editor stays open
+                          } catch (error) {
+                            console.error("Failed to toggle segment status:", error);
+                            // Revert on error
+                            setLocalStatus(segment.status);
+                            onUpdate?.(
+                              segment.target || "",
+                              segment.status,
+                              segment.origin,
+                            );
+                          }
+                        };
+                        
+                        updateSegmentStatus();
+                      }}
+                    >
+                      {localStatus || "Draft"}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Click to toggle between Edited and Reviewed</p>
+                  </TooltipContent>
+                </Tooltip>
+                
+                {/* Close Button */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0 rounded-full hover:bg-muted"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Close editor without changing status
+                        onCancel?.();
+                      }}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Close editor (no status change)</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
             </div>
           </div>
         </span>
