@@ -576,7 +576,7 @@ export function DocReviewEditor({
 
         {/* Side Panel - Only shown when enabled */}
         {!isMobile && showSidePanel && (
-            <div className="w-[300px] shrink-0 border-l bg-card sticky top-[56px] max-h-[calc(100vh-56px)] overflow-y-auto">
+            <div className="w-80 shrink-0 border-l border-border bg-card h-full flex flex-col overflow-hidden">
             <SidePanel
               tmMatches={tmMatches}
               glossaryTerms={glossaryTerms}
