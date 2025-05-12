@@ -169,21 +169,55 @@ export function DocReviewEditor({
   fileName,
   sourceLanguage,
   targetLanguage,
-  segments = [],
+  segments: propSegments,
   onSave,
   onExport,
-  fileId = 0, // 기본값 제공
+  fileId,
   tmMatches = [],
   glossaryTerms = []
 }: DocReviewEditorProps) {
   const { toast } = useToast();
   const isMobile = useMobile();
   const [showSource, setShowSource] = useState(true);
-  // scrollSync 기능 제거
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [showSidePanel, setShowSidePanel] = useState(true);
   // 문장 하이라이트를 위한 상태 변수 추가
   const [highlightedSegmentId, setHighlightedSegmentId] = useState<number | null>(null);
+  
+  // React Query로 segments 관리
+  const { 
+    segments, 
+    isLoading, 
+    isError, 
+    updateSegment: reactQueryUpdateSegment,
+    debouncedUpdateSegment 
+  } = useSegments(fileId);
+  
+  // 로딩 상태 표시
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-pulse text-center">
+          <div className="h-8 w-40 bg-accent rounded-full mx-auto mb-4"></div>
+          <div className="h-4 w-60 bg-accent rounded-full mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  // 에러 상태 표시
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <AlertCircle className="h-10 w-10 text-destructive mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Failed to load segments</h3>
+          <p className="text-muted-foreground mb-4">There was an error loading translation segments.</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
   
   // 문서 보기를 위해 세그먼트를 그룹화
   const segmentGroups = groupSegmentsByParagraphs(segments);
@@ -198,18 +232,15 @@ export function DocReviewEditor({
   // Keep track of which panel was scrolled last
   const lastScrolledPanel = useRef<'left' | 'right' | null>(null);
   
-  // 공유 세그먼트 컨텍스트 사용
-  const { updateSegment: contextUpdateSegment } = useSegmentContext();
-  
   // Use our custom hook for managing editing state
   const {
     editingId,
     editedValue,
     setEditedValue,
     selectSegmentForEditing: originalSelectForEditing,
-    updateSegment,
+    updateSegment: editingStateUpdateSegment,
     cancelEditing,
-    toggleStatus
+    toggleStatus: editingStateToggleStatus
   } = useEditingState(segments, fileId);
   
   // 수정된 선택 함수 - 하이라이트 기능 추가
@@ -259,7 +290,7 @@ export function DocReviewEditor({
       
       try {
         // 공유 컨텍스트의 업데이트 함수 사용
-        await contextUpdateSegment(id, {
+        await reactQueryUpdateSegment(id, {
           target: value,
           status: newStatus,
           origin: isValueChanged && newStatus === 'Edited' ? 'HT' : segment.origin
