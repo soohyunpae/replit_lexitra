@@ -445,9 +445,15 @@ export function DocSegment({
                     segment.origin === "Fuzzy";
                   const newOrigin = needsOriginChange ? "HT" : segment.origin;
 
+                  // 중요: 즉시 UI 업데이트를 위해 로컬 상태 업데이트도 필요함
                   let newStatus = segment.status;
+                  
+                  // Reviewed 상태인 경우 Edited로 변경 (Segment Editor와 동일한 동작)
                   if (segment.status === "Reviewed") {
                     newStatus = "Edited";
+                    // 로컬 상태도 함께 업데이트
+                    setLocalStatus("Edited");
+                    console.log("Status auto-changed from Reviewed to Edited");
                   } else if (
                     segment.status === "MT" ||
                     segment.status === "100%" ||
