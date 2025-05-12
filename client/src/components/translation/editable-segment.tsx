@@ -63,67 +63,68 @@ export function EditableSegment(props: EditableSegmentProps) {
 
   // 세그먼트 데이터나 텍스트 값 변경시 레이아웃 처리 이후 높이 동기화
   useLayoutEffect(() => {
-    const adjustHeight = () => {
+    // 요소가 완전히 마운트되고 DOM에 반영된 후에 실행되도록 requestAnimationFrame 사용
+    requestAnimationFrame(() => {
       const sourceEl = sourceContainerRef.current;
-      const textareaEl = textareaRef.current;
       const targetEl = targetContainerRef.current;
-      if (!sourceEl || !textareaEl || !targetEl) return;
+      const textareaEl = textareaRef.current;
+      if (!sourceEl || !targetEl || !textareaEl) return;
 
-      // Reset heights to measure content
-      sourceEl.style.height = 'auto';
-      targetEl.style.height = 'auto';
-      textareaEl.style.height = 'auto';
+      // 정확한 높이 측정을 위해 초기화
+      textareaEl.style.height = "auto";
+      sourceEl.style.height = "auto";
+      targetEl.style.height = "auto";
 
-      // Get natural heights
-      const sourceContentHeight = sourceEl.scrollHeight;
-      const targetContentHeight = targetEl.scrollHeight;
-      const textareaContentHeight = textareaEl.scrollHeight;
+      // 실제 스크롤 높이(콘텐츠 전체 높이) 측정
+      const sourceHeight = sourceEl.scrollHeight;
+      const textareaHeight = textareaEl.scrollHeight;
 
-      // Use individual heights for better content visibility
-      sourceEl.style.height = `${sourceContentHeight}px`;
-      targetEl.style.height = `${targetContentHeight}px`;
-      textareaEl.style.height = `${textareaContentHeight}px`;
-    };
+      // 둘 중 더 큰 값으로 높이 설정 (최소 120px)
+      const maxHeight = Math.max(sourceHeight, textareaHeight, 120);
 
-    // Initial adjustment
-    adjustHeight();
-
-    // Add resize observer to handle dynamic content changes
-    const resizeObserver = new ResizeObserver(adjustHeight);
-    if (sourceContainerRef.current) resizeObserver.observe(sourceContainerRef.current);
-    if (targetContainerRef.current) resizeObserver.observe(targetContainerRef.current);
-
-    return () => resizeObserver.disconnect();
+      // 양쪽 컨테이너와 textarea에 동일한 높이 적용
+      textareaEl.style.height = `${maxHeight}px`;
+      sourceEl.style.height = `${maxHeight}px`;
+      targetEl.style.height = `${maxHeight}px`;
+    });
   }, [value, segment.source]);
 
   // 창 크기 변경시 높이 동기화
   useEffect(() => {
+    // 동일한 높이 동기화 로직을 사용하는 리사이즈 핸들러
     const handleResize = () => {
       requestAnimationFrame(() => {
-        if (
-          sourceContainerRef.current &&
-          targetContainerRef.current &&
-          textareaRef.current
-        ) {
-          // 높이 초기화
-          textareaRef.current.style.height = "auto";
-          sourceContainerRef.current.style.height = "auto";
-          targetContainerRef.current.style.height = "auto";
-
-          // 스크롤 높이 계산
-          const textHeight = textareaRef.current.scrollHeight;
-          const sourceHeight = sourceContainerRef.current.scrollHeight;
-          const maxHeight = Math.max(textHeight, sourceHeight, 120);
-
-          // 높이 적용
-          textareaRef.current.style.height = `${maxHeight}px`;
-          sourceContainerRef.current.style.height = `${maxHeight}px`;
-          targetContainerRef.current.style.height = `${maxHeight}px`;
-        }
+        const sourceEl = sourceContainerRef.current;
+        const targetEl = targetContainerRef.current;
+        const textareaEl = textareaRef.current;
+        if (!sourceEl || !targetEl || !textareaEl) return;
+  
+        // 정확한 높이 측정을 위해 초기화
+        textareaEl.style.height = "auto";
+        sourceEl.style.height = "auto";
+        targetEl.style.height = "auto";
+  
+        // 실제 스크롤 높이(콘텐츠 전체 높이) 측정
+        const sourceHeight = sourceEl.scrollHeight;
+        const textareaHeight = textareaEl.scrollHeight;
+  
+        // 둘 중 더 큰 값으로 높이 설정 (최소 120px)
+        const maxHeight = Math.max(sourceHeight, textareaHeight, 120);
+  
+        // 양쪽 컨테이너와 textarea에 동일한 높이 적용
+        textareaEl.style.height = `${maxHeight}px`;
+        sourceEl.style.height = `${maxHeight}px`;
+        targetEl.style.height = `${maxHeight}px`;
       });
     };
 
+    // 초기에 한 번 실행 - 컴포넌트 마운트 직후
+    handleResize();
+    
+    // 윈도우 리사이즈 이벤트 리스너 추가
     window.addEventListener("resize", handleResize);
+    
+    // 클린업 - 컴포넌트 언마운트 시 리스너 제거
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
@@ -248,16 +249,15 @@ export function EditableSegment(props: EditableSegmentProps) {
           {/* 번역문 입력 영역 */}
           <div
             ref={targetContainerRef}
-            className="relative flex min-h-[120px] flex-1 items-stretch bg-transparent"
+            className="relative flex min-h-[120px] flex-1 items-stretch bg-transparent overflow-hidden"
           >
             <Textarea
               ref={textareaRef}
               value={value}
               onChange={handleTextareaChange}
-              className="flex-1 resize-none bg-transparent pb-[28px] pt-[2px] text-sm leading-relaxed shadow-none outline-none font-mono w-full border-none focus-visible:ring-0 focus:ring-0 overflow-y-hidden"
+              className="flex-1 resize-none bg-transparent pb-[28px] pt-[2px] text-sm leading-relaxed shadow-none outline-none font-mono w-full border-none focus-visible:ring-0 focus:ring-0 overflow-hidden min-h-[40px]"
               style={{
                 lineHeight: "1.6",
-                minHeight: "100%",
                 height: "auto",
                 boxShadow: "none",
                 outline: "none",
@@ -307,7 +307,7 @@ export function EditableSegment(props: EditableSegmentProps) {
           {/* 원문 텍스트 표시 영역 */}
           <div
             ref={sourceContainerRef}
-            className="relative flex min-h-[120px] flex-1 items-stretch bg-transparent"
+            className="relative flex min-h-[120px] flex-1 items-stretch bg-transparent overflow-hidden"
           >
             <Textarea
               value={liveSegment.source || ""}
@@ -315,7 +315,6 @@ export function EditableSegment(props: EditableSegmentProps) {
               className="no-scrollbar flex-1 resize-none overflow-hidden bg-transparent pt-[2px] text-sm font-mono leading-relaxed text-foreground shadow-none outline-none w-full h-auto min-h-[40px] border-none focus-visible:ring-0 focus:ring-0"
               style={{
                 lineHeight: "1.6",
-                overflow: "hidden",
                 boxShadow: "none",
                 outline: "none",
                 transition: "none",
