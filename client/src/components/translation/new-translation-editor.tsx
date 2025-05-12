@@ -958,8 +958,8 @@ export function NewTranslationEditor({
           </div>
         </div>
 
-        {/* Side panel - Fixed position */}
-        <div className="sticky top-0 h-screen">
+        {/* Side panel - Fixed position with flex layout for sticky tabs */}
+        <div className="flex flex-col sticky top-0 h-screen">
           <SidePanel
             tmMatches={tmMatches}
             glossaryTerms={glossaryTerms}

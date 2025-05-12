@@ -480,10 +480,10 @@ export function SidePanel({
   const glossarySourceTerms = glossaryTerms.map(term => term.source);
   
   return (
-    <aside className="w-80 border-l border-border bg-card flex flex-col sticky top-0 h-screen">
+    <aside className="w-80 border-l border-border bg-card flex flex-col h-full">
       <Tabs defaultValue="tm" value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-        {/* 고정 탭 영역 */}
-        <div className="px-4 py-3 border-b border-border bg-card z-50 shadow-md">
+        {/* 고정 탭 영역 - 최상단에 sticky로 고정 */}
+        <div className="px-4 py-3 border-b border-border bg-card z-50 shadow-md sticky top-0">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="tm" className="flex items-center justify-center">
               <Database className="h-4 w-4 mr-1.5" />
