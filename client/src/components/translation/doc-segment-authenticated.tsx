@@ -166,11 +166,23 @@ export function DocSegment({
                   // Update UI state
                   onEditValueChange?.(newValue);
 
-                  // Automatic status update logic
-                  if (onUpdate) {
-                    const isValueChanged = newValue !== segment.target;
-
-                    if (isValueChanged) {
+                  // 텍스트가 변경될 때마다 실행: 상태 자동 변경
+                  const isValueChanged = newValue !== segment.target;
+                  if (isValueChanged) {
+                    // 먼저 상태 변경 검사 및 업데이트
+                    // Reviewed 또는 MT/100%/Fuzzy 상태인 경우 Edited로 변경
+                    if (
+                      localStatus === "Reviewed" || 
+                      localStatus === "MT" || 
+                      localStatus === "100%" || 
+                      localStatus === "Fuzzy"
+                    ) {
+                      console.log("텍스트 편집으로 상태 자동 변경:", localStatus, "→ Edited");
+                      setLocalStatus("Edited");
+                    }
+                    
+                    // 이제 API 업데이트 준비
+                    if (onUpdate) {
                       const needsOriginChange =
                         segment.origin === "MT" ||
                         segment.origin === "100%" ||
@@ -179,24 +191,11 @@ export function DocSegment({
                         ? "HT"
                         : segment.origin;
 
-                      // Change status to Edited if needed
-                      let newStatus = localStatus;
-                      if (localStatus === "Reviewed") {
-                        newStatus = "Edited";
-                        // Update local state to reflect change
-                        setLocalStatus("Edited");
-                      } else if (
-                        localStatus === "MT" ||
-                        localStatus === "100%" ||
-                        localStatus === "Fuzzy"
-                      ) {
-                        newStatus = "Edited";
-                        // Update local state to reflect change
-                        setLocalStatus("Edited");
-                      }
-
-                      // Update through parent component
-                      onUpdate(newValue, newStatus, newOrigin);
+                      // 현재 상태가 Reviewed에서 Edited로 바뀌었으므로
+                      // 업데이트 시 "Edited" 상태로 전달
+                      // debouncedUpdate 호출을 통해 API 저장 (실제 저장은 약간 지연됨)
+                      // 수정된 부분: newStatus 대신 현재 "Edited" 상태로 고정
+                      onUpdate(newValue, "Edited", newOrigin);
                     }
                   }
                 }}
@@ -305,11 +304,12 @@ export function DocSegment({
                       onClick={(e) => {
                         e.stopPropagation();
                         
-                        // 수정된 동작: 항상 현재 텍스트와 상태를 함께 저장하고 닫기
+                        // 수정된 동작: 항상 현재 텍스트(editedValue, 사용자가 수정 중인 최신 텍스트)와 
+                        // 상태(localStatus)를 함께 저장하고 닫기
                         const isTextChanged = editedValue !== segment.target;
                         const isStatusChanged = localStatus !== segment.status;
                         
-                        // 텍스트 변경 또는 상태 변경이 있는 경우에 저장 진행
+                        // 문서에 따른 수정: 텍스트 변경 또는 상태 변경이 있는 경우에 저장 진행
                         if (isTextChanged || isStatusChanged) {
                           // 수정된 부분: origin 변경 필요 여부 확인
                           const needsOriginChange = 
@@ -318,7 +318,10 @@ export function DocSegment({
                           
                           const newOrigin = needsOriginChange ? "HT" : segment.origin;
                           
-                          // 핵심 수정: 항상 최신 localStatus 사용하고, 텍스트 변경 여부와 관계없이 저장
+                          // 핵심 수정: 
+                          // 1. React useState의 비동기 특성으로 인해 직접 editedValue 사용
+                          // 2. 항상 최신 localStatus 사용하고, 텍스트 변경 여부와 관계없이 저장
+                          // 3. 원본이 MT/100%/Fuzzy인 경우 origin을 HT로 변경
                           onUpdate?.(editedValue, localStatus, newOrigin);
                           
                           console.log("닫기 버튼으로 저장:", {
