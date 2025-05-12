@@ -61,6 +61,8 @@ export function useSegments(fileId: number) {
   const debouncedUpdateSegment = useCallback((
     segmentData: Partial<TranslationUnit> & { id: number }
   ): void => {
+    const { id, ...rest } = segmentData;
+    
     // 낙관적 UI 업데이트를 위해 현재 캐시된 데이터 수동 업데이트
     // React Query의 setQueryData를 사용하여 캐시 업데이트
     queryClient.setQueryData(
@@ -69,15 +71,15 @@ export function useSegments(fileId: number) {
         if (!oldData) return [];
         
         return oldData.map(segment => 
-          segment.id === segmentId 
-            ? { ...segment, ...newData } 
+          segment.id === id 
+            ? { ...segment, ...rest } 
             : segment
         );
       }
     );
     
     // 디바운스된 API 호출
-    debouncedUpdateSegmentFn(segmentId, newData);
+    debouncedUpdateSegmentFn(id, rest);
   }, [fileId, debouncedUpdateSegmentFn]);
 
   return {

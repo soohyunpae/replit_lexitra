@@ -671,8 +671,8 @@ export function NewTranslationEditor({
   };
 
   // Count by origin
-  const originCounts = localSegments.reduce(
-    (acc, segment) => {
+  const originCounts = segments?.reduce(
+    (acc: Record<string, number>, segment: TranslationUnit) => {
       if (segment.origin) {
         acc[segment.origin] = (acc[segment.origin] || 0) + 1;
       }
@@ -692,21 +692,21 @@ export function NewTranslationEditor({
               <div
                 className="h-full bg-green-500"
                 style={{
-                  width: `${((statusCounts["Reviewed"] || 0) / localSegments.length) * 100}%`,
+                  width: `${((statusCounts["Reviewed"] || 0) / (segments?.length || 1)) * 100}%`,
                 }}
               />
               {/* In Progress segments (MT, 100%, Fuzzy, Edited) - (blue) */}
               <div
                 className="h-full bg-blue-500"
                 style={{
-                  width: `${(((statusCounts["MT"] || 0) + (statusCounts["100%"] || 0) + (statusCounts["Fuzzy"] || 0) + (statusCounts["Edited"] || 0)) / localSegments.length) * 100}%`,
+                  width: `${(((statusCounts["MT"] || 0) + (statusCounts["100%"] || 0) + (statusCounts["Fuzzy"] || 0) + (statusCounts["Edited"] || 0)) / (segments?.length || 1)) * 100}%`,
                 }}
               />
               {/* Rejected segments (red) */}
               <div
                 className="h-full bg-red-500"
                 style={{
-                  width: `${((statusCounts["Rejected"] || 0) / localSegments.length) * 100}%`,
+                  width: `${((statusCounts["Rejected"] || 0) / (segments?.length || 1)) * 100}%`,
                 }}
               />
             </div>
