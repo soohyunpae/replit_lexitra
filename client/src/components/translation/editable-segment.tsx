@@ -61,31 +61,41 @@ export function EditableSegment(props: EditableSegmentProps) {
     }
   }, [isSelected, isSource]);
 
-  // 세그먼트 데이터나 텍스트 값 변경시 레이아웃 처리 이후 높이 동기화 (수정된 로직)
+  // 세그먼트 데이터나 텍스트 값 변경시 레이아웃 처리 이후 높이 동기화
   useLayoutEffect(() => {
-    requestAnimationFrame(() => {
+    const adjustHeight = () => {
       const sourceEl = sourceContainerRef.current;
       const textareaEl = textareaRef.current;
       const targetEl = targetContainerRef.current;
       if (!sourceEl || !textareaEl || !targetEl) return;
 
-      // Reset heights
+      // Reset heights to get natural height
       textareaEl.style.height = "auto";
       sourceEl.style.height = "auto";
       targetEl.style.height = "auto";
 
+      // Get scroll heights (actual content height)
       const sourceHeight = sourceEl.scrollHeight;
       const textHeight = textareaEl.scrollHeight;
+      
+      // Use the larger height for both containers
+      const maxHeight = Math.max(sourceHeight, textHeight);
+      
+      // Set both containers and textarea to the same height
+      sourceEl.style.height = `${maxHeight}px`;
+      targetEl.style.height = `${maxHeight}px`;
+      textareaEl.style.height = `${maxHeight}px`;
+    };
 
-      // Expand only the shorter one
-      if (sourceHeight > textHeight) {
-        textareaEl.style.height = `${sourceHeight}px`;
-        targetEl.style.height = `${sourceHeight}px`;
-      } else {
-        sourceEl.style.height = `${textHeight}px`;
-        targetEl.style.height = `${textHeight}px`;
-      }
-    });
+    // Initial adjustment
+    adjustHeight();
+
+    // Add resize observer to handle dynamic content changes
+    const resizeObserver = new ResizeObserver(adjustHeight);
+    if (sourceContainerRef.current) resizeObserver.observe(sourceContainerRef.current);
+    if (targetContainerRef.current) resizeObserver.observe(targetContainerRef.current);
+
+    return () => resizeObserver.disconnect();
   }, [value, segment.source]);
 
   // 창 크기 변경시 높이 동기화
@@ -246,11 +256,11 @@ export function EditableSegment(props: EditableSegmentProps) {
               ref={textareaRef}
               value={value}
               onChange={handleTextareaChange}
-              className="no-scrollbar flex-1 resize-none bg-transparent pb-[28px] pt-[2px] text-sm leading-relaxed shadow-none outline-none font-mono w-full h-full border-none focus-visible:ring-0 focus:ring-0"
+              className="flex-1 resize-none bg-transparent pb-[28px] pt-[2px] text-sm leading-relaxed shadow-none outline-none font-mono w-full border-none focus-visible:ring-0 focus:ring-0"
               style={{
                 lineHeight: "1.6",
-                overflow: "auto",
-                height: "auto",
+                overflow: "visible",
+                height: "100%",
                 boxShadow: "none",
                 outline: "none",
                 transition: "none",
