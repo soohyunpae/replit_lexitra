@@ -240,7 +240,7 @@ export function EditableSegment(props: EditableSegmentProps) {
           {/* 번역문 입력 영역 */}
           <div
             ref={targetContainerRef}
-            className="relative flex min-h-[120px] flex-1 items-stretch bg-transparent"
+            className="relative flex flex-1 items-stretch bg-transparent"
           >
             <Textarea
               ref={textareaRef}
@@ -298,7 +298,7 @@ export function EditableSegment(props: EditableSegmentProps) {
           {/* 원문 텍스트 표시 영역 */}
           <div
             ref={sourceContainerRef}
-            className="relative flex min-h-[120px] flex-1 items-stretch bg-transparent"
+            className="relative flex flex-1 items-stretch bg-transparent"
           >
             <Textarea
               value={liveSegment.source || ""}
