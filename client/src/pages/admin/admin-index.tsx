@@ -13,58 +13,62 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Suspense } from "react";
-import {
-  Database,
-  AlignLeft,
-  FileText,
-  Upload,
-  FileHeart,
+  Settings,
+  Key,
+  Globe,
+  Users,
   Lock,
   Loader2,
-  FileType,
-  FilePlus2,
-  FileOutput,
-  Settings,
+  Moon,
+  Sun,
+  UserCog,
+  Shield,
+  Edit,
+  User,
+  UserPlus,
 } from "lucide-react";
-
-interface AdminLink {
-  name: string;
-  path: string;
-  icon: React.ReactNode;
-  disabled?: boolean;
-}
-
-interface AdminModule {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  links: AdminLink[];
-}
 
 export default function AdminDashboard() {
   const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
-  const [activeTab, setActiveTab] = useState("translation-memory");
+  const [activeTab, setActiveTab] = useState("api-keys");
   const { setActiveSubSection } = useContext(SidebarContext);
   
+  // API Key states
+  const [apiKey, setApiKey] = useState<string>("");
+  const [apiKeyVisible, setApiKeyVisible] = useState<boolean>(false);
+  
+  // Language preferences states
+  const [defaultSourceLang, setDefaultSourceLang] = useState<string>("KO");
+  const [defaultTargetLang, setDefaultTargetLang] = useState<string>("EN");
+  
+  // User management states
+  const [users, setUsers] = useState([
+    { id: 1, username: "admin", role: "admin" },
+    { id: 2, username: "translator1", role: "user" },
+    { id: 3, username: "reviewer1", role: "user" },
+  ]);
+  
   // 활성 탭 변경 시 SidebarContext 업데이트
-  const [activeTabLabel, setActiveTabLabel] = useState<string>("TM Management");
+  const [activeTabLabel, setActiveTabLabel] = useState<string>("API Keys");
   
   // 탭 변경 핸들러
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     // 선택된 탭에 따라 적절한 라벨 설정
-    if (value === "translation-memory") {
-      setActiveTabLabel("TM Management");
-    } else if (value === "file-preprocessing") {
-      setActiveTabLabel("File Processing");
+    if (value === "api-keys") {
+      setActiveTabLabel("API Keys");
+    } else if (value === "language") {
+      setActiveTabLabel("Language Settings");
+    } else if (value === "user-management") {
+      setActiveTabLabel("User Management");
     }
   };
   
@@ -72,6 +76,26 @@ export default function AdminDashboard() {
   useEffect(() => {
     setActiveSubSection(activeTabLabel);
   }, [activeTabLabel, setActiveSubSection]);
+
+  // Handle API key save
+  const handleSaveApiKey = () => {
+    // In a real app, you would save this to a secure storage
+    console.log("Saving API key:", apiKey);
+    alert("API key saved successfully!");
+  };
+
+  // Handle language preferences save
+  const handleSaveLanguagePreferences = () => {
+    console.log("Saving language preferences:", { defaultSourceLang, defaultTargetLang });
+    alert("Language preferences saved successfully!");
+  };
+
+  // Handle role change
+  const handleRoleChange = (userId: number, newRole: string) => {
+    setUsers(users.map(user => 
+      user.id === userId ? { ...user, role: newRole } : user
+    ));
+  };
 
   // Show loading state
   if (isLoading) {
@@ -112,61 +136,6 @@ export default function AdminDashboard() {
     );
   }
 
-  // Import components for embedded mode
-  const TMUpload = React.lazy(() => import("./tm/upload"));
-  const TMAlignment = React.lazy(() => import("./tm/alignment"));
-  const TMCleanup = React.lazy(() => import("./tm/cleanup"));
-  const PDFProcessing = React.lazy(() => import("./file/pdf"));
-  const FileConversion = React.lazy(() => import("./file/conversion"));
-
-  // Define the module/category structure
-  const adminModules: AdminModule[] = [
-    {
-      title: "TM Management",
-      description: "Manage TM assets, align files, clean duplicates",
-      icon: <Database className="h-6 w-6" />,
-      links: [
-        {
-          name: "TM Upload",
-          path: "tm-upload",
-          icon: <Upload className="h-4 w-4" />,
-        },
-        {
-          name: "Bilingual Alignment",
-          path: "tm-alignment",
-          icon: <AlignLeft className="h-4 w-4" />,
-        },
-        {
-          name: "TM Cleanup",
-          path: "tm-cleanup",
-          icon: <FileHeart className="h-4 w-4" />,
-        },
-      ],
-    },
-    {
-      title: "File Processing",
-      description:
-        "Convert or prepare files (PDFs, DOCX, etc.) before translation",
-      icon: <FileText className="h-6 w-6" />,
-      links: [
-        {
-          name: "PDF Processing",
-          path: "pdf-processing",
-          icon: <FileType className="h-4 w-4" />,
-        },
-        {
-          name: "File Format Conversion",
-          path: "file-conversion",
-          icon: <FileOutput className="h-4 w-4" />,
-        },
-      ],
-    },
-  ];
-
-  // State for accordion sections
-  const [tmActiveSection, setTmActiveSection] = useState<string>("");
-  const [fileActiveSection, setFileActiveSection] = useState<string>("");
-
   return (
     <MainLayout title="Admin Tools">
       <div className="container max-w-screen-xl mx-auto p-6">
@@ -175,7 +144,7 @@ export default function AdminDashboard() {
           <h2 className="text-3xl font-bold tracking-tight">Admin Tools</h2>
         </div>
         <p className="text-muted-foreground mb-6">
-          Manage TMs and preprocess files
+          Manage system settings and user permissions
         </p>
 
         <Tabs
@@ -183,191 +152,246 @@ export default function AdminDashboard() {
           onValueChange={handleTabChange}
           className="space-y-6"
         >
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger
-              value="translation-memory"
+              value="api-keys"
               className="flex items-center gap-2"
             >
-              <Database className="h-4 w-4" />
-              <span>TM Management</span>
+              <Key className="h-4 w-4" />
+              <span>API Keys</span>
             </TabsTrigger>
             <TabsTrigger
-              value="file-preprocessing"
+              value="language"
               className="flex items-center gap-2"
             >
-              <FileText className="h-4 w-4" />
-              <span>File Processing</span>
+              <Globe className="h-4 w-4" />
+              <span>Language</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="user-management"
+              className="flex items-center gap-2"
+            >
+              <Users className="h-4 w-4" />
+              <span>User Management</span>
             </TabsTrigger>
           </TabsList>
 
-          {/* Translation Memory Tab Content */}
-          <TabsContent value="translation-memory" className="space-y-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                {adminModules[0].icon}
-                <h3 className="text-lg font-medium">{adminModules[0].title}</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {adminModules[0].description}
-              </p>
-            </div>
-
-            <Accordion
-              type="single"
-              collapsible
-              className="w-full"
-              value={tmActiveSection}
-              onValueChange={setTmActiveSection}
-            >
-              {/* TM Upload */}
-              <AccordionItem
-                value="tm-upload"
-                className="border rounded-md mb-4 px-4"
-              >
-                <AccordionTrigger className="py-4">
-                  <div className="flex items-center gap-2">
-                    <Upload className="h-5 w-5" />
-                    <span className="text-lg font-medium">TM Upload</span>
+          {/* API Keys Tab Content */}
+          <TabsContent value="api-keys" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Key className="h-5 w-5 mr-2" />
+                  API Keys
+                </CardTitle>
+                <CardDescription>
+                  Manage API keys for external services like OpenAI.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-medium">OpenAI API Key</h3>
+                    <p className="text-sm text-muted-foreground">
+                      OpenAI API key is used for GPT-powered translations.
+                      <a href="https://platform.openai.com/api-keys" target="_blank" className="text-primary underline ml-1">
+                        Get your API key
+                      </a>
+                    </p>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-2 pb-6">
-                  <Suspense
-                    fallback={
-                      <div className="flex justify-center py-8">
-                        <Loader2 className="h-8 w-8 animate-spin" />
-                      </div>
-                    }
-                  >
-                    <TMUpload embedded={true} />
-                  </Suspense>
-                </AccordionContent>
-              </AccordionItem>
-
-              {/* Bilingual Alignment */}
-              <AccordionItem
-                value="tm-alignment"
-                className="border rounded-md mb-4 px-4"
-              >
-                <AccordionTrigger className="py-4">
-                  <div className="flex items-center gap-2">
-                    <AlignLeft className="h-5 w-5" />
-                    <span className="text-lg font-medium">
-                      Bilingual Alignment
-                    </span>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="openai-api-key">OpenAI API Key</Label>
+                    <div className="flex">
+                      <Input
+                        id="openai-api-key"
+                        type={apiKeyVisible ? "text" : "password"}
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        placeholder="sk-..."
+                        className="flex-grow"
+                      />
+                      <Button 
+                        variant="outline" 
+                        className="ml-2" 
+                        onClick={() => setApiKeyVisible(!apiKeyVisible)}
+                      >
+                        {apiKeyVisible ? "Hide" : "Show"}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      API keys are stored securely and never shared with anyone.
+                    </p>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-2 pb-6">
-                  <Suspense
-                    fallback={
-                      <div className="flex justify-center py-8">
-                        <Loader2 className="h-8 w-8 animate-spin" />
-                      </div>
-                    }
-                  >
-                    <TMAlignment embedded={true} />
-                  </Suspense>
-                </AccordionContent>
-              </AccordionItem>
-
-              {/* TM Cleanup */}
-              <AccordionItem
-                value="tm-cleanup"
-                className="border rounded-md mb-4 px-4"
-              >
-                <AccordionTrigger className="py-4">
-                  <div className="flex items-center gap-2">
-                    <FileHeart className="h-5 w-5" />
-                    <span className="text-lg font-medium">TM Cleanup</span>
+                  
+                  <div className="flex justify-end">
+                    <Button onClick={handleSaveApiKey}>Save API Key</Button>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-2 pb-6">
-                  <Suspense
-                    fallback={
-                      <div className="flex justify-center py-8">
-                        <Loader2 className="h-8 w-8 animate-spin" />
-                      </div>
-                    }
-                  >
-                    <TMCleanup embedded={true} />
-                  </Suspense>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
-          {/* File Processing Tab Content */}
-          <TabsContent value="file-preprocessing" className="space-y-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                {adminModules[1].icon}
-                <h3 className="text-lg font-medium">{adminModules[1].title}</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {adminModules[1].description}
-              </p>
-            </div>
-
-            <Accordion
-              type="single"
-              collapsible
-              className="w-full"
-              value={fileActiveSection}
-              onValueChange={setFileActiveSection}
-            >
-              {/* PDF Processing */}
-              <AccordionItem
-                value="pdf-processing"
-                className="border rounded-md mb-4 px-4"
-              >
-                <AccordionTrigger className="py-4">
-                  <div className="flex items-center gap-2">
-                    <FileType className="h-5 w-5" />
-                    <span className="text-lg font-medium">PDF Processing</span>
+          {/* Language Settings Tab Content */}
+          <TabsContent value="language" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Globe className="h-5 w-5 mr-2" />
+                  Language Settings
+                </CardTitle>
+                <CardDescription>
+                  Set default language preferences for translation projects.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-medium">Default Languages</h3>
+                    <p className="text-sm text-muted-foreground">
+                      These will be pre-selected when creating new translation projects.
+                    </p>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-2 pb-6">
-                  <Suspense
-                    fallback={
-                      <div className="flex justify-center py-8">
-                        <Loader2 className="h-8 w-8 animate-spin" />
-                      </div>
-                    }
-                  >
-                    <PDFProcessing embedded={true} />
-                  </Suspense>
-                </AccordionContent>
-              </AccordionItem>
-
-              {/* File Format Conversion */}
-              <AccordionItem
-                value="file-conversion"
-                className="border rounded-md mb-4 px-4"
-              >
-                <AccordionTrigger className="py-4">
-                  <div className="flex items-center gap-2">
-                    <FileOutput className="h-5 w-5" />
-                    <span className="text-lg font-medium">
-                      File Format Conversion
-                    </span>
+                  
+                  <Separator />
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="default-source-language">Default Source Language</Label>
+                      <Select 
+                        value={defaultSourceLang} 
+                        onValueChange={setDefaultSourceLang}
+                      >
+                        <SelectTrigger id="default-source-language">
+                          <SelectValue placeholder="Select source language" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="KO">Korean (KO)</SelectItem>
+                          <SelectItem value="JA">Japanese (JA)</SelectItem>
+                          <SelectItem value="EN">English (EN)</SelectItem>
+                          <SelectItem value="ZH">Chinese (ZH)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="default-target-language">Default Target Language</Label>
+                      <Select 
+                        value={defaultTargetLang} 
+                        onValueChange={setDefaultTargetLang}
+                      >
+                        <SelectTrigger id="default-target-language">
+                          <SelectValue placeholder="Select target language" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="EN">English (EN)</SelectItem>
+                          <SelectItem value="KO">Korean (KO)</SelectItem>
+                          <SelectItem value="JA">Japanese (JA)</SelectItem>
+                          <SelectItem value="ZH">Chinese (ZH)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-2 pb-6">
-                  <Suspense
-                    fallback={
-                      <div className="flex justify-center py-8">
-                        <Loader2 className="h-8 w-8 animate-spin" />
-                      </div>
-                    }
+                  
+                  <Separator />
+                  
+                  <div className="flex justify-end">
+                    <Button onClick={handleSaveLanguagePreferences}>Save Preferences</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* User Management Tab Content */}
+          <TabsContent value="user-management" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <UserCog className="h-5 w-5 mr-2" />
+                  User Management
+                </CardTitle>
+                <CardDescription>
+                  Manage user roles and permissions.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-medium">Users</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Manage user access to different features.
+                    </p>
+                  </div>
+                  <Button 
+                    className="flex items-center gap-2"
+                    onClick={() => {
+                      /* Add user functionality can be implemented here */
+                      alert("Add user functionality not implemented yet");
+                    }}
                   >
-                    <FileConversion embedded={true} />
-                  </Suspense>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                    <UserPlus className="h-4 w-4" />
+                    Add User
+                  </Button>
+                </div>
+                
+                <Separator />
+                
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Username</TableHead>
+                        <TableHead>Current Role</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            {user.username}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Shield className={`h-4 w-4 ${user.role === 'admin' ? 'text-primary' : 'text-muted-foreground'}`} />
+                              {user.role === 'admin' ? 'Administrator' : 'User'}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Select 
+                              value={user.role} 
+                              onValueChange={(value) => handleRoleChange(user.id, value)}
+                              disabled={user.username === 'admin'} // Don't allow changing the main admin
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue placeholder="Select role" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="admin">Administrator</SelectItem>
+                                <SelectItem value="user">User</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                
+                <p className="text-xs text-muted-foreground mt-4">
+                  <strong>Administrator:</strong> Can manage all settings, users, TMs, and glossaries.<br />
+                  <strong>User:</strong> Can work on translation projects but has limited administrative access.
+                </p>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <div className="text-sm text-muted-foreground mt-6 pt-4 border-t">
-            Access additional tools and features from the sidebar menu
+            These settings affect the entire application and all users
           </div>
         </Tabs>
       </div>
