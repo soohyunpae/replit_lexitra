@@ -1306,19 +1306,16 @@ export default function ProjectsPage() {
                               projectStats[project.id]?.translatedPercentage ||
                               0
                             }
+                            statusCounts={projectStats[project.id]?.statusCounts}
+                            totalSegments={projectStats[project.id]?.totalSegments}
                             height="h-2"
+                            showPercentage={false}
                           />
                         </div>
-                        <div className="text-xs text-muted-foreground flex items-center justify-between mt-2">
-                          <span>
-                            Translated:{" "}
-                            {projectStats[project.id]?.translatedPercentage ||
-                              0}
-                            %
-                          </span>
-                          <span>
-                            Reviewed:{" "}
-                            {projectStats[project.id]?.reviewedPercentage || 0}%
+                        <div className="text-xs text-muted-foreground mt-2">
+                          <span className="inline-flex items-center gap-1">
+                            <div className="w-2 h-2 rounded-full bg-blue-300"></div>
+                            세그먼트: {projectStats[project.id]?.totalSegments || 0}개
                           </span>
                         </div>
                       </CardContent>
@@ -1518,13 +1515,9 @@ export default function ProjectsPage() {
                               statusCounts={stats.statusCounts}
                               totalSegments={stats.totalSegments}
                               height="h-2.5"
+                              showPercentage={true}
                             />
-                            <div className="text-xs text-muted-foreground flex items-center justify-between">
-                              <span>
-                                Translated: {stats.translatedPercentage}%
-                              </span>
-                              <span>Reviewed: {stats.reviewedPercentage}%</span>
-                            </div>
+
                           </div>
                         </TableCell>
                         <TableCell>

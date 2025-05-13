@@ -52,9 +52,15 @@ export function CombinedProgress({
         </ProgressPrimitive.Root>
         
         {showPercentage && (
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Translated: {translatedPercentage}%</span>
-            <span>Reviewed: {reviewedPercentage}%</span>
+          <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground my-1">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-green-300"></div>
+              <span>Rev: {reviewedPercentage}%</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-yellow-300"></div>
+              <span>Trans: {translatedPercentage}%</span>
+            </div>
           </div>
         )}
       </div>
@@ -107,9 +113,31 @@ export function CombinedProgress({
       </ProgressPrimitive.Root>
       
       {showPercentage && (
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Translated: {translatedPercentage}%</span>
-          <span>Reviewed: {reviewedPercentage}%</span>
+        <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground my-1">
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-green-300"></div>
+            <span>Rev: {statusCounts.Reviewed || 0}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-blue-300"></div>
+            <span>100%: {statusCounts["100%"] || 0}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-yellow-300"></div>
+            <span>Fuzzy: {statusCounts.Fuzzy || 0}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+            <span>MT: {statusCounts.MT || 0}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-purple-300"></div>
+            <span>Edit: {statusCounts.Edited || 0}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-red-300"></div>
+            <span>Rej: {statusCounts.Rejected || 0}</span>
+          </div>
         </div>
       )}
     </div>
