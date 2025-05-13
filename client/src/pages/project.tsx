@@ -319,6 +319,8 @@ export default function Project() {
       Fuzzy: 0,
       "100%": 0,
       Reviewed: 0,
+      Edited: 0,
+      Rejected: 0,
     };
 
     allSegments.forEach((segment) => {
@@ -348,6 +350,65 @@ export default function Project() {
       glossaryMatchCount,
     };
   }, [allSegmentsData, glossaryTerms]);
+
+  // 세그먼트 상태 타입 정의
+  type SegmentStatus = 'Reviewed' | '100%' | 'Fuzzy' | 'MT' | 'Edited' | 'Rejected';
+  
+  // 파일별 상태 카운트 타입 정의
+  type FileStatusCounts = {
+    [fileId: number]: {
+      Reviewed: number;
+      '100%': number;
+      Fuzzy: number;
+      MT: number;
+      Edited: number;
+      Rejected: number;
+      total: number;
+    };
+  };
+
+  // 파일별 세그먼트 상태 카운트 계산 함수
+  const fileSegmentStatusCounts = useMemo<FileStatusCounts>(() => {
+    if (!allSegmentsData || !project?.files) return {} as FileStatusCounts;
+
+    const counts: FileStatusCounts = {};
+
+    project.files.forEach((file: any) => {
+      const segments = allSegmentsData[file.id] || [];
+      
+      counts[file.id] = {
+        Reviewed: 0,
+        '100%': 0,
+        Fuzzy: 0,
+        MT: 0,
+        Edited: 0,
+        Rejected: 0,
+        total: segments.length
+      };
+      
+      segments.forEach(segment => {
+        // 상태가 없으면 기본값으로 MT 사용
+        const status = segment.status || 'MT';
+        
+        // 유효한 상태인지 확인
+        if (status in counts[file.id] && status !== 'total') {
+          counts[file.id][status as SegmentStatus]++;
+        }
+      });
+    });
+
+    return counts;
+  }, [allSegmentsData, project?.files]);
+
+  // 파일별 상태 퍼센트 계산 함수
+  const getStatusPercentage = (fileId: number, status: SegmentStatus): number => {
+    if (!fileSegmentStatusCounts[fileId]) return 0;
+    
+    const counts = fileSegmentStatusCounts[fileId];
+    const total = counts.total || 1; // 0으로 나누기 방지
+    
+    return (counts[status] / total) * 100;
+  };
 
   // Calculate statistics for each file
   const fileStats = useMemo(() => {
@@ -885,6 +946,14 @@ export default function Project() {
                         <Progress
                           value={projectStats.completionPercentage}
                           className="h-2"
+                          style={{
+                            "--reviewed-percent": `${(projectStats.statusCounts.Reviewed / projectStats.totalSegments) * 100}%`,
+                            "--match-100-percent": `${(projectStats.statusCounts["100%"] / projectStats.totalSegments) * 100}%`,
+                            "--fuzzy-percent": `${(projectStats.statusCounts.Fuzzy / projectStats.totalSegments) * 100}%`,
+                            "--mt-percent": `${(projectStats.statusCounts.MT / projectStats.totalSegments) * 100}%`,
+                            "--edited-percent": "0%",
+                            "--rejected-percent": "0%",
+                          } as React.CSSProperties}
                         />
                       </div>
                     </div>
@@ -895,31 +964,45 @@ export default function Project() {
                       </div>
                       <div>
                         <div className="flex items-center gap-1 mb-1">
-                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                          <div className="w-2 h-2 rounded-full bg-green-300"></div>
+                          <span>Reviewed:</span>
+                          <span className="font-medium ml-auto">
+                            {projectStats.statusCounts["Reviewed"]}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 mb-1">
+                          <div className="w-2 h-2 rounded-full bg-blue-300"></div>
                           <span>100% Match:</span>
                           <span className="font-medium ml-auto">
                             {projectStats.statusCounts["100%"]}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 mb-1">
-                          <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                          <div className="w-2 h-2 rounded-full bg-yellow-300"></div>
                           <span>Fuzzy Match:</span>
                           <span className="font-medium ml-auto">
                             {projectStats.statusCounts["Fuzzy"]}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 mb-1">
-                          <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                          <div className="w-2 h-2 rounded-full bg-gray-300"></div>
                           <span>MT:</span>
                           <span className="font-medium ml-auto">
                             {projectStats.statusCounts["MT"]}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                          <span>Reviewed:</span>
+                        <div className="flex items-center gap-1 mb-1">
+                          <div className="w-2 h-2 rounded-full bg-purple-300"></div>
+                          <span>Edited:</span>
                           <span className="font-medium ml-auto">
-                            {projectStats.statusCounts["Reviewed"]}
+                            0
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-red-300"></div>
+                          <span>Rejected:</span>
+                          <span className="font-medium ml-auto">
+                            0
                           </span>
                         </div>
                       </div>
@@ -1251,6 +1334,14 @@ export default function Project() {
                               <Progress
                                 value={stats.percentage}
                                 className="h-2 flex-1"
+                                style={{
+                                  "--reviewed-percent": `${getStatusPercentage(file.id, 'Reviewed')}%`,
+                                  "--match-100-percent": `${getStatusPercentage(file.id, '100%')}%`,
+                                  "--fuzzy-percent": `${getStatusPercentage(file.id, 'Fuzzy')}%`,
+                                  "--mt-percent": `${getStatusPercentage(file.id, 'MT')}%`,
+                                  "--edited-percent": `${getStatusPercentage(file.id, 'Edited')}%`,
+                                  "--rejected-percent": `${getStatusPercentage(file.id, 'Rejected')}%`,
+                                } as React.CSSProperties}
                               />
                               <span className="text-xs text-muted-foreground whitespace-nowrap">
                                 {stats.completed}/{stats.total} (
