@@ -693,42 +693,42 @@ export function NewTranslationEditor({
             <div className="h-2.5 rounded-full bg-secondary overflow-hidden flex">
               {/* Reviewed segments (green) */}
               <div
-                className="h-full bg-green-500"
+                className="h-full bg-green-300"
                 style={{
                   width: `${((statusCounts["Reviewed"] || 0) / (segments?.length || 1)) * 100}%`,
                 }}
               />
               {/* 100% segments (blue) */}
               <div
-                className="h-full bg-blue-500"
+                className="h-full bg-blue-300"
                 style={{
                   width: `${((statusCounts["100%"] || 0) / (segments?.length || 1)) * 100}%`,
                 }}
               />
               {/* Fuzzy segments (yellow) */}
               <div
-                className="h-full bg-yellow-500"
+                className="h-full bg-yellow-300"
                 style={{
                   width: `${((statusCounts["Fuzzy"] || 0) / (segments?.length || 1)) * 100}%`,
                 }}
               />
               {/* MT segments (gray) */}
               <div
-                className="h-full bg-gray-500"
+                className="h-full bg-gray-300"
                 style={{
                   width: `${((statusCounts["MT"] || 0) / (segments?.length || 1)) * 100}%`,
                 }}
               />
               {/* Edited segments (purple) */}
               <div
-                className="h-full bg-purple-500"
+                className="h-full bg-purple-300"
                 style={{
                   width: `${((statusCounts["Edited"] || 0) / (segments?.length || 1)) * 100}%`,
                 }}
               />
               {/* Rejected segments (red) */}
               <div
-                className="h-full bg-red-500"
+                className="h-full bg-red-300"
                 style={{
                   width: `${((statusCounts["Rejected"] || 0) / (segments?.length || 1)) * 100}%`,
                 }}
