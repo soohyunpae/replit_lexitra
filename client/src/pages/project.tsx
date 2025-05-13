@@ -977,7 +977,7 @@ export default function Project() {
                             <span>Word Count:</span>
                           </div>
                           <div className="font-medium">
-                            {calculateTotalWordCount()} words
+                            {project.wordCount || calculateTotalWordCount()} words
                           </div>
                         </div>
                         <Progress
@@ -1393,7 +1393,7 @@ export default function Project() {
                             </div>
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                               <TextCursorInput className="h-3.5 w-3.5" />
-                              <span>{getFileWordCount(file.id)} words</span>
+                              <span>{(file as any).wordCount || getFileWordCount(file.id)} words</span>
                             </div>
                           </div>
 
