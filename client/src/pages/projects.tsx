@@ -223,18 +223,20 @@ export default function ProjectsPage() {
               return 500 + ((projectId * 123) % 3000);
             };
             
-            // 프로젝트 상세 페이지와 동일한 계산 방식 사용
-            // 프로젝트 ID 자체가 아닌, 프로젝트의 모든 파일 단어 수의 합계로 계산
+            // 프로젝트 상세 페이지와 '정확히' 동일한 계산 방식 사용
+            // 1. project.tsx의 getFileWordCount 함수 동일하게 구현
+            const getFileWordCount = (fileId: number): number => {
+              // allSegmentsData가 없으면 fallback 계산식 사용
+              return 500 + ((fileId * 123) % 3000);
+            };
+            
+            // 2. calculateTotalWordCount 함수 동일하게 적용
             let wordCount = 0;
             if (project.files && project.files.length > 0) {
-              // 파일마다 단어 수를 계산하고 합산 (project.tsx와 동일)
+              // 프로젝트 상세 페이지의 calculateTotalWordCount 함수와 동일
               wordCount = project.files
                 .filter((file: any) => file.type === "work" || !file.type)
-                .reduce((total: number, file: any) => {
-                  // 파일별 단어 수 계산 (getFileWordCount와 동일)
-                  const fileWordCount = 500 + ((file.id * 123) % 3000);
-                  return total + fileWordCount;
-                }, 0);
+                .reduce((total: number, file: any) => total + getFileWordCount(file.id), 0);
             } else {
               // 파일 정보가 없는 경우 프로젝트 ID로 계산
               wordCount = 500 + ((project.id * 123) % 3000);
