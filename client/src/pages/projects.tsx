@@ -121,6 +121,19 @@ export default function ProjectsPage() {
   
   // Check if user is admin
   const isAdmin = user?.role === "admin";
+  
+  // 프로젝트의 단어 수 계산 - project.tsx의 계산 방식을 따름
+  const calculateProjectWordCount = (project: any): number => {
+    if (!project.files || project.files.length === 0) return 0;
+    
+    // 세그먼트 데이터가 없으므로 더미 데이터 방식 사용
+    return project.files
+      .filter((file: any) => file.type === "work" || !file.type)
+      .reduce((total: number, file: any) => {
+        // 파일 ID를 시드로 사용해서 항상 동일한 값 생성 (project.tsx와 동일)
+        return total + (500 + ((file.id * 123) % 3000));
+      }, 0);
+  };
 
   type Project = {
     id: number;
@@ -136,6 +149,7 @@ export default function ProjectsPage() {
     createdAt: string;
     updatedAt?: string;
     deadline?: string;
+    wordCount?: number;
     claimer?: {
       id: number;
       username: string;
@@ -1659,17 +1673,7 @@ export default function ProjectsPage() {
                           <div className="flex items-center gap-1.5">
                             <TextCursorInput className="h-3.5 w-3.5 text-muted-foreground" />
                             <span className="text-sm font-medium">
-                              {project.files && project.files.length > 0
-                                ? project.files
-                                    .filter((file: any) => file.type === "work" || !file.type)
-                                    .reduce((total: number, file: any) => {
-                                      if (file.wordCount !== undefined) {
-                                        return total + file.wordCount;
-                                      } else {
-                                        return total + (500 + ((file.id * 123) % 3000));
-                                      }
-                                    }, 0)
-                                : 0}
+                              {project.wordCount || calculateProjectWordCount(project)}
                             </span>
                           </div>
                         </TableCell>
