@@ -1647,7 +1647,7 @@ export default function ProjectsPage() {
                           <div className="flex items-center gap-1.5">
                             <TextCursorInput className="h-3.5 w-3.5 text-muted-foreground" />
                             <span className="text-sm font-medium">
-                              {stats.wordCount || 0}
+                              {getProjectWordCount(project)}
                             </span>
                           </div>
                         </TableCell>
