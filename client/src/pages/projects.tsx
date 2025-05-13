@@ -198,11 +198,17 @@ export default function ProjectsPage() {
             console.log(`Fetching stats for project ${project.id}...`);
             // 서버에 API 호출이 실패하는 경우를 위해 더미 데이터 생성
             // 이 데이터는 개발용으로만 사용하며, 실제 서버 응답이 성공하면 무시됨
+            // 클라이언트에서 계산하는 단어 수 계산 함수를 사용
+            const calculateWordCount = (projectId: number) => {
+              // ProjectId를 기반으로 일관된 값을 반환 (랜덤 대신)
+              return 500 + (projectId * 123) % 3000;
+            };
+            
             let dummyStats = {
               translatedPercentage: 0,
               reviewedPercentage: 0,
               totalSegments: 100, // 예시 값
-              wordCount: Math.floor(Math.random() * 5000) + 1000, // 랜덤 단어 수 (개발용)
+              wordCount: calculateWordCount(project.id), // 일관된 계산 방식
               statusCounts: {
                 "Reviewed": 0,
                 "100%": 0,
@@ -245,17 +251,30 @@ export default function ProjectsPage() {
             } else {
               // API 호출 실패 시 개발용 더미 데이터 사용
               console.warn(`Using dummy data for project ${project.id} for development`);
-              // Make sure dummyStats has a wordCount
+              // 단어 수가 없는 경우 계산된 값 사용
               if (!dummyStats.wordCount) {
-                dummyStats.wordCount = Math.floor(Math.random() * 5000) + 1000;
+                dummyStats.wordCount = 500 + (project.id * 123) % 3000;
               }
               stats[project.id] = dummyStats;
               return true; // 개발용 더미 데이터를 사용했으므로 성공으로 간주
             }
           } catch (error) {
             console.error(`Error fetching stats for project ${project.id}:`, error);
-            // Make sure defaultStats has a wordCount (for error cases)
-            const defStats = { ...defaultStats, wordCount: Math.floor(Math.random() * 3000) + 500 };
+            // 에러 케이스에서도 일관된 단어 수 계산 사용
+            const defStats = {
+              translatedPercentage: 0,
+              reviewedPercentage: 0,
+              totalSegments: 0,
+              wordCount: 500 + (project.id * 123) % 3000, // 일관된 계산 방식
+              statusCounts: {
+                "Reviewed": 0,
+                "100%": 0,
+                "Fuzzy": 0,
+                "MT": 0,
+                "Edited": 0,
+                "Rejected": 0
+              }
+            };
             stats[project.id] = defStats;
             return false;
           }
