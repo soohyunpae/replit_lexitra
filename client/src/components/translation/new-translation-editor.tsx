@@ -698,11 +698,32 @@ export function NewTranslationEditor({
                   width: `${((statusCounts["Reviewed"] || 0) / (segments?.length || 1)) * 100}%`,
                 }}
               />
-              {/* In Progress segments (MT, 100%, Fuzzy, Edited) - (blue) */}
+              {/* 100% segments (blue) */}
               <div
                 className="h-full bg-blue-500"
                 style={{
-                  width: `${(((statusCounts["MT"] || 0) + (statusCounts["100%"] || 0) + (statusCounts["Fuzzy"] || 0) + (statusCounts["Edited"] || 0)) / (segments?.length || 1)) * 100}%`,
+                  width: `${((statusCounts["100%"] || 0) / (segments?.length || 1)) * 100}%`,
+                }}
+              />
+              {/* Fuzzy segments (yellow) */}
+              <div
+                className="h-full bg-yellow-500"
+                style={{
+                  width: `${((statusCounts["Fuzzy"] || 0) / (segments?.length || 1)) * 100}%`,
+                }}
+              />
+              {/* MT segments (gray) */}
+              <div
+                className="h-full bg-gray-500"
+                style={{
+                  width: `${((statusCounts["MT"] || 0) / (segments?.length || 1)) * 100}%`,
+                }}
+              />
+              {/* Edited segments (purple) */}
+              <div
+                className="h-full bg-purple-500"
+                style={{
+                  width: `${((statusCounts["Edited"] || 0) / (segments?.length || 1)) * 100}%`,
                 }}
               />
               {/* Rejected segments (red) */}
