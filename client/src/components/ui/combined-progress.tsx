@@ -21,7 +21,7 @@ export function CombinedProgress({
   totalSegments,
   ...props 
 }: CombinedProgressProps) {
-  // 기존 방식 (단순히 리뷰됨, 번역됨만 표시)
+  // 기존 방식 (간소화 - Reviewed만 표시)
   if (!statusCounts || !totalSegments) {
     return (
       <div className="w-full space-y-1.5">
@@ -40,14 +40,7 @@ export function CombinedProgress({
               className="h-full bg-green-300" 
               style={{ width: `${reviewedPercentage}%` }} 
             />
-            
-            {/* Translated but not reviewed part (yellow) */}
-            <div 
-              className="h-full bg-yellow-300" 
-              style={{ 
-                width: `${Math.max(0, translatedPercentage - reviewedPercentage)}%` 
-              }} 
-            />
+            {/* 나머지는 표시하지 않음 (기본 배경색으로 표시) */}
           </div>
         </ProgressPrimitive.Root>
         
@@ -55,11 +48,7 @@ export function CombinedProgress({
           <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground my-1">
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-green-300"></div>
-              <span>Rev: {reviewedPercentage}%</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-yellow-300"></div>
-              <span>Trans: {translatedPercentage}%</span>
+              <span>Reviewed: {reviewedPercentage}%</span>
             </div>
           </div>
         )}
@@ -67,7 +56,11 @@ export function CombinedProgress({
     );
   }
   
-  // 새로운 방식 (6가지 상태 모두 표시)
+  // 새로운 방식 (Reviewed와 나머지로만 구분)
+  // Reviewed 수 계산
+  const reviewedCount = statusCounts.Reviewed || 0;
+  const reviewedPercentageNew = Math.round((reviewedCount / totalSegments) * 100);
+
   return (
     <div className="w-full space-y-1.5">
       <ProgressPrimitive.Root
@@ -82,33 +75,9 @@ export function CombinedProgress({
           {/* Reviewed segments (green) */}
           <div 
             className="h-full bg-green-300" 
-            style={{ width: `${(statusCounts.Reviewed || 0) / totalSegments * 100}%` }} 
+            style={{ width: `${reviewedPercentageNew}%` }} 
           />
-          {/* 100% segments (blue) */}
-          <div 
-            className="h-full bg-blue-300" 
-            style={{ width: `${(statusCounts["100%"] || 0) / totalSegments * 100}%` }} 
-          />
-          {/* Fuzzy segments (yellow) */}
-          <div 
-            className="h-full bg-yellow-300" 
-            style={{ width: `${(statusCounts.Fuzzy || 0) / totalSegments * 100}%` }} 
-          />
-          {/* MT segments (gray) */}
-          <div 
-            className="h-full bg-gray-300" 
-            style={{ width: `${(statusCounts.MT || 0) / totalSegments * 100}%` }} 
-          />
-          {/* Edited segments (purple) */}
-          <div 
-            className="h-full bg-purple-300" 
-            style={{ width: `${(statusCounts.Edited || 0) / totalSegments * 100}%` }} 
-          />
-          {/* Rejected segments (red) */}
-          <div 
-            className="h-full bg-red-300" 
-            style={{ width: `${(statusCounts.Rejected || 0) / totalSegments * 100}%` }} 
-          />
+          {/* 나머지는 표시하지 않음 (기본 배경색으로 표시) */}
         </div>
       </ProgressPrimitive.Root>
       
@@ -116,27 +85,7 @@ export function CombinedProgress({
         <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground my-1">
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-green-300"></div>
-            <span>Rev: {statusCounts.Reviewed || 0}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-blue-300"></div>
-            <span>100%: {statusCounts["100%"] || 0}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-yellow-300"></div>
-            <span>Fuzzy: {statusCounts.Fuzzy || 0}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-            <span>MT: {statusCounts.MT || 0}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-purple-300"></div>
-            <span>Edit: {statusCounts.Edited || 0}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-red-300"></div>
-            <span>Rej: {statusCounts.Rejected || 0}</span>
+            <span>Reviewed: {reviewedPercentageNew}%</span>
           </div>
         </div>
       )}
