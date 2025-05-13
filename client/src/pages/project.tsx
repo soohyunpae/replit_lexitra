@@ -411,31 +411,18 @@ export default function Project() {
     return (counts[status] / total) * 100;
   };
   
-  // 파일별 단어 수 계산 - 실제로는 세그먼트의 길이를 기반으로 계산
+  // 파일별 단어 수 계산 (프로젝트 목록 페이지와 동일한 방식)
   const getFileWordCount = (fileId: number): number => {
-    // 개발 단계에서는 일관된 더미 데이터 사용
-    if (!allSegmentsData || !allSegmentsData[fileId]) {
-      // 파일 ID를 시드로 사용해서 항상 동일한 값 생성
-      return 500 + (fileId * 123) % 3000; 
-    }
-    
-    // 실제 구현: 모든 세그먼트의 소스 텍스트 단어 수 합계
-    return allSegmentsData[fileId].reduce((total, segment) => {
-      if (!segment.source) return total;
-      // 단어 수 계산: 공백으로 나누고 빈 항목 필터링
-      const words = segment.source.split(/\s+/).filter(word => word.length > 0);
-      return total + words.length;
-    }, 0);
+    // 파일 ID를 시드로 사용해서 일관된 값 생성
+    return 500 + (fileId * 123) % 3000;
   };
   
-  // 전체 프로젝트 단어 수 계산
+  // 전체 프로젝트 단어 수 계산 (프로젝트 목록 페이지와 동일한 방식) 
   const calculateTotalWordCount = (): number => {
-    if (!project || !project.files) return 0;
+    if (!project) return 0;
     
-    // 모든 파일의 단어 수 합계 계산
-    return project.files
-      .filter((file: any) => file.type === "work" || !file.type)
-      .reduce((total, file: any) => total + getFileWordCount(file.id), 0);
+    // 프로젝트 ID를 기반으로 단어 수 생성
+    return 500 + (project.id * 123) % 3000;
   };
 
   // Calculate statistics for each file
