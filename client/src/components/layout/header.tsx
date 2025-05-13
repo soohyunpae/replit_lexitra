@@ -128,11 +128,7 @@ export function Header({
             )}
           </Button>
           
-          <Link href="/settings">
-            <Button variant="ghost" size="icon" aria-label="Settings" className="h-8 w-8">
-              <Settings className="h-4 w-4" />
-            </Button>
-          </Link>
+          {/* Settings 버튼 제거 */}
           
           {user ? (
             <DropdownMenu>

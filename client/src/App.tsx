@@ -22,7 +22,7 @@ import TMUnified from "@/pages/tm/unified";
 import AuthPage from "@/pages/auth-page";
 import ProfilePage from "@/pages/profile";
 import AuthDebugPage from "@/pages/auth-debug";
-import AdminDashboard from "@/pages/admin/admin-index";
+import AdminConsole from "@/pages/admin/admin-index";
 import TMUpload from "@/pages/admin/tm/upload";
 import TMAlignment from "@/pages/admin/tm/alignment";
 import TMCleanup from "@/pages/admin/tm/cleanup";
@@ -72,7 +72,7 @@ function Router() {
       
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <Route path="/admin">
-        <AdminRoute component={AdminDashboard} />
+        <AdminRoute component={AdminConsole} />
       </Route>
       <Route path="/admin/tm/upload">
         <AdminRoute component={TMUpload} />
