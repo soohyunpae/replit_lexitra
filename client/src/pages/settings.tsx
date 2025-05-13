@@ -11,23 +11,11 @@ import { Switch } from "@/components/ui/switch";
 import { Settings, Moon, Sun } from "lucide-react";
 
 export default function SettingsPage() {
-  // State for API key input
-  const [apiKey, setApiKey] = React.useState<string>("");
-  const [apiKeyVisible, setApiKeyVisible] = React.useState<boolean>(false);
+  // Get user information
+  const { user } = useAuth();
   
   // Get theme toggle functionality
   const { isDarkMode, toggleTheme } = useThemeToggle();
-  
-  // States for language preferences
-  const [defaultSourceLang, setDefaultSourceLang] = React.useState<string>("KO");
-  const [defaultTargetLang, setDefaultTargetLang] = React.useState<string>("EN");
-  
-  // Handle API key save
-  const handleSaveApiKey = () => {
-    // In a real app, you would save this to a secure storage
-    console.log("Saving API key:", apiKey);
-    alert("API key saved successfully!");
-  };
   
   return (
     <MainLayout title="Settings">
@@ -81,7 +69,7 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted-foreground">
                       API Keys and Language Settings have been moved to Admin Tools.
                       {user?.role === 'admin' ? (
-                        <Link href="/admin" className="text-primary ml-1 hover:underline">
+                        <Link to="/admin" className="text-primary ml-1 hover:underline">
                           Go to Admin Tools
                         </Link>
                       ) : null}
