@@ -1466,17 +1466,7 @@ export default function ProjectsPage() {
                           <div className="flex items-center mt-2 text-sm text-gray-600">
                             <TextCursorInput className="h-3.5 w-3.5 mr-1.5" />
                             <span>
-                              {project.files && project.files.length > 0
-                                ? project.files
-                                    .filter((file: any) => file.type === "work" || !file.type)
-                                    .reduce((total: number, file: any) => {
-                                      if (file.wordCount !== undefined) {
-                                        return total + file.wordCount;
-                                      } else {
-                                        return total + (500 + ((file.id * 123) % 3000));
-                                      }
-                                    }, 0)
-                                : 0} words
+                              {project.wordCount || calculateProjectWordCount(project)} words
                             </span>
                           </div>
                         </div>
