@@ -195,12 +195,12 @@ function StatusInfoPanel({
       case "Edited":
         return <PenLine className="h-4 w-4 text-purple-500" />;
       case "100%":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-blue-500" />;
       case "Fuzzy":
         return <Circle className="h-4 w-4 text-yellow-500" />;
       case "MT":
       default:
-        return <Bot className="h-4 w-4 text-blue-500" />;
+        return <Bot className="h-4 w-4 text-gray-500" />;
     }
   };
 
@@ -214,12 +214,12 @@ function StatusInfoPanel({
       case "Edited":
         return "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-900";
       case "100%":
-        return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-900";
+        return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900";
       case "Fuzzy":
         return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-900";
       case "MT":
       default:
-        return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900";
+        return "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-900";
     }
   };
 
