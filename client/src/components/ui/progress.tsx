@@ -28,8 +28,6 @@ const Progress = React.forwardRef<
       <div className="h-full bg-purple-300" style={{ width: 'var(--edited-percent, 0%)' }} />
       {/* Rejected segments (red) */}
       <div className="h-full bg-red-300" style={{ width: 'var(--rejected-percent, 0%)' }} />
-      {/* Remaining space (transparent) */}
-      <div className="h-full flex-grow bg-secondary" />
     </div>
   </ProgressPrimitive.Root>
 ))

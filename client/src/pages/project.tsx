@@ -947,12 +947,12 @@ export default function Project() {
                           value={projectStats.completionPercentage}
                           className="h-2"
                           style={{
-                            "--reviewed-percent": `${(projectStats.statusCounts.Reviewed / projectStats.totalSegments) * 100}%`,
-                            "--match-100-percent": `${(projectStats.statusCounts["100%"] / projectStats.totalSegments) * 100}%`,
-                            "--fuzzy-percent": `${(projectStats.statusCounts.Fuzzy / projectStats.totalSegments) * 100}%`,
-                            "--mt-percent": `${(projectStats.statusCounts.MT / projectStats.totalSegments) * 100}%`,
-                            "--edited-percent": "0%",
-                            "--rejected-percent": "0%",
+                            "--reviewed-percent": `${(projectStats.statusCounts.Reviewed || 0) / projectStats.totalSegments * 100}%`,
+                            "--match-100-percent": `${(projectStats.statusCounts["100%"] || 0) / projectStats.totalSegments * 100}%`,
+                            "--fuzzy-percent": `${(projectStats.statusCounts.Fuzzy || 0) / projectStats.totalSegments * 100}%`,
+                            "--mt-percent": `${(projectStats.statusCounts.MT || 0) / projectStats.totalSegments * 100}%`,
+                            "--edited-percent": `${(projectStats.statusCounts.Edited || 0) / projectStats.totalSegments * 100}%`,
+                            "--rejected-percent": `${(projectStats.statusCounts.Rejected || 0) / projectStats.totalSegments * 100}%`,
                           } as React.CSSProperties}
                         />
                       </div>
@@ -995,14 +995,14 @@ export default function Project() {
                           <div className="w-2 h-2 rounded-full bg-purple-300"></div>
                           <span>Edited:</span>
                           <span className="font-medium ml-auto">
-                            0
+                            {projectStats.statusCounts.Edited || 0}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
                           <div className="w-2 h-2 rounded-full bg-red-300"></div>
                           <span>Rejected:</span>
                           <span className="font-medium ml-auto">
-                            0
+                            {projectStats.statusCounts.Rejected || 0}
                           </span>
                         </div>
                       </div>
