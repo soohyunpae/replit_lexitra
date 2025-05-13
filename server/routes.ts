@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
 import * as schema from "@shared/schema";
-import { eq, and, or, desc, like, sql } from "drizzle-orm";
+import { eq, and, or, desc, like, sql, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { ZodError } from "zod";
@@ -1188,6 +1188,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       return res.json(project);
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // 프로젝트 진행 상황 통계 가져오기
+  app.get(`${apiPrefix}/projects/:id/stats`, verifyToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // 해당 프로젝트의 파일 목록 가져오기
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, id),
+        with: {
+          files: true
+        }
+      });
+      
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      // 프로젝트에 연결된 모든 파일의 ID 추출
+      const fileIds = project.files.map(file => file.id);
+      
+      if (fileIds.length === 0) {
+        return res.json({
+          totalSegments: 0,
+          translatedPercentage: 0,
+          reviewedPercentage: 0,
+          statusCounts: {
+            "Reviewed": 0,
+            "100%": 0,
+            "Fuzzy": 0,
+            "MT": 0,
+            "Edited": 0,
+            "Rejected": 0
+          } as Record<string, number>
+        });
+      }
+      
+      // 모든 파일의 번역 단위(세그먼트) 가져오기
+      const segments = await db.query.translationUnits.findMany({
+        where: inArray(schema.translationUnits.fileId, fileIds)
+      });
+      
+      const totalSegments = segments.length;
+      
+      if (totalSegments === 0) {
+        return res.json({
+          totalSegments: 0,
+          translatedPercentage: 0,
+          reviewedPercentage: 0,
+          statusCounts: {
+            "Reviewed": 0,
+            "100%": 0,
+            "Fuzzy": 0,
+            "MT": 0,
+            "Edited": 0,
+            "Rejected": 0
+          } as Record<string, number>
+        });
+      }
+      
+      // 상태별 세그먼트 개수 계산
+      const statusCounts: Record<string, number> = {
+        "Reviewed": 0,
+        "100%": 0,
+        "Fuzzy": 0,
+        "MT": 0,
+        "Edited": 0,
+        "Rejected": 0
+      };
+      
+      // 번역된 세그먼트 및 리뷰된 세그먼트 개수
+      let translatedCount = 0;
+      
+      segments.forEach(segment => {
+        // 상태별 카운팅
+        if (segment.status in statusCounts) {
+          statusCounts[segment.status]++;
+        }
+        
+        // 번역되었는지 확인 (target이 존재하고 비어있지 않은 경우)
+        if (segment.target && segment.target.trim() !== '') {
+          translatedCount++;
+        }
+      });
+      
+      // 백분율 계산
+      const reviewedPercentage = Math.round((statusCounts["Reviewed"] / totalSegments) * 100);
+      const translatedPercentage = Math.round((translatedCount / totalSegments) * 100);
+      
+      return res.json({
+        totalSegments,
+        translatedPercentage,
+        reviewedPercentage,
+        statusCounts
+      });
     } catch (error) {
       return handleApiError(res, error);
     }

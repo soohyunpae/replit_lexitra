@@ -166,56 +166,78 @@ export default function ProjectsPage() {
     },
   });
 
-  // Generate demo statistics for projects
+  // 프로젝트 통계 데이터 가져오기
   useEffect(() => {
     if (projects) {
-      const stats: typeof projectStats = {};
-      projects.forEach((project) => {
-        // In a real application, these would be fetched from the API
-        const totalSegments = 100; // 예시 값 (실제로는 API에서 가져와야 함)
-        const translatedPercentage = Math.floor(Math.random() * 100);
-        const reviewedPercentage = Math.floor(
-          Math.random() * (translatedPercentage + 1),
-        );
+      const fetchProjectStats = async () => {
+        const stats: typeof projectStats = {};
         
-        // 각 상태 별 비율 계산 (합계가 100이 되도록)
-        const reviewedCount = Math.floor(totalSegments * (reviewedPercentage / 100));
+        // 각 프로젝트의 통계 데이터를 병렬로 가져오기
+        // 백엔드에 API 엔드포인트 추가 여부 확인을 위한 리트라이 카운트 변수
+        let retryCount = 0;
+        const maxRetries = 2; // 최대 재시도 횟수
         
-        // 나머지 상태들의 합이 (totalSegments - reviewedCount)가 되도록 분배
-        const remainingSegments = totalSegments - reviewedCount;
+        const promises = projects.map(async (project) => {
+          const defaultStats = {
+            translatedPercentage: 0,
+            reviewedPercentage: 0,
+            totalSegments: 0,
+            statusCounts: {
+              "Reviewed": 0,
+              "100%": 0,
+              "Fuzzy": 0,
+              "MT": 0,
+              "Edited": 0,
+              "Rejected": 0
+            }
+          };
+          
+          const fetchWithRetry = async () => {
+            try {
+              const response = await fetch(`/api/projects/${project.id}/stats`, {
+                headers: {
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+              });
+              
+              if (response.ok) {
+                const data = await response.json();
+                stats[project.id] = {
+                  translatedPercentage: data.translatedPercentage,
+                  reviewedPercentage: data.reviewedPercentage,
+                  totalSegments: data.totalSegments || 0,
+                  statusCounts: data.statusCounts || defaultStats.statusCounts
+                };
+                return true; // 성공
+              } else if (response.status === 404 && retryCount < maxRetries) {
+                // 서버 엔드포인트가 아직 로드되지 않았거나 존재하지 않을 수 있으므로 재시도
+                console.warn(`Endpoint not found for project ${project.id}, retrying... (${retryCount + 1}/${maxRetries})`);
+                retryCount++;
+                await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기
+                return await fetchWithRetry(); // 재귀적으로 재시도
+              } else {
+                console.error(`Failed to fetch stats for project ${project.id}:`, await response.text());
+                stats[project.id] = defaultStats;
+                return false;
+              }
+            } catch (error) {
+              console.error(`Error fetching stats for project ${project.id}:`, error);
+              stats[project.id] = defaultStats;
+              return false;
+            }
+          };
+          
+          return fetchWithRetry();
+        });
         
-        // 비율 예시 (실제로는 API에서 가져온 데이터를 사용해야 함)
-        const match100Ratio = 0.25; // 25%
-        const fuzzyRatio = 0.30;    // 30%
-        const mtRatio = 0.35;       // 35%
-        const editedRatio = 0.05;   // 5%
-        const rejectedRatio = 0.05; // 5%
+        // 모든 요청이 완료될 때까지 기다림
+        await Promise.all(promises);
         
-        // 각 상태 별 세그먼트 수 계산
-        const match100Count = Math.floor(remainingSegments * match100Ratio);
-        const fuzzyCount = Math.floor(remainingSegments * fuzzyRatio);
-        const mtCount = Math.floor(remainingSegments * mtRatio);
-        const editedCount = Math.floor(remainingSegments * editedRatio);
-        const rejectedCount = Math.floor(remainingSegments * rejectedRatio);
-        
-        // 반올림 오차로 인해 합계가 totalSegments와 다를 수 있으므로 조정
-        const adjustedRejectedCount = totalSegments - reviewedCount - match100Count - fuzzyCount - mtCount - editedCount;
-        
-        stats[project.id] = {
-          translatedPercentage,
-          reviewedPercentage,
-          totalSegments,
-          statusCounts: {
-            "Reviewed": reviewedCount,
-            "100%": match100Count,
-            "Fuzzy": fuzzyCount,
-            "MT": mtCount,
-            "Edited": editedCount,
-            "Rejected": adjustedRejectedCount
-          }
-        };
-      });
-      setProjectStats(stats);
+        // 상태 업데이트
+        setProjectStats(stats);
+      };
+      
+      fetchProjectStats();
     }
   }, [projects]);
 
