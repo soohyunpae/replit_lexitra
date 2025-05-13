@@ -146,6 +146,15 @@ export default function ProjectsPage() {
     [key: number]: {
       reviewedPercentage: number;
       translatedPercentage: number;
+      totalSegments: number;
+      statusCounts: {
+        "Reviewed": number;
+        "100%": number;
+        "Fuzzy": number;
+        "MT": number;
+        "Edited": number;
+        "Rejected": number;
+      };
     };
   }>({});
 
@@ -163,13 +172,47 @@ export default function ProjectsPage() {
       const stats: typeof projectStats = {};
       projects.forEach((project) => {
         // In a real application, these would be fetched from the API
+        const totalSegments = 100; // 예시 값 (실제로는 API에서 가져와야 함)
         const translatedPercentage = Math.floor(Math.random() * 100);
         const reviewedPercentage = Math.floor(
           Math.random() * (translatedPercentage + 1),
         );
+        
+        // 각 상태 별 비율 계산 (합계가 100이 되도록)
+        const reviewedCount = Math.floor(totalSegments * (reviewedPercentage / 100));
+        
+        // 나머지 상태들의 합이 (totalSegments - reviewedCount)가 되도록 분배
+        const remainingSegments = totalSegments - reviewedCount;
+        
+        // 비율 예시 (실제로는 API에서 가져온 데이터를 사용해야 함)
+        const match100Ratio = 0.25; // 25%
+        const fuzzyRatio = 0.30;    // 30%
+        const mtRatio = 0.35;       // 35%
+        const editedRatio = 0.05;   // 5%
+        const rejectedRatio = 0.05; // 5%
+        
+        // 각 상태 별 세그먼트 수 계산
+        const match100Count = Math.floor(remainingSegments * match100Ratio);
+        const fuzzyCount = Math.floor(remainingSegments * fuzzyRatio);
+        const mtCount = Math.floor(remainingSegments * mtRatio);
+        const editedCount = Math.floor(remainingSegments * editedRatio);
+        const rejectedCount = Math.floor(remainingSegments * rejectedRatio);
+        
+        // 반올림 오차로 인해 합계가 totalSegments와 다를 수 있으므로 조정
+        const adjustedRejectedCount = totalSegments - reviewedCount - match100Count - fuzzyCount - mtCount - editedCount;
+        
         stats[project.id] = {
           translatedPercentage,
           reviewedPercentage,
+          totalSegments,
+          statusCounts: {
+            "Reviewed": reviewedCount,
+            "100%": match100Count,
+            "Fuzzy": fuzzyCount,
+            "MT": mtCount,
+            "Edited": editedCount,
+            "Rejected": adjustedRejectedCount
+          }
         };
       });
       setProjectStats(stats);
@@ -1472,6 +1515,8 @@ export default function ProjectsPage() {
                             <CombinedProgress
                               reviewedPercentage={stats.reviewedPercentage}
                               translatedPercentage={stats.translatedPercentage}
+                              statusCounts={stats.statusCounts}
+                              totalSegments={stats.totalSegments}
                               height="h-2.5"
                             />
                             <div className="text-xs text-muted-foreground flex items-center justify-between">
