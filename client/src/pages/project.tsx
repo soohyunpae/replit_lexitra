@@ -353,13 +353,19 @@ export default function Project() {
   }, [allSegmentsData, glossaryTerms]);
 
   // 세그먼트 상태 타입 정의
-  type SegmentStatus = 'Reviewed' | '100%' | 'Fuzzy' | 'MT' | 'Edited' | 'Rejected';
-  
+  type SegmentStatus =
+    | "Reviewed"
+    | "100%"
+    | "Fuzzy"
+    | "MT"
+    | "Edited"
+    | "Rejected";
+
   // 파일별 상태 카운트 타입 정의
   type FileStatusCounts = {
     [fileId: number]: {
       Reviewed: number;
-      '100%': number;
+      "100%": number;
       Fuzzy: number;
       MT: number;
       Edited: number;
@@ -376,23 +382,23 @@ export default function Project() {
 
     project.files.forEach((file: any) => {
       const segments = allSegmentsData[file.id] || [];
-      
+
       counts[file.id] = {
         Reviewed: 0,
-        '100%': 0,
+        "100%": 0,
         Fuzzy: 0,
         MT: 0,
         Edited: 0,
         Rejected: 0,
-        total: segments.length
+        total: segments.length,
       };
-      
-      segments.forEach(segment => {
+
+      segments.forEach((segment) => {
         // 상태가 없으면 기본값으로 MT 사용
-        const status = segment.status || 'MT';
-        
+        const status = segment.status || "MT";
+
         // 유효한 상태인지 확인
-        if (status in counts[file.id] && status !== 'total') {
+        if (status in counts[file.id] && status !== "total") {
           counts[file.id][status as SegmentStatus]++;
         }
       });
@@ -402,27 +408,45 @@ export default function Project() {
   }, [allSegmentsData, project?.files]);
 
   // 파일별 상태 퍼센트 계산 함수
-  const getStatusPercentage = (fileId: number, status: SegmentStatus): number => {
+  const getStatusPercentage = (
+    fileId: number,
+    status: SegmentStatus,
+  ): number => {
     if (!fileSegmentStatusCounts[fileId]) return 0;
-    
+
     const counts = fileSegmentStatusCounts[fileId];
     const total = counts.total || 1; // 0으로 나누기 방지
-    
+
     return (counts[status] / total) * 100;
   };
-  
-  // 파일별 단어 수 계산 (프로젝트 목록 페이지와 동일한 방식)
+
+  // 파일별 단어 수 계산 - 실제로는 세그먼트의 길이를 기반으로 계산
   const getFileWordCount = (fileId: number): number => {
-    // 파일 ID를 시드로 사용해서 일관된 값 생성
-    return 500 + (fileId * 123) % 3000;
+    // 개발 단계에서는 일관된 더미 데이터 사용
+    if (!allSegmentsData || !allSegmentsData[fileId]) {
+      // 파일 ID를 시드로 사용해서 항상 동일한 값 생성
+      return 500 + ((fileId * 123) % 3000);
+    }
+
+    // 실제 구현: 모든 세그먼트의 소스 텍스트 단어 수 합계
+    return allSegmentsData[fileId].reduce((total, segment) => {
+      if (!segment.source) return total;
+      // 단어 수 계산: 공백으로 나누고 빈 항목 필터링
+      const words = segment.source
+        .split(/\s+/)
+        .filter((word) => word.length > 0);
+      return total + words.length;
+    }, 0);
   };
-  
-  // 전체 프로젝트 단어 수 계산 (프로젝트 목록 페이지와 동일한 방식) 
+
+  // 전체 프로젝트 단어 수 계산
   const calculateTotalWordCount = (): number => {
-    if (!project) return 0;
-    
-    // 프로젝트 ID를 기반으로 단어 수 생성
-    return 500 + (project.id * 123) % 3000;
+    if (!project || !project.files) return 0;
+
+    // 모든 파일의 단어 수 합계 계산
+    return project.files
+      .filter((file: any) => file.type === "work" || !file.type)
+      .reduce((total, file: any) => total + getFileWordCount(file.id), 0);
   };
 
   // Calculate statistics for each file
@@ -964,20 +988,23 @@ export default function Project() {
                             <span>Word Count:</span>
                           </div>
                           <div className="font-medium">
-                            {project.wordCount || calculateTotalWordCount()} words
+                            {project.wordCount || calculateTotalWordCount()}{" "}
+                            words
                           </div>
                         </div>
                         <Progress
                           value={projectStats.completionPercentage}
                           className="h-2"
-                          style={{
-                            "--reviewed-percent": `${(projectStats.statusCounts.Reviewed || 0) / projectStats.totalSegments * 100}%`,
-                            "--match-100-percent": `${(projectStats.statusCounts["100%"] || 0) / projectStats.totalSegments * 100}%`,
-                            "--fuzzy-percent": `${(projectStats.statusCounts.Fuzzy || 0) / projectStats.totalSegments * 100}%`,
-                            "--mt-percent": `${(projectStats.statusCounts.MT || 0) / projectStats.totalSegments * 100}%`,
-                            "--edited-percent": `${(projectStats.statusCounts.Edited || 0) / projectStats.totalSegments * 100}%`,
-                            "--rejected-percent": `${(projectStats.statusCounts.Rejected || 0) / projectStats.totalSegments * 100}%`,
-                          } as React.CSSProperties}
+                          style={
+                            {
+                              "--reviewed-percent": `${((projectStats.statusCounts.Reviewed || 0) / projectStats.totalSegments) * 100}%`,
+                              "--match-100-percent": `${((projectStats.statusCounts["100%"] || 0) / projectStats.totalSegments) * 100}%`,
+                              "--fuzzy-percent": `${((projectStats.statusCounts.Fuzzy || 0) / projectStats.totalSegments) * 100}%`,
+                              "--mt-percent": `${((projectStats.statusCounts.MT || 0) / projectStats.totalSegments) * 100}%`,
+                              "--edited-percent": `${((projectStats.statusCounts.Edited || 0) / projectStats.totalSegments) * 100}%`,
+                              "--rejected-percent": `${((projectStats.statusCounts.Rejected || 0) / projectStats.totalSegments) * 100}%`,
+                            } as React.CSSProperties
+                          }
                         />
                       </div>
                     </div>
@@ -1358,14 +1385,16 @@ export default function Project() {
                               <Progress
                                 value={stats.percentage}
                                 className="h-2 flex-1"
-                                style={{
-                                  "--reviewed-percent": `${getStatusPercentage(file.id, 'Reviewed')}%`,
-                                  "--match-100-percent": `${getStatusPercentage(file.id, '100%')}%`,
-                                  "--fuzzy-percent": `${getStatusPercentage(file.id, 'Fuzzy')}%`,
-                                  "--mt-percent": `${getStatusPercentage(file.id, 'MT')}%`,
-                                  "--edited-percent": `${getStatusPercentage(file.id, 'Edited')}%`,
-                                  "--rejected-percent": `${getStatusPercentage(file.id, 'Rejected')}%`,
-                                } as React.CSSProperties}
+                                style={
+                                  {
+                                    "--reviewed-percent": `${getStatusPercentage(file.id, "Reviewed")}%`,
+                                    "--match-100-percent": `${getStatusPercentage(file.id, "100%")}%`,
+                                    "--fuzzy-percent": `${getStatusPercentage(file.id, "Fuzzy")}%`,
+                                    "--mt-percent": `${getStatusPercentage(file.id, "MT")}%`,
+                                    "--edited-percent": `${getStatusPercentage(file.id, "Edited")}%`,
+                                    "--rejected-percent": `${getStatusPercentage(file.id, "Rejected")}%`,
+                                  } as React.CSSProperties
+                                }
                               />
                               <span className="text-xs text-muted-foreground whitespace-nowrap">
                                 {stats.completed}/{stats.total} (
@@ -1380,7 +1409,11 @@ export default function Project() {
                             </div>
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                               <TextCursorInput className="h-3.5 w-3.5" />
-                              <span>{(file as any).wordCount || getFileWordCount(file.id)} words</span>
+                              <span>
+                                {(file as any).wordCount ||
+                                  getFileWordCount(file.id)}{" "}
+                                words
+                              </span>
                             </div>
                           </div>
 
