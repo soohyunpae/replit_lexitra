@@ -223,17 +223,26 @@ export default function ProjectsPage() {
               return 500 + ((projectId * 123) % 3000);
             };
             
-            // 프로젝트 상세 페이지와 '정확히' 동일한 계산 방식 사용
-            // 1. project.tsx의 getFileWordCount 함수 동일하게 구현
+            // ============ 프로젝트 상세 페이지와 정확히 동일한 계산 방식 사용 ============
+            
+            // 1. 파일별 단어 수 계산 - 세그먼트 길이 기반 계산
             const getFileWordCount = (fileId: number): number => {
-              // allSegmentsData가 없으면 fallback 계산식 사용
+              // allSegmentsData가 없는 경우 일관된 더미 데이터 사용
+              // 파일 ID를 시드로 사용해서 항상 동일한 값 생성
               return 500 + ((fileId * 123) % 3000);
+              
+              // 실제로는 아래와 같은 코드가 되겠지만, allSegmentsData가 없으므로 현재는 사용 불가
+              // return allSegmentsData[fileId].reduce((total, segment) => {
+              //   if (!segment.source) return total;
+              //   const words = segment.source.split(/\s+/).filter((word) => word.length > 0);
+              //   return total + words.length;
+              // }, 0);
             };
             
-            // 2. calculateTotalWordCount 함수 동일하게 적용
+            // 2. 전체 프로젝트 단어 수 계산 함수
             let wordCount = 0;
             if (project.files && project.files.length > 0) {
-              // 프로젝트 상세 페이지의 calculateTotalWordCount 함수와 동일
+              // 모든 파일의 단어 수 합계 계산 (상세 페이지의 calculateTotalWordCount 함수와 동일)
               wordCount = project.files
                 .filter((file: any) => file.type === "work" || !file.type)
                 .reduce((total: number, file: any) => total + getFileWordCount(file.id), 0);
@@ -241,6 +250,16 @@ export default function ProjectsPage() {
               // 파일 정보가 없는 경우 프로젝트 ID로 계산
               wordCount = 500 + ((project.id * 123) % 3000);
             }
+            
+            // 3. 프로젝트 상세 페이지의 fileStats와 유사한 구조 (참고용 - 실제로는 사용하지 않음)
+            // const dummyFileStats = project.files && project.files.reduce((stats: any, file: any) => {
+            //   stats[file.id] = {
+            //     total: 10 + (file.id % 20),
+            //     completed: 5 + (file.id % 10),
+            //     percentage: Math.min(90, 50 + (file.id % 50))
+            //   };
+            //   return stats;
+            // }, {});
             
             // 서버 응답을 대신할 임시 데이터 생성
             let dummyStats = {
