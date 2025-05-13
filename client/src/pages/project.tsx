@@ -446,7 +446,7 @@ export default function Project() {
     // 모든 파일의 단어 수 합계 계산
     return project.files
       .filter((file: any) => file.type === "work" || !file.type)
-      .reduce((total, file: any) => total + getFileWordCount(file.id), 0);
+      .reduce((total: number, file: any) => total + getFileWordCount(file.id), 0);
   };
 
   // Calculate statistics for each file

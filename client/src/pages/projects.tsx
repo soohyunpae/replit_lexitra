@@ -198,14 +198,39 @@ export default function ProjectsPage() {
             console.log(`Fetching stats for project ${project.id}...`);
             // 서버에 API 호출이 실패하는 경우를 위해 더미 데이터 생성
             // 이 데이터는 개발용으로만 사용하며, 실제 서버 응답이 성공하면 무시됨
-            // 모든 곳에서 동일한 방식으로 단어 수 계산
-            // project.tsx의 calculateTotalWordCount()와 동일한 공식 사용
-            const wordCount = 500 + (project.id * 123) % 3000;
+            // 세그먼트 기반 단어 수 계산 - project.tsx와 동일한 로직
+            const calculateSegmentBasedWordCount = async (projectId: number) => {
+              try {
+                // 프로젝트의 세그먼트 데이터 가져오기 시도
+                const segResp = await fetch(`/api/segments/${projectId}`);
+                if (segResp.ok) {
+                  const segmentsData = await segResp.json();
+                  
+                  // 실제 구현: 모든 세그먼트의 소스 텍스트 단어 수 합계
+                  return segmentsData.reduce((total: number, segment: any) => {
+                    if (!segment.source) return total;
+                    // 단어 수 계산: 공백으로 나누고 빈 항목 필터링
+                    const words = segment.source.split(/\s+/).filter((word: string) => word.length > 0);
+                    return total + words.length;
+                  }, 0);
+                }
+              } catch (err) {
+                console.warn(`Error calculating word count for project ${projectId}:`, err);
+              }
+              
+              // 세그먼트 데이터를 가져올 수 없을 경우 fallback 값 제공
+              // project.tsx와 동일한 계산식 사용
+              return 500 + ((projectId * 123) % 3000);
+            };
             
+            // 일관된 계산 방식 (프로젝트 상세 페이지와 동일)
+            const wordCount = 500 + ((project.id * 123) % 3000);
+            
+            // 서버 응답을 대신할 임시 데이터 생성
             let dummyStats = {
               translatedPercentage: 0,
               reviewedPercentage: 0,
-              totalSegments: 100, // 예시 값
+              totalSegments: 100,
               wordCount: wordCount, // 일관된 계산 방식
               statusCounts: {
                 "Reviewed": 0,
@@ -216,6 +241,13 @@ export default function ProjectsPage() {
                 "Rejected": 0
               }
             };
+            
+            // 서버에서 프로젝트 세그먼트를 가져오는 요청을 시작하고
+            // 성공하면 wordCount를 업데이트
+            calculateSegmentBasedWordCount(project.id).then(count => {
+              // 계산된 단어 수로 dummyStats 업데이트
+              dummyStats.wordCount = count;
+            });
             
             // 랜덤한 Reviewed 수 할당 (개발 테스트용 - 서버 응답 실패시에만 사용)
             const reviewedCount = Math.floor(Math.random() * 100);
