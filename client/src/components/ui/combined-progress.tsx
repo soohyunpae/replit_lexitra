@@ -37,7 +37,7 @@ export function CombinedProgress({
           <div className="h-full w-full flex overflow-hidden">
             {/* Reviewed segments (green) */}
             <div 
-              className="h-full bg-green-300" 
+              className="h-full bg-green-200" 
               style={{ width: `${reviewedPercentage}%` }} 
             />
             {/* 나머지는 표시하지 않음 (기본 배경색으로 표시) */}
@@ -47,7 +47,7 @@ export function CombinedProgress({
         {showPercentage && (
           <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground my-1">
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-green-300"></div>
+              <div className="w-2 h-2 rounded-full bg-green-200"></div>
               <span>Reviewed: {reviewedPercentage}%</span>
             </div>
           </div>
@@ -74,7 +74,7 @@ export function CombinedProgress({
         <div className="h-full w-full flex overflow-hidden">
           {/* Reviewed segments (green) */}
           <div 
-            className="h-full bg-green-300" 
+            className="h-full bg-green-200" 
             style={{ width: `${reviewedPercentageNew}%` }} 
           />
           {/* 나머지는 표시하지 않음 (기본 배경색으로 표시) */}
@@ -84,7 +84,7 @@ export function CombinedProgress({
       {showPercentage && (
         <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground my-1">
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-green-300"></div>
+            <div className="w-2 h-2 rounded-full bg-green-200"></div>
             <span>Reviewed: {reviewedPercentageNew}%</span>
           </div>
         </div>

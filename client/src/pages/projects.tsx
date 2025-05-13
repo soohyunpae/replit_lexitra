@@ -173,11 +173,10 @@ export default function ProjectsPage() {
         const stats: typeof projectStats = {};
         
         // 각 프로젝트의 통계 데이터를 병렬로 가져오기
-        // 백엔드에 API 엔드포인트 추가 여부 확인을 위한 리트라이 카운트 변수
-        let retryCount = 0;
         const maxRetries = 2; // 최대 재시도 횟수
         
-        const promises = projects.map(async (project) => {
+        // 실제 서버 데이터 가져오는 함수
+        const fetchStatsFromServer = async (project: Project, retryCount = 0): Promise<boolean> => {
           const defaultStats = {
             translatedPercentage: 0,
             reviewedPercentage: 0,
@@ -192,42 +191,43 @@ export default function ProjectsPage() {
             }
           };
           
-          const fetchWithRetry = async () => {
-            try {
-              const response = await fetch(`/api/projects/${project.id}/stats`, {
-                headers: {
-                  'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-              });
-              
-              if (response.ok) {
-                const data = await response.json();
-                stats[project.id] = {
-                  translatedPercentage: data.translatedPercentage,
-                  reviewedPercentage: data.reviewedPercentage,
-                  totalSegments: data.totalSegments || 0,
-                  statusCounts: data.statusCounts || defaultStats.statusCounts
-                };
-                return true; // 성공
-              } else if (response.status === 404 && retryCount < maxRetries) {
-                // 서버 엔드포인트가 아직 로드되지 않았거나 존재하지 않을 수 있으므로 재시도
-                console.warn(`Endpoint not found for project ${project.id}, retrying... (${retryCount + 1}/${maxRetries})`);
-                retryCount++;
-                await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기
-                return await fetchWithRetry(); // 재귀적으로 재시도
-              } else {
-                console.error(`Failed to fetch stats for project ${project.id}:`, await response.text());
-                stats[project.id] = defaultStats;
-                return false;
+          try {
+            console.log(`Fetching stats for project ${project.id}...`);
+            const response = await fetch(`/api/projects/${project.id}/stats`, {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
               }
-            } catch (error) {
-              console.error(`Error fetching stats for project ${project.id}:`, error);
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              console.log(`Project ${project.id} stats:`, data);
+              stats[project.id] = {
+                translatedPercentage: data.translatedPercentage || 0,
+                reviewedPercentage: data.reviewedPercentage || 0,
+                totalSegments: data.totalSegments || 0,
+                statusCounts: data.statusCounts || defaultStats.statusCounts
+              };
+              return true; // 성공
+            } else if (response.status === 404 && retryCount < maxRetries) {
+              // 서버 엔드포인트가 아직 로드되지 않았거나 존재하지 않을 수 있으므로 재시도
+              console.warn(`Endpoint not found for project ${project.id}, retrying... (${retryCount + 1}/${maxRetries})`);
+              await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기
+              return fetchStatsFromServer(project, retryCount + 1); // 재귀적으로 재시도
+            } else {
+              console.error(`Failed to fetch stats for project ${project.id}:`, await response.text());
               stats[project.id] = defaultStats;
               return false;
             }
-          };
-          
-          return fetchWithRetry();
+          } catch (error) {
+            console.error(`Error fetching stats for project ${project.id}:`, error);
+            stats[project.id] = defaultStats;
+            return false;
+          }
+        };
+        
+        const promises = projects.map(async (project) => {
+          return fetchStatsFromServer(project, 0);
         });
         
         // 모든 요청이 완료될 때까지 기다림
