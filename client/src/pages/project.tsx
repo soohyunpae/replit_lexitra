@@ -410,6 +410,33 @@ export default function Project() {
     
     return (counts[status] / total) * 100;
   };
+  
+  // 파일별 단어 수 계산 - 실제로는 세그먼트의 길이를 기반으로 계산
+  const getFileWordCount = (fileId: number): number => {
+    // 개발 단계에서는 일관된 더미 데이터 사용
+    if (!allSegmentsData || !allSegmentsData[fileId]) {
+      // 파일 ID를 시드로 사용해서 항상 동일한 값 생성
+      return 500 + (fileId * 123) % 3000; 
+    }
+    
+    // 실제 구현: 모든 세그먼트의 소스 텍스트 단어 수 합계
+    return allSegmentsData[fileId].reduce((total, segment) => {
+      if (!segment.source) return total;
+      // 단어 수 계산: 공백으로 나누고 빈 항목 필터링
+      const words = segment.source.split(/\s+/).filter(word => word.length > 0);
+      return total + words.length;
+    }, 0);
+  };
+  
+  // 전체 프로젝트 단어 수 계산
+  const calculateTotalWordCount = (): number => {
+    if (!project || !project.files) return 0;
+    
+    // 모든 파일의 단어 수 합계 계산
+    return project.files
+      .filter((file: any) => file.type === "work" || !file.type)
+      .reduce((total, file: any) => total + getFileWordCount(file.id), 0);
+  };
 
   // Calculate statistics for each file
   const fileStats = useMemo(() => {
@@ -950,7 +977,7 @@ export default function Project() {
                             <span>Word Count:</span>
                           </div>
                           <div className="font-medium">
-                            {(project as any).wordCount || Math.floor(Math.random() * 10000) + 2000} words
+                            {calculateTotalWordCount()} words
                           </div>
                         </div>
                         <Progress
@@ -1366,7 +1393,7 @@ export default function Project() {
                             </div>
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                               <TextCursorInput className="h-3.5 w-3.5" />
-                              <span>{(file as any).wordCount || Math.floor(Math.random() * 3000) + 500} words</span>
+                              <span>{getFileWordCount(file.id)} words</span>
                             </div>
                           </div>
 
