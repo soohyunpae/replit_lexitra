@@ -52,9 +52,9 @@ export default function Project() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   // 관리자 권한 체크
-  const isAdmin = useMemo(() => user?.role === 'admin', [user?.role]);
+  const isAdmin = useMemo(() => user?.role === "admin", [user?.role]);
 
   // 다이얼로그 상태 관리
   const [showReleaseDialog, setShowReleaseDialog] = useState(false);
@@ -177,7 +177,7 @@ export default function Project() {
       });
     },
   });
-  
+
   // 참조 파일 삭제 mutation
   const deleteReferenceFile = useMutation({
     mutationFn: async (fileIndex: number) => {
@@ -192,7 +192,7 @@ export default function Project() {
         title: "Reference file deleted",
         description: "The reference file has been removed successfully.",
       });
-      
+
       // 프로젝트 데이터 새로고침
       queryClient.invalidateQueries({
         queryKey: [`/api/projects/${projectId}`],
@@ -212,25 +212,28 @@ export default function Project() {
     mutationFn: async (files: File[]) => {
       // Create FormData to send actual files
       const formData = new FormData();
-      
+
       // Add each file to FormData
       files.forEach((file) => {
-        formData.append('files', file);
+        formData.append("files", file);
       });
 
       // Use fetch directly with FormData
-      const response = await fetch(`/api/projects/${projectId}/references/upload`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      const response = await fetch(
+        `/api/projects/${projectId}/references/upload`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: formData,
         },
-        body: formData,
-      });
-      
+      );
+
       if (!response.ok) {
-        throw new Error('Failed to upload files');
+        throw new Error("Failed to upload files");
       }
-      
+
       return response.json();
     },
     onSuccess: (data) => {
@@ -241,12 +244,12 @@ export default function Project() {
       });
       // 업로드 후 references 상태 초기화 (DB에서 관리하므로)
       setReferences([]);
-      
+
       // 업로드 후 즉시 프로젝트 데이터와 파일 목록을 새로고침합니다
       queryClient.invalidateQueries({
         queryKey: [`/api/projects/${projectId}`],
       });
-      
+
       // 새로운 참조 파일 즉시 표시 - 서버에서 받은 데이터로 UI 업데이트
       if (data && Array.isArray(data)) {
         console.log("Adding new files to savedReferences:", data);
@@ -511,7 +514,9 @@ export default function Project() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
               <h1 className="text-xl font-semibold mb-1 flex items-center">
-                <span>Project {project.id}: {project.name}</span>
+                <span>
+                  Project [{project.id}] {project.name}
+                </span>
                 <span
                   className={`ml-3 text-sm font-medium rounded-md px-2 py-0.5 ${
                     project.status === "Unclaimed"
@@ -979,13 +984,14 @@ export default function Project() {
                               // 새로 만든 API 헬퍼 함수를 이용해 다운로드 처리
                               downloadFile(
                                 `/api/projects/${projectId}/references/${index}/download`,
-                                file.name || `reference-${index}.file`
-                              ).catch(err => {
-                                console.error('Download error:', err);
+                                file.name || `reference-${index}.file`,
+                              ).catch((err) => {
+                                console.error("Download error:", err);
                                 toast({
                                   title: "다운로드 실패",
-                                  description: "파일을 다운로드하는 중 오류가 발생했습니다",
-                                  variant: "destructive"
+                                  description:
+                                    "파일을 다운로드하는 중 오류가 발생했습니다",
+                                  variant: "destructive",
                                 });
                               });
                             }}
@@ -993,7 +999,7 @@ export default function Project() {
                           >
                             <FileDownIcon className="h-3 w-3" />
                           </Button>
-                          
+
                           {isAdmin && (
                             <Button
                               variant="ghost"
@@ -1009,28 +1015,31 @@ export default function Project() {
                         </div>
                       </div>
                     ))}
-                    
+
                     {/* Drag and drop area for adding more files (admin only) */}
                     {isAdmin && (
-                      <div 
+                      <div
                         className="border-2 border-dashed border-border/50 rounded-md p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
                         onClick={() => fileInputRef.current?.click()}
                         onDragOver={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          e.currentTarget.classList.add('border-primary');
+                          e.currentTarget.classList.add("border-primary");
                         }}
                         onDragLeave={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          e.currentTarget.classList.remove('border-primary');
+                          e.currentTarget.classList.remove("border-primary");
                         }}
                         onDrop={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          e.currentTarget.classList.remove('border-primary');
-                          
-                          if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                          e.currentTarget.classList.remove("border-primary");
+
+                          if (
+                            e.dataTransfer.files &&
+                            e.dataTransfer.files.length > 0
+                          ) {
                             const newFiles = Array.from(e.dataTransfer.files);
                             setReferences([...references, ...newFiles]);
                             // Upload the files
@@ -1048,25 +1057,28 @@ export default function Project() {
                 ) : (
                   <>
                     {isAdmin ? (
-                      <div 
+                      <div
                         className="text-center py-8 border-2 border-dashed border-border/50 rounded-lg mb-4 hover:border-primary/50 transition-colors cursor-pointer"
                         onClick={() => fileInputRef.current?.click()}
                         onDragOver={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          e.currentTarget.classList.add('border-primary');
+                          e.currentTarget.classList.add("border-primary");
                         }}
                         onDragLeave={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          e.currentTarget.classList.remove('border-primary');
+                          e.currentTarget.classList.remove("border-primary");
                         }}
                         onDrop={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          e.currentTarget.classList.remove('border-primary');
-                          
-                          if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                          e.currentTarget.classList.remove("border-primary");
+
+                          if (
+                            e.dataTransfer.files &&
+                            e.dataTransfer.files.length > 0
+                          ) {
                             const newFiles = Array.from(e.dataTransfer.files);
                             setReferences([...references, ...newFiles]);
                             // Upload the files
@@ -1097,7 +1109,8 @@ export default function Project() {
                           No Reference Files
                         </h3>
                         <p className="text-muted-foreground text-xs max-w-md mx-auto">
-                          No reference files have been added to this project yet.
+                          No reference files have been added to this project
+                          yet.
                         </p>
                       </div>
                     )}
@@ -1153,9 +1166,9 @@ export default function Project() {
                 <CardTitle className="text-lg flex items-center justify-between">
                   <span>📝 Project Notes</span>
                   {!isNotesEditing && note && isAdmin && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setIsNotesEditing(true)}
                       className="text-xs"
                     >
@@ -1181,16 +1194,20 @@ export default function Project() {
                     disabled={!isAdmin}
                   />
                 ) : (
-                  <div 
-                    className={`border rounded-md p-3 min-h-24 text-sm whitespace-pre-wrap ${isAdmin ? 'cursor-pointer' : ''}`}
+                  <div
+                    className={`border rounded-md p-3 min-h-24 text-sm whitespace-pre-wrap ${isAdmin ? "cursor-pointer" : ""}`}
                     onClick={() => isAdmin && setIsNotesEditing(true)}
                   >
-                    {note 
-                      ? note 
-                      : isAdmin
-                        ? <span className="text-muted-foreground">Add special requirements, terminology instructions, or other notes. Click to edit.</span>
-                        : "No notes available."
-                    }
+                    {note ? (
+                      note
+                    ) : isAdmin ? (
+                      <span className="text-muted-foreground">
+                        Add special requirements, terminology instructions, or
+                        other notes. Click to edit.
+                      </span>
+                    ) : (
+                      "No notes available."
+                    )}
                   </div>
                 )}
                 {saveNotes.isPending && (

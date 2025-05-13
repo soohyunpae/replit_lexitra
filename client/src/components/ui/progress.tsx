@@ -15,10 +15,20 @@ const Progress = React.forwardRef<
     )}
     {...props}
   >
-    <ProgressPrimitive.Indicator
-      className="h-full w-full flex-1 bg-primary transition-all"
-      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
-    />
+    <div className="h-full w-full flex overflow-hidden">
+      {/* Reviewed segments (green) */}
+      <div className="h-full bg-green-300 transition-all" style={{ width: 'var(--reviewed-percent, 0%)' }} />
+      {/* 100% segments (blue) */}
+      <div className="h-full bg-blue-300 transition-all" style={{ width: 'var(--match-100-percent, 0%)' }} />
+      {/* Fuzzy segments (yellow) */}
+      <div className="h-full bg-yellow-300 transition-all" style={{ width: 'var(--fuzzy-percent, 0%)' }} />
+      {/* MT segments (gray) */}
+      <div className="h-full bg-gray-300 transition-all" style={{ width: 'var(--mt-percent, 0%)' }} />
+      {/* Edited segments (purple) */}
+      <div className="h-full bg-purple-300 transition-all" style={{ width: 'var(--edited-percent, 0%)' }} />
+      {/* Rejected segments (red) */}
+      <div className="h-full bg-red-300 transition-all" style={{ width: 'var(--rejected-percent, 0%)' }} />
+    </div>
   </ProgressPrimitive.Root>
 ))
 Progress.displayName = ProgressPrimitive.Root.displayName

@@ -390,17 +390,47 @@ export function DocReviewEditor({
         <div className="flex items-center gap-2 mb-1.5">
           <div className="flex-1">
             <div className="h-2.5 rounded-full bg-secondary overflow-hidden flex">
-              <div 
-                className="h-full bg-green-500" 
-                style={{ width: `${reviewedPercentage}%` }}
+              {/* Reviewed segments (green) */}
+              <div
+                className="h-full bg-green-300"
+                style={{
+                  width: `${totalSegments > 0 ? ((statusCounts["Reviewed"] || 0) / totalSegments) * 100 : 0}%`,
+                }}
               />
-              <div 
-                className="h-full bg-blue-500" 
-                style={{ width: `${inProgressPercentage}%` }}
+              {/* 100% segments (blue) */}
+              <div
+                className="h-full bg-blue-300"
+                style={{
+                  width: `${totalSegments > 0 ? ((statusCounts["100%"] || 0) / totalSegments) * 100 : 0}%`,
+                }}
               />
-              <div 
-                className="h-full bg-red-500" 
-                style={{ width: `${rejectedPercentage}%` }}
+              {/* Fuzzy segments (yellow) */}
+              <div
+                className="h-full bg-yellow-300"
+                style={{
+                  width: `${totalSegments > 0 ? ((statusCounts["Fuzzy"] || 0) / totalSegments) * 100 : 0}%`,
+                }}
+              />
+              {/* MT segments (gray) */}
+              <div
+                className="h-full bg-gray-300"
+                style={{
+                  width: `${totalSegments > 0 ? ((statusCounts["MT"] || 0) / totalSegments) * 100 : 0}%`,
+                }}
+              />
+              {/* Edited segments (purple) */}
+              <div
+                className="h-full bg-purple-300"
+                style={{
+                  width: `${totalSegments > 0 ? ((statusCounts["Edited"] || 0) / totalSegments) * 100 : 0}%`,
+                }}
+              />
+              {/* Rejected segments (red) */}
+              <div
+                className="h-full bg-red-300"
+                style={{
+                  width: `${totalSegments > 0 ? ((statusCounts["Rejected"] || 0) / totalSegments) * 100 : 0}%`,
+                }}
               />
             </div>
           </div>
