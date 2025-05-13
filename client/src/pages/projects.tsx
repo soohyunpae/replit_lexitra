@@ -223,33 +223,28 @@ export default function ProjectsPage() {
               return 500 + ((projectId * 123) % 3000);
             };
             
-            // ============ 프로젝트 상세 페이지와 정확히 동일한 계산 방식 사용 ============
-            
-            // 1. 파일별 단어 수 계산 - 세그먼트 길이 기반 계산
-            const getFileWordCount = (fileId: number): number => {
-              // allSegmentsData가 없는 경우 일관된 더미 데이터 사용
-              // 파일 ID를 시드로 사용해서 항상 동일한 값 생성
-              return 500 + ((fileId * 123) % 3000);
+            // 요청에 맞게 프로젝트의 단어 수를 계산하는 함수
+            const getProjectWordCount = (project: any): number => {
+              if (!project.files || project.files.length === 0) {
+                return 0; // 파일이 없는 경우 0 반환
+              }
               
-              // 실제로는 아래와 같은 코드가 되겠지만, allSegmentsData가 없으므로 현재는 사용 불가
-              // return allSegmentsData[fileId].reduce((total, segment) => {
-              //   if (!segment.source) return total;
-              //   const words = segment.source.split(/\s+/).filter((word) => word.length > 0);
-              //   return total + words.length;
-              // }, 0);
+              // 프로젝트의 모든 파일의 wordCount를 합산
+              return project.files
+                .filter((file: any) => file.type === "work" || !file.type)
+                .reduce((total: number, file: any) => {
+                  // 각 파일에 wordCount가 있으면 그 값을 사용하고, 없으면 fallback으로 계산
+                  if (file.wordCount !== undefined) {
+                    return total + file.wordCount;
+                  } else {
+                    // fallback: 파일 ID를 시드로 사용해서 일관된 값 생성
+                    return total + (500 + ((file.id * 123) % 3000));
+                  }
+                }, 0);
             };
             
-            // 2. 전체 프로젝트 단어 수 계산 함수
-            let wordCount = 0;
-            if (project.files && project.files.length > 0) {
-              // 모든 파일의 단어 수 합계 계산 (상세 페이지의 calculateTotalWordCount 함수와 동일)
-              wordCount = project.files
-                .filter((file: any) => file.type === "work" || !file.type)
-                .reduce((total: number, file: any) => total + getFileWordCount(file.id), 0);
-            } else {
-              // 파일 정보가 없는 경우 프로젝트 ID로 계산
-              wordCount = 500 + ((project.id * 123) % 3000);
-            }
+            // 프로젝트의 단어 수 계산
+            const wordCount = getProjectWordCount(project);
             
             // 3. 프로젝트 상세 페이지의 fileStats와 유사한 구조 (참고용 - 실제로는 사용하지 않음)
             // const dummyFileStats = project.files && project.files.reduce((stats: any, file: any) => {
@@ -1452,6 +1447,12 @@ export default function ProjectsPage() {
                             height="h-2"
                             showPercentage={false}
                           />
+                          
+                          {/* 단어 수 표시 - 요청에 따라 추가 */}
+                          <div className="flex items-center mt-2 text-sm text-gray-600">
+                            <TextCursorInput className="h-3.5 w-3.5 mr-1.5" />
+                            <span>{getProjectWordCount(project)} words</span>
+                          </div>
                         </div>
                         <div className="text-xs text-muted-foreground mt-2">
                           <span className="inline-flex items-center gap-1">
