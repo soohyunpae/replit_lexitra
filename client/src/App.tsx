@@ -18,7 +18,7 @@ import GlossariesIndex from "@/pages/glossaries";
 // Removed import for resources page
 import GlossariesUnified from "@/pages/glossaries/unified";
 import TMUnified from "@/pages/tm/unified";
-import Settings from "@/pages/settings";
+// Removed import for settings page
 import AuthPage from "@/pages/auth-page";
 import ProfilePage from "@/pages/profile";
 import AuthDebugPage from "@/pages/auth-debug";
@@ -70,7 +70,6 @@ function Router() {
       {/* TM page */}
       <ProtectedRoute path="/tm" component={TMUnified} />
       
-      <ProtectedRoute path="/settings" component={Settings} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <Route path="/admin">
         <AdminRoute component={AdminDashboard} />
