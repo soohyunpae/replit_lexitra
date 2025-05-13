@@ -32,6 +32,7 @@ import {
   Plus,
   RefreshCw,
   Search,
+  TextCursorInput,
   Trash2,
   Unlock,
   Upload,
@@ -1424,6 +1425,7 @@ export default function ProjectsPage() {
                     </TableHead>
                     <TableHead className="w-[120px]">Language Pair</TableHead>
                     <TableHead className="w-[80px]">Files</TableHead>
+                    <TableHead className="w-[100px]">Word Count</TableHead>
                     <TableHead className="w-[120px]">
                       {renderSortButton("status", "Status")}
                     </TableHead>
@@ -1543,6 +1545,14 @@ export default function ProjectsPage() {
                             <FileText className="h-3.5 w-3.5 text-muted-foreground" />
                             <span className="text-sm font-medium">
                               {project.files?.length || 0}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <TextCursorInput className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-sm font-medium">
+                              {stats.wordCount || 0}
                             </span>
                           </div>
                         </TableCell>

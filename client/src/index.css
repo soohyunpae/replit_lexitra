@@ -16,8 +16,8 @@
     --primary: 245 76% 59%;
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 160 84% 39%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 240 10% 20%;
 
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
@@ -63,8 +63,8 @@
     --primary: 245 76% 59%;
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 160 84% 39%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 223 14% 20%; /* 어두운 회색 (gray-700~800 느낌) */
+    --secondary-foreground: 0 0% 95%; /* 밝은 텍스트 (white-ish) */
 
     --muted: 223 14% 20%;
     --muted-foreground: 240 5% 64.9%;

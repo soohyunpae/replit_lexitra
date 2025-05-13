@@ -1,7 +1,8 @@
 import * as ProgressPrimitive from "@radix-ui/react-progress";
 import { cn } from "@/lib/utils";
 
-interface CombinedProgressProps extends React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> {
+interface CombinedProgressProps
+  extends React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> {
   reviewedPercentage: number;
   translatedPercentage: number;
   height?: string;
@@ -20,28 +21,34 @@ export function CombinedProgress({
   ...props
 }: CombinedProgressProps) {
   // Calculate percentage based on available data
-  const percentage = statusCounts && totalSegments && totalSegments > 0
-    ? Math.round(((statusCounts.Reviewed || 0) / totalSegments) * 100)
-    : (!isNaN(reviewedPercentage) ? reviewedPercentage : 0);
+  const percentage =
+    statusCounts && totalSegments && totalSegments > 0
+      ? Math.round(((statusCounts.Reviewed || 0) / totalSegments) * 100)
+      : !isNaN(reviewedPercentage)
+        ? reviewedPercentage
+        : 0;
 
   return (
     <div className="w-full space-y-1.5">
       <ProgressPrimitive.Root
-        className={cn("relative overflow-hidden rounded-full bg-secondary", height, className)}
+        className={cn(
+          "relative overflow-hidden rounded-full bg-secondary",
+          height,
+          className,
+        )}
         {...props}
       >
         <div className="h-full w-full flex">
-          <div 
-            className="h-full bg-green-200" 
-            style={{ width: `${percentage}%` }} 
+          <div
+            className="h-full bg-green-300"
+            style={{ width: `${percentage}%` }}
           />
         </div>
       </ProgressPrimitive.Root>
 
       {showPercentage && (
         <div className="flex gap-x-2 text-xs text-muted-foreground my-1">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-green-200"></div>
+          <div className="flex items-center">
             <span>Reviewed: {percentage}%</span>
           </div>
         </div>
