@@ -215,13 +215,15 @@ export function NewTranslationEditor({
       ? Math.round((completedSegments / segments.length) * 100)
       : 0;
 
-  // Calculate status counts
+  // Calculate status counts only when segments actually change
   useEffect(() => {
     if (segments) {
       const counts = countSegmentStatuses(segments);
-      setStatusCounts(counts);
+      if (JSON.stringify(counts) !== JSON.stringify(statusCounts)) {
+        setStatusCounts(counts);
+      }
     }
-  }, [segments]); // segments를 의존성 배열에 추가
+  }, [segments, statusCounts]);
 
   // Search TM for selected segment
   const searchTM = async (source: string) => {

@@ -14,7 +14,12 @@ export function useSegmentMutation() {
       fileId: number;
     }) => {
       try {
+        console.log('Mutation started:', data);
         const response = await updateSegment(data.id, data.target, data.status);
+        if (!response) {
+          throw new Error('No response from updateSegment');
+        }
+        console.log('Mutation successful:', response);
         return response;
       } catch (error) {
         console.error('Mutation error:', error);
