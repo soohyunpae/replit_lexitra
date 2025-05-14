@@ -1241,6 +1241,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .values(projectData)
           .returning();
 
+        // 메모리 사용량 로깅 함수
+        const logMemoryUsage = (label: string) => {
+          const memUsage = process.memoryUsage();
+          console.log(`Memory Usage (${label}):`, {
+            rss: `${Math.round(memUsage.rss / 1024 / 1024)} MB`,
+            heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)} MB`,
+            heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)} MB`,
+          });
+        };
+        
+        logMemoryUsage('Before file processing');
+        
         // 업로드된 파일 처리
         const files: (typeof schema.files.$inferInsert)[] = [];
         const uploadedFiles = req.files as {
