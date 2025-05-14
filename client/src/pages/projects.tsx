@@ -1588,3 +1588,13 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
                             </span>
                           </TableCell>
                           <TableCell>
+                            <div className="flex flex-col gap-1.5">
+                              <CombinedProgress
+                                reviewedPercentage={stats[project.id]?.reviewedPercentage || 0}
+                                statusCounts={stats[project.id]?.statusCounts}
+                                totalSegments={stats[project.id]?.totalSegments}
+                                height="h-2.5"
+                                showPercentage={true}
+                              />
+                            </div>
+                          </TableCell>
