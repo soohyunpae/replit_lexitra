@@ -1,16 +1,15 @@
-
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-import { TranslationUnit } from '@/types';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { updateSegment, fetchSegments } from "../lib/api";
+import { TranslationUnit } from "@/types";
 
 const queryKeys = {
-  segments: (fileId: number) => ['segments', fileId] as const,
+  segments: (fileId: number) => ["segments", fileId] as const,
 };
 
 export function useSegments(fileId: number) {
   return useQuery({
     queryKey: queryKeys.segments(fileId),
-    queryFn: () => api.get(`/api/segments?fileId=${fileId}`),
+    queryFn: () => fetchSegments(fileId),
   });
 }
 
@@ -18,11 +17,15 @@ export function useSegmentMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { id: number; target: string; status: string }) =>
-      api.patch(`/api/segments/${data.id}`, data),
+    mutationFn: (data: {
+      id: number;
+      target: string;
+      status: string;
+      fileId: number;
+    }) => updateSegment(data.id, data.target, data.status),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: queryKeys.segments(variables.fileId) 
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.segments(variables.fileId),
       });
     },
   });
