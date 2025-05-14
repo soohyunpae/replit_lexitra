@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { TranslationUnit } from "@/types";
@@ -12,12 +11,10 @@ export const useSegments = (fileId: number) => {
       const response = await apiRequest("GET", `/api/segments/${fileId}`);
       return response.json();
     },
-    enabled: !!fileId,
-    staleTime: 1000, // 1 second
-    cacheTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!fileId
   });
 
-  const { mutate: updateSegmentMutation, error: updateError } = useMutation({
+  const { mutate: updateSegmentMutation } = useMutation({
     mutationFn: async ({
       id,
       target,
@@ -38,21 +35,12 @@ export const useSegments = (fileId: number) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["segments", fileId] });
-    },
+    }
   });
-
-  const debouncedUpdateSegment = async (
-    id: number,
-    target: string,
-    status: string
-  ) => {
-    updateSegmentMutation({ id, target, status });
-  };
 
   return {
     segments,
     ...rest,
-    updateSegment: updateSegmentMutation,
-    debouncedUpdateSegment,
+    updateSegment: updateSegmentMutation
   };
 };
