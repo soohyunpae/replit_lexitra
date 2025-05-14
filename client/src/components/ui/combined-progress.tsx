@@ -1,14 +1,14 @@
+
 import * as ProgressPrimitive from "@radix-ui/react-progress";
 import { cn } from "@/lib/utils";
 
 interface CombinedProgressProps
   extends React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> {
   reviewedPercentage: number;
-  translatedPercentage: number;
-  height?: string;
-  showPercentage?: boolean;
   statusCounts?: Record<string, number>;
   totalSegments?: number;
+  height?: string;
+  showPercentage?: boolean;
 }
 
 export function CombinedProgress({
@@ -20,7 +20,6 @@ export function CombinedProgress({
   totalSegments,
   ...props
 }: CombinedProgressProps) {
-  // Always use reviewedPercentage for consistency
   const percentage = !isNaN(reviewedPercentage) ? Math.round(reviewedPercentage) : 0;
 
   return (
@@ -29,16 +28,14 @@ export function CombinedProgress({
         className={cn(
           "relative overflow-hidden rounded-full bg-secondary",
           height,
-          className,
+          className
         )}
         {...props}
       >
-        <div className="h-full w-full flex">
-          <div
-            className="h-full bg-green-300"
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
+        <ProgressPrimitive.Indicator
+          className="h-full w-full flex bg-primary transition-all"
+          style={{ transform: `translateX(-${100 - percentage}%)` }}
+        />
       </ProgressPrimitive.Root>
 
       {showPercentage && (
