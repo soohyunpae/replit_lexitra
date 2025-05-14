@@ -215,8 +215,6 @@ export function EditableSegment(props: EditableSegmentProps) {
   };
 
   // 텍스트 변경 핸들러
-  const { mutate: updateSegmentMutation } = useSegmentMutation();
-
   const { mutate: updateSegment } = useSegmentMutation();
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -225,11 +223,18 @@ export function EditableSegment(props: EditableSegmentProps) {
 
     if (!isSource) {
       const isValueChanged = newValue !== liveSegment.target;
+      if (!isValueChanged) return;
+
       const needsOriginChange = isOriginInList(liveSegment.origin, STATUS_NEED_CHANGE);
-      const newOrigin = isValueChanged && needsOriginChange ? "HT" : liveSegment.origin || "HT";
-      const newStatus = isValueChanged && (liveSegment.status === "Reviewed" || isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)) 
+      const newOrigin = needsOriginChange ? "HT" : liveSegment.origin || "HT";
+      const newStatus = (liveSegment.status === "Reviewed" || isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)) 
         ? "Edited" 
         : liveSegment.status || "Edited";
+
+      // 낙관적 업데이트
+      if (onUpdate) {
+        onUpdate(newValue, newStatus, newOrigin);
+      }
 
       updateSegment(
         {
@@ -240,13 +245,12 @@ export function EditableSegment(props: EditableSegmentProps) {
           origin: newOrigin
         },
         {
-          onSuccess: () => {
-            if (onUpdate) {
-              onUpdate(newValue, newStatus, newOrigin);
-            }
-          },
-          onError: () => {
+          onError: (error) => {
+            console.error("Failed to update segment:", error);
             setValue(liveSegment.target || "");
+            if (onUpdate) {
+              onUpdate(liveSegment.target || "", liveSegment.status, liveSegment.origin);
+            }
           }
         }
       );

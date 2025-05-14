@@ -36,6 +36,13 @@ export function useSegmentMutation() {
         description: "세그먼트 업데이트 중 오류가 발생했습니다. 다시 시도해주세요.",
         variant: "destructive",
       });
+      // Invalidate queries to ensure we have the latest state
+      queryClient.invalidateQueries({
+        queryKey: [`/api/segments/${variables.fileId}`],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/files/${variables.fileId}`],
+      });
     },
   });
 }
