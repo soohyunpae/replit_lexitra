@@ -1105,9 +1105,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Get all segments for these files with detailed logging
-      console.log(`🔍 Querying segments for fileIds:`, fileIds);
+      // First get all files for this project
+      const files = await db.query.files.findMany({
+        where: eq(schema.files.projectId, id),
+        columns: {
+          id: true
+        }
+      });
 
+      const fileIds = files.map(f => f.id);
+      console.log(`🔍 Found ${fileIds.length} files for project ${id}:`, fileIds);
+
+      // Then get segments for these files
       const segments = await db.query.translationUnits.findMany({
         where: inArray(schema.translationUnits.fileId, fileIds),
       });
