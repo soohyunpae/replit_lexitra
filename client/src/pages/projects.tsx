@@ -1363,10 +1363,6 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
                               reviewedPercentage={
                                 projectStats[project.id]?.reviewedPercentage || 0
                               }
-                              translatedPercentage={
-                                projectStats[project.id]?.translatedPercentage ||
-                                0
-                              }
                               statusCounts={projectStats[project.id]?.statusCounts}
                               totalSegments={projectStats[project.id]?.totalSegments}
                               height="h-2"
@@ -1617,3 +1613,14 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
                                 : "Not set"}
                             </span>
                           </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+        </div>
+      </MainLayout>
+    );
+  }
