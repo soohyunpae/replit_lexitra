@@ -1,5 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer } from "ws";
+import WebSocket from 'ws';
 import { db } from "@db";
 import * as schema from "@shared/schema";
 import { eq, and, or, desc, like, sql, inArray } from "drizzle-orm";
@@ -3467,5 +3469,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // WebSocket server setup
+  const wss = new WebSocketServer({ 
+    server: httpServer, 
+    path: '/ws' // Using a distinct path to avoid conflict with Vite's HMR websocket
+  });
+
+  // Connected clients storage with project ID mapping
+  const clients = new Map<WebSocket, {
+    userId?: number;
+    username?: string;
+    projectId?: number;
+    fileId?: number;
+  }>();
+
+  // Create reverse lookup for broadcasting to specific projects/files
+  const getProjectClients = (projectId: number): WebSocket[] => {
+    return Array.from(clients.entries())
+      .filter(([_, data]) => data.projectId === projectId)
+      .map(([client, _]) => client);
+  };
+
+  // Handle WebSocket connections
+  wss.on('connection', (ws: WebSocket) => {
+    console.log('WebSocket client connected');
+    
+    // Add client to the connected clients map
+    clients.set(ws, {});
+
+    // Handle client messages (JSON format expected)
+    ws.on('message', (message: string) => {
+      try {
+        const data = JSON.parse(message.toString());
+        console.log('WebSocket message received:', data);
+
+        // Handle client registration (associate user with the connection)
+        if (data.type === 'register') {
+          const clientData = clients.get(ws);
+          if (clientData) {
+            clientData.userId = data.userId;
+            clientData.username = data.username;
+            clientData.projectId = data.projectId;
+            clientData.fileId = data.fileId;
+            clients.set(ws, clientData);
+
+            // Send confirmation
+            ws.send(JSON.stringify({
+              type: 'registered',
+              success: true
+            }));
+
+            // Notify other clients in the same project about new user
+            if (data.projectId) {
+              broadcastToProject(data.projectId, {
+                type: 'user_joined',
+                userId: data.userId,
+                username: data.username,
+                projectId: data.projectId
+              }, ws); // Exclude the sender
+            }
+          }
+        }
+        // Handle segment update notification
+        else if (data.type === 'segment_update') {
+          // Broadcast the segment update to all clients working on the same project
+          if (data.projectId) {
+            broadcastToProject(data.projectId, {
+              type: 'segment_updated',
+              segmentId: data.segmentId,
+              userId: data.userId,
+              username: data.username,
+              status: data.status,
+              target: data.target,
+              timestamp: new Date().toISOString()
+            });
+          }
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    });
+
+    // Handle client disconnection
+    ws.on('close', () => {
+      const clientData = clients.get(ws);
+      
+      // Notify other clients about user leaving
+      if (clientData?.projectId && clientData?.userId) {
+        broadcastToProject(clientData.projectId, {
+          type: 'user_left',
+          userId: clientData.userId,
+          username: clientData.username,
+          projectId: clientData.projectId
+        });
+      }
+      
+      // Remove client from the map
+      clients.delete(ws);
+      console.log('WebSocket client disconnected');
+    });
+
+    // Handle errors
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+    });
+  });
+
+  // Broadcast to all clients working on a specific project
+  function broadcastToProject(projectId: number, data: any, excludeClient?: WebSocket) {
+    const projectClients = getProjectClients(projectId);
+    const message = JSON.stringify(data);
+    
+    projectClients.forEach(client => {
+      // Check if client is still connected
+      if (client !== excludeClient && client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+  }
+
   return httpServer;
 }
