@@ -2565,9 +2565,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const data = updateSchema.parse(req.body);
       console.log(`Updating segment ${id} with data:`, data);
-      
-      // Add timeout promise
-      const updatePromise = db
+
+      // 세그먼트 존재 여부 확인
+      const existingSegment = await db.query.translationUnits.findFirst({
+        where: eq(schema.translationUnits.id, id)
+      });
+
+      if (!existingSegment) {
+        return res.status(404).json({ message: "Segment not found" });
+      }
+
+      // 업데이트 실행
+      const [updatedSegment] = await db
         .update(schema.translationUnits)
         .set({
           ...data,
@@ -2575,11 +2584,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .where(eq(schema.translationUnits.id, id))
         .returning();
-
-      const [updatedSegment] = await Promise.race([
-        updatePromise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Update timeout')), 10000))
-      ]) as any;
 
       if (!updatedSegment) {
         return res.status(404).json({ message: "Segment not found" });
