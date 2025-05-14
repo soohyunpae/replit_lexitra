@@ -1,96 +1,29 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { TranslationUnit } from "@/types";
-import { useCallback } from "react";
-import { useDebouncedCallback } from "./useDebounce";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
+import { TranslationUnit } from '@/types';
 
-// 디바운스 지연 시간 (ms) - 키 입력에 더 빠르게 반응하도록 값 조정
-const DEBOUNCE_DELAY = 300;
+const queryKeys = {
+  segments: (fileId: number) => ['segments', fileId] as const,
+};
 
-/**
- * React Query 기반 세그먼트 데이터 관리 훅
- * useSegmentContext를 대체하여 일관된 데이터 흐름과 자동 동기화를 제공함
- */
 export function useSegments(fileId: number) {
-  // 세그먼트 데이터 가져오기
-  const { 
-    data: segments = [], 
-    isLoading, 
-    isError, 
-    error,
-    refetch
-  } = useQuery<TranslationUnit[]>({
-    queryKey: ["segments", fileId], 
-    queryFn: () => apiRequest("GET", `/api/segments/${fileId}`)
-      .then(res => res.json()),
-    staleTime: 0,
-    refetchOnWindowFocus: false,
+  return useQuery({
+    queryKey: queryKeys.segments(fileId),
+    queryFn: () => api.get(`/api/segments?fileId=${fileId}`),
   });
+}
 
-  // 세그먼트 업데이트 뮤테이션
-  const updateSegmentMutation = useMutation({
-    mutationFn: (updated: Partial<TranslationUnit> & { id: number }) => 
-      apiRequest("PATCH", `/api/segments/${updated.id}`, updated)
-        .then(res => res.json()),
-    onSuccess: () => {
-      // 업데이트 성공 시 세그먼트 쿼리 무효화하여 최신 데이터 가져오기
-      queryClient.invalidateQueries({ queryKey: ["segments", fileId] });
-    }
-  });
+export function useSegmentMutation() {
+  const queryClient = useQueryClient();
 
-  // 디바운스 없이 즉시 업데이트하는 함수
-  const updateSegment = async (segmentData: Partial<TranslationUnit> & { id: number }) => {
-    return updateSegmentMutation.mutateAsync(segmentData);
-  };
-
-  // 디바운스된 API 업데이트 함수
-  const debouncedUpdateSegmentFn = useDebouncedCallback(
-    async (segmentId: number, newData: Partial<TranslationUnit>) => {
-      try {
-        console.log(`Sending debounced update for segment ${segmentId}:`, newData);
-        await updateSegmentMutation.mutateAsync({ id: segmentId, ...newData });
-      } catch (error) {
-        console.error(`Debounced update for segment ${segmentId} failed:`, error);
-      }
+  return useMutation({
+    mutationFn: (data: { id: number; target: string; status: string }) =>
+      api.patch(`/api/segments/${data.id}`, data),
+    onSuccess: (_, variables) => {
+      // 성공 시 segments 쿼리 무효화
+      queryClient.invalidateQueries({ 
+        queryKey: queryKeys.segments(variables.fileId) 
+      });
     },
-    DEBOUNCE_DELAY
-  );
-  
-  // 낙관적 UI 업데이트를 포함한 디바운스 함수
-  // 단일 객체 패러미터로 변경 ({id, ...rest}) 형태
-  const debouncedUpdateSegment = useCallback((
-    segmentData: Partial<TranslationUnit> & { id: number }
-  ): void => {
-    const { id, ...rest } = segmentData;
-    
-    // 낙관적 UI 업데이트를 위해 현재 캐시된 데이터 수동 업데이트
-    // React Query의 setQueryData를 사용하여 캐시 업데이트
-    queryClient.setQueryData(
-      ["segments", fileId], 
-      (oldData: TranslationUnit[] | undefined): TranslationUnit[] => {
-        if (!oldData) return [];
-        
-        return oldData.map(segment => 
-          segment.id === id 
-            ? { ...segment, ...rest } 
-            : segment
-        );
-      }
-    );
-    
-    // 디바운스된 API 호출
-    debouncedUpdateSegmentFn(id, rest);
-  }, [fileId, debouncedUpdateSegmentFn]);
-
-  return {
-    segments,
-    isLoading,
-    isError,
-    error,
-    updateSegment,
-    debouncedUpdateSegment,
-    refetch,
-    // isMutating은 현재 업데이트 중인지 확인하는 데 사용
-    isMutating: updateSegmentMutation.isPending,
-  };
+  });
 }

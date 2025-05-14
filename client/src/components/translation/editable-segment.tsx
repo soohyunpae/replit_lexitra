@@ -88,41 +88,41 @@ export function EditableSegment(props: EditableSegmentProps) {
     // 원문과 번역문 textarea 참조 모두 가져오기
     const sourceTextarea = sourceTextareaRef.current;
     const targetTextarea = textareaRef.current;
-    
+
     // 하나라도 없으면 동기화 불가
     if (!sourceTextarea && !targetTextarea) return;
-    
+
     // 두 영역 높이 초기화 (정확한 스크롤 높이 측정을 위해)
     if (sourceTextarea) sourceTextarea.style.height = 'auto';
     if (targetTextarea) targetTextarea.style.height = 'auto';
-    
+
     // 두 영역의 스크롤 높이 계산
     const sourceHeight = sourceTextarea ? sourceTextarea.scrollHeight : 0;
     const targetHeight = targetTextarea ? targetTextarea.scrollHeight : 0;
-    
+
     // 둘 중 더 큰 높이로 설정
     const maxHeight = Math.max(sourceHeight, targetHeight);
-    
+
     // 두 에디터에 최종 높이 적용
     if (sourceTextarea) sourceTextarea.style.height = `${maxHeight}px`;
     if (targetTextarea) targetTextarea.style.height = `${maxHeight}px`;
-    
+
     // 세그먼트 ID에 현재 높이 저장
     segmentHeightsMap.set(segment.id, maxHeight);
-    
+
     // 주변 세그먼트들에게 업데이트 이벤트 발생시키기
     const event = new CustomEvent('segment-height-changed', { 
       detail: { segmentId: segment.id, height: maxHeight } 
     });
     window.dispatchEvent(event);
   }, [segment.id]);
-  
+
   // 다른 세그먼트의 높이 변경 시 반응
   useEffect(() => {
     const handleHeightChange = (e: Event) => {
       const customEvent = e as CustomEvent;
       const { segmentId, height } = customEvent.detail;
-      
+
       // 현재 세그먼트의 높이 업데이트
       if (segmentId === segment.id) {
         // 원문 및 번역문 모두 높이 적용
@@ -134,16 +134,16 @@ export function EditableSegment(props: EditableSegmentProps) {
         }
       }
     };
-    
+
     // 이벤트 리스너 등록
     window.addEventListener('segment-height-changed', handleHeightChange);
-    
+
     // 클린업
     return () => {
       window.removeEventListener('segment-height-changed', handleHeightChange);
     };
   }, [segment.id]);
-  
+
   // 각 세그먼트 텍스트의 높이 조절
   const synchronizeHeights = React.useCallback(() => {
     requestAnimationFrame(() => {
@@ -155,19 +155,19 @@ export function EditableSegment(props: EditableSegmentProps) {
   useLayoutEffect(() => {
     synchronizeHeights();
   }, [value, synchronizeHeights]);
-  
+
   // 컴포넌트 마운트 시 한 번 실행
   useEffect(() => {
     // 약간의 시간 간격을 두고 여러 번 높이 동기화 시도
     // 브라우저 렌더링 및 스타일 적용 후 정확한 높이 계산을 위함
     synchronizeHeights();
-    
+
     const timers = [
       setTimeout(() => synchronizeHeights(), 50),
       setTimeout(() => synchronizeHeights(), 150),
       setTimeout(() => synchronizeHeights(), 300)
     ];
-    
+
     return () => {
       timers.forEach(timer => clearTimeout(timer));
     };
@@ -179,10 +179,10 @@ export function EditableSegment(props: EditableSegmentProps) {
     const handleResize = () => {
       synchronizeHeights();
     };
-    
+
     // 윈도우 리사이즈 이벤트 리스너 추가
     window.addEventListener("resize", handleResize);
-    
+
     // 클린업 - 컴포넌트 언마운트 시 리스너 제거
     return () => window.removeEventListener("resize", handleResize);
   }, [synchronizeHeights]);
@@ -385,3 +385,4 @@ export function EditableSegment(props: EditableSegmentProps) {
     </div>
   );
 }
+import { useSegmentMutation } from "@/hooks/useSegments";
