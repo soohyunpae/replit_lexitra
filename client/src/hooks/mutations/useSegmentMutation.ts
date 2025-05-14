@@ -8,12 +8,18 @@ export function useSegmentMutation() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: (data: {
+    mutationFn: async (data: {
       id: number;
       target: string;
       status: string;
       fileId: number;
-    }) => updateSegment(data.id, data.target, data.status),
+    }) => {
+      const response = await updateSegment(data.id, data.target, data.status);
+      if (!response) {
+        throw new Error("Failed to update segment");
+      }
+      return response;
+    },
     onSuccess: (_, variables) => {
       // Invalidate and refetch
       queryClient.invalidateQueries({
@@ -27,7 +33,7 @@ export function useSegmentMutation() {
       console.error("Failed to update segment:", error);
       toast({
         title: "업데이트 실패",
-        description: "세그먼트 업데이트 중 오류가 발생했습니다.",
+        description: "세그먼트 업데이트 중 오류가 발생했습니다. 다시 시도해주세요.",
         variant: "destructive",
       });
     },

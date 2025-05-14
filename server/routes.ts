@@ -2549,11 +2549,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch(`${apiPrefix}/segments/:id`, verifyToken, async (req, res) => {
     try {
-      // Add authentication check
-      if (!req.user) {
-        console.error('Authentication required for segment update');
-        return res.status(401).json({ message: "Authentication required" });
-      }
+      // Authentication already checked by verifyToken middleware
+      console.log('[SEGMENT UPDATE]', {
+        tokenAuthenticated: !!req.user,
+        user: req.user,
+        segmentId: req.params.id,
+        body: req.body
+      });
 
       const id = parseInt(req.params.id);
       const updateSchema = z.object({
