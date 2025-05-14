@@ -5,8 +5,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Languages } from "lucide-react";
 import { TranslationUnit } from "@/types";
 import { cn } from "@/lib/utils";
-import { useWebSocket } from "@/hooks/use-websocket";
-import { useToast } from "@/hooks/use-toast";
 
 /**
  * !!! 중요 !!! 2025-05-12 개선된 세그먼트 높이 동기화 기능
@@ -36,7 +34,6 @@ interface EditableSegmentProps {
   onTranslateWithGPT?: () => void;
   isChecked?: boolean;
   onCheckChange?: (checked: boolean) => void;
-  projectId?: number; // Project ID for WebSocket collaboration
 }
 
 export function EditableSegment(props: EditableSegmentProps) {
@@ -243,7 +240,7 @@ export function EditableSegment(props: EditableSegmentProps) {
         }
       }
 
-      // onUpdate 함수 호출
+      // onUpdate 함수 호출 (서버에 변경사항 저장)
       onUpdate(newValue, newStatus as string, newOrigin as string);
     }
   };
@@ -388,4 +385,3 @@ export function EditableSegment(props: EditableSegmentProps) {
     </div>
   );
 }
-import { useSegmentMutation } from "@/hooks/useSegments";
