@@ -1,6 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/api";
+import { apiRequest } from "@/lib/queryClient";
 import { File } from "@/types";
 
 export function useFileQuery(fileId: number) {
