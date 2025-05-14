@@ -11,7 +11,10 @@ export const useSegments = (fileId: number) => {
       const response = await apiRequest("GET", `/api/segments/${fileId}`);
       return response.json();
     },
-    enabled: !!fileId
+    enabled: !!fileId,
+    staleTime: 30000, // 30 seconds
+    cacheTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false
   });
 
   const { mutate: updateSegmentMutation } = useMutation({

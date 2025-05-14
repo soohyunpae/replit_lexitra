@@ -114,21 +114,14 @@ export function NewTranslationEditor({
   useEffect(() => {
     if (!segments) return;
 
-    let filtered = [...segments];
-
-    // Apply status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((segment) => segment.status === statusFilter);
-    }
-
-    // Apply origin filter
-    if (originFilter !== "all") {
-      filtered = filtered.filter((segment) => segment.origin === originFilter);
-    }
+    const filtered = segments.filter(segment => {
+      const statusMatch = statusFilter === "all" || segment.status === statusFilter;
+      const originMatch = originFilter === "all" || segment.origin === originFilter;
+      return statusMatch && originMatch;
+    });
 
     setFilteredSegments(filtered);
-
-    // Reset to page 1 when filters change
+  }, [segments, statusFilter, originFilter]); page 1 when filters change
     setCurrentPage(1);
   }, [segments, statusFilter, originFilter]);
 
