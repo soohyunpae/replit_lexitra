@@ -5,6 +5,21 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from 'url';
 
+// Global setTimeout patching to prevent timeout integer overflow
+// Maximum safe timeout value (32-bit signed integer)
+const MAX_TIMEOUT = 2147483647; // ~24.8 days
+
+// Patch global setTimeout to prevent integer overflow errors
+const originalSetTimeout = global.setTimeout;
+global.setTimeout = function safeSetTimeout(callback: any, ms: number, ...args: any[]) {
+  // Clamp timeout to prevent integer overflow
+  const safeMs = Math.min(Math.max(0, ms), MAX_TIMEOUT);
+  if (safeMs !== ms && ms > MAX_TIMEOUT) {
+    console.warn(`Timeout value ${ms} exceeds maximum safe value, clamped to ${MAX_TIMEOUT}`);
+  }
+  return originalSetTimeout(callback, safeMs, ...args);
+} as typeof setTimeout;
+
 // ES Module equivalent for __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

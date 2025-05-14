@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { db } from "@db";
 import * as schema from "@shared/schema";
 import { eq, and, or, desc, like, sql, inArray } from "drizzle-orm";
+import type { TranslationUnit } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { ZodError } from "zod";
@@ -187,10 +188,11 @@ function levenshteinDistance(str1: string, str2: string): number {
   return dp[m][n];
 }
 
-// Safe setTimeout helper that handles large delays
+// The global setTimeout is already patched in index.ts and openai.ts
+// This function now simply uses the global safe implementation
 const safeSetTimeout = (fn: Function, delay: number) => {
-  const MAX_TIMEOUT = 2147483647; // Max 32-bit signed integer
-  setTimeout(fn, Math.min(delay, MAX_TIMEOUT));
+  // The global setTimeout has been patched to safely handle large delays
+  setTimeout(() => fn(), delay);
 };
 
 // API Error Handler
@@ -1112,7 +1114,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get segments for these files with proper error handling
-      let segments;
+      let segments: schema.TranslationUnit[] = [];
       try {
         segments = await db.query.translationUnits.findMany({
           where: inArray(schema.translationUnits.fileId, fileIds),
