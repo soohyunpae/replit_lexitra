@@ -2575,18 +2575,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Segment not found" });
       }
 
+      // 업데이트할 데이터 준비
+      const updateData = {
+        ...data,
+        updatedAt: new Date()
+      };
+
+      // target이 변경되었고 status가 지정되지 않은 경우 status를 'Edited'로 설정
+      if (data.target !== undefined && data.target !== existingSegment.target && !data.status) {
+        updateData.status = 'Edited';
+      }
+
       // 업데이트 실행
       const [updatedSegment] = await db
         .update(schema.translationUnits)
-        .set({
-          ...data,
-          updatedAt: new Date(),
-        })
+        .set(updateData)
         .where(eq(schema.translationUnits.id, id))
         .returning();
 
       if (!updatedSegment) {
-        return res.status(404).json({ message: "Segment not found" });
+        return res.status(404).json({ message: "Failed to update segment" });
       }
 
       // If the status is Reviewed, save to TM
