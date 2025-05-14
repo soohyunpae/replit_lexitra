@@ -214,14 +214,13 @@ export function EditableSegment(props: EditableSegmentProps) {
   };
 
   // 텍스트 변경 핸들러
+  const { mutate: updateSegmentMutation } = useSegmentMutation();
+
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
+    setValue(newValue); // 즉시 UI 업데이트
 
-    // 즉시 UI 업데이트
-    setValue(newValue);
-
-    // 서버 업데이트 로직
-    if (!isSource && onUpdate) {
+    if (!isSource) {
       const isValueChanged = newValue !== liveSegment.target;
       const needsOriginChange = isOriginInList(
         liveSegment.origin,
@@ -240,8 +239,27 @@ export function EditableSegment(props: EditableSegmentProps) {
         }
       }
 
-      // onUpdate 함수 호출 (서버에 변경사항 저장)
-      onUpdate(newValue, newStatus as string, newOrigin as string);
+      // React Query mutation 사용
+      updateSegmentMutation(
+        {
+          id: liveSegment.id,
+          target: newValue,
+          status: newStatus,
+          fileId: liveSegment.fileId,
+        },
+        {
+          onSuccess: () => {
+            if (onUpdate) {
+              onUpdate(newValue, newStatus, newOrigin);
+            }
+          },
+          onError: (error) => {
+            console.error("Failed to update segment:", error);
+            // UI 롤백
+            setValue(liveSegment.target || "");
+          },
+        }
+      );
     }
   };
 

@@ -303,53 +303,46 @@ export function NewTranslationEditor({
     try {
       if (!segments) return;
 
-      // Find current segment to check if it was modified
       const currentSegment = segments.find((s) => s.id === id);
       if (!currentSegment) return;
 
-      const wasModified = currentSegment && currentSegment.target !== target;
+      const wasModified = currentSegment.target !== target;
+      const updatedStatus = status || (wasModified ? "Edited" : currentSegment.status);
+      const updatedOrigin = origin || 
+        (wasModified && (currentSegment.origin === "MT" || currentSegment.origin === "100%" || currentSegment.origin === "Fuzzy") 
+          ? "HT" 
+          : currentSegment.origin);
 
-      // If segment was manually edited and no status is provided, set to "Edited"
-      let updatedStatus = status;
-      if (!updatedStatus && wasModified) {
-        updatedStatus = "Edited";
-      }
-
-      // Set origin to HT if this is a human edit and it's marked as Reviewed
-      let updatedOrigin = origin;
-      if (!updatedOrigin && wasModified) {
-        // If segment was manually edited, set origin to HT
-        updatedOrigin =
-          updatedStatus === "Reviewed" ||
-          (currentSegment?.status === "Reviewed" && updatedStatus === undefined)
-            ? "HT"
-            : currentSegment?.origin;
-      }
-
-      // React Query의 debouncedUpdateSegment 사용 - 자동 캐시 업데이트
-      debouncedUpdateSegment({
-        id,
-        target,
-        status: updatedStatus || "MT",
-        origin: updatedOrigin,
-        modified: true,
-      });
-
-      // 히스토리 트래킹
-      const oldTarget = currentSegment?.target;
-      if (selectedSegmentId === id && oldTarget && oldTarget !== target) {
-        console.log("Recording segment history for:", id, target);
-
-        // 이전 버전이 없을 경우에만 저장
-        if (!previousVersions[id]) {
-          setPreviousVersions((prev) => ({
-            ...prev,
-            [id]: oldTarget,
-          }));
+      // React Query mutation 직접 사용
+      updateSegmentMutation(
+        {
+          id,
+          target,
+          status: updatedStatus,
+          fileId,
+        },
+        {
+          onSuccess: () => {
+            // 히스토리 트래킹
+            if (selectedSegmentId === id && currentSegment.target && currentSegment.target !== target) {
+              if (!previousVersions[id]) {
+                setPreviousVersions((prev) => ({
+                  ...prev,
+                  [id]: currentSegment.target || "",
+                }));
+              }
+            }
+          },
+          onError: (error) => {
+            console.error("Error updating segment:", error);
+            toast({
+              title: "Error",
+              description: "Failed to update segment",
+              variant: "destructive",
+            });
+          },
         }
-      }
-
-      // React Query가 업데이트된 값을 자동으로 반환하므로 별도 return이 필요 없음
+      );
     } catch (error) {
       console.error("Error updating segment:", error);
       toast({
@@ -357,7 +350,6 @@ export function NewTranslationEditor({
         description: "Failed to update segment",
         variant: "destructive",
       });
-      return null;
     }
   };
 
