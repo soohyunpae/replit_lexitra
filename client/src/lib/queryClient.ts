@@ -162,9 +162,17 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       staleTime: Infinity,
       retry: false,
+      onError: (error) => {
+        console.error("Query Error:", error);
+        // You can add global error notification here
+      }
     },
     mutations: {
       retry: false,
+      onError: (error) => {
+        console.error("Mutation Error:", error);
+        // You can add global error notification here
+      }
     },
   },
 });

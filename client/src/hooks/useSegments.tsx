@@ -15,7 +15,7 @@ export const useSegments = (fileId: number) => {
     enabled: !!fileId,
   });
 
-  const { mutate: updateSegmentMutation } = useMutation({
+  const { mutate: updateSegmentMutation, error: updateError } = useMutation({
     mutationFn: async ({
       id,
       target,
