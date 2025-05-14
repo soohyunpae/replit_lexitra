@@ -1,0 +1,149 @@
+# React Query 기반 리팩토링 지원 문서
+
+이 문서는 Lexitra 프로젝트의 React Query 기반 리팩토링을 Replit 또는 다른 협업 대상에게 요청할 때 사용할 수 있는 보조 자료입니다.
+
+---
+
+## ✅ 1. 리팩토링 로드맵 문서
+
+이미 작성된 `react_migration_plan.md` 파일에는 다음 내용이 포함되어 있습니다:
+
+* 상태 관리 전환: Context → React Query
+* 디렉토리 구조 개선
+* API fetch/mutation 통일 전략
+* TM, 용어집, 세그먼트 구조 정리 제안
+* 모듈화된 컴포넌트 설계 방향
+
+참고 파일: `/docs/react_migration_plan.md`
+
+---
+
+## ✅ 2. API 응답 예시 모음
+
+### 📘 `/api/projects`
+
+```json
+[
+  {
+    "id": 1,
+    "name": "My Project",
+    "files": [
+      {
+        "id": 101,
+        "name": "intro.txt"
+      }
+    ]
+  }
+]
+```
+
+### 📗 `/api/projects/1/stats`
+
+```json
+{
+  "wordCount": 540,
+  "translatedPercentage": 87.3,
+  "reviewedPercentage": 45.5,
+  "statusCounts": {
+    "100%": 120,
+    "Fuzzy": 34,
+    "MT": 112,
+    "Reviewed": 84,
+    "Edited": 15,
+    "Rejected": 3
+  },
+  "totalSegments": 368
+}
+```
+
+### 📕 `/api/segments?fileId=101`
+
+```json
+[
+  {
+    "id": 1001,
+    "source": "This is a test segment.",
+    "target": "이것은 테스트 문장입니다.",
+    "status": "MT"
+  }
+]
+```
+
+### 📒 `/api/segments/1001` (PATCH)
+
+```json
+{
+  "target": "수정된 번역문",
+  "status": "Edited"
+}
+```
+
+---
+
+## ✅ 3. 리팩토링 우선순위 정리
+
+### 🔹 Phase 1: 핵심 페이지 및 데이터 흐름 리팩토링
+
+* `/app/projects.tsx` → 프로젝트 목록 + 단어 수 fetch 통일
+* `/app/project.tsx` → 상세 단어 수, segment fetch 통일
+* `/app/translation/page.tsx` → 에디터 구조 분해, 상태 통일
+* `/components/segment/editable-segment.tsx` → mutation hook 적용
+
+### 🔹 Phase 2: TM/Glossary 및 관리자 기능 분리
+
+* `/app/tm_management/page.tsx`
+* `/app/termbase/page.tsx`
+* `/components/tm/TMMatches.tsx`, `TMSuggestion.tsx`
+
+---
+
+## ✅ 4. Replit 전달용 요약
+
+이 프로젝트는 현재 React Query와 기존 Context 상태 관리가 혼합된 구조입니다. 전체 리팩토링 목표는:
+
+* 모든 서버 데이터 fetch → `useQuery` 기반 통일
+* 모든 데이터 변경 → `useMutation` + `queryClient.invalidateQueries()` 적용
+* 디렉토리 구조 → `/hooks/queries`, `/mutations`, `/states`, `/components/translation` 등 모듈화
+* TM, 용어집, Segment, 프로젝트 상태 등의 상태 일관성 확보
+
+우선순위는 위에 명시된 Phase 1 파일들입니다. 각 단계별로 점진적 refactoring이 가능하며, `react_migration_plan.md`를 기준으로 작업해주시면 됩니다.
+
+---
+
+## ✅ 6. 종합 정리 및 Replit 피드백 요약
+
+- ✅ API 응답 예시가 명확하게 문서화되어 있어 인터페이스 설계가 명확함  
+- ✅ Phase 1과 2로 우선순위를 나누어 점진적 리팩토링 가능  
+- ✅ 디렉토리 구조 개선 방향이 구체적
+
+---
+
+### 🔸 추가 제안: `queryKey` 상수화
+
+```ts
+const queryKeys = {
+  projects: ['projects'] as const,
+  project: (id: number) => ['projects', id] as const,
+  segments: (fileId: number) => ['segments', fileId] as const,
+  tm: ['tm'] as const,
+  glossary: ['glossary'] as const
+};
+```
+
+→ `invalidateQueries()`가 안정적으로 동작하고, hook들 간 key 관리가 일관됨
+
+---
+
+### 🔸 기타 전략 요약
+
+- Mutation 분리: `useSegmentMutation.ts` 등으로 나누고 `onSuccess`, `onError` 핸들링 명확히
+- Optimistic Update: mutation에서 optimistic하게 UI 반영 후 rollback 처리 가능성 고려
+- Error Boundary: 전역 에러 처리를 위한 React `ErrorBoundary` 도입 권장
+- Cache 전략 명시: `staleTime`, `cacheTime`, `refetchOnWindowFocus` 등 세부 옵션 정의
+
+---
+
+### 🔸 참고할 기존 코드
+
+- `useSegments.tsx`처럼 이미 React Query 기반으로 리팩토링된 훅들이 있으므로,  
+  그 구조를 따라 `useProjectQuery`, `useTMQuery`, `useSegmentMutation` 등으로 점진적 전환 가능
