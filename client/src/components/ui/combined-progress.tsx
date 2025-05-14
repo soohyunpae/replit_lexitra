@@ -24,6 +24,13 @@ export function CombinedProgress({
   height = "h-2",
   showPercentage = false
 }: CombinedProgressProps) {
+  // Debug logging
+  console.log("CombinedProgress received props:", {
+    reviewedPercentage,
+    statusCounts,
+    totalSegments
+  });
+
   // Calculate percentages for each status
   const total = Math.max(totalSegments, 1); // Avoid division by zero
   const percentages = {

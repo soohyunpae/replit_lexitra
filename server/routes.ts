@@ -1126,11 +1126,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         statusCounts[status] = (statusCounts[status] || 0) + 1;
       });
 
-      console.log(`Project ${id} stats:`, { totalSegments, statusCounts });
+      // Calculate reviewed percentage
+      const reviewedCount = statusCounts["Reviewed"] || 0;
+      const reviewedPercentage = totalSegments > 0 ? (reviewedCount / totalSegments) * 100 : 0;
+
+      console.log(`Project ${id} stats calculation:`, {
+        totalSegments,
+        statusCounts,
+        reviewedCount,
+        reviewedPercentage,
+        segments: segments.length,
+        segmentStatuses: segments.map(s => s.status)
+      });
 
       return res.json({
         totalSegments,
         statusCounts,
+        reviewedPercentage // Add reviewedPercentage to response
       });
     } catch (error) {
       console.error("Failed to get project stats:", error);
