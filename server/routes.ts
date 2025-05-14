@@ -1366,9 +1366,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log(`Processing ${contentLines.length} lines for file ID ${file.id}`);
               logMemoryUsage('Before segment processing');
               
-              // 메모리 부담을 줄이기 위해 작은 배치로 세그먼트 처리
+              // 메모리 사용을 최소화하기 위해 세그먼트 ID만 추적
               const BATCH_SIZE = 50; // 한 번에 최대 50개 세그먼트씩 처리
-              let allSavedSegments: typeof schema.translationUnits.$inferSelect[] = [];
+              let segmentIds: number[] = []; // 세그먼트 ID만 저장 (전체 객체 저장 X)
               let currentBatch: {
                 source: string;
                 status: string;
@@ -1376,6 +1376,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }[] = [];
               
               let segmentCount = 0;
+              
+              // 연속적인 segments 배열 확장 사용 금지 (메모리 효율성)
+              console.log('Processing content with optimized memory usage');
               
               // 각 라인마다 세그먼트로 분할하고 배치로 처리
               for (const line of contentLines) {
@@ -1399,9 +1402,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     const batchSavedSegments = await db
                       .insert(schema.translationUnits)
                       .values(currentBatch)
-                      .returning();
+                      .returning({ id: schema.translationUnits.id });
                     
-                    allSavedSegments = [...allSavedSegments, ...batchSavedSegments];
+                    // 메모리 효율을 위해 전체 객체가 아닌 ID만 저장
+                    segmentIds = segmentIds.concat(batchSavedSegments.map(s => s.id));
                     currentBatch = []; // 배치 초기화
                     
                     logMemoryUsage('After batch insert');
@@ -1417,17 +1421,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 const finalBatchSegments = await db
                   .insert(schema.translationUnits)
                   .values(currentBatch)
-                  .returning();
+                  .returning({ id: schema.translationUnits.id });
                 
-                allSavedSegments = [...allSavedSegments, ...finalBatchSegments];
+                // 메모리 효율을 위해 전체 객체가 아닌 ID만 저장
+                segmentIds = segmentIds.concat(finalBatchSegments.map(s => s.id));
+                
                 logMemoryUsage('After final batch insert');
               }
               
               if (segmentCount > 0) {
                 console.log(`Created total ${segmentCount} segments for file ID ${file.id}`);
                 
-                // 기존 코드와의 호환성을 위해 savedSegments 변수 정의
-                const savedSegments = allSavedSegments;
+                // 필요한 세그먼트 정보만 가져옴 (메모리 효율성 향상)
+                const savedSegments = segmentIds.length > 0 ? 
+                  await db.query.translationUnits.findMany({
+                    where: inArray(schema.translationUnits.id, segmentIds),
+                    columns: {
+                      id: true,
+                      source: true,
+                      fileId: true
+                    }
+                  }) : [];
 
                 // 프로젝트 정보 가져오기 (언어 정보 필요)
                 const projectInfo = await db.query.projects.findFirst({
