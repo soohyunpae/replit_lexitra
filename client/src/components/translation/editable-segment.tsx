@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useSegmentMutation } from "@/hooks/mutations/useSegmentMutation";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Languages } from "lucide-react";
 import { TranslationUnit } from "@/types";
@@ -217,7 +218,7 @@ export function EditableSegment(props: EditableSegmentProps) {
   const { mutate: updateSegmentMutation } = useSegmentMutation();
 
   const { mutate: updateSegment } = useSegmentMutation();
-  
+
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setValue(newValue);
