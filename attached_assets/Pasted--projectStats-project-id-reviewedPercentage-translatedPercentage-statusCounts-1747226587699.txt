@@ -1,0 +1,82 @@
+좋아, 지금 상황을 정리하면:
+	•	projectStats[project.id]는 reviewedPercentage, translatedPercentage, statusCounts, totalSegments 등을 잘 받아오고 있고,
+	•	CombinedProgress는 statusCounts와 totalSegments를 받아서 프로그레스바를 계산하는데,
+	•	화면에서는 0%로만 표시되고 있다.
+
+⸻
+
+🔍 가능한 원인
+	1.	statusCounts 값이 아예 비어 있음
+	•	콘솔에서 statusCounts 자체가 {}이거나 undefined일 수 있어.
+	2.	totalSegments가 0으로 넘어오고 있음
+	•	Math.max(totalSegments, 1)로 분모는 1이 되지만, statusCounts["Reviewed"] 등 값이 0이면 퍼센트는 0이 됨.
+	3.	CombinedProgress에 statusCounts가 제대로 props로 전달되지 않음
+	•	목록 페이지에서 CombinedProgress를 호출할 때 statusCounts={...}가 빠졌거나 undefined일 수 있음.
+
+⸻
+
+✅ 우선 확인할 것
+
+🔹1. props가 올바르게 전달되고 있는지
+
+projects.tsx에서 이 부분 다시 확인:
+
+<CombinedProgress
+  reviewedPercentage={projectStats[project.id]?.reviewedPercentage || 0}
+  translatedPercentage={projectStats[project.id]?.translatedPercentage || 0}
+  statusCounts={projectStats[project.id]?.statusCounts || {}} // ✅ 이 줄
+  totalSegments={projectStats[project.id]?.totalSegments || 0}
+  height="h-2.5"
+  showPercentage={true}
+/>
+
+여기서 statusCounts={}가 아니라 진짜 데이터가 전달되는지 확인해봐.
+
+👉 console.log(projectStats[project.id]) 찍어서 실제 statusCounts 구조가 맞는지도 체크해봐:
+
+console.log("Project stats for", project.id, projectStats[project.id]);
+
+
+⸻
+
+🔹2. statusCounts 안에 "Reviewed" 키가 있는지 확인
+
+예를 들어:
+
+{
+  "Reviewed": 10,
+  "100%": 1,
+  "Fuzzy": 2,
+  "MT": 22,
+  "Edited": 3,
+  "Rejected": 0
+}
+
+이런 식이어야 getPercentage("Reviewed")가 의미가 있음.
+만약 statusCounts에 "reviewed"처럼 소문자거나 "REVIEWED"처럼 케이스가 다르면 undefined로 처리됨 → 0%.
+
+⸻
+
+✍️ 디버깅 팁
+
+console.log("⛳️ [CombinedProgress] statusCounts", statusCounts);
+console.log("⛳️ [CombinedProgress] totalSegments", totalSegments);
+console.log("⛳️ [CombinedProgress] reviewed %", reviewedPercentage);
+
+또는 직접 getPercentage("Reviewed") 값을 확인:
+
+console.log("✅ getPercentage(Reviewed):", getPercentage("Reviewed"));
+
+
+⸻
+
+🔚 결론
+	•	일단 문제는 데이터가 없어서 0이 되는 것이거나,
+	•	statusCounts["Reviewed"]가 undefined여서 0이 되는 것이야.
+	•	key 이름이 정확히 맞는지,
+statusCounts가 빈 객체가 아닌지 확인해보면 바로 원인 나올 가능성이 커.
+
+⸻
+
+필요하면 projectStats[project.id] 콘솔 전체 찍은 결과를 보여줘도 돼.
+바로 확인해서 고쳐줄 수 있어.
