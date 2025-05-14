@@ -12,19 +12,13 @@ export function useSegmentMutation() {
       target: string;
       status: string;
       fileId: number;
+      origin?: string;
     }) => {
-      try {
-        console.log('Mutation started:', data);
-        const response = await updateSegment(data.id, data.target, data.status);
-        if (!response) {
-          throw new Error('No response from updateSegment');
-        }
-        console.log('Mutation successful:', response);
-        return response;
-      } catch (error) {
-        console.error('Mutation error:', error);
-        throw error;
+      const response = await updateSegment(data.id, data.target, data.status, data.origin);
+      if (!response) {
+        throw new Error('No response from updateSegment');
       }
+      return response;
     },
     onSuccess: (_, variables) => {
       // Invalidate and refetch
