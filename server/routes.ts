@@ -2651,46 +2651,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
         target: z.string().optional(),
         status: z.string().optional(),
         comment: z.string().optional(),
-        origin: z.string().optional(), // Add origin field to the schema
+        origin: z.string().optional(),
       });
 
       const data = updateSchema.parse(req.body);
-      console.log(`Updating segment ${id} with data:`, data); // Add logging for debugging
-      const [updatedSegment] = await db
-        .update(schema.translationUnits)
-        .set({
-          ...data,
-          updatedAt: new Date(),
-        })
-        .where(eq(schema.translationUnits.id, id))
-        .returning();
+      console.log(`Updating segment ${id} with data:`, data);
 
-      if (!updatedSegment) {
-        return res.status(404).json({ message: "Segment not found" });
-      }
+      // Use a reasonable timeout for the update operation
+      const updatePromise = new Promise(async (resolve, reject) => {
+        try {
+          const [updatedSegment] = await db
+            .update(schema.translationUnits)
+            .set({
+              ...data,
+              updatedAt: new Date(),
+            })
+            .where(eq(schema.translationUnits.id, id))
+            .returning();
 
-      // If the status is Reviewed, save to TM
-      if (data.status === "Reviewed" && updatedSegment.target) {
-        const file = await db.query.files.findFirst({
-          where: eq(schema.files.id, updatedSegment.fileId),
-          with: {
-            project: true,
-          },
-        });
+          if (!updatedSegment) {
+            reject(new Error("Segment not found"));
+            return;
+          }
 
-        if (file && file.project) {
-          await db.insert(schema.translationMemory).values({
-            source: updatedSegment.source,
-            target: updatedSegment.target,
-            status: "Reviewed",
-            sourceLanguage: file.project.sourceLanguage,
-            targetLanguage: file.project.targetLanguage,
-          });
+          // Handle TM update with safe timeout
+          if (data.status === "Reviewed" && updatedSegment.target) {
+            safeSetTimeout(async () => {
+              try {
+                const file = await db.query.files.findFirst({
+                  where: eq(schema.files.id, updatedSegment.fileId),
+                  with: {
+                    project: true,
+                  },
+                });
+
+                if (file && file.project) {
+                  await db.insert(schema.translationMemory).values({
+                    source: updatedSegment.source,
+                    target: updatedSegment.target,
+                    status: "Reviewed",
+                    sourceLanguage: file.project.sourceLanguage,
+                    targetLanguage: file.project.targetLanguage,
+                  });
+                }
+              } catch (tmError) {
+                console.error("TM update error:", tmError);
+              }
+            }, 100);
+          }
+
+          resolve(updatedSegment);
+        } catch (error) {
+          reject(error);
         }
-      }
+      });
 
-      return res.json(updatedSegment);
+      const result = await Promise.race([
+        updatePromise,
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Update timeout")), 5000)
+        )
+      ]);
+
+      return res.json(result);
     } catch (error) {
+      console.error("Segment update error:", error);
       return handleApiError(res, error);
     }
   });
