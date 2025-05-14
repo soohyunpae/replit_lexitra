@@ -1969,7 +1969,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
   });
 
-  app.post(`${apiPrefix}/files`, verifyToken, async (req, res) =>{
+  app.post(`${apiPrefix}/files`, verifyToken, async (req, res) => {
     try {
       const fileData = schema.insertFileSchema.parse(req.body);
       const [file] = await db.insert(schema.files).values(fileData).returning();
@@ -2300,7 +2300,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // 프로젝트 참조 파일 삭제 API
   app.delete(
-    `${apiPrefix}/projects/:id/references/:index}`,
+    `${apiPrefix}/projects/:id/references/:index`,
     verifyToken,
     async (req, res) => {
       try {
