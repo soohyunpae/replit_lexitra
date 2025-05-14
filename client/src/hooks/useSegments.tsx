@@ -21,7 +21,6 @@ export function useSegmentMutation() {
     mutationFn: (data: { id: number; target: string; status: string }) =>
       api.patch(`/api/segments/${data.id}`, data),
     onSuccess: (_, variables) => {
-      // 성공 시 segments 쿼리 무효화
       queryClient.invalidateQueries({ 
         queryKey: queryKeys.segments(variables.fileId) 
       });
