@@ -57,7 +57,7 @@ export function NewTranslationEditor({
   onExport,
 }: TranslationEditorProps) {
   const { toast } = useToast();
-  
+
   // Side panel toggle state
   const [showSidePanel, setShowSidePanel] = useState(true);
 
@@ -217,16 +217,11 @@ export function NewTranslationEditor({
 
   // Calculate status counts
   useEffect(() => {
-    if (!segments) return;
-
-    const counts: Record<string, number> = {};
-    segments.forEach((segment) => {
-      // Use new status types: MT, 100%, Fuzzy, Edited, Reviewed, Rejected
-      const status = segment.status || "MT";
-      counts[status] = (counts[status] || 0) + 1;
-    });
-    setStatusCounts(counts);
-  }, [segments]);
+    if (segments) {
+      const counts = countSegmentStatuses(segments);
+      setStatusCounts(counts);
+    }
+  }, [segments]); // segments를 의존성 배열에 추가
 
   // Search TM for selected segment
   const searchTM = async (source: string) => {
@@ -650,6 +645,16 @@ export function NewTranslationEditor({
     },
     {} as Record<string, number>,
   );
+
+  // Helper function to count segment statuses
+  const countSegmentStatuses = (segments: TranslationUnit[]): Record<string, number> => {
+    const counts: Record<string, number> = {};
+    segments.forEach((segment) => {
+      const status = segment.status || "MT";
+      counts[status] = (counts[status] || 0) + 1;
+    });
+    return counts;
+  };
 
   // 로딩 상태 및 에러 처리
   if (isLoading) {

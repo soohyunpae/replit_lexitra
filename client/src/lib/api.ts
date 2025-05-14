@@ -133,6 +133,8 @@ export async function updateSegment(id: number, target: string, status: string) 
       throw new Error('No auth token found');
     }
 
+    console.log('Updating segment:', { id, target, status, hasToken: !!token });
+
     const response = await apiRequest('PATCH', `/api/segments/${id}`, 
       { target, status },
       {
@@ -144,11 +146,18 @@ export async function updateSegment(id: number, target: string, status: string) 
     );
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to update segment');
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Server response error:', { 
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      });
+      throw new Error(errorData.message || `Failed to update segment: ${response.statusText}`);
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log('Segment updated successfully:', result);
+    return result;
   } catch (error) {
     console.error('Error updating segment:', error);
     throw error;
