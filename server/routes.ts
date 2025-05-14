@@ -1129,9 +1129,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       // Ensure all timeouts are within 32-bit integer range
-      const safeSetTimeout = (fn: Function, delay: number) => {
-        const MAX_TIMEOUT = 2147483647; // Maximum 32-bit integer
-        setTimeout(fn, Math.min(delay, MAX_TIMEOUT));
+      // Count segments by status directly without setTimeout
+      const statusCounts: Record<string, number> = {
+        Reviewed: 0,
+        "100%": 0,
+        Fuzzy: 0,
+        MT: 0,
+        Edited: 0,
+        Rejected: 0
       };
 
       // Count segments by status with logging
@@ -1140,23 +1145,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         statusCounts[status] = (statusCounts[status] || 0) + 1;
       });
 
-      // Calculate reviewed percentage with detailed logging
+      // Count segments by status
+      segments.forEach(segment => {
+        const status = segment.status || "MT";
+        statusCounts[status] = (statusCounts[status] || 0) + 1;
+      });
+
+      // Calculate reviewed percentage
       const reviewedCount = statusCounts["Reviewed"] || 0;
       const reviewedPercentage = totalSegments > 0 ? (reviewedCount / totalSegments) * 100 : 0;
 
       console.log(`⚡️ Project ${id} stats calculation:`, {
         projectId: id,
         totalFiles: fileIds.length,
-        fileIds,
         totalSegments,
         statusCounts,
         reviewedCount,
-        reviewedPercentage,
-        segmentDetails: segments.map(s => ({
-          id: s.id,
-          fileId: s.fileId,
-          status: s.status
-        }))
+        reviewedPercentage
       });
 
       return res.json({
