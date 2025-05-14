@@ -1,11 +1,8 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { WebSocketServer } from "ws";
-import WebSocket from 'ws';
 import { db } from "@db";
 import * as schema from "@shared/schema";
 import { eq, and, or, desc, like, sql, inArray } from "drizzle-orm";
-import type { TranslationUnit } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { ZodError } from "zod";
@@ -177,7 +174,7 @@ function levenshteinDistance(str1: string, str2: string): number {
 
   // Fill the matrix
   for (let i = 1; i <= m; i++) {
-    for (let j = 1; i <= n; j++) {
+    for (let j = 1; j <= n; j++) {
       const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
       dp[i][j] = Math.min(
         dp[i - 1][j] + 1, // deletion
@@ -190,13 +187,6 @@ function levenshteinDistance(str1: string, str2: string): number {
   return dp[m][n];
 }
 
-// The global setTimeout is already patched in index.ts and openai.ts
-// This function now simply uses the global safe implementation
-const safeSetTimeout = (fn: Function, delay: number) => {
-  // The global setTimeout has been patched to safely handle large delays
-  setTimeout(() => fn(), delay);
-};
-
 // API Error Handler
 const handleApiError = (res: Response, error: unknown) => {
   console.error("API Error:", error);
@@ -204,7 +194,7 @@ const handleApiError = (res: Response, error: unknown) => {
   if (error instanceof ZodError) {
     const formattedError = fromZodError(error);
     return res.status(400).json({
-      message: "Validation error", 
+      message: "Validation error",
       errors: formattedError.details,
     });
   }
@@ -928,7 +918,7 @@ function registerAdminRoutes(app: Express) {
             fs.unlinkSync(sourceFile.path);
             fs.unlinkSync(targetFile.path);
           } catch (unlinkErr) {
-            console.error(`Failed tounlink PDF files:`, unlinkErr);
+            console.error(`Failed to unlink PDF files:`, unlinkErr);
           }
         }
       } catch (error) {
@@ -1078,97 +1068,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Project Stats API
-  app.get(`${apiPrefix}/projects/:id/stats`, verifyToken, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid project ID" });
-      }
-
-      // Get all files for this project
-      const project = await db.query.projects.findFirst({
-        where: eq(schema.projects.id, id),
-        with: {
-          files: true,
-        },
-      });
-
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-
-      // Get file IDs
-      const fileIds = project.files.map((file) => file.id);
-
-      if (fileIds.length === 0) {
-        return res.json({
-          totalSegments: 0,
-          statusCounts: {
-            Reviewed: 0,
-            "100%": 0,
-            Fuzzy: 0,
-            MT: 0,
-            Edited: 0,
-            Rejected: 0,
-          },
-        });
-      }
-
-      // Get segments for these files with proper error handling
-      let segments: schema.TranslationUnit[] = [];
-      try {
-        segments = await db.query.translationUnits.findMany({
-          where: inArray(schema.translationUnits.fileId, fileIds),
-        });
-
-        console.log(`📊 Found ${segments.length} segments for project ${id}`);
-      } catch (err) {
-        console.error(`Failed to query segments for project ${id}:`, err);
-        segments = [];
-      }
-
-      const totalSegments = segments?.length || 0;
-      const statusCounts: Record<string, number> = {
-        Reviewed: 0,
-        "100%": 0,
-        Fuzzy: 0,
-        MT: 0,
-        Edited: 0,
-        Rejected: 0
-      };
-
-      // Count segments by status without using forEach
-      for (let i = 0; i < segments.length; i++) {
-        const status = segments[i].status || "MT";
-        statusCounts[status] = (statusCounts[status] || 0) + 1;
-      }
-
-      // Calculate reviewed percentage
-      const reviewedCount = statusCounts["Reviewed"] || 0;
-      const reviewedPercentage = Math.min(totalSegments > 0 ? (reviewedCount / totalSegments) * 100 : 0, 100);
-
-      // Use safeSetTimeout for any delayed operations
-      safeSetTimeout(() => {
-        // Simple logging with safe delay
-        console.log(`Project ${id} stats:`, 
-          `Total: ${totalSegments}`, 
-          `Reviewed: ${reviewedCount}`, 
-          `Percentage: ${reviewedPercentage.toFixed(1)}%`
-        );
-      }, 1);
-
-      return res.json({
-        totalSegments,
-        statusCounts,
-        reviewedPercentage
-      });
-    } catch (error) {
-      console.error("Failed to get project stats:", error);
-      return handleApiError(res, error);
-    }
-  });
-
   // Projects API
   app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
     try {
@@ -1241,18 +1140,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .values(projectData)
           .returning();
 
-        // 메모리 사용량 로깅 함수
-        const logMemoryUsage = (label: string) => {
-          const memUsage = process.memoryUsage();
-          console.log(`Memory Usage (${label}):`, {
-            rss: `${Math.round(memUsage.rss / 1024 / 1024)} MB`,
-            heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)} MB`,
-            heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)} MB`,
-          });
-        };
-        
-        logMemoryUsage('Before file processing');
-        
         // 업로드된 파일 처리
         const files: (typeof schema.files.$inferInsert)[] = [];
         const uploadedFiles = req.files as {
@@ -1327,7 +1214,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // 각 파일에 대해 세그먼트 생성
         if (savedFiles.length > 0) {
-          logMemoryUsage('After file DB save, before segments creation');
           for (const file of savedFiles) {
             if (file.type === "work") {
               // 참조 파일이 아닌 작업 파일만 세그먼트 생성
@@ -1362,86 +1248,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const contentLines = file.content
                 .split(/\r?\n/)
                 .filter((line) => line.trim().length > 0);
-              
-              console.log(`Processing ${contentLines.length} lines for file ID ${file.id}`);
-              logMemoryUsage('Before segment processing');
-              
-              // 메모리 사용을 최소화하기 위해 세그먼트 ID만 추적
-              const BATCH_SIZE = 50; // 한 번에 최대 50개 세그먼트씩 처리
-              let segmentIds: number[] = []; // 세그먼트 ID만 저장 (전체 객체 저장 X)
-              let currentBatch: {
+              let segments: {
                 source: string;
                 status: string;
                 fileId: number;
               }[] = [];
-              
-              let segmentCount = 0;
-              
-              // 연속적인 segments 배열 확장 사용 금지 (메모리 효율성)
-              console.log('Processing content with optimized memory usage');
-              
-              // 각 라인마다 세그먼트로 분할하고 배치로 처리
+
+              // Process each line
               for (const line of contentLines) {
                 const sentences = segmentText(String(line).trim());
-                
-                for (const sentence of sentences) {
-                  // 현재 배치에 추가
-                  currentBatch.push({
+
+                // Add each sentence as a separate segment
+                segments = [
+                  ...segments,
+                  ...sentences.map((sentence) => ({
                     source: sentence,
                     status: "MT",
                     fileId: file.id,
-                  });
-                  
-                  segmentCount++;
-                  
-                  // 배치가 가득 차면 DB에 저장하고 배치 초기화
-                  if (currentBatch.length >= BATCH_SIZE) {
-                    console.log(`Saving batch of ${currentBatch.length} segments (${segmentCount} total)`);
-                    logMemoryUsage('Before batch insert');
-                    
-                    const batchSavedSegments = await db
-                      .insert(schema.translationUnits)
-                      .values(currentBatch)
-                      .returning({ id: schema.translationUnits.id });
-                    
-                    // 메모리 효율을 위해 전체 객체가 아닌 ID만 저장
-                    segmentIds = segmentIds.concat(batchSavedSegments.map(s => s.id));
-                    currentBatch = []; // 배치 초기화
-                    
-                    logMemoryUsage('After batch insert');
-                  }
-                }
+                  })),
+                ];
               }
-              
-              // 남은 세그먼트 저장 (마지막 배치)
-              if (currentBatch.length > 0) {
-                console.log(`Saving final batch of ${currentBatch.length} segments (${segmentCount} total)`);
-                logMemoryUsage('Before final batch insert');
-                
-                const finalBatchSegments = await db
+
+              if (segments.length > 0) {
+                console.log(
+                  `Creating ${segments.length} segments for file ID ${file.id}`,
+                );
+                // 세그먼트 먼저 저장
+                const savedSegments = await db
                   .insert(schema.translationUnits)
-                  .values(currentBatch)
-                  .returning({ id: schema.translationUnits.id });
-                
-                // 메모리 효율을 위해 전체 객체가 아닌 ID만 저장
-                segmentIds = segmentIds.concat(finalBatchSegments.map(s => s.id));
-                
-                logMemoryUsage('After final batch insert');
-              }
-              
-              if (segmentCount > 0) {
-                console.log(`Created total ${segmentCount} segments for file ID ${file.id}`);
-                
-                // 필요한 세그먼트 정보만 가져옴 (메모리 효율성 향상)
-                const savedSegments = segmentIds.length > 0 ? 
-                  await db.query.translationUnits.findMany({
-                    where: inArray(schema.translationUnits.id, segmentIds),
-                    columns: {
-                      id: true,
-                      source: true,
-                      fileId: true
-                    }
-                  }) : [];
+                  .values(segments)
+                  .returning();
 
                 // 프로젝트 정보 가져오기 (언어 정보 필요)
                 const projectInfo = await db.query.projects.findFirst({
@@ -1479,107 +1315,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     limit: 100,
                   });
 
-                  // 세그먼트를 번역하기 위한 배치 처리 시스템 구현
-                  console.log('Setting up translation batch queue for segments');
-                  logMemoryUsage('Before setting up translation queue');
-                  
-                  // 비동기 큐 구현을 위한 함수
-                  const processSegmentBatch = async (segments: typeof savedSegments, projectInfo: any) => {
-                    const BATCH_SIZE = 5; // 한 번에 처리할 세그먼트 수
-                    let segmentCount = 0;
-                    let processedCount = 0;
-                    
-                    // 세그먼트를 작은 배치로 나누기 (메모리 효율성)
-                    const batches: typeof savedSegments[] = [];
-                    for (let i = 0; i < segments.length; i += BATCH_SIZE) {
-                      batches.push(segments.slice(i, i + BATCH_SIZE));
-                    }
-                    
-                    console.log(`Created ${batches.length} batches of segments (total: ${segments.length})`);
-                    
-                    // 각 배치를 순차적으로 처리
-                    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
-                      const batch = batches[batchIndex];
-                      console.log(`Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} segments)`);
-                      
-                      // 배치 내 세그먼트를 병렬로 처리 (제한된 병렬성으로 메모리 사용 제어)
-                      const translationPromises = batch.map(async (segment) => {
-                        try {
-                          // TM 매칭 찾기 (최적화)
-                          const relevantTmMatches = tmMatches
-                            .filter(tm => calculateSimilarity(segment.source, tm.source) > 0.7)
-                            .slice(0, 2); // 최대 2개로 제한
-                          
-                          // 용어집 매칭 (최적화)
-                          const relevantTerms = glossaryTerms
-                            .filter(term => segment.source.toLowerCase().includes(term.source.toLowerCase()))
-                            .slice(0, 3); // 최대 3개로 제한
-                          
-                          // 최소한의 컨텍스트 준비
-                          const context = relevantTmMatches.map(match => `${match.source} => ${match.target}`);
-                          
-                          // 번역 실행
-                          const translationResult = await translateWithGPT({
-                            source: segment.source,
-                            sourceLanguage: projectInfo.sourceLanguage,
-                            targetLanguage: projectInfo.targetLanguage,
-                            context: context.length > 0 ? context : undefined,
-                            glossaryTerms: relevantTerms.length > 0
-                              ? relevantTerms.map(term => ({
-                                  source: term.source,
-                                  target: term.target,
-                                }))
-                              : undefined,
-                          });
-                          
-                          // 번역 결과 저장
-                          await db
-                            .update(schema.translationUnits)
-                            .set({
-                              target: translationResult.target,
-                              origin: "MT",
-                              updatedAt: new Date(),
-                            })
-                            .where(eq(schema.translationUnits.id, segment.id));
-                          
-                          processedCount++;
-                          
-                          // 로깅 제어 (과도한 로깅 방지)
-                          if (processedCount % 5 === 0 || processedCount === segments.length) {
-                            console.log(`Translated ${processedCount}/${segments.length} segments for file ID ${file.id}`);
-                            logMemoryUsage(`After translating ${processedCount} segments`);
-                          }
-                          
-                          return { success: true, id: segment.id };
-                        } catch (error) {
-                          console.error(`Error translating segment ${segment.id}:`, error);
-                          return { success: false, id: segment.id, error };
-                        }
-                      });
-                      
-                      // 배치 내 모든 번역 작업이 완료될 때까지 대기
-                      await Promise.all(translationPromises);
-                      
-                      // 메모리 정리를 위한 짧은 대기
-                      await new Promise(resolve => setTimeout(resolve, 500));
-                    }
-                    
-                    console.log(`Completed all translations for file ID ${file.id}`);
-                    logMemoryUsage('After all translations');
-                  };
-                  
-                  // 번역 작업을 비동기로 시작하고 API는 즉시 응답
-                  // 이렇게 하면 요청 처리는 빠르게 완료되지만 번역은 백그라운드에서 계속됨
-                  (async () => {
+                  // 각 세그먼트에 대해 자동 번역 실행 및 업데이트
+                  for (const segment of savedSegments) {
                     try {
-                      await processSegmentBatch(savedSegments, projectInfo);
+                      // TM 매칭 찾기
+                      const relevantTmMatches = tmMatches
+                        .filter(
+                          (tm) =>
+                            calculateSimilarity(segment.source, tm.source) >
+                            0.7,
+                        )
+                        .slice(0, 5);
+
+                      // 용어집 매칭 찾기
+                      const relevantTerms = glossaryTerms.filter((term) =>
+                        segment.source
+                          .toLowerCase()
+                          .includes(term.source.toLowerCase()),
+                      );
+
+                      // TM 컨텍스트 준비
+                      const context = relevantTmMatches.map(
+                        (match) => `${match.source} => ${match.target}`,
+                      );
+
+                      // GPT 번역 실행
+                      const translationResult = await translateWithGPT({
+                        source: segment.source,
+                        sourceLanguage: projectInfo.sourceLanguage,
+                        targetLanguage: projectInfo.targetLanguage,
+                        context: context.length > 0 ? context : undefined,
+                        glossaryTerms:
+                          relevantTerms.length > 0
+                            ? relevantTerms.map((term) => ({
+                                source: term.source,
+                                target: term.target,
+                              }))
+                            : undefined,
+                      });
+
+                      // 번역 결과 업데이트
+                      await db
+                        .update(schema.translationUnits)
+                        .set({
+                          target: translationResult.target,
+                          origin: "MT",
+                          updatedAt: new Date(),
+                        })
+                        .where(eq(schema.translationUnits.id, segment.id));
+
+                      // 번역 진행 상황 로깅 (100개 이상일 경우 10개마다 로깅)
+                      if (
+                        savedSegments.length > 100 &&
+                        savedSegments.indexOf(segment) % 10 === 0
+                      ) {
+                        console.log(
+                          `Translated ${savedSegments.indexOf(segment) + 1}/${savedSegments.length} segments for file ID ${file.id}`,
+                        );
+                      }
                     } catch (error) {
-                      console.error('Error in batch translation process:', error);
+                      console.error(
+                        `Error translating segment ${segment.id}:`,
+                        error,
+                      );
                     }
-                  })();
-                  
-                  console.log(`Initiated background translation for ${savedSegments.length} segments in file ID ${file.id}`);
-                  logMemoryUsage('After initiating background translation');
+                  }
 
                   console.log(
                     `Completed translation for all ${savedSegments.length} segments in file ID ${file.id}`,
@@ -1660,6 +1460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (fileIds.length === 0) {
         return res.json({
           totalSegments: 0,
+          translatedPercentage: 0,
           reviewedPercentage: 0,
           statusCounts: {
             Reviewed: 0,
@@ -1673,15 +1474,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // 모든 파일의 번역 단위(세그먼트) 가져오기
-      const allSegments = await db.query.translationUnits.findMany({
+      const segments = await db.query.translationUnits.findMany({
         where: inArray(schema.translationUnits.fileId, fileIds),
       });
 
-      const totalSegments = allSegments.length;
+      const totalSegments = segments.length;
 
       if (totalSegments === 0) {
         return res.json({
           totalSegments: 0,
+          translatedPercentage: 0,
           reviewedPercentage: 0,
           statusCounts: {
             Reviewed: 0,
@@ -1694,8 +1496,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // 기본 상태 카운트 정의
-      const defaultStatusCounts = {
+      // 상태별 세그먼트 개수 계산
+      const statusCounts: Record<string, number> = {
         Reviewed: 0,
         "100%": 0,
         Fuzzy: 0,
@@ -1704,34 +1506,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         Rejected: 0,
       };
 
-      const statusCounts = { ...defaultStatusCounts };
-
-      // 실제 세그먼트 상태 카운트
-      allSegments.forEach((segment) => {
-        if (segment.status && segment.status in statusCounts) {
-          statusCounts[segment.status as keyof typeof statusCounts]++;
-        }
-      });
-
-      console.log(`Project ${id} status counts:`, statusCounts);
-
       // 번역된 세그먼트 및 리뷰된 세그먼트 개수
       let translatedCount = 0;
 
-      allSegments.forEach((segment) => {
+      segments.forEach((segment) => {
+        // 상태별 카운팅
+        if (segment.status in statusCounts) {
+          statusCounts[segment.status]++;
+        }
+
         // 번역되었는지 확인 (target이 존재하고 비어있지 않은 경우)
         if (segment.target && segment.target.trim() !== "") {
           translatedCount++;
         }
       });
 
-      // Reviewed 비율 계산
-      const reviewedCount = statusCounts["Reviewed"] || 0;
-      const reviewedPercentage =
-        totalSegments > 0 ? (reviewedCount / totalSegments) * 100 : 0;
+      // 백분율 계산
+      const reviewedPercentage = Math.round(
+        (statusCounts["Reviewed"] / totalSegments) * 100,
+      );
+      const translatedPercentage = Math.round(
+        (translatedCount / totalSegments) * 100,
+      );
 
       return res.json({
         totalSegments,
+        translatedPercentage,
         reviewedPercentage,
         statusCounts,
       });
@@ -2076,7 +1876,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.send(file.content);
     } catch (error) {
       return handleApiError(res, error);
-        }
+    }
   });
 
   app.post(`${apiPrefix}/files`, verifyToken, async (req, res) => {
@@ -2936,7 +2736,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           desc(schema.translationMemory.origin),
           // Finally, sort by recency
           desc(schema.translationMemory.updatedAt),
-        ],        limit,
+        ],
+        limit,
       });
 
       // Calculate similarity scores and sort by similarity (descending)
@@ -3568,125 +3369,5 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
-  
-  // WebSocket server setup
-  const wss = new WebSocketServer({ 
-    server: httpServer, 
-    path: '/ws' // Using a distinct path to avoid conflict with Vite's HMR websocket
-  });
-
-  // Connected clients storage with project ID mapping
-  const clients = new Map<WebSocket, {
-    userId?: number;
-    username?: string;
-    projectId?: number;
-    fileId?: number;
-  }>();
-
-  // Create reverse lookup for broadcasting to specific projects/files
-  const getProjectClients = (projectId: number): WebSocket[] => {
-    return Array.from(clients.entries())
-      .filter(([_, data]) => data.projectId === projectId)
-      .map(([client, _]) => client);
-  };
-
-  // Handle WebSocket connections
-  wss.on('connection', (ws: WebSocket) => {
-    console.log('WebSocket client connected');
-    
-    // Add client to the connected clients map
-    clients.set(ws, {});
-
-    // Handle client messages (JSON format expected)
-    ws.on('message', (message: string) => {
-      try {
-        const data = JSON.parse(message.toString());
-        console.log('WebSocket message received:', data);
-
-        // Handle client registration (associate user with the connection)
-        if (data.type === 'register') {
-          const clientData = clients.get(ws);
-          if (clientData) {
-            clientData.userId = data.userId;
-            clientData.username = data.username;
-            clientData.projectId = data.projectId;
-            clientData.fileId = data.fileId;
-            clients.set(ws, clientData);
-
-            // Send confirmation
-            ws.send(JSON.stringify({
-              type: 'registered',
-              success: true
-            }));
-
-            // Notify other clients in the same project about new user
-            if (data.projectId) {
-              broadcastToProject(data.projectId, {
-                type: 'user_joined',
-                userId: data.userId,
-                username: data.username,
-                projectId: data.projectId
-              }, ws); // Exclude the sender
-            }
-          }
-        }
-        // Handle segment update notification
-        else if (data.type === 'segment_update') {
-          // Broadcast the segment update to all clients working on the same project
-          if (data.projectId) {
-            broadcastToProject(data.projectId, {
-              type: 'segment_updated',
-              segmentId: data.segmentId,
-              userId: data.userId,
-              username: data.username,
-              status: data.status,
-              target: data.target,
-              timestamp: new Date().toISOString()
-            });
-          }
-        }
-      } catch (error) {
-        console.error('WebSocket message error:', error);
-      }
-    });
-
-    // Handle client disconnection
-    ws.on('close', () => {
-      const clientData = clients.get(ws);
-      
-      // Notify other clients about user leaving
-      if (clientData?.projectId && clientData?.userId) {
-        broadcastToProject(clientData.projectId, {
-          type: 'user_left',
-          userId: clientData.userId,
-          username: clientData.username,
-          projectId: clientData.projectId
-        });
-      }
-      
-      // Remove client from the map
-      clients.delete(ws);
-      console.log('WebSocket client disconnected');
-    });
-
-    // Handle errors
-    ws.on('error', (error) => {
-      console.error('WebSocket error:', error);
-    });
-  });
-
-  // Broadcast to all clients working on a specific project
-  function broadcastToProject(projectId: number, data: any, excludeClient?: WebSocket) {
-    const projectClients = getProjectClients(projectId);
-    const message = JSON.stringify(data);
-    
-    projectClients.forEach(client => {
-      // Check if client is still connected
-      if (client !== excludeClient && client.readyState === WebSocket.OPEN) {
-        client.send(message);
-      }
-    });
-  }
-
   return httpServer;
 }
