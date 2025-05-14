@@ -20,13 +20,8 @@ export function CombinedProgress({
   totalSegments,
   ...props
 }: CombinedProgressProps) {
-  // Calculate percentage based on available data
-  const percentage =
-    statusCounts && totalSegments && totalSegments > 0
-      ? Math.round(((statusCounts.Reviewed || 0) / totalSegments) * 100)
-      : !isNaN(reviewedPercentage)
-        ? reviewedPercentage
-        : 0;
+  // Always use reviewedPercentage for consistency
+  const percentage = !isNaN(reviewedPercentage) ? Math.round(reviewedPercentage) : 0;
 
   return (
     <div className="w-full space-y-1.5">
