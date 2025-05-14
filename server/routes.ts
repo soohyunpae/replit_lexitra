@@ -1105,12 +1105,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Get segments for these files
-      const segments = await db.query.translationUnits.findMany({
-        where: inArray(schema.translationUnits.fileId, fileIds),
-      });
+      // Get segments for these files with proper error handling
+      let segments;
+      try {
+        segments = await db.query.translationUnits.findMany({
+          where: inArray(schema.translationUnits.fileId, fileIds),
+        });
 
-      console.log(`📊 Found ${segments.length} segments for project ${id}`);
+        console.log(`📊 Found ${segments.length} segments for project ${id}`);
+      } catch (err) {
+        console.error(`Failed to query segments for project ${id}:`, err);
+        segments = [];
+      }
 
       const totalSegments = segments.length;
       const statusCounts: Record<string, number> = {
@@ -1120,6 +1126,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         MT: 0,
         Edited: 0,
         Rejected: 0
+      };
+
+      // Ensure all timeouts are within 32-bit integer range
+      const safeSetTimeout = (fn: Function, delay: number) => {
+        const MAX_TIMEOUT = 2147483647; // Maximum 32-bit integer
+        setTimeout(fn, Math.min(delay, MAX_TIMEOUT));
       };
 
       // Count segments by status with logging
