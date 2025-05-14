@@ -127,16 +127,32 @@ export async function searchTranslationMemory(
 
 // Update a translation segment
 export async function updateSegment(id: number, target: string, status: string) {
-  const token = localStorage.getItem('authToken');
-  return apiRequest('PATCH', `/api/segments/${id}`, 
-    { target, status },
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+  try {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      throw new Error('No auth token found');
     }
-  );
+
+    const response = await apiRequest('PATCH', `/api/segments/${id}`, 
+      { target, status },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to update segment');
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Error updating segment:', error);
+    throw error;
+  }
 }
 
 // Save to translation memory

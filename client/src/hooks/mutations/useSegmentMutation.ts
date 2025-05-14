@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateSegment } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -16,13 +15,9 @@ export function useSegmentMutation() {
     }) => {
       try {
         const response = await updateSegment(data.id, data.target, data.status);
-        if (!response || !response.ok) {
-          throw new Error(response?.statusText || "Failed to update segment");
-        }
-        const result = await response.json();
-        return result;
+        return response;
       } catch (error) {
-        console.error("Segment update error:", error);
+        console.error('Mutation error:', error);
         throw error;
       }
     },
