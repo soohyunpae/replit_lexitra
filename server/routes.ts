@@ -2549,17 +2549,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch(`${apiPrefix}/segments/:id`, verifyToken, async (req, res) => {
     try {
+      // Add authentication check
+      if (!req.user) {
+        console.error('Authentication required for segment update');
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       const id = parseInt(req.params.id);
       const updateSchema = z.object({
         target: z.string().optional(),
         status: z.string().optional(),
         comment: z.string().optional(),
-        origin: z.string().optional(), // Add origin field to the schema
+        origin: z.string().optional(),
       });
 
       const data = updateSchema.parse(req.body);
-      console.log(`Updating segment ${id} with data:`, data); // Add logging for debugging
-      const [updatedSegment] = await db
+      console.log(`Updating segment ${id} with data:`, data);
+      
+      // Add timeout promise
+      const updatePromise = db
         .update(schema.translationUnits)
         .set({
           ...data,
@@ -2567,6 +2575,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .where(eq(schema.translationUnits.id, id))
         .returning();
+
+      const [updatedSegment] = await Promise.race([
+        updatePromise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Update timeout')), 10000))
+      ]) as any;
 
       if (!updatedSegment) {
         return res.status(404).json({ message: "Segment not found" });
