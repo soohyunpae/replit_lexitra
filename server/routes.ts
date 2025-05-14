@@ -1118,7 +1118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         segments = [];
       }
 
-      const totalSegments = segments.length;
+      const totalSegments = segments?.length || 0;
       const statusCounts: Record<string, number> = {
         Reviewed: 0,
         "100%": 0,
@@ -1128,13 +1128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         Rejected: 0
       };
 
-      // Count segments by status with logging
-      segments.forEach((segment) => {
-        const status = segment.status || "MT";
-        statusCounts[status] = (statusCounts[status] || 0) + 1;
-      });
-
-      // Count segments by status
+      // Count segments by status (한 번만 실행)
       segments.forEach(segment => {
         const status = segment.status || "MT";
         statusCounts[status] = (statusCounts[status] || 0) + 1;
