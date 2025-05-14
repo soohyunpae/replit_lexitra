@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { safeSetTimeout } from '@/lib/utils';
 
 /**
  * 값의 변경을 지연시키는 커스텀 훅
@@ -11,7 +12,7 @@ export function useDebounce<T>(value: T, delay: number): T {
   
   useEffect(() => {
     // 지연 시간 후에 값 업데이트
-    const timer = setTimeout(() => {
+    const timer = safeSetTimeout(() => {
       setDebouncedValue(value);
     }, delay);
     

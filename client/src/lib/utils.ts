@@ -96,3 +96,22 @@ export function formatFileSize(bytes: number): string {
   
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
+// Maximum safe timeout value (32-bit signed integer)
+export const MAX_SAFE_TIMEOUT = 2147483647;
+
+/**
+ * Creates a safe timeout that won't exceed JavaScript's maximum 32-bit integer limit
+ * @param ms Desired timeout in milliseconds
+ * @returns Clamped timeout value
+ */
+export const getSafeTimeout = (ms: number): number => {
+  return Math.min(Math.max(0, ms), MAX_SAFE_TIMEOUT);
+};
+
+/**
+ * Safe version of setTimeout that prevents integer overflow
+ */
+export const safeSetTimeout = (callback: () => void, ms: number): NodeJS.Timeout => {
+  const safeMs = getSafeTimeout(ms);
+  return setTimeout(callback, safeMs);
+};
