@@ -13,6 +13,8 @@ export const useSegments = (fileId: number) => {
       return response.json();
     },
     enabled: !!fileId,
+    staleTime: 1000, // 1 second
+    cacheTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const { mutate: updateSegmentMutation, error: updateError } = useMutation({
