@@ -918,7 +918,7 @@ function registerAdminRoutes(app: Express) {
             fs.unlinkSync(sourceFile.path);
             fs.unlinkSync(targetFile.path);
           } catch (unlinkErr) {
-            console.error(`Failed to unlink PDF files:`, unlinkErr);
+            console.error(`Failed tounlink PDF files:`, unlinkErr);
           }
         }
       } catch (error) {
@@ -1105,10 +1105,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Get all segments for these files
+      // Get all segments for these files with detailed logging
+      console.log(`🔍 Querying segments for fileIds:`, fileIds);
+
       const segments = await db.query.translationUnits.findMany({
         where: inArray(schema.translationUnits.fileId, fileIds),
       });
+
+      console.log(`📊 Found ${segments.length} segments for project ${id}`);
 
       const totalSegments = segments.length;
       const statusCounts: Record<string, number> = {
@@ -1117,26 +1121,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         Fuzzy: 0,
         MT: 0,
         Edited: 0,
-        Rejected: 0,
+        Rejected: 0
       };
 
-      // Count segments by status
+      // Count segments by status with logging
       segments.forEach((segment) => {
         const status = segment.status || "MT";
         statusCounts[status] = (statusCounts[status] || 0) + 1;
       });
 
-      // Calculate reviewed percentage
+      // Calculate reviewed percentage with detailed logging
       const reviewedCount = statusCounts["Reviewed"] || 0;
       const reviewedPercentage = totalSegments > 0 ? (reviewedCount / totalSegments) * 100 : 0;
 
-      console.log(`Project ${id} stats calculation:`, {
+      console.log(`⚡️ Project ${id} stats calculation:`, {
+        projectId: id,
+        totalFiles: fileIds.length,
+        fileIds,
         totalSegments,
         statusCounts,
         reviewedCount,
         reviewedPercentage,
-        segments: segments.length,
-        segmentStatuses: segments.map(s => s.status)
+        segmentDetails: segments.map(s => ({
+          id: s.id,
+          fileId: s.fileId,
+          status: s.status
+        }))
       });
 
       return res.json({
@@ -1958,7 +1968,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.send(file.content);
     } catch (error) {
       return handleApiError(res, error);
-    }
+        }
   });
 
   app.post(`${apiPrefix}/files`, verifyToken, async (req, res) => {
@@ -2818,8 +2828,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           desc(schema.translationMemory.origin),
           // Finally, sort by recency
           desc(schema.translationMemory.updatedAt),
-        ],
-        limit,
+        ],        limit,
       });
 
       // Calculate similarity scores and sort by similarity (descending)
