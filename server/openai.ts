@@ -1,7 +1,22 @@
 import OpenAI from "openai";
 
+// Global setTimeout patching to prevent timeout integer overflow
+// Maximum safe timeout value (32-bit signed integer)
+const MAX_TIMEOUT = 2147483647; // ~24.8 days
+
+// Monkey-patch global setTimeout to prevent integer overflow
+const originalSetTimeout = global.setTimeout;
+global.setTimeout = function safeSetTimeout(callback: any, ms: number, ...args: any[]) {
+  // Clamp timeout to prevent integer overflow
+  const safeMs = Math.min(Math.max(0, ms), MAX_TIMEOUT);
+  return originalSetTimeout(callback, safeMs, ...args);
+} as typeof setTimeout;
+
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({ 
+  apiKey: process.env.OPENAI_API_KEY,
+  timeout: MAX_TIMEOUT // Set a safe maximum timeout for OpenAI API calls
+});
 
 interface TranslationRequest {
   source: string;
