@@ -121,7 +121,10 @@ export function NewTranslationEditor({
     });
 
     setFilteredSegments(filtered);
-  }, [segments, statusFilter, originFilter]); page 1 when filters change
+  }, [segments, statusFilter, originFilter]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
     setCurrentPage(1);
   }, [segments, statusFilter, originFilter]);
 
