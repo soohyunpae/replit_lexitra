@@ -1006,8 +1006,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
                                 multiple
                                 className="hidden"
                                 onChange={(e) => {
-                                  const files = e.target.files;
-                                                                 if (files && files.length > 0) {
+                                  const files = e.target.files;                                  if (files && files.length > 0) {
                                     const currentFiles = field.value ? (Array.isArray(field.value) ? field.value : Array.from(field.value)) : [];
                                     field.onChange([
                                       ...currentFiles,
@@ -1472,8 +1471,8 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
                         translatedPercentage: 0,
                         reviewedPercentage: 0,
                       };
-                      // Live project stats for display (word count)
-                      const { data: liveStats } = useProjectStats(project.id);
+                      // Use cached stats instead of live query per row
+                      const liveStats = projectStats[project.id] || { wordCount: 0 };
 
                       // 사용자에게 보여질 상태 가져오기
                       const displayStatus = getDisplayStatus(project);
