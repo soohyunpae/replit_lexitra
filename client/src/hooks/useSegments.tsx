@@ -41,6 +41,28 @@ export const useSegments = (fileId: number) => {
     }
   });
 
+  // Calculate segment status counts
+  const statusCounts: Record<StatusType, number> = {
+    "Reviewed": 0,
+    "100%": 0,
+    "Fuzzy": 0,
+    "MT": 0,
+    "Edited": 0,
+    "Rejected": 0,
+  };
+
+  segments.forEach((segment) => {
+    if (segment.status) {
+      statusCounts[segment.status]++;
+    }
+  });
+
+  // Calculate reviewed percentage
+  const totalSegments = segments.length;
+  const reviewedPercentage = totalSegments > 0 
+    ? (statusCounts["Reviewed"] / totalSegments) * 100 
+    : 0;
+
   return {
     segments,
     ...rest,
