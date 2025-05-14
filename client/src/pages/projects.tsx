@@ -1,4 +1,4 @@
-  import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
   import { useLocation, Link } from "wouter";
   import { MainLayout } from "@/components/layout/main-layout";
   import { Button } from "@/components/ui/button";
@@ -237,12 +237,13 @@
               });
 
               if (response.ok) {
-                // 서버 응답 성공시 실제 데이터 사용
+                // 서버 응답 성공시 실제 데이터 사용하고 비율 계산
                 const data = await response.json();
+                const totalSegs = data.totalSegments || 0;
                 stats[project.id] = {
-                  translatedPercentage: data.translatedPercentage || 0,
-                  reviewedPercentage: data.reviewedPercentage || 0,
-                  totalSegments: data.totalSegments || 0,
+                  translatedPercentage: totalSegs > 0 ? ((data.statusCounts?.["100%"] || 0) / totalSegs) * 100 : 0,
+                  reviewedPercentage: totalSegs > 0 ? ((data.statusCounts?.["Reviewed"] || 0) / totalSegs) * 100 : 0,
+                  totalSegments: totalSegs,
                   wordCount: data.wordCount || 0,
                   statusCounts: data.statusCounts || defaultStats.statusCounts
                 };
@@ -1006,7 +1007,7 @@
                                 className="hidden"
                                 onChange={(e) => {
                                   const files = e.target.files;
-                                  if (files && files.length > 0) {
+                                                                 if (files && files.length > 0) {
                                     const currentFiles = field.value ? (Array.isArray(field.value) ? field.value : Array.from(field.value)) : [];
                                     field.onChange([
                                       ...currentFiles,
