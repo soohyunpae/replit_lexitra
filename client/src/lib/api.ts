@@ -6,41 +6,41 @@ export async function downloadFile(url: string, filename: string): Promise<void>
   try {
     // 디버깅 메시지
     console.log(`파일 다운로드 시작: ${url}, 파일명: ${filename}`);
-    
+
     const token = localStorage.getItem('authToken');
     console.log(`인증 토큰 ${token ? '존재함' : '존재하지 않음'}`);
-    
+
     // 브라우저의 기본 다운로드 방식 사용
     const downloadWindow = window.open(url, '_blank');
-    
+
     // 새 창이 차단되었는지 확인
     if (!downloadWindow || downloadWindow.closed || typeof downloadWindow.closed === 'undefined') {
       // 새 창이 차단되었거나 열리지 않았다면, fetch 사용
       console.log('새 창이 차단되었거나 열리지 않음, fetch 방식으로 대체');
-      
+
       const response = await fetch(url, {
         headers: {
           'Authorization': token ? `Bearer ${token}` : ''
         }
       });
-      
+
       if (!response.ok) {
         throw new Error(`Download failed: ${response.status} ${response.statusText}`);
       }
-      
+
       const blob = await response.blob();
       console.log(`파일 blob 생성 성공: ${blob.size} bytes, type: ${blob.type}`);
-      
+
       const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = downloadUrl;
       a.download = filename || 'download';
       a.style.display = 'none';
       document.body.appendChild(a);
-      
+
       console.log('다운로드 링크 생성 및 클릭');
       a.click();
-      
+
       // 정리
       window.URL.revokeObjectURL(downloadUrl);
       document.body.removeChild(a);
@@ -91,7 +91,7 @@ export async function translateWithGPT(
         targetLanguage
       }
     );
-    
+
     return await response.json();
   } catch (error) {
     console.error("Error translating with GPT:", error);
@@ -117,7 +117,7 @@ export async function searchTranslationMemory(
         limit
       }
     );
-    
+
     return await response.json();
   } catch (error) {
     console.error("Error searching TM:", error);
@@ -126,23 +126,17 @@ export async function searchTranslationMemory(
 }
 
 // Update a translation segment
-export async function updateSegment(
-  id: number,
-  target: string,
-  status: string
-): Promise<TranslationUnit> {
-  try {
-    const response = await apiRequest(
-      "PATCH",
-      `/api/segments/${id}`,
-      { target, status }
-    );
-    
-    return await response.json();
-  } catch (error) {
-    console.error("Error updating segment:", error);
-    throw error;
-  }
+export async function updateSegment(id: number, target: string, status: string) {
+  const token = localStorage.getItem('authToken');
+  return apiRequest('PATCH', `/api/segments/${id}`, 
+    { target, status },
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
 }
 
 // Save to translation memory
@@ -167,7 +161,7 @@ export async function saveToTM(
         context
       }
     );
-    
+
     return await response.json();
   } catch (error) {
     console.error("Error saving to TM:", error);
@@ -185,7 +179,7 @@ export async function getGlossaryTerms(
       "GET",
       `/api/glossary?sourceLanguage=${sourceLanguage}&targetLanguage=${targetLanguage}`,
     );
-    
+
     return await response.json();
   } catch (error) {
     console.error("Error fetching glossary terms:", error);
@@ -203,12 +197,12 @@ export async function searchGlossaryTerms(
     if (!query || query.length < 2) {
       return [];
     }
-    
+
     const response = await apiRequest(
       "GET",
       `/api/glossary/search?query=${encodeURIComponent(query)}&sourceLanguage=${sourceLanguage}&targetLanguage=${targetLanguage}`,
     );
-    
+
     return await response.json();
   } catch (error) {
     console.error("Error searching glossary terms:", error);

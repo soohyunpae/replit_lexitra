@@ -14,11 +14,17 @@ export function useSegmentMutation() {
       status: string;
       fileId: number;
     }) => {
-      const response = await updateSegment(data.id, data.target, data.status);
-      if (!response) {
-        throw new Error("Failed to update segment");
+      try {
+        const response = await updateSegment(data.id, data.target, data.status);
+        if (!response || !response.ok) {
+          throw new Error(response?.statusText || "Failed to update segment");
+        }
+        const result = await response.json();
+        return result;
+      } catch (error) {
+        console.error("Segment update error:", error);
+        throw error;
       }
-      return response;
     },
     onSuccess: (_, variables) => {
       // Invalidate and refetch
