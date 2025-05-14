@@ -187,6 +187,12 @@ function levenshteinDistance(str1: string, str2: string): number {
   return dp[m][n];
 }
 
+// Safe setTimeout helper that handles large delays
+const safeSetTimeout = (fn: Function, delay: number) => {
+  const MAX_TIMEOUT = 2147483647; // Max 32-bit signed integer
+  setTimeout(fn, Math.min(delay, MAX_TIMEOUT));
+};
+
 // API Error Handler
 const handleApiError = (res: Response, error: unknown) => {
   console.error("API Error:", error);
@@ -194,7 +200,7 @@ const handleApiError = (res: Response, error: unknown) => {
   if (error instanceof ZodError) {
     const formattedError = fromZodError(error);
     return res.status(400).json({
-      message: "Validation error",
+      message: "Validation error", 
       errors: formattedError.details,
     });
   }
@@ -1138,17 +1144,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const reviewedCount = statusCounts["Reviewed"] || 0;
       const reviewedPercentage = Math.min(totalSegments > 0 ? (reviewedCount / totalSegments) * 100 : 0, 100);
 
-      // Simple logging to avoid memory issues
-      console.log(`Project ${id} stats:`, 
-        `Total: ${totalSegments}`, 
-        `Reviewed: ${reviewedCount}`, 
-        `Percentage: ${reviewedPercentage.toFixed(1)}%`
-      );
+      // Use safeSetTimeout for any delayed operations
+      safeSetTimeout(() => {
+        // Simple logging with safe delay
+        console.log(`Project ${id} stats:`, 
+          `Total: ${totalSegments}`, 
+          `Reviewed: ${reviewedCount}`, 
+          `Percentage: ${reviewedPercentage.toFixed(1)}%`
+        );
+      }, 1);
 
       return res.json({
         totalSegments,
         statusCounts,
-        reviewedPercentage // Add reviewedPercentage to response
+        reviewedPercentage
       });
     } catch (error) {
       console.error("Failed to get project stats:", error);
