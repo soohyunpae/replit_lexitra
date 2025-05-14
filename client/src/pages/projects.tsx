@@ -1006,7 +1006,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
                                 multiple
                                 className="hidden"
                                 onChange={(e) => {
-                                  const files = e.target.files;                                  if (files && files.length > 0) {
+                                  const files = Array.from(e.target.files);                                  if (files && files.length > 0) {
                                     const currentFiles = field.value ? (Array.isArray(field.value) ? field.value : Array.from(field.value)) : [];
                                     field.onChange([
                                       ...currentFiles,
@@ -1588,45 +1588,3 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
                             </span>
                           </TableCell>
                           <TableCell>
-                            <div className="flex flex-col gap-1.5">
-                              <CombinedProgress
-                                reviewedPercentage={stats.reviewedPercentage}
-                                translatedPercentage={stats.translatedPercentage}
-                                statusCounts={stats.statusCounts}
-                                totalSegments={stats.totalSegments}
-                                height="h-2.5"
-                                showPercentage={true}
-                              />
-
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm">
-                              {new Date(project.createdAt).toLocaleString()}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm">
-                              {project.updatedAt
-                                ? new Date(project.updatedAt).toLocaleString()
-                                : "-"}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm">
-                              {project.deadline
-                                ? new Date(project.deadline).toLocaleString()
-                                : "Not set"}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-        </div>
-      </MainLayout>
-    );
-  }

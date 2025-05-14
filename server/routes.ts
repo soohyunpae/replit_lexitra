@@ -1277,13 +1277,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      // 백분율 계산
-      const reviewedPercentage = Math.round((statusCounts["Reviewed"] / totalSegments) * 100);
-      const translatedPercentage = Math.round((translatedCount / totalSegments) * 100);
+      // Reviewed 비율 계산 
+      const reviewedCount = statusCounts["Reviewed"] || 0;
+      const reviewedPercentage = totalSegments > 0 ? (reviewedCount / totalSegments) * 100 : 0;
       
       return res.json({
         totalSegments,
-        translatedPercentage,
         reviewedPercentage,
         statusCounts
       });
