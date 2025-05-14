@@ -239,10 +239,21 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
               if (response.ok) {
                 // 서버 응답 성공시 실제 데이터 사용하고 비율 계산
                 const data = await response.json();
+                console.log(`Raw API response for project ${project.id}:`, data);
+
                 const totalSegs = data.totalSegments || 0;
+                const reviewedCount = data.statusCounts?.["Reviewed"] || 0;
+                const reviewedPercentage = totalSegs > 0 ? (reviewedCount / totalSegs) * 100 : 0;
+
+                console.log(`Project ${project.id} calculation:`, {
+                  totalSegs,
+                  reviewedCount,
+                  reviewedPercentage
+                });
+
                 stats[project.id] = {
                   translatedPercentage: totalSegs > 0 ? ((data.statusCounts?.["100%"] || 0) / totalSegs) * 100 : 0,
-                  reviewedPercentage: totalSegs > 0 ? ((data.statusCounts?.["Reviewed"] || 0) / totalSegs) * 100 : 0,
+                  reviewedPercentage,
                   totalSegments: totalSegs,
                   wordCount: data.wordCount || 0,
                   statusCounts: data.statusCounts || defaultStats.statusCounts
@@ -997,7 +1008,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
                                   Click to upload reference files
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  PDF, DOCX, Excel, or any reference documents
+                                                                 PDF, DOCX, Excel, or any reference documents
                                 </p>
                               </div>
                               <input
