@@ -54,6 +54,20 @@ export async function downloadFile(url: string, filename: string): Promise<void>
   }
 };
 
+// API functions for segments
+export async function fetchSegments(fileId: number): Promise<TranslationUnit[]> {
+  try {
+    const response = await apiRequest(
+      "GET", 
+      `/api/segments/${fileId}`
+    );
+    return response.json();
+  } catch (error) {
+    console.error("Error fetching segments:", error);
+    throw error;
+  }
+}
+
 // API functions for working with translations
 
 // Translate a segment with GPT, considering TM context and glossary terms
