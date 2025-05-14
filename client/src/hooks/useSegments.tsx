@@ -1,6 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchSegments, updateSegment } from "@/lib/api";
+import { apiRequest } from "@/lib/queryClient";
 import type { TranslationUnit } from "@/types";
 
 export const useSegments = (fileId: number) => {
@@ -8,7 +8,10 @@ export const useSegments = (fileId: number) => {
 
   const { data: segments = [], ...rest } = useQuery({
     queryKey: ["segments", fileId],
-    queryFn: () => fetchSegments(fileId),
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/segments/${fileId}`);
+      return response.json();
+    },
     enabled: !!fileId,
   });
 
@@ -24,7 +27,12 @@ export const useSegments = (fileId: number) => {
       status: string;
       origin?: string;
     }) => {
-      return updateSegment(id, target, status);
+      const response = await apiRequest("PATCH", `/api/segments/${id}`, {
+        target,
+        status,
+        origin
+      });
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["segments", fileId] });
