@@ -900,6 +900,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Project Stats API
+  app.get(`${apiPrefix}/projects/:id/stats`, verifyToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid project ID' });
+      }
+
+      // Get all files for this project
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, id),
+        with: {
+          files: true
+        }
+      });
+
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+
+      // Get file IDs
+      const fileIds = project.files.map(file => file.id);
+
+      if (fileIds.length === 0) {
+        return res.json({
+          totalSegments: 0,
+          statusCounts: {
+            "Reviewed": 0,
+            "100%": 0,
+            "Fuzzy": 0,
+            "MT": 0,
+            "Edited": 0,
+            "Rejected": 0
+          }
+        });
+      }
+
+      // Get all segments for these files
+      const segments = await db.query.translationUnits.findMany({
+        where: inArray(schema.translationUnits.fileId, fileIds)
+      });
+
+      const totalSegments = segments.length;
+      const statusCounts: Record<string, number> = {
+        "Reviewed": 0,
+        "100%": 0,
+        "Fuzzy": 0,
+        "MT": 0,
+        "Edited": 0,
+        "Rejected": 0
+      };
+
+      // Count segments by status
+      segments.forEach(segment => {
+        const status = segment.status || "MT";
+        statusCounts[status] = (statusCounts[status] || 0) + 1;
+      });
+
+      console.log(`Project ${id} stats:`, { totalSegments, statusCounts });
+
+      return res.json({
+        totalSegments,
+        statusCounts
+      });
+
+    } catch (error) {
+      console.error("Failed to get project stats:", error);
+      return handleApiError(res, error);
+    }
+  });
+
   // Projects API
   app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
     try {
