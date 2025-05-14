@@ -1128,24 +1128,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         Rejected: 0
       };
 
-      // Count segments by status (한 번만 실행)
-      segments.forEach(segment => {
-        const status = segment.status || "MT";
+      // Count segments by status without using forEach
+      for (let i = 0; i < segments.length; i++) {
+        const status = segments[i].status || "MT";
         statusCounts[status] = (statusCounts[status] || 0) + 1;
-      });
+      }
 
       // Calculate reviewed percentage
       const reviewedCount = statusCounts["Reviewed"] || 0;
-      const reviewedPercentage = totalSegments > 0 ? (reviewedCount / totalSegments) * 100 : 0;
+      const reviewedPercentage = Math.min(totalSegments > 0 ? (reviewedCount / totalSegments) * 100 : 0, 100);
 
-      console.log(`⚡️ Project ${id} stats calculation:`, {
-        projectId: id,
-        totalFiles: fileIds.length,
-        totalSegments,
-        statusCounts,
-        reviewedCount,
-        reviewedPercentage
-      });
+      // Simple logging to avoid memory issues
+      console.log(`Project ${id} stats:`, 
+        `Total: ${totalSegments}`, 
+        `Reviewed: ${reviewedCount}`, 
+        `Percentage: ${reviewedPercentage.toFixed(1)}%`
+      );
 
       return res.json({
         totalSegments,
