@@ -225,35 +225,38 @@ export function EditableSegment(props: EditableSegmentProps) {
       const isValueChanged = newValue !== liveSegment.target;
       if (!isValueChanged) return;
 
-      const needsOriginChange = isOriginInList(liveSegment.origin, STATUS_NEED_CHANGE);
-      const newOrigin = needsOriginChange ? "HT" : liveSegment.origin || "HT";
-      const newStatus = (liveSegment.status === "Reviewed" || isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)) 
-        ? "Edited" 
-        : liveSegment.status || "Edited";
+      try {
+        const needsOriginChange = isOriginInList(liveSegment.origin, STATUS_NEED_CHANGE);
+        const newOrigin = needsOriginChange ? "HT" : liveSegment.origin || "HT";
+        const newStatus = (liveSegment.status === "Reviewed" || isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)) 
+          ? "Edited" 
+          : liveSegment.status || "Edited";
 
-      // 낙관적 업데이트
-      if (onUpdate) {
-        onUpdate(newValue, newStatus, newOrigin);
-      }
-
-      updateSegment(
+        updateSegment(
         {
           id: liveSegment.id,
           target: newValue,
           status: newStatus,
           fileId: liveSegment.fileId,
-          origin: newOrigin
+          origin: newOrigin,
+          fileId: liveSegment.fileId
         },
         {
+          onSuccess: () => {
+            if (onUpdate) {
+              onUpdate(newValue, newStatus, newOrigin);
+            }
+          },
           onError: (error) => {
             console.error("Failed to update segment:", error);
             setValue(liveSegment.target || "");
-            if (onUpdate) {
-              onUpdate(liveSegment.target || "", liveSegment.status, liveSegment.origin);
-            }
           }
         }
       );
+      } catch (error) {
+        console.error("Error in handleTextareaChange:", error);
+        setValue(liveSegment.target || "");
+      }
     }
   };
 
