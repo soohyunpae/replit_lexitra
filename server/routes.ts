@@ -1479,73 +1479,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     limit: 100,
                   });
 
-                  // 세그먼트 처리를 모두 비동기로 처리 (메모리 문제 방지)
-                  console.log('Setting up delayed translation for segments');
-                  logMemoryUsage('Before setting up delayed translations');
+                  // 세그먼트를 번역하기 위한 배치 처리 시스템 구현
+                  console.log('Setting up translation batch queue for segments');
+                  logMemoryUsage('Before setting up translation queue');
                   
-                  // 번역 요청을 비동기로 예약만 하고 즉시 리턴 (실제 번역은 백그라운드에서 처리)
-                  // 이렇게 하면 현재 요청 핸들러가 먼저 완료되어 메모리를 해제함
-                  const delayBetweenTranslations = 2000; // 각 세그먼트당 2초 간격
-                  
-                  savedSegments.forEach((segment, index) => {
-                    // 각 세그먼트별로 지연 시간을 다르게 설정하여 순차 처리
-                    const delay = index * delayBetweenTranslations;
+                  // 비동기 큐 구현을 위한 함수
+                  const processSegmentBatch = async (segments: typeof savedSegments, projectInfo: any) => {
+                    const BATCH_SIZE = 5; // 한 번에 처리할 세그먼트 수
+                    let segmentCount = 0;
+                    let processedCount = 0;
                     
-                    // 실제 번역 작업을 비동기로 예약
-                    safeSetTimeout(async () => {
-                      try {
-                        // TM 매칭 및 번역 요청 로직은 그대로 유지하되, 메모리 사용량 최적화
-                        console.log(`Processing delayed translation for segment ${segment.id} (${index+1}/${savedSegments.length})`);
-                        
-                        // 세그먼트당 매칭 찾기 (TM 리스트에서 매칭)
-                        const relevantTmMatches = tmMatches
-                          .filter(tm => calculateSimilarity(segment.source, tm.source) > 0.7)
-                          .slice(0, 3); // 최대 3개 매칭으로 제한
-                        
-                        // 최적화된 용어집 매칭
-                        const relevantTerms = glossaryTerms
-                          .filter(term => segment.source.toLowerCase().includes(term.source.toLowerCase()))
-                          .slice(0, 5); // 최대 5개 용어로 제한
-                        
-                        // 컨텍스트 준비 (최적화)
-                        const context = relevantTmMatches.map(match => `${match.source} => ${match.target}`);
-                        
-                        // 번역 실행
-                        const translationResult = await translateWithGPT({
-                          source: segment.source,
-                          sourceLanguage: projectInfo.sourceLanguage,
-                          targetLanguage: projectInfo.targetLanguage,
-                          context: context.length > 0 ? context : undefined,
-                          glossaryTerms: relevantTerms.length > 0
-                            ? relevantTerms.map(term => ({
-                                source: term.source,
-                                target: term.target,
-                              }))
-                            : undefined,
-                        });
-                        
-                        // 번역 결과 저장
-                        await db
-                          .update(schema.translationUnits)
-                          .set({
-                            target: translationResult.target,
-                            origin: "MT",
-                            updatedAt: new Date(),
-                          })
-                          .where(eq(schema.translationUnits.id, segment.id));
-                        
-                        // 10개마다 로깅
-                        if (index % 10 === 0 || index === savedSegments.length - 1) {
-                          console.log(`Translated segment ${index+1}/${savedSegments.length} for file ID ${file.id}`);
+                    // 세그먼트를 작은 배치로 나누기 (메모리 효율성)
+                    const batches: typeof savedSegments[] = [];
+                    for (let i = 0; i < segments.length; i += BATCH_SIZE) {
+                      batches.push(segments.slice(i, i + BATCH_SIZE));
+                    }
+                    
+                    console.log(`Created ${batches.length} batches of segments (total: ${segments.length})`);
+                    
+                    // 각 배치를 순차적으로 처리
+                    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+                      const batch = batches[batchIndex];
+                      console.log(`Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} segments)`);
+                      
+                      // 배치 내 세그먼트를 병렬로 처리 (제한된 병렬성으로 메모리 사용 제어)
+                      const translationPromises = batch.map(async (segment) => {
+                        try {
+                          // TM 매칭 찾기 (최적화)
+                          const relevantTmMatches = tmMatches
+                            .filter(tm => calculateSimilarity(segment.source, tm.source) > 0.7)
+                            .slice(0, 2); // 최대 2개로 제한
+                          
+                          // 용어집 매칭 (최적화)
+                          const relevantTerms = glossaryTerms
+                            .filter(term => segment.source.toLowerCase().includes(term.source.toLowerCase()))
+                            .slice(0, 3); // 최대 3개로 제한
+                          
+                          // 최소한의 컨텍스트 준비
+                          const context = relevantTmMatches.map(match => `${match.source} => ${match.target}`);
+                          
+                          // 번역 실행
+                          const translationResult = await translateWithGPT({
+                            source: segment.source,
+                            sourceLanguage: projectInfo.sourceLanguage,
+                            targetLanguage: projectInfo.targetLanguage,
+                            context: context.length > 0 ? context : undefined,
+                            glossaryTerms: relevantTerms.length > 0
+                              ? relevantTerms.map(term => ({
+                                  source: term.source,
+                                  target: term.target,
+                                }))
+                              : undefined,
+                          });
+                          
+                          // 번역 결과 저장
+                          await db
+                            .update(schema.translationUnits)
+                            .set({
+                              target: translationResult.target,
+                              origin: "MT",
+                              updatedAt: new Date(),
+                            })
+                            .where(eq(schema.translationUnits.id, segment.id));
+                          
+                          processedCount++;
+                          
+                          // 로깅 제어 (과도한 로깅 방지)
+                          if (processedCount % 5 === 0 || processedCount === segments.length) {
+                            console.log(`Translated ${processedCount}/${segments.length} segments for file ID ${file.id}`);
+                            logMemoryUsage(`After translating ${processedCount} segments`);
+                          }
+                          
+                          return { success: true, id: segment.id };
+                        } catch (error) {
+                          console.error(`Error translating segment ${segment.id}:`, error);
+                          return { success: false, id: segment.id, error };
                         }
-                      } catch (error) {
-                        console.error(`Error in delayed translation for segment ${segment.id}:`, error);
-                      }
-                    }, delay);
-                  });
+                      });
+                      
+                      // 배치 내 모든 번역 작업이 완료될 때까지 대기
+                      await Promise.all(translationPromises);
+                      
+                      // 메모리 정리를 위한 짧은 대기
+                      await new Promise(resolve => setTimeout(resolve, 500));
+                    }
+                    
+                    console.log(`Completed all translations for file ID ${file.id}`);
+                    logMemoryUsage('After all translations');
+                  };
                   
-                  console.log(`Scheduled translations for ${savedSegments.length} segments in file ID ${file.id}`);
-                  logMemoryUsage('After scheduling all translations');
+                  // 번역 작업을 비동기로 시작하고 API는 즉시 응답
+                  // 이렇게 하면 요청 처리는 빠르게 완료되지만 번역은 백그라운드에서 계속됨
+                  (async () => {
+                    try {
+                      await processSegmentBatch(savedSegments, projectInfo);
+                    } catch (error) {
+                      console.error('Error in batch translation process:', error);
+                    }
+                  })();
+                  
+                  console.log(`Initiated background translation for ${savedSegments.length} segments in file ID ${file.id}`);
+                  logMemoryUsage('After initiating background translation');
 
                   console.log(
                     `Completed translation for all ${savedSegments.length} segments in file ID ${file.id}`,
