@@ -1327,6 +1327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // 각 파일에 대해 세그먼트 생성
         if (savedFiles.length > 0) {
+          logMemoryUsage('After file DB save, before segments creation');
           for (const file of savedFiles) {
             if (file.type === "work") {
               // 참조 파일이 아닌 작업 파일만 세그먼트 생성
@@ -1361,36 +1362,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const contentLines = file.content
                 .split(/\r?\n/)
                 .filter((line) => line.trim().length > 0);
-              let segments: {
+              
+              console.log(`Processing ${contentLines.length} lines for file ID ${file.id}`);
+              logMemoryUsage('Before segment processing');
+              
+              // 메모리 부담을 줄이기 위해 작은 배치로 세그먼트 처리
+              const BATCH_SIZE = 50; // 한 번에 최대 50개 세그먼트씩 처리
+              let allSavedSegments: typeof schema.translationUnits.$inferSelect[] = [];
+              let currentBatch: {
                 source: string;
                 status: string;
                 fileId: number;
               }[] = [];
-
-              // Process each line
+              
+              let segmentCount = 0;
+              
+              // 각 라인마다 세그먼트로 분할하고 배치로 처리
               for (const line of contentLines) {
                 const sentences = segmentText(String(line).trim());
-
-                // Add each sentence as a separate segment
-                segments = [
-                  ...segments,
-                  ...sentences.map((sentence) => ({
+                
+                for (const sentence of sentences) {
+                  // 현재 배치에 추가
+                  currentBatch.push({
                     source: sentence,
                     status: "MT",
                     fileId: file.id,
-                  })),
-                ];
+                  });
+                  
+                  segmentCount++;
+                  
+                  // 배치가 가득 차면 DB에 저장하고 배치 초기화
+                  if (currentBatch.length >= BATCH_SIZE) {
+                    console.log(`Saving batch of ${currentBatch.length} segments (${segmentCount} total)`);
+                    logMemoryUsage('Before batch insert');
+                    
+                    const batchSavedSegments = await db
+                      .insert(schema.translationUnits)
+                      .values(currentBatch)
+                      .returning();
+                    
+                    allSavedSegments = [...allSavedSegments, ...batchSavedSegments];
+                    currentBatch = []; // 배치 초기화
+                    
+                    logMemoryUsage('After batch insert');
+                  }
+                }
               }
-
-              if (segments.length > 0) {
-                console.log(
-                  `Creating ${segments.length} segments for file ID ${file.id}`,
-                );
-                // 세그먼트 먼저 저장
-                const savedSegments = await db
+              
+              // 남은 세그먼트 저장 (마지막 배치)
+              if (currentBatch.length > 0) {
+                console.log(`Saving final batch of ${currentBatch.length} segments (${segmentCount} total)`);
+                logMemoryUsage('Before final batch insert');
+                
+                const finalBatchSegments = await db
                   .insert(schema.translationUnits)
-                  .values(segments)
+                  .values(currentBatch)
                   .returning();
+                
+                allSavedSegments = [...allSavedSegments, ...finalBatchSegments];
+                logMemoryUsage('After final batch insert');
+              }
+              
+              if (segmentCount > 0) {
+                console.log(`Created total ${segmentCount} segments for file ID ${file.id}`);
+                
+                // 기존 코드와의 호환성을 위해 savedSegments 변수 정의
+                const savedSegments = allSavedSegments;
 
                 // 프로젝트 정보 가져오기 (언어 정보 필요)
                 const projectInfo = await db.query.projects.findFirst({
