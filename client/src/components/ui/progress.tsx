@@ -16,18 +16,12 @@ const Progress = React.forwardRef<
     {...props}
   >
     <div className="h-full w-full flex overflow-hidden">
-      {/* Reviewed segments (green) */}
-      <div className="h-full bg-green-300" style={{ width: 'var(--reviewed-percent, 0%)' }} />
-      {/* 100% segments (blue) */}
-      <div className="h-full bg-blue-300" style={{ width: 'var(--match-100-percent, 0%)' }} />
-      {/* Fuzzy segments (yellow) */}
-      <div className="h-full bg-yellow-300" style={{ width: 'var(--fuzzy-percent, 0%)' }} />
-      {/* MT segments (gray) */}
-      <div className="h-full bg-gray-300" style={{ width: 'var(--mt-percent, 0%)' }} />
-      {/* Edited segments (purple) */}
-      <div className="h-full bg-purple-300" style={{ width: 'var(--edited-percent, 0%)' }} />
-      {/* Rejected segments (red) */}
-      <div className="h-full bg-red-300" style={{ width: 'var(--rejected-percent, 0%)' }} />
+      <div className="h-full bg-green-500/70" style={{ width: 'var(--reviewed-percent, 0%)' }} />
+      <div className="h-full bg-blue-500/70" style={{ width: 'var(--match-100-percent, 0%)' }} />
+      <div className="h-full bg-yellow-500/70" style={{ width: 'var(--fuzzy-percent, 0%)' }} />
+      <div className="h-full bg-gray-500/70" style={{ width: 'var(--mt-percent, 0%)' }} />
+      <div className="h-full bg-purple-500/70" style={{ width: 'var(--edited-percent, 0%)' }} />
+      <div className="h-full bg-red-500/70" style={{ width: 'var(--rejected-percent, 0%)' }} />
     </div>
   </ProgressPrimitive.Root>
 ))

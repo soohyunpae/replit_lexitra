@@ -12,18 +12,26 @@ interface CombinedProgressProps extends React.ComponentPropsWithoutRef<typeof Pr
 
 export function CombinedProgress({
   reviewedPercentage,
-  statusCounts,
+  statusCounts = {},
   totalSegments = 0,
   height = "h-2",
   showPercentage = false,
   ...props
 }: CombinedProgressProps) {
-  const total = totalSegments || 0;
-  const reviewed = (statusCounts?.["Reviewed"] || 0) / total * 100;
-  const match100 = (statusCounts?.["100%"] || 0) / total * 100;
-  const fuzzy = (statusCounts?.["Fuzzy"] || 0) / total * 100;
-  const mt = (statusCounts?.["MT"] || 0) / total * 100;
-  const edited = (statusCounts?.["Edited"] || 0) / total * 100;
+  // Prevent division by zero
+  const total = Math.max(totalSegments, 1);
+  
+  // Calculate percentages safely
+  const getPercentage = (status: string) => {
+    return ((statusCounts[status] || 0) / total) * 100;
+  };
+
+  const reviewed = getPercentage("Reviewed");
+  const match100 = getPercentage("100%");
+  const fuzzy = getPercentage("Fuzzy");
+  const mt = getPercentage("MT");
+  const edited = getPercentage("Edited");
+  const rejected = getPercentage("Rejected");
 
   return (
     <div className="space-y-1.5 w-full">
@@ -36,7 +44,8 @@ export function CombinedProgress({
           "--fuzzy-percent": `${fuzzy}%`,
           "--mt-percent": `${mt}%`,
           "--edited-percent": `${edited}%`,
-        }}
+          "--rejected-percent": `${rejected}%`,
+        } as React.CSSProperties}
         {...props}
       />
       {showPercentage && (
