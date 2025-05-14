@@ -1008,7 +1008,8 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
                                   Click to upload reference files
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                                                 PDF, DOCX, Excel, or any reference documents
+                                                                 PDF, DOCX, Excel,```text
+ or any reference documents
                                 </p>
                               </div>
                               <input
@@ -1370,15 +1371,23 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
                         </CardHeader>
                         <CardContent className="pb-2">
                           <div>
-                            <CombinedProgress
-                              reviewedPercentage={
-                                projectStats[project.id]?.reviewedPercentage || 0
-                              }
-                              statusCounts={projectStats[project.id]?.statusCounts}
-                              totalSegments={projectStats[project.id]?.totalSegments}
-                              height="h-2"
-                              showPercentage={false}
-                            />
+                            {(() => {
+                              const stats = projectStats[project.id];
+                              console.log("⛳️ Project stats for", project.id, stats);
+                              console.log("⛳️ Status counts:", stats?.statusCounts);
+                              console.log("⛳️ Reviewed percentage:", stats?.reviewedPercentage);
+                              console.log("⛳️ Total segments:", stats?.totalSegments);
+
+                              return (
+                                <CombinedProgress
+                                  reviewedPercentage={stats?.reviewedPercentage || 0}
+                                  statusCounts={stats?.statusCounts || {}}
+                                  totalSegments={stats?.totalSegments || 0}
+                                  height="h-2"
+                                  showPercentage={true}
+                                />
+                              );
+                            })()}
 
                             {/* 단어 수 표시 - 요청에 따라 추가 */}
                             <div className="flex items-center mt-2 text-sm text-gray-600">
@@ -1596,13 +1605,23 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col gap-1.5">
-                              <CombinedProgress
-                                reviewedPercentage={stats?.reviewedPercentage || 0}
-                                statusCounts={stats?.statusCounts}
-                                totalSegments={stats?.totalSegments}
-                                height="h-2.5"
-                                showPercentage={true}
-                              />
+                              {(() => {
+                                const stats = projectStats[project.id];
+                                console.log("⛳️ Project stats for", project.id, stats);
+                                console.log("⛳️ Status counts:", stats?.statusCounts);
+                                console.log("⛳️ Reviewed percentage:", stats?.reviewedPercentage);
+                                console.log("⛳️ Total segments:", stats?.totalSegments);
+
+                                return (
+                                  <CombinedProgress
+                                    reviewedPercentage={stats?.reviewedPercentage || 0}
+                                    statusCounts={stats?.statusCounts || {}}
+                                    totalSegments={stats?.totalSegments || 0}
+                                    height="h-2.5"
+                                    showPercentage={true}
+                                  />
+                                );
+                              })()}
                             </div>
                           </TableCell>
                           <TableCell>
