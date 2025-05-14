@@ -1128,17 +1128,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         Rejected: 0
       };
 
-      // Ensure all timeouts are within 32-bit integer range
-      // Count segments by status directly without setTimeout
-      const statusCounts: Record<string, number> = {
-        Reviewed: 0,
-        "100%": 0,
-        Fuzzy: 0,
-        MT: 0,
-        Edited: 0,
-        Rejected: 0
-      };
-
       // Count segments by status with logging
       segments.forEach((segment) => {
         const status = segment.status || "MT";
