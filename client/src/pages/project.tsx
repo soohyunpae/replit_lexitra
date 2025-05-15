@@ -1379,50 +1379,36 @@ export default function Project() {
                         key={file.id}
                         className="border border-border rounded-lg p-4 hover:border-primary/60 transition-colors"
                       >
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-                          <div className="md:col-span-2">
-                            <div className="mb-2">
-                              <h3 className="font-medium truncate">
-                                {file.name}
-                              </h3>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Progress
-                                value={stats.percentage}
-                                className="h-2 flex-1"
-                                style={
-                                  {
-                                    "--reviewed-percent": `${getStatusPercentage(file.id, "Reviewed")}%`,
-                                    "--match-100-percent": `${getStatusPercentage(file.id, "100%")}%`,
-                                    "--fuzzy-percent": `${getStatusPercentage(file.id, "Fuzzy")}%`,
-                                    "--mt-percent": `${getStatusPercentage(file.id, "MT")}%`,
-                                    "--edited-percent": `${getStatusPercentage(file.id, "Edited")}%`,
-                                    "--rejected-percent": `${getStatusPercentage(file.id, "Rejected")}%`,
-                                  } as React.CSSProperties
-                                }
-                              />
-                              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                {stats.completed}/{stats.total} (
-                                {stats.percentage}%)
-                              </span>
-                            </div>
+                        <div className="flex items-center gap-4">
+                          <div className="w-44 truncate">
+                            <span className="font-medium">{file.name}</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 flex-1 max-w-md">
+                            <Progress
+                              value={getStatusPercentage(file.id, "Reviewed")}
+                              className="h-2 flex-1 bg-gray-100 dark:bg-gray-800"
+                              indicatorClassName="bg-green-500"
+                            />
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                              {Math.round(getStatusPercentage(file.id, "Reviewed"))}%
+                            </span>
                           </div>
 
-                          <div className="flex flex-col gap-1">
-                            <div className="text-sm text-muted-foreground">
-                              {formatDate(file.updatedAt || file.createdAt)}
-                            </div>
-                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <TextCursorInput className="h-3.5 w-3.5" />
-                              <span>
-                                {(file as any).wordCount ||
-                                  getFileWordCount(file.id)}{" "}
-                                words
-                              </span>
-                            </div>
+                          <div className="text-sm text-muted-foreground whitespace-nowrap">
+                            {formatDate(file.updatedAt || file.createdAt)}
                           </div>
 
-                          <div className="flex justify-end">
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground whitespace-nowrap">
+                            <TextCursorInput className="h-3.5 w-3.5" />
+                            <span>
+                              {(file as any).wordCount ||
+                                getFileWordCount(file.id)}{" "}
+                              words
+                            </span>
+                          </div>
+
+                          <div className="flex justify-end min-w-[120px]">
                             {/* 빈 타겟 세그먼트 개수 확인 */}
                             {(() => {
                               // 파일의 모든 세그먼트 가져오기
@@ -1444,6 +1430,7 @@ export default function Project() {
 
                               return (
                                 <Button
+                                  size="sm"
                                   onClick={() =>
                                     navigate(`/translation/${file.id}`)
                                   }
