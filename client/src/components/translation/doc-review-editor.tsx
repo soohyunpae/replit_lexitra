@@ -415,7 +415,6 @@ export function DocReviewEditor({
                 variant={showSource && showSidePanel ? "default" : "ghost"}
                 onClick={() => {
                   setShowSource(true);
-                  setShowSidePanel(true);
                 }}
                 className="h-7 px-3 hidden md:inline-flex"
                 title="Show side by side"
