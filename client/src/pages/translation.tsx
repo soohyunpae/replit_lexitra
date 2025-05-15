@@ -436,8 +436,26 @@ export default function Translation() {
             </h1>
           </div>
 
-          {/* Tabs and Save Button */}
-          <div className="flex items-center justify-between">
+          {/* Search and Tabs */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="relative flex-grow max-w-md">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search in file content..."
+                className="pl-8"
+                onChange={(e) => {
+                  const searchText = e.target.value.toLowerCase();
+                  const segments = file?.segments || [];
+                  const firstMatch = segments.findIndex(seg => 
+                    seg.source.toLowerCase().includes(searchText) || 
+                    (seg.target && seg.target.toLowerCase().includes(searchText))
+                  );
+                  if (firstMatch !== -1 && searchText) {
+                    setSelectedSegment(segments[firstMatch]);
+                  }
+                }}
+              />
+            </div>
             <Tabs
               value={editorMode}
               onValueChange={(value) =>
