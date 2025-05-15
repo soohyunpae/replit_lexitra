@@ -451,13 +451,18 @@ export function DocReviewEditor({
           isMobile ? "flex flex-col" : "flex flex-row"
         )}
       >
-        {/* Source Panel - Hidden on mobile when showSource is false */}
+        {/* Source Panel */}
         <div 
           className={cn(
             "border-r bg-card/20",
             isMobile 
               ? (showSource ? "h-1/2 overflow-y-auto" : "hidden") 
-              : (showSidePanel ? "w-[35%]" : "w-1/2") + " overflow-auto"
+              : cn(
+                  "overflow-auto",
+                  showSource && !isMobile ? "w-full" : // Full width when source is selected
+                  !showSource && !isMobile ? "hidden" : // Hidden when target is selected
+                  showSidePanel ? "w-[35%]" : "w-1/2" // Default side-by-side width
+                )
           )}
           ref={leftPanelRef}
         >
@@ -520,7 +525,12 @@ export function DocReviewEditor({
             "bg-card/20",
             isMobile 
               ? "flex-1 overflow-auto" 
-              : (showSidePanel ? "w-[35%]" : "w-1/2") + " overflow-auto"
+              : cn(
+                  "overflow-auto",
+                  !showSource && !isMobile ? "w-full" : // Full width when target is selected
+                  showSource && !isMobile ? "hidden" : // Hidden when source is selected
+                  showSidePanel ? "w-[35%]" : "w-1/2" // Default side-by-side width
+                )
           )}
           ref={rightPanelRef}
         >
