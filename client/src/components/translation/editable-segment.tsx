@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Languages } from "lucide-react";
 import { TranslationUnit } from "@/types";
 import { cn } from "@/lib/utils";
-import { useDebouncedCallback } from 'use-debounce';
+import { useDebouncedCallback } from "use-debounce";
 
 /**
  * !!! 중요 !!! 2025-05-12 개선된 세그먼트 높이 동기화 기능
@@ -217,7 +217,6 @@ export function EditableSegment(props: EditableSegmentProps) {
           target: value,
           status: newStatus,
           origin: newOrigin,
-          fileId: liveSegment.fileId,
         },
         {
           onSuccess: () => {
@@ -285,7 +284,6 @@ export function EditableSegment(props: EditableSegmentProps) {
         target: newValue,
         status: newStatus,
         origin: newOrigin,
-        fileId: liveSegment.fileId,
       });
     }
   };
@@ -314,7 +312,6 @@ export function EditableSegment(props: EditableSegmentProps) {
           target: value,
           status: newStatus,
           origin: newOrigin,
-          fileId: liveSegment.fileId,
         },
         {
           onSuccess: () => {
