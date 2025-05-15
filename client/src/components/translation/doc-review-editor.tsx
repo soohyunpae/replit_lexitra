@@ -388,54 +388,55 @@ export function DocReviewEditor({
       {/* Controls - Fixed at the top */}
       <div className="bg-card border-b border-border py-2 px-4 sticky top-0 z-20 shadow-sm">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant={showSource && !isMobile ? "default" : "outline"}
-              onClick={() => setShowSource(true)}
-              className="h-7"
-              title="Show source only"
-            >
-              Source
-            </Button>
-            <Button
-              size="sm"
-              variant={!showSource && !isMobile ? "default" : "outline"}
-              onClick={() => setShowSource(false)}
-              className="h-7"
-              title="Show target only"
-            >
-              Target
-            </Button>
-            <Button
-              size="sm"
-              variant={showSource && isMobile ? "default" : "outline"}
-              onClick={() => {
-                setShowSource(true);
-                // Force side-by-side on desktop
-                if (!isMobile) {
-                  setShowSidePanel(false);
-                }
-              }}
-              className="h-7 hidden md:inline-flex"
-              title="Show side by side"
-            >
-              Side by Side
-            </Button>
-          </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between w-full">
+            <div className="inline-flex items-center rounded-lg border bg-card p-1 text-card-foreground shadow-sm">
+              <Button
+                size="sm"
+                variant={showSource && !isMobile ? "default" : "ghost"}
+                onClick={() => setShowSource(true)}
+                className="h-7 px-3"
+                title="Show source only"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Source
+              </Button>
+              <Button
+                size="sm"
+                variant={!showSource && !isMobile ? "default" : "ghost"}
+                onClick={() => setShowSource(false)}
+                className="h-7 px-3"
+                title="Show target only"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Target
+              </Button>
+              <Button
+                size="sm"
+                variant={showSource && showSidePanel ? "default" : "ghost"}
+                onClick={() => {
+                  setShowSource(true);
+                  setShowSidePanel(true);
+                }}
+                className="h-7 px-3 hidden md:inline-flex"
+                title="Show side by side"
+              >
+                <Languages className="h-4 w-4 mr-2" />
+                Side by Side
+              </Button>
+            </div>
+            
             {/* Side panel toggle button */}
             <Button
               size="sm"
-              variant={showSidePanel ? "default" : "outline"}
+              variant="ghost"
               onClick={() => setShowSidePanel(!showSidePanel)}
               className="h-7 w-7 p-0"
               title={showSidePanel ? "Hide side panel" : "Show side panel"}
             >
               {showSidePanel ? (
-                <ChevronRight className="h-3.5 w-3.5" />
+                <ChevronRight className="h-4 w-4" />
               ) : (
-                <ChevronLeft className="h-3.5 w-3.5" />
+                <ChevronLeft className="h-4 w-4" />
               )}
             </Button>
 
