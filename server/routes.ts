@@ -151,20 +151,43 @@ async function processFile(file: Express.Multer.File) {
           });
           
           // 추출된 텍스트 저장
-          text = pdfData.text || '';
+          const rawText = pdfData.text || '';
           
           // 텍스트가 비어있는지 확인
-          if (!text || text.trim() === '') {
+          if (!rawText || rawText.trim() === '') {
             console.error('PDF에서 텍스트를 추출했지만 결과가 비어있습니다.');
             // 대안으로 제공하는 텍스트
             text = `PDF 파일 내용을 추출할 수 없습니다. 파일명: ${Buffer.from(file.originalname).toString('utf-8')}`;
           } else {
-            console.log('PDF 텍스트 추출 성공! 내용:', text.substring(0, 100) + '...');
+            console.log('PDF 텍스트 추출 성공! 내용:', rawText.substring(0, 100) + '...');
             
-            // 세그먼트 분리를 위한 텍스트 정리
-            text = text.replace(/\r\n/g, '\n')
-                       .replace(/\n{3,}/g, '\n\n')  // 3개 이상 연속 줄바꿈 제거
-                       .trim();
+            // PDF 특수처리: 텍스트 정리 및 세그먼트 나누기
+            // 1. 기본 정리 (불필요한 공백, 특수문자 처리)
+            const cleanedText = rawText
+              .replace(/\r\n/g, '\n')
+              .replace(/\n{3,}/g, '\n\n')  // 3개 이상 연속 줄바꿈 제거
+              .replace(/[^\x20-\x7E\n\r\t가-힣]/g, '') // 영문, 한글, 일반 구두점만 유지
+              .trim();
+            
+            // 2. 줄 단위로 분리
+            const textLines = cleanedText.split(/\r?\n/)
+              .filter(line => line.trim().length > 3) // 너무 짧은 라인 제거
+              .map(line => line.trim());
+            
+            // 3. 각 줄을 문장 단위로 분리
+            let sentences: string[] = [];
+            for (const line of textLines) {
+              // 각 줄을 문장 단위로 분리해서 추가
+              const lineSentences = segmentText(line);
+              sentences = [...sentences, ...lineSentences];
+            }
+            
+            // 4. 최종 텍스트 생성 (문장 단위로 구분)
+            text = sentences.join('\n');
+            
+            // 디버깅용 정보 출력
+            console.log(`PDF 처리 완료: ${sentences.length}개 세그먼트 생성`);
+            console.log('첫 세그먼트 샘플:', sentences.slice(0, 2));
           }
           
           // 진행 상황 업데이트
