@@ -901,6 +901,7 @@ export function NewTranslationEditor({
                         segment={segment}
                         index={index + 1}
                         isSource={false}
+                        isSelected={selectedSegmentId === segment.id}
                         fileId={fileId}
                         onSelect={() => handleSegmentSelect(segment.id)}
                         onUpdate={(target, status, origin) => {
@@ -917,14 +918,9 @@ export function NewTranslationEditor({
                             console.error("Error in onUpdate callback:", err);
                           }
                         }}
-                        onTranslateWithGPT={() =>
-                          handleTranslateWithGPT(segment.id)
-                        }
-                        isSelected={selectedSegmentId === segment.id}
+                        onTranslateWithGPT={() => handleTranslateWithGPT(segment.id)}
                         isChecked={!!checkedSegments[segment.id]}
-                        onCheckChange={(checked) =>
-                          handleCheckboxChange(segment.id, checked)
-                        }
+                        onCheckChange={(checked) => handleCheckboxChange(segment.id, checked)}
                       />
                     </div>
                   ))}

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { TranslationUnit } from "@/types";
+import { StatusTypes } from "@shared/schema";
 
 export const useSegments = (fileId: number) => {
   const queryClient = useQueryClient();
@@ -13,7 +14,7 @@ export const useSegments = (fileId: number) => {
     },
     enabled: !!fileId,
     staleTime: 30000, // 30 seconds
-    cacheTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false
   });
 
@@ -22,17 +23,20 @@ export const useSegments = (fileId: number) => {
       id,
       target,
       status,
-      origin = "HT"
+      origin = "HT",
+      fileId: segmentFileId = fileId
     }: {
       id: number;
       target: string;
       status: string;
       origin?: string;
+      fileId?: number;
     }) => {
       const response = await apiRequest("PATCH", `/api/segments/${id}`, {
         target,
         status,
-        origin
+        origin,
+        fileId: segmentFileId
       });
       return response.json();
     },
@@ -42,7 +46,7 @@ export const useSegments = (fileId: number) => {
   });
 
   // Calculate segment status counts
-  const statusCounts: Record<StatusType, number> = {
+  const statusCounts: Record<string, number> = {
     "Reviewed": 0,
     "100%": 0,
     "Fuzzy": 0,
@@ -51,14 +55,14 @@ export const useSegments = (fileId: number) => {
     "Rejected": 0,
   };
 
-  segments.forEach((segment) => {
+  (segments as TranslationUnit[]).forEach((segment: TranslationUnit) => {
     if (segment.status) {
       statusCounts[segment.status]++;
     }
   });
 
   // Calculate reviewed percentage
-  const totalSegments = segments.length;
+  const totalSegments = Array.isArray(segments) ? segments.length : 0;
   const reviewedPercentage = totalSegments > 0 
     ? (statusCounts["Reviewed"] / totalSegments) * 100 
     : 0;
@@ -72,7 +76,10 @@ export const useSegments = (fileId: number) => {
     fileId: number;
   }, options?: any) => {
     setTimeout(() => {
-      updateSegmentMutation(params, options);
+      updateSegmentMutation({
+        ...params,
+        fileId: params.fileId || fileId
+      }, options);
     }, 300);
   };
 
