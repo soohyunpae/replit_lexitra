@@ -35,7 +35,7 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { CombinedProgress } from "@/components/ui/combined-progress";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -1385,14 +1385,20 @@ export default function Project() {
                           </div>
                           
                           <div className="flex items-center gap-2 flex-1 max-w-md">
-                            <Progress
-                              value={getStatusPercentage(file.id, "Reviewed")}
-                              className="h-2 flex-1 bg-gray-100 dark:bg-gray-800"
-                              indicatorClassName="bg-green-500"
+                            <CombinedProgress
+                              reviewedPercentage={getStatusPercentage(file.id, "Reviewed")}
+                              statusCounts={{
+                                "Reviewed": getStatusCount(file.id, "Reviewed"),
+                                "100%": getStatusCount(file.id, "100%"),
+                                "Fuzzy": getStatusCount(file.id, "Fuzzy"),
+                                "MT": getStatusCount(file.id, "MT"),
+                                "Edited": getStatusCount(file.id, "Edited"),
+                                "Rejected": getStatusCount(file.id, "Rejected")
+                              }}
+                              totalSegments={getTotalSegments(file.id)}
+                              height="h-2"
+                              showPercentage={true}
                             />
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">
-                              {Math.round(getStatusPercentage(file.id, "Reviewed"))}%
-                            </span>
                           </div>
 
                           <div className="text-sm text-muted-foreground whitespace-nowrap">
