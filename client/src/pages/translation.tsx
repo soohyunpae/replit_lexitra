@@ -447,13 +447,21 @@ export default function Translation() {
                 className="pl-8"
                 onChange={(e) => {
                   const searchText = e.target.value.toLowerCase();
-                  const segments = file?.segments || [];
-                  const firstMatch = segments.findIndex(seg => 
-                    seg.source.toLowerCase().includes(searchText) || 
-                    (seg.target && seg.target.toLowerCase().includes(searchText))
-                  );
-                  if (firstMatch !== -1 && searchText) {
-                    setSelectedSegment(segments[firstMatch]);
+                  if (!searchText || !file?.segments) return;
+                  
+                  const segments = file.segments;
+                  for (let i = 0; i < segments.length; i++) {
+                    const segment = segments[i];
+                    if (
+                      segment.source.toLowerCase().includes(searchText) ||
+                      (segment.target && segment.target.toLowerCase().includes(searchText))
+                    ) {
+                      setSelectedSegment(segment);
+                      // Scroll segment into view if needed
+                      const element = document.getElementById(`segment-${segment.id}`);
+                      element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      break;
+                    }
                   }
                 }}
               />
