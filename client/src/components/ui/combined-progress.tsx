@@ -23,9 +23,11 @@ export function CombinedProgress({
   ...props
 }: CombinedProgressProps) {
   // Reviewed 수 계산
-  const reviewedCount = statusCounts.Reviewed || 0;
+  const counts = statusCounts || {};
+  const reviewedCount = counts.Reviewed || 0;
+  const totalSegs = totalSegments || 1; // 0으로 나누기 방지
   const reviewedPercentageNew = Math.round(
-    (reviewedCount / totalSegments) * 100,
+    (reviewedCount / totalSegs) * 100,
   );
 
   return (

@@ -1388,6 +1388,13 @@ export default function Project() {
 
                           <div className="flex items-center gap-2 flex-1 max-w-md">
                             <CombinedProgress
+                              translatedPercentage={getStatusPercentage(
+                                file.id,
+                                "100%",
+                              ) + getStatusPercentage(
+                                file.id,
+                                "Edited",
+                              )}
                               reviewedPercentage={getStatusPercentage(
                                 file.id,
                                 "Reviewed",
