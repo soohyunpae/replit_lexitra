@@ -23,6 +23,9 @@ import {
   File,
   Pencil,
   TextCursorInput,
+  RefreshCw,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 import {
   Card,
@@ -33,6 +36,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -1400,6 +1404,32 @@ export default function Project() {
                                 {stats.completed}/{stats.total} (
                                 {stats.percentage}%)
                               </span>
+                              
+                              {/* 파일 상태 표시 */}
+                              {(() => {
+                                const segments = allSegmentsData?.[file.id] || [];
+                                const emptyTargets = segments.filter(
+                                  seg => !seg.target || seg.target.trim() === ""
+                                ).length;
+                                const isRecent = new Date().getTime() - new Date(file.createdAt).getTime() < 1000 * 60 * 10;
+                                
+                                if (emptyTargets > 0 && isRecent) {
+                                  return (
+                                    <Badge variant="outline" className="ml-1 bg-yellow-100 text-yellow-800 text-[10px] h-5">
+                                      <RefreshCw className="mr-1 h-3 w-3 animate-spin" />
+                                      번역 초벌 진행 중
+                                    </Badge>
+                                  );
+                                } else if (stats.percentage === 100) {
+                                  return (
+                                    <Badge variant="outline" className="ml-1 bg-green-100 text-green-800 text-[10px] h-5">
+                                      <CheckCircle className="mr-1 h-3 w-3" />
+                                      번역 완료
+                                    </Badge>
+                                  );
+                                }
+                                return null;
+                              })()}
                             </div>
                           </div>
 
@@ -1418,32 +1448,59 @@ export default function Project() {
                           </div>
 
                           <div className="flex justify-end">
-                            <Button
-                              onClick={() =>
-                                navigate(`/translation/${file.id}`)
-                              }
-                              disabled={
-                                project.status === "Unclaimed" ||
-                                (project.status === "Claimed" &&
-                                  project.claimedBy !== user?.id &&
-                                  user?.role !== "admin")
-                              }
-                              variant={
-                                project.status === "Unclaimed" ||
-                                (project.status === "Claimed" &&
-                                  project.claimedBy !== user?.id &&
-                                  user?.role !== "admin")
-                                  ? "outline"
-                                  : "default"
-                              }
-                            >
-                              {project.status === "Unclaimed"
-                                ? "Claim Project First"
-                                : project.status === "Claimed" &&
-                                    project.claimedBy !== user?.id
-                                  ? "Claimed by Another User"
-                                  : "Open Editor"}
-                            </Button>
+                            {/* 빈 타겟 세그먼트 개수 확인 */}
+                            {(() => {
+                              // 파일의 모든 세그먼트 가져오기
+                              const segments = allSegmentsData?.[file.id] || [];
+                              // 타겟이 비어있는 세그먼트 개수
+                              const emptyTargets = segments.filter(
+                                seg => !seg.target || seg.target.trim() === ""
+                              ).length;
+                              // 총 세그먼트 수
+                              const totalSegments = segments.length;
+                              
+                              // 번역 초벌이 진행 중인지 확인 (배정된지 얼마 안된 경우)
+                              const isInitialTranslationInProgress = 
+                                emptyTargets > 0 && 
+                                new Date().getTime() - new Date(file.createdAt).getTime() < 1000 * 60 * 10; // 10분 이내 생성
+                              
+                              return (
+                                <Button
+                                  onClick={() =>
+                                    navigate(`/translation/${file.id}`)
+                                  }
+                                  disabled={
+                                    project.status === "Unclaimed" ||
+                                    (project.status === "Claimed" &&
+                                      project.claimedBy !== user?.id &&
+                                      user?.role !== "admin") ||
+                                    // 번역 초벌이 진행 중인 경우 disabled (관리자 제외)
+                                    (isInitialTranslationInProgress && user?.role !== "admin")
+                                  }
+                                  variant={
+                                    project.status === "Unclaimed" ||
+                                    (project.status === "Claimed" &&
+                                      project.claimedBy !== user?.id &&
+                                      user?.role !== "admin") ||
+                                    isInitialTranslationInProgress
+                                      ? "outline"
+                                      : "default"
+                                  }
+                                >
+                                  {project.status === "Unclaimed"
+                                    ? "Claim Project First"
+                                    : project.status === "Claimed" &&
+                                      project.claimedBy !== user?.id
+                                      ? "Claimed by Another User"
+                                      : isInitialTranslationInProgress
+                                        ? "번역 초벌 진행 중..."
+                                        : "Open Editor"}
+                                  {isInitialTranslationInProgress && (
+                                    <RefreshCw className="ml-2 h-3 w-3 animate-spin" />
+                                  )}
+                                </Button>
+                              );
+                            })()}
                           </div>
                         </div>
                       </div>

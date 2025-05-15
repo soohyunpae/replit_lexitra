@@ -457,10 +457,24 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
         return response.json();
       },
       onSuccess: (data) => {
+        console.log("Project created successfully:", data);
         queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
         setIsDialogOpen(false);
         form.reset();
-        navigate(`/projects/${data.id}`);
+        
+        // 응답에 유효한 ID가 있는지 확인 후 이동
+        if (data && data.id) {
+          // 진행 중이던 업로드 작업이 완료되도록 짧은 지연 추가
+          setTimeout(() => {
+            navigate(`/projects/${data.id}`);
+          }, 500);
+        } else {
+          console.error("Project created but no ID returned:", data);
+          toast({
+            title: "프로젝트 생성됨",
+            description: "프로젝트가 생성되었지만 상세 페이지로 이동할 수 없습니다."
+          });
+        }
       },
     });
 
@@ -1110,7 +1124,23 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
                       )}
                     />
 
-                    <DialogFooter>
+                    {/* 파일 업로드 진행 상태 표시 */}
+                  {createProject.isPending && (
+                    <div className="bg-accent/20 rounded-lg p-4 mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <RefreshCw className="h-4 w-4 animate-spin text-primary" />
+                        <p className="text-sm font-medium">
+                          파일 업로드 및 처리 중...
+                        </p>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        파일 크기에 따라 몇 분 정도 소요될 수 있습니다.
+                      </p>
+                      <FileProgressIndicator />
+                    </div>
+                  )}
+                  
+                  <DialogFooter>
                       <Button type="submit" disabled={createProject.isPending}>
                         {createProject.isPending
                           ? "Creating..."
