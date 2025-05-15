@@ -319,6 +319,7 @@ export function NewTranslationEditor({
           id,
           target,
           status: updatedStatus,
+          origin: updatedOrigin,
           fileId,
         },
         {
