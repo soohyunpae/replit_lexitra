@@ -399,30 +399,30 @@ export function DocReviewEditor({
               Source
             </Button>
             <Button
-              size="sm"
-              variant={!showSource && !isMobile ? "default" : "outline"}
-              onClick={() => setShowSource(false)}
-              className="h-7"
-              title="Show target only"
-            >
-              Target
-            </Button>
-            <Button
-              size="sm"
-              variant={!showSource && !isMobile ? "default" : "outline"}
-              onClick={() => {
-                // For side-by-side view, set showSource to false
-                setShowSource(false);
-                // Ensure both panels are visible
-                if (!isMobile) {
+                size="sm"
+                variant={!showSource && showSidePanel === false && !isMobile ? "default" : "outline"}
+                onClick={() => {
+                  setShowSource(false);
+                  setShowSidePanel(false);
+                }}
+                className="h-7"
+                title="Show target only"
+              >
+                Target
+              </Button>
+              <Button
+                size="sm"
+                variant={showSidePanel && !isMobile ? "default" : "outline"}
+                onClick={() => {
+                  // For side-by-side view
+                  setShowSource(false);
                   setShowSidePanel(true);
-                }
-              }}
-              className="h-7 hidden md:inline-flex"
-              title="Show side by side"
-            >
-              Side by Side
-            </Button>
+                }}
+                className="h-7 hidden md:inline-flex"
+                title="Show side by side"
+              >
+                Side by Side
+              </Button>
           </div>
           <div className="flex items-center gap-2">
             {/* Side panel toggle button */}
