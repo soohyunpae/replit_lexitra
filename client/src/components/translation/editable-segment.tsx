@@ -9,16 +9,16 @@ import { cn } from "@/lib/utils";
 
 /**
  * !!! 중요 !!! 2025-05-12 개선된 세그먼트 높이 동기화 기능
- * 
+ *
  * 이 코드는 원문과 번역문의 텍스트 높이를 정확히 동기화합니다.
  * 1. 세그먼트 ID를 기반으로 높이 값을 저장하고 관리
  * 2. 원문/번역문 간 동일한 높이 유지
  * 3. 텍스트가 긴 쪽에 맞춰 자동으로 높이 조정
  * 4. 이벤트 시스템을 통한 동기화
- * 
+ *
  * 이 기능 수정 시 반드시 동기화 메커니즘 전체를 이해한 후에 변경하세요.
  * 잘못된 수정은 UI 깨짐과 사용자 경험 저하로 이어집니다.
- * 
+ *
  * Git Tag: v1.0.1-segment-height-sync
  */
 
@@ -94,8 +94,8 @@ export function EditableSegment(props: EditableSegmentProps) {
     if (!sourceTextarea && !targetTextarea) return;
 
     // 두 영역 높이 초기화 (정확한 스크롤 높이 측정을 위해)
-    if (sourceTextarea) sourceTextarea.style.height = 'auto';
-    if (targetTextarea) targetTextarea.style.height = 'auto';
+    if (sourceTextarea) sourceTextarea.style.height = "auto";
+    if (targetTextarea) targetTextarea.style.height = "auto";
 
     // 두 영역의 스크롤 높이 계산
     const sourceHeight = sourceTextarea ? sourceTextarea.scrollHeight : 0;
@@ -112,8 +112,8 @@ export function EditableSegment(props: EditableSegmentProps) {
     segmentHeightsMap.set(segment.id, maxHeight);
 
     // 주변 세그먼트들에게 업데이트 이벤트 발생시키기
-    const event = new CustomEvent('segment-height-changed', { 
-      detail: { segmentId: segment.id, height: maxHeight } 
+    const event = new CustomEvent("segment-height-changed", {
+      detail: { segmentId: segment.id, height: maxHeight },
     });
     window.dispatchEvent(event);
   }, [segment.id]);
@@ -137,11 +137,11 @@ export function EditableSegment(props: EditableSegmentProps) {
     };
 
     // 이벤트 리스너 등록
-    window.addEventListener('segment-height-changed', handleHeightChange);
+    window.addEventListener("segment-height-changed", handleHeightChange);
 
     // 클린업
     return () => {
-      window.removeEventListener('segment-height-changed', handleHeightChange);
+      window.removeEventListener("segment-height-changed", handleHeightChange);
     };
   }, [segment.id]);
 
@@ -166,11 +166,11 @@ export function EditableSegment(props: EditableSegmentProps) {
     const timers = [
       setTimeout(() => synchronizeHeights(), 50),
       setTimeout(() => synchronizeHeights(), 150),
-      setTimeout(() => synchronizeHeights(), 300)
+      setTimeout(() => synchronizeHeights(), 300),
     ];
 
     return () => {
-      timers.forEach(timer => clearTimeout(timer));
+      timers.forEach((timer) => clearTimeout(timer));
     };
   }, [synchronizeHeights]);
 
@@ -226,37 +226,36 @@ export function EditableSegment(props: EditableSegmentProps) {
       if (!isValueChanged) return;
 
       try {
-        const needsOriginChange = isOriginInList(liveSegment.origin, STATUS_NEED_CHANGE);
+        const needsOriginChange = isOriginInList(
+          liveSegment.origin,
+          STATUS_NEED_CHANGE,
+        );
         const newOrigin = needsOriginChange ? "HT" : liveSegment.origin || "HT";
-        const newStatus = (liveSegment.status === "Reviewed" || isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)) 
-          ? "Edited" 
-          : liveSegment.status || "Edited";
+        const newStatus =
+          liveSegment.status === "Reviewed" ||
+          isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)
+            ? "Edited"
+            : liveSegment.status || "Edited";
 
-        // Debounce the update to prevent rapid re-renders
-        const timeoutId = setTimeout(() => {
-          updateSegment(
-            {
-              id: liveSegment.id,
-              target: newValue,
-              status: newStatus,
-              fileId: liveSegment.fileId,
-              origin: newOrigin
-            },
-            {
-              onSuccess: () => {
-                if (onUpdate) {
-                  onUpdate(newValue, newStatus, newOrigin);
-                }
-              },
-              onError: (error) => {
-                console.error("Failed to update segment:", error);
-                setValue(liveSegment.target || "");
+        updateSegment(
+          {
+            id: liveSegment.id,
+            target: newValue,
+            status: newStatus,
+            origin: newOrigin,
+          },
+          {
+            onSuccess: () => {
+              if (onUpdate) {
+                onUpdate(newValue, newStatus, newOrigin);
               }
-            }
-          );
-        }, 300);
-
-        return () => clearTimeout(timeoutId);
+            },
+            onError: (error) => {
+              console.error("Failed to update segment:", error);
+              setValue(liveSegment.target || "");
+            },
+          },
+        );
       } catch (error) {
         console.error("Error in handleTextareaChange:", error);
         setValue(liveSegment.target || "");
@@ -325,10 +324,7 @@ export function EditableSegment(props: EditableSegmentProps) {
           </div>
 
           {/* 번역문 입력 영역 */}
-          <div
-            ref={targetContainerRef}
-            className="flex-grow relative"
-          >
+          <div ref={targetContainerRef} className="flex-grow relative">
             <Textarea
               ref={textareaRef}
               value={value}
@@ -338,7 +334,7 @@ export function EditableSegment(props: EditableSegmentProps) {
                 lineHeight: "1.6",
                 minHeight: "24px",
                 boxShadow: "none",
-                outline: "none"
+                outline: "none",
               }}
               placeholder="Enter translation..."
             />
@@ -382,10 +378,7 @@ export function EditableSegment(props: EditableSegmentProps) {
           </div>
 
           {/* 원문 텍스트 표시 영역 */}
-          <div
-            ref={sourceContainerRef}
-            className="flex-grow overflow-hidden"
-          >
+          <div ref={sourceContainerRef} className="flex-grow overflow-hidden">
             <Textarea
               ref={sourceTextareaRef}
               value={liveSegment.source || ""}
@@ -394,7 +387,7 @@ export function EditableSegment(props: EditableSegmentProps) {
               style={{
                 lineHeight: "1.6",
                 boxShadow: "none",
-                outline: "none"
+                outline: "none",
               }}
               placeholder="No source text"
             />
