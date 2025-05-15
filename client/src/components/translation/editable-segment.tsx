@@ -237,25 +237,39 @@ export function EditableSegment(props: EditableSegmentProps) {
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
-    setValue(newValue); // 로컬 상태만 업데이트
+    setValue(newValue);
   };
 
-  // 저장 버튼이나 닫기 버튼 클릭 시에만 mutation 실행
+  // Document View와 동일한 저장 로직 적용
   const handleSave = () => {
     if (!isSource) {
       const isValueChanged = value !== liveSegment.target;
-      if (!isValueChanged) return;
+      const isStatusChanged = false; // 상태 변경은 toggleStatus에서 처리
+
+      // 값이 변경되었거나 상태가 변경된 경우에만 저장
+      if (!isValueChanged && !isStatusChanged) return;
 
       const needsOriginChange = isOriginInList(
         liveSegment.origin,
         STATUS_NEED_CHANGE,
       );
-      const newOrigin = needsOriginChange ? "HT" : liveSegment.origin || "HT";
-      const newStatus =
+      
+      // MT/100%/Fuzzy에서 수정된 경우 origin을 HT로 변경
+      const newOrigin = (isValueChanged && needsOriginChange) ? "HT" : liveSegment.origin;
+      
+      // Reviewed나 특수 상태에서 수정된 경우 Edited로 변경
+      const newStatus = (isValueChanged && (
         liveSegment.status === "Reviewed" ||
         isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)
-          ? "Edited"
-          : liveSegment.status || "Edited";
+      )) ? "Edited" : liveSegment.status;
+
+      console.log("텍스트 저장:", {
+        text: value,
+        status: newStatus,
+        origin: newOrigin,
+        textChanged: isValueChanged,
+        statusChanged: isStatusChanged
+      });
 
       updateSegment(
         {
@@ -267,8 +281,6 @@ export function EditableSegment(props: EditableSegmentProps) {
         },
         {
           onSuccess: () => {
-            // Update local state immediately for better UX
-            setValue(value);
             if (onUpdate) {
               onUpdate(value, newStatus, newOrigin);
             }
