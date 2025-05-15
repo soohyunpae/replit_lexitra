@@ -720,126 +720,98 @@ export function NewTranslationEditor({
               />
             </div>
           </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="h-7 w-[90px] text-xs">
-                  <SelectValue placeholder="Filter by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Filter by</SelectItem>
-                  <SelectItem value="MT">
-                    MT ({statusCounts["MT"] || 0})
-                  </SelectItem>
-                  <SelectItem value="100%">
-                    100% Match ({statusCounts["100%"] || 0})
-                  </SelectItem>
-                  <SelectItem value="Fuzzy">
-                    Fuzzy Match ({statusCounts["Fuzzy"] || 0})
-                  </SelectItem>
-                  <SelectItem value="Edited">
-                    Edited ({statusCounts["Edited"] || 0})
-                  </SelectItem>
-                  <SelectItem value="Reviewed">
-                    Reviewed ({statusCounts["Reviewed"] || 0})
-                  </SelectItem>
-                  <SelectItem value="Rejected">
-                    Rejected ({statusCounts["Rejected"] || 0})
-                  </SelectItem>
-                </SelectContent>
-              </Select>
 
-              <Select
-                onValueChange={(value) => {
-                  if (value !== "none" && checkedCount > 0) {
-                    handleBulkStatusUpdate(value as StatusType);
-                  }
-                }}
-              >
-                <SelectTrigger className="h-7 w-[90px] text-xs">
-                  <SelectValue placeholder="Set as..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="MT">MT</SelectItem>
-                  <SelectItem value="100%">100% Match</SelectItem>
-                  <SelectItem value="Fuzzy">Fuzzy Match</SelectItem>
-                  <SelectItem value="Edited">Edited</SelectItem>
-                  <SelectItem value="Reviewed">Reviewed</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-7 w-[90px] text-xs">
+              <SelectValue placeholder="Filter by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Filter by</SelectItem>
+              <SelectItem value="MT">
+                MT ({statusCounts["MT"] || 0})
+              </SelectItem>
+              <SelectItem value="100%">
+                100% Match ({statusCounts["100%"] || 0})
+              </SelectItem>
+              <SelectItem value="Fuzzy">
+                Fuzzy Match ({statusCounts["Fuzzy"] || 0})
+              </SelectItem>
+              <SelectItem value="Edited">
+                Edited ({statusCounts["Edited"] || 0})
+              </SelectItem>
+              <SelectItem value="Reviewed">
+                Reviewed ({statusCounts["Reviewed"] || 0})
+              </SelectItem>
+              <SelectItem value="Rejected">
+                Rejected ({statusCounts["Rejected"] || 0})
+              </SelectItem>
+            </SelectContent>
+          </Select>
 
-            {/* Select All Checkbox */}
-            <div className="flex items-center space-x-1.5">
-              <Checkbox
-                id="toggle-select-all"
-                checked={
-                  Object.keys(checkedSegments).length > 0 &&
-                  segments &&
-                  Object.keys(checkedSegments).length === segments.length
-                }
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    handleSelectAll();
-                  } else {
-                    handleUnselectAll();
-                  }
-                }}
-              />
-              <div className="flex items-center">
-                <label
-                  htmlFor="toggle-select-all"
-                  className="text-xs font-medium ml-1 cursor-pointer"
-                >
-                  {checkedCount}/{segments?.length || 0}
-                </label>
-              </div>
-            </div>
+          <Select
+            onValueChange={(value) => {
+              if (value !== "none" && checkedCount > 0) {
+                handleBulkStatusUpdate(value as StatusType);
+              }
+            }}
+          >
+            <SelectTrigger className="h-7 w-[90px] text-xs">
+              <SelectValue placeholder="Set as..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="MT">MT</SelectItem>
+              <SelectItem value="100%">100% Match</SelectItem>
+              <SelectItem value="Fuzzy">Fuzzy Match</SelectItem>
+              <SelectItem value="Edited">Edited</SelectItem>
+              <SelectItem value="Reviewed">Reviewed</SelectItem>
+              <SelectItem value="Rejected">Rejected</SelectItem>
+            </SelectContent>
+          </Select>
 
-            {/* Side panel toggle button - placed at the end */}
-            <div className="ml-auto flex items-center">
-              <Button
-                size="sm"
-                variant={showSidePanel ? "default" : "outline"}
-                onClick={() => setShowSidePanel(!showSidePanel)}
-                className="h-7 w-7 p-0"
-                title={showSidePanel ? "Hide side panel" : "Show side panel"}
-              >
-                {showSidePanel ? (
-                  <ChevronRight className="h-3.5 w-3.5" />
-                ) : (
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center justify-between p-4 border-b">
-        <div className="flex items-center space-x-4 flex-1">
-          <div className="relative flex-grow max-w-md">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search in segments..."
-              className="pl-8"
-              onChange={(e) => {
-                const searchText = e.target.value.toLowerCase();
-                if (!searchText || !segments) return;
-
-                for (let i = 0; i < segments.length; i++) {
-                  const segment = segments[i];
-                  if (
-                    segment.source.toLowerCase().includes(searchText) ||
-                    (segment.target && segment.target.toLowerCase().includes(searchText))
-                  ) {
-                    const element = document.getElementById(`segment-${segment.id}`);
-                    element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    break;
-                  }
+          {/* Select All Checkbox */}
+          <div className="flex items-center space-x-1.5">
+            <Checkbox
+              id="toggle-select-all"
+              checked={
+                Object.keys(checkedSegments).length > 0 &&
+                segments &&
+                Object.keys(checkedSegments).length === segments.length
+              }
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  handleSelectAll();
+                } else {
+                  handleUnselectAll();
                 }
               }}
             />
+            <div className="flex items-center">
+              <label
+                htmlFor="toggle-select-all"
+                className="text-xs font-medium ml-1 cursor-pointer"
+              >
+                {checkedCount}/{segments?.length || 0}
+              </label>
+            </div>
+          </div>
+
+          {/* Side panel toggle button - placed at the end */}
+          <div className="ml-auto flex items-center">
+            <Button
+              size="sm"
+              variant={showSidePanel ? "default" : "outline"}
+              onClick={() => setShowSidePanel(!showSidePanel)}
+              className="h-7 w-7 p-0"
+              title={showSidePanel ? "Hide side panel" : "Show side panel"}
+            >
+              {showSidePanel ? (
+                <ChevronRight className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronLeft className="h-3.5 w-3.5" />
+              )}
+            </Button>
           </div>
         </div>
-      </div>
       </div>
 
       {/* Warning for batch translation */}
