@@ -307,7 +307,11 @@ export default function Project() {
   // Get status count for a specific file and status
   const getStatusCount = (fileId: number, status: string): number => {
     if (!fileSegmentStatusCounts[fileId]) return 0;
-    return fileSegmentStatusCounts[fileId][status as keyof typeof fileSegmentStatusCounts[number]] || 0;
+    return (
+      fileSegmentStatusCounts[fileId][
+        status as keyof (typeof fileSegmentStatusCounts)[number]
+      ] || 0
+    );
   };
 
   // Get total segments for a file
@@ -992,7 +996,6 @@ export default function Project() {
                       <div>
                         <div className="flex justify-between items-center mb-1">
                           <div className="text-muted-foreground flex items-center gap-1.5">
-                            <TextCursorInput className="h-3.5 w-3.5" />
                             <span>Word Count:</span>
                           </div>
                           <div className="font-medium">
@@ -1246,7 +1249,7 @@ export default function Project() {
                         </h3>
                         <p className="text-muted-foreground text-xs max-w-md mx-auto mb-2">
                           Upload reference files to help translators understand
-                          context and terminology
+                          context
                         </p>
                         <p className="text-xs text-primary">
                           Drop files here or click to upload
@@ -1396,17 +1399,20 @@ export default function Project() {
                           <div className="w-44 truncate">
                             <span className="font-medium">{file.name}</span>
                           </div>
-                          
+
                           <div className="flex items-center gap-2 flex-1 max-w-md">
                             <CombinedProgress
-                              reviewedPercentage={getStatusPercentage(file.id, "Reviewed")}
+                              reviewedPercentage={getStatusPercentage(
+                                file.id,
+                                "Reviewed",
+                              )}
                               statusCounts={{
-                                "Reviewed": getStatusCount(file.id, "Reviewed"),
+                                Reviewed: getStatusCount(file.id, "Reviewed"),
                                 "100%": getStatusCount(file.id, "100%"),
-                                "Fuzzy": getStatusCount(file.id, "Fuzzy"),
-                                "MT": getStatusCount(file.id, "MT"),
-                                "Edited": getStatusCount(file.id, "Edited"),
-                                "Rejected": getStatusCount(file.id, "Rejected")
+                                Fuzzy: getStatusCount(file.id, "Fuzzy"),
+                                MT: getStatusCount(file.id, "MT"),
+                                Edited: getStatusCount(file.id, "Edited"),
+                                Rejected: getStatusCount(file.id, "Rejected"),
                               }}
                               totalSegments={getTotalSegments(file.id)}
                               height="h-2"
