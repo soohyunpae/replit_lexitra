@@ -237,6 +237,12 @@ export function EditableSegment(props: EditableSegmentProps) {
 
   const debouncedUpdateSegment = useDebouncedCallback((updateData: any) => {
     updateSegment(updateData, {
+      onSuccess: (data) => {
+        if (onUpdate) {
+          onUpdate(data.target, data.status, data.origin);
+        }
+        queryClient.invalidateQueries(["segments"]);
+      },
       onError: (error) => {
         console.error("Failed to update segment:", error);
         setValue(liveSegment.target || "");
@@ -247,10 +253,7 @@ export function EditableSegment(props: EditableSegmentProps) {
             liveSegment.origin,
           );
         }
-      },
-      onSettled: () => {
-        queryClient.invalidateQueries(["segments"]);
-      },
+      }
     });
   }, 300);
 
