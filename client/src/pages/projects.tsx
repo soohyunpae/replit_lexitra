@@ -1422,7 +1422,6 @@ etc. Unlike work files, references can be added
                     key={project.id}
                     className="overflow-hidden group hover:shadow-md transition-all duration-200 border-border hover:border-primary/30 relative"
                   >
-                    <div className="h-1.5 w-full bg-gradient-to-r from-primary to-primary/70"></div>
                     <div className="absolute top-2 right-2">
                       <span
                         className={`rounded-full px-2 py-1 text-xs font-medium ${statusColor}`}
