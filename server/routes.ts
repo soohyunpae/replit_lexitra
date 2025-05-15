@@ -74,6 +74,10 @@ ensureDirectories();
 
 // 파일 처리 함수
 // pdftotext를 사용하여 PDF에서 텍스트 추출
+import { promisify } from "util";
+import { spawn } from "child_process";
+
+// PDF에서 텍스트 추출 함수 - pdftotext 사용
 const extractTextFromPdf = async (pdfPath: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     // 임시 출력 파일 경로
@@ -85,7 +89,7 @@ const extractTextFromPdf = async (pdfPath: string): Promise<string> => {
     console.log(`PDF 추출 시작: ${pdfPath} -> ${tmpOutputPath}`);
 
     // pdftotext 명령어 실행
-    const pdfProcess = spawn("pdftotext", [
+    const pdfProcess = spawn("/nix/store/1f2vbia1rg1rh5cs0ii49v3hln9i36rv-poppler-utils-24.02.0/bin/pdftotext", [
       "-layout", // 레이아웃 유지
       "-nopgbrk", // 페이지 나누기 없음
       "-enc", "UTF-8", // UTF-8 인코딩 사용
