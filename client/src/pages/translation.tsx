@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
+import { Search } from "lucide-react";
 import { NewTranslationEditor } from "@/components/translation/new-translation-editor";
 import { DocReviewEditor } from "@/components/translation/doc-review-editor";
 import { useQuery, useMutation } from "@tanstack/react-query";
