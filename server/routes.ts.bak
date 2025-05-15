@@ -75,20 +75,18 @@ async function processFile(file: Express.Multer.File) {
         break;
 
       case '.pdf':
-        // PDF 파일 처리 시작
+        // PDF를 지원하지 않는 경우 오류 발생
         console.log('PDF 파일 처리 시작:', file.originalname);
         
-        // PDF는 텍스트 파일로 간단히 처리
+        // PDF는 단순히 텍스트 파일로 처리 (임시)
         try {
-          // 간단한 텍스트 추출
-          const pdfContents = fs.readFileSync(file.path, 'utf8');
-          // 기본 텍스트만 추출 (제한적 처리)
-          text = `PDF 파일 ${file.originalname}의 내용:\n\n${pdfContents.substring(0, 5000)}`;
-          console.log('PDF 처리 완료 - 간단한 텍스트 추출');
+          // 텍스트로 처리 (폴백 솔루션)
+          text = `[PDF 파일: ${file.originalname}] - 이 파일은 텍스트 추출 없이 처리됩니다.`;
+          console.log('PDF 처리 완료: 텍스트 폴백 사용');
         } catch (pdfError) {
           console.error('PDF 처리 오류:', pdfError);
           // 오류가 발생해도 프로젝트 생성은 계속 진행
-          text = `[PDF 파일: ${file.originalname}] - 이 파일은 텍스트 내용이 제한적으로 추출되었습니다.`;
+          text = `[PDF 파일: ${file.originalname}] - 처리 중 오류가 발생했습니다.`;
         }
         break;
 
@@ -1943,20 +1941,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             break;
 
           case '.pdf':
-            // PDF 파일 처리 시작
+            // PDF를 지원하지 않는 경우 오류 발생
             console.log('PDF 파일 처리 시작:', file.originalname);
             
-            // PDF는 텍스트 파일로 간단히 처리
+            // PDF는 단순히 텍스트 파일로 처리 (임시)
             try {
-              // 간단한 텍스트 추출
-              const pdfContents = fs.readFileSync(file.path, 'utf8');
-              // 기본 텍스트만 추출 (제한적 처리)
-              text = `PDF 파일 ${file.originalname}의 내용:\n\n${pdfContents.substring(0, 5000)}`;
-              console.log('PDF 처리 완료 - 간단한 텍스트 추출');
+              // 텍스트로 처리 (폴백 솔루션)
+              text = `[PDF 파일: ${file.originalname}] - 이 파일은 텍스트 추출 없이 처리됩니다.`;
+              console.log('PDF 처리 완료: 텍스트 폴백 사용');
             } catch (pdfError) {
               console.error('PDF 처리 오류:', pdfError);
               // 오류가 발생해도 프로젝트 생성은 계속 진행
-              text = `[PDF 파일: ${file.originalname}] - 이 파일은 텍스트 내용이 제한적으로 추출되었습니다.`;
+              text = `[PDF 파일: ${file.originalname}] - 처리 중 오류가 발생했습니다.`;
             }
             break;
 
