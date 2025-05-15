@@ -16,8 +16,12 @@ const Progress = React.forwardRef<
     {...props}
   >
     <div className="h-full w-full flex overflow-hidden">
-      <div className="h-full bg-green-500" style={{ width: 'var(--reviewed-percent, 0%)' }} />
-      <div className="h-full bg-gray-200 dark:bg-gray-700" style={{ width: 'calc(100% - var(--reviewed-percent, 0%))' }} />
+      <div className="h-full bg-green-500/70" style={{ width: 'var(--reviewed-percent, 0%)' }} />
+      <div className="h-full bg-blue-500/70" style={{ width: 'var(--match-100-percent, 0%)' }} />
+      <div className="h-full bg-yellow-500/70" style={{ width: 'var(--fuzzy-percent, 0%)' }} />
+      <div className="h-full bg-gray-500/70" style={{ width: 'var(--mt-percent, 0%)' }} />
+      <div className="h-full bg-purple-500/70" style={{ width: 'var(--edited-percent, 0%)' }} />
+      <div className="h-full bg-red-500/70" style={{ width: 'var(--rejected-percent, 0%)' }} />
     </div>
   </ProgressPrimitive.Root>
 ))
