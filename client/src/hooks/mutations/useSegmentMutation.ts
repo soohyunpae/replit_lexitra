@@ -32,8 +32,8 @@ export function useSegmentMutation() {
     onError: (error) => {
       console.error("Failed to update segment:", error);
       toast({
-        title: "업데이트 실패",
-        description: "세그먼트 업데이트 중 오류가 발생했습니다. 다시 시도해주세요.",
+        title: "Update Failed",
+        description: "Failed to update segment. Please try again.",
         variant: "destructive",
       });
       // Invalidate queries to ensure we have the latest state
