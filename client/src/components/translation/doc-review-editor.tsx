@@ -180,7 +180,7 @@ export function DocReviewEditor({
   // 1. useState hooks
   const [showSource, setShowSource] = useState(true);
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
-  const [showSidePanel, setShowSidePanel] = useState(false);
+  const [showSidePanel, setShowSidePanel] = useState(true);
   const [highlightedSegmentId, setHighlightedSegmentId] = useState<number | null>(null);
   const [segmentStatuses, setSegmentStatuses] = useState<Record<number, string>>({});
 
@@ -457,7 +457,7 @@ export function DocReviewEditor({
             "border-r bg-card/20",
             isMobile 
               ? (showSource ? "h-1/2 overflow-y-auto" : "hidden") 
-              : (!showSource ? "hidden" : showSidePanel ? "w-[40%]" : "w-full") + " overflow-auto"
+              : (showSource ? (showSidePanel ? "w-[40%]" : "flex-1") : "hidden") + " overflow-auto"
           )}
           ref={leftPanelRef}
         >
