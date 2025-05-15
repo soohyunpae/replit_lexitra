@@ -285,6 +285,7 @@ export function EditableSegment(props: EditableSegmentProps) {
         target: newValue,
         status: newStatus,
         origin: newOrigin,
+        fileId: liveSegment.fileId,
       });
     }
   };
