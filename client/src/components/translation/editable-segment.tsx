@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { useDebouncedCallback } from '@/hooks/useDebounce';
+import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { useSegmentMutation } from "@/hooks/mutations/useSegmentMutation";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Languages } from "lucide-react";
 import { TranslationUnit } from "@/types";
 import { cn } from "@/lib/utils";
+import { useDebouncedCallback } from "use-debounce";
 
 /**
  * !!! 중요 !!! 2025-05-12 개선된 세그먼트 높이 동기화 기능
@@ -234,66 +234,59 @@ export function EditableSegment(props: EditableSegmentProps) {
   };
 
   // 텍스트 변경 핸들러
-  const { mutate: updateSegment } = useSegmentMutation();
-  const { queryClient } = useSegmentMutation();
+  const { mutate: updateSegment, queryClient } = useSegmentMutation();
 
-  const debouncedUpdateSegment = useDebouncedCallback(
-    (newValue: string) => {
-      if (newValue === liveSegment.target) return;
+  const debouncedUpdateSegment = useDebouncedCallback((updateData: any) => {
+    updateSegment(updateData, {
+      onError: (error) => {
+        console.error("Failed to update segment:", error);
+        setValue(liveSegment.target || "");
+        if (onUpdate) {
+          onUpdate(
+            liveSegment.target || "",
+            liveSegment.status,
+            liveSegment.origin,
+          );
+        }
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries(["segments"]);
+        queryClient.invalidateQueries([`/api/segments/${liveSegment.fileId}`]);
+      },
+    });
+  }, 300);
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setValue(newValue);
+
+    if (!isSource) {
+      const isValueChanged = newValue !== liveSegment.target;
+      if (!isValueChanged) return;
 
       const needsOriginChange = isOriginInList(
         liveSegment.origin,
         STATUS_NEED_CHANGE,
       );
-
-      const newOrigin = needsOriginChange ? "HT" : liveSegment.origin;
-      const newStatus = (
+      const newOrigin = needsOriginChange ? "HT" : liveSegment.origin || "HT";
+      const newStatus =
         liveSegment.status === "Reviewed" ||
         isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)
-      ) ? "Edited" : liveSegment.status;
+          ? "Edited"
+          : liveSegment.status || "Edited";
 
-      const updateData = {
-        id: liveSegment.id,
-        target: newValue,
-        status: newStatus,
-        origin: newOrigin,
-        fileId: liveSegment.fileId,
-      };
-
-      // 낙관적 업데이트를 위한 이전 상태 저장
-      const previousValue = liveSegment.target;
-      const previousStatus = liveSegment.status;
-      const previousOrigin = liveSegment.origin;
-
-      // 낙관적 업데이트 먼저 적용
+      // Optimistic update
       if (onUpdate) {
         onUpdate(newValue, newStatus, newOrigin);
       }
 
-      updateSegment(updateData, {
-        onError: (error) => {
-          console.error("Failed to update segment:", error);
-          // 에러 발생 시 이전 상태로 정확히 롤백
-          setValue(previousValue || "");
-          if (onUpdate) {
-            onUpdate(previousValue || "", previousStatus, previousOrigin);
-          }
-        },
-        onSuccess: () => {
-          // 성공 시 쿼리 캐시 무효화
-          queryClient.invalidateQueries(["segments"]);
-          queryClient.invalidateQueries([`/api/segments/${liveSegment.fileId}`]);
-        }
+      debouncedUpdateSegment({
+        id: liveSegment.id,
+        target: newValue,
+        status: newStatus,
+        origin: newOrigin,
       });
-    },
-    300,  // 디바운스 시간 최적화
-    [liveSegment.id, liveSegment.fileId]  // 필수 디펜던시만 포함
-  );
-
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value;
-    setValue(newValue);
-    debouncedUpdateSegment(newValue);
+    }
   };
 
   // 수동 저장 함수 (필요한 경우를 위해 유지)
@@ -308,10 +301,11 @@ export function EditableSegment(props: EditableSegmentProps) {
       );
 
       const newOrigin = needsOriginChange ? "HT" : liveSegment.origin;
-      const newStatus = (
+      const newStatus =
         liveSegment.status === "Reviewed" ||
         isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)
-      ) ? "Edited" : liveSegment.status;
+          ? "Edited"
+          : liveSegment.status;
 
       updateSegment(
         {
