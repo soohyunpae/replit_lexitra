@@ -12,6 +12,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
     CardHeader,
     CardTitle,
   } from "@/components/ui/card";
+  import { FileProgressIndicator } from "@/components/file-progress-indicator";
   import {
     Archive,
     ArrowDown,
@@ -898,6 +899,9 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
                             Files must be uploaded during project creation. You
                             won't be able to add or modify work files later.
                           </FormDescription>
+                          
+                          {/* 파일 업로드 진행 상황 표시 */}
+                          <FileProgressIndicator />
 
                           <FormControl>
                             <div
@@ -1109,6 +1113,9 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
               </DialogContent>
             </Dialog>
           </div>
+          
+          {/* 파일 업로드 진행 상황 표시 - 전체 프로젝트 목록 위에 표시 */}
+          <FileProgressIndicator />
 
           {/* Admin Selection Info */}
           {isAdmin && selectedProjects.length > 0 && (

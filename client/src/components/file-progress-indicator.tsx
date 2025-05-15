@@ -59,10 +59,15 @@ export function FileProgressIndicator({ projectId }: FileProgressIndicatorProps)
               <Badge 
                 variant={
                   item.status === 'completed' 
-                    ? 'success' 
+                    ? 'outline' // 완료된 항목에는 outline 사용
                     : item.status === 'error' 
-                      ? 'destructive' 
-                      : 'secondary'
+                      ? 'destructive' // 오류 항목에는 destructive 사용
+                      : 'secondary' // 처리 중인 항목에는 secondary 사용
+                }
+                className={
+                  item.status === 'completed'
+                    ? 'bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900'
+                    : ''
                 }
               >
                 {item.status === 'processing'
