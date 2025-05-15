@@ -1,8 +1,8 @@
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-// 세그먼트 업데이트에 필요한 데이터 타입 정의
 type SegmentUpdateData = {
   id: number;
   target: string;
@@ -15,7 +15,7 @@ export function useSegmentMutation() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  return useMutation<any, Error, SegmentUpdateData>({
+  return useMutation({
     mutationFn: async (data: SegmentUpdateData) => {
       const response = await apiRequest("PATCH", `/api/segments/${data.id}`, {
         target: data.target,
@@ -30,30 +30,26 @@ export function useSegmentMutation() {
       return response.json();
     },
     onSuccess: (_, variables) => {
-      // Invalidate and refetch - using both key formats for consistency
+      // 모든 관련 쿼리 무효화
       queryClient.invalidateQueries({
-        queryKey: [`/api/segments/${variables.fileId}`],
+        queryKey: ["segments"]
       });
       queryClient.invalidateQueries({
-        queryKey: ["segments", variables.fileId],
+        queryKey: [`/api/segments/${variables.fileId}`]
       });
       queryClient.invalidateQueries({
-        queryKey: [`/api/files/${variables.fileId}`],
+        queryKey: ["files"]
+      });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/files/${variables.fileId}`]
       });
     },
-    onError: (error, variables) => {
+    onError: (error) => {
       console.error("Failed to update segment:", error);
       toast({
         title: "Update Failed",
         description: "Failed to update segment. Please try again.",
         variant: "destructive",
-      });
-      // Invalidate queries to ensure we have the latest state
-      queryClient.invalidateQueries({
-        queryKey: [`/api/segments/${variables.fileId}`],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["segments", variables.fileId],
       });
     },
   });
