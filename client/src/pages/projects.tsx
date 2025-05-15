@@ -1485,7 +1485,7 @@ export default function ProjectsPage() {
                             );
                           })()}
 
-                          {/* 단어 수 표시 - 요청에 따라 추가 */}
+                          {/* 단어 수 표시 */}
                           <div className="flex items-center mt-2 text-sm text-gray-600">
                             <TextCursorInput className="h-3.5 w-3.5 mr-1.5" />
                             <span>{stats?.wordCount || 0} words</span>
