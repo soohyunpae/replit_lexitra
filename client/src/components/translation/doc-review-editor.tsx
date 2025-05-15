@@ -180,7 +180,7 @@ export function DocReviewEditor({
   // 1. useState hooks
   const [showSource, setShowSource] = useState(true);
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
-  const [showSidePanel, setShowSidePanel] = useState(true);
+  const [showSidePanel, setShowSidePanel] = useState(false);
   const [highlightedSegmentId, setHighlightedSegmentId] = useState<number | null>(null);
   const [segmentStatuses, setSegmentStatuses] = useState<Record<number, string>>({});
 
