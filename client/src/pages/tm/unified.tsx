@@ -673,45 +673,7 @@ export default function UnifiedTranslationMemoryPage() {
                 />
               </div>
               
-              {/* Source Language Filter */}
-              <Select
-                value={sourceLanguageFilter}
-                onValueChange={setSourceLanguageFilter}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Source language" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all_source_languages">
-                    All languages
-                  </SelectItem>
-                  {filters.source.map((lang) => (
-                    <SelectItem key={lang} value={lang}>
-                      {lang.toUpperCase()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Target Language Filter */}
-              <Select
-                value={targetLanguageFilter}
-                onValueChange={setTargetLanguageFilter}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Target language" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all_target_languages">
-                    All languages
-                  </SelectItem>
-                  {filters.target.map((lang) => (
-                    <SelectItem key={lang} value={lang}>
-                      {lang.toUpperCase()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              
             </div>
           </div>
 
