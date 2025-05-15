@@ -26,8 +26,11 @@ import {
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import mammoth from 'mammoth';
-import { WebSocketServer, WebSocket } from 'ws';
+import * as os from "os";
+import mammoth from "mammoth";
+import { WebSocketServer, WebSocket } from "ws";
+import { spawn } from "child_process";
+import { promisify } from "util";
 
 // Request에 커스텀 필드 추가를 위한 타입 확장
 declare global {
@@ -70,183 +73,189 @@ function ensureDirectories() {
 ensureDirectories();
 
 // 파일 처리 함수
-// PDF 처리를 위한 pdf-parse 모듈 추가
-import pdfParse from 'pdf-parse';
+// pdftotext를 사용하여 PDF에서 텍스트 추출
+const extractTextFromPdf = async (pdfPath: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    // 임시 출력 파일 경로
+    const tmpOutputPath = path.join(
+      os.tmpdir(),
+      `pdf-extract-${Date.now()}.txt`
+    );
+
+    console.log(`PDF 추출 시작: ${pdfPath} -> ${tmpOutputPath}`);
+
+    // pdftotext 명령어 실행
+    const pdfProcess = spawn("pdftotext", [
+      "-layout", // 레이아웃 유지
+      "-nopgbrk", // 페이지 나누기 없음
+      "-enc", "UTF-8", // UTF-8 인코딩 사용
+      pdfPath, // 입력 PDF 파일
+      tmpOutputPath, // 출력 텍스트 파일
+    ]);
+
+    let stderr = "";
+    pdfProcess.stderr.on("data", (data) => {
+      stderr += data.toString();
+    });
+
+    pdfProcess.on("close", (code) => {
+      if (code !== 0) {
+        console.error(`pdftotext 실행 오류 (코드: ${code}):`, stderr);
+        reject(new Error(`pdftotext 실행 실패: ${stderr}`));
+        return;
+      }
+
+      // 추출된 텍스트 읽기
+      try {
+        const extractedText = fs.readFileSync(tmpOutputPath, "utf-8");
+        
+        // 임시 파일 삭제
+        fs.unlinkSync(tmpOutputPath);
+        
+        console.log(`PDF 추출 완료: ${extractedText.length} 바이트 추출됨`);
+        resolve(extractedText);
+      } catch (err) {
+        console.error("추출된 텍스트 읽기 실패:", err);
+        reject(err);
+      }
+    });
+  });
+};
 
 async function processFile(file: Express.Multer.File) {
   const ext = path.extname(file.originalname).toLowerCase();
-  let text = '';
-  
+  let text = "";
+
   // 전역 함수를 통해 진행 상황 알림 (타입 보장을 위한 검사)
-  const notifyProgress = (global as any).broadcastFileProgress || 
-    ((projectId: number, filename: string, status: string, progress: number, message?: string) => {
-      console.log(`파일 진행 상황: ${filename}, 상태: ${status}, 진행률: ${progress}%, 메시지: ${message || 'N/A'}`);
+  const notifyProgress =
+    (global as any).broadcastFileProgress ||
+    ((
+      projectId: number,
+      filename: string,
+      status: string,
+      progress: number,
+      message?: string,
+    ) => {
+      console.log(
+        `파일 진행 상황: ${filename}, 상태: ${status}, 진행률: ${progress}%, 메시지: ${message || "N/A"}`,
+      );
     });
-  
+
   // 시작 알림
-  notifyProgress(0, file.originalname, 'processing', 0, '파일 처리 시작');
-  
+  notifyProgress(0, file.originalname, "processing", 0, "파일 처리 시작");
+
   try {
     // 파일 형식에 따른 처리
-    notifyProgress(0, file.originalname, 'processing', 10, '파일 형식 확인');
+    notifyProgress(0, file.originalname, "processing", 10, "파일 형식 확인");
     switch (ext) {
-      case '.txt':
-        text = fs.readFileSync(file.path, 'utf8');
+      case ".txt":
+        text = fs.readFileSync(file.path, "utf8");
         break;
 
-      case '.docx':
-        console.log('DOCX 파일 처리 시작:', file.originalname);
+      case ".docx":
+        console.log("DOCX 파일 처리 시작:", file.originalname);
         try {
           // mammoth 라이브러리를 사용하여 DOCX 파일에서 텍스트 추출
-          const docxResult = await mammoth.extractRawText({path: file.path});
-          text = docxResult.value || '';
-          
-          if (!text || text.trim() === '') {
-            console.error('DOCX에서 텍스트를 추출했지만 결과가 비어있습니다.');
+          const docxResult = await mammoth.extractRawText({ path: file.path });
+          text = docxResult.value || "";
+          if (!text || text.trim() === "") {
+            console.error("DOCX에서 텍스트를 추출했지만 결과가 비어있습니다.");
             text = `[DOCX 파일: ${file.originalname}] - 파일에서 텍스트를 추출할 수 없습니다.`;
           } else {
-            console.log('DOCX 텍스트 추출 성공:', text.substring(0, 100) + '...');
+            console.log(
+              "DOCX 텍스트 추출 성공:",
+              text.substring(0, 100) + "...",
+            );
           }
         } catch (docxError) {
-          console.error('DOCX 처리 오류:', docxError);
+          console.error("DOCX 처리 오류:", docxError);
           text = `[DOCX 파일: ${file.originalname}] - 파일 처리 중 오류가 발생했습니다.`;
         }
         break;
 
-      case '.pdf':
+      case ".pdf":
         // PDF 파일 처리 시작
-        console.log('PDF 파일 처리 시작:', file.originalname);
+        console.log("PDF 파일 처리 시작:", file.originalname);
         
         try {
-          // 디버깅: 파일 정보 출력
-          console.log('PDF 파일 처리 정보:', {
-            path: file.path,
-            originalname: file.originalname,
-            size: file.size,
-            encoding: file.encoding,
-            mimetype: file.mimetype
-          });
-          
           // 진행 상황 업데이트
-          notifyProgress(0, file.originalname, 'processing', 30, 'PDF 내용 추출중');
+          notifyProgress(0, file.originalname, "processing", 30, "PDF 내용 추출중");
           
-          // PDF는 버퍼로 읽어서 pdf-parse로 처리
-          const pdfBuffer = fs.readFileSync(file.path);
-          console.log('PDF 버퍼 크기:', pdfBuffer.length);
-          
-          // PDF 내용을 추출하기 위한 옵션 추가
-          const options = {
-            // 모든 페이지 처리
-            max: 0,
-            // PDF 유효성 오류 무시
-            throwOnBadFormat: false,
-          };
-          
-          // pdf-parse를 사용하여 PDF에서 텍스트 추출
-          const pdfData = await pdfParse(pdfBuffer, options);
-          console.log('PDF 정보:', {
-            pageCount: pdfData.numpages,
-            metadata: pdfData.metadata ? JSON.stringify(pdfData.metadata).substring(0, 100) : 'N/A',
-            textLength: pdfData.text ? pdfData.text.length : 0
-          });
-          
-          // 추출된 텍스트 저장
-          const rawText = pdfData.text || '';
+          // extractTextFromPdf 함수를 사용하여 텍스트 추출
+          const extractedText = await extractTextFromPdf(file.path);
           
           // 텍스트가 비어있는지 확인
-          if (!rawText || rawText.trim() === '') {
-            console.error('PDF에서 텍스트를 추출했지만 결과가 비어있습니다.');
-            // 대안으로 제공하는 텍스트
-            text = `PDF 파일 내용을 추출할 수 없습니다. 파일명: ${Buffer.from(file.originalname).toString('utf-8')}`;
+          if (!extractedText || extractedText.trim() === "") {
+            console.error("PDF에서 텍스트를 추출했지만 결과가 비어있습니다.");
+            text = `PDF 파일 내용을 추출할 수 없습니다. 파일명: ${file.originalname.normalize("NFC")}`;
           } else {
-            console.log('PDF 텍스트 추출 성공! 내용:', rawText.substring(0, 100) + '...');
+            console.log("PDF 텍스트 추출 성공! 내용:", extractedText.substring(0, 100) + "...");
             
-            // PDF 특수처리: 텍스트 정리 및 세그먼트 나누기
-            // 1. 기본 정리 (불필요한 공백, 특수문자 처리)
-            const cleanedText = rawText
-              .replace(/\r\n/g, '\n')
-              .replace(/\n{3,}/g, '\n\n')  // 3개 이상 연속 줄바꿈 제거
-              .replace(/[^\x20-\x7E\n\r\t가-힣]/g, '') // 영문, 한글, 일반 구두점만 유지
-              .trim();
-            
-            // 2. 줄 단위로 분리
-            const textLines = cleanedText.split(/\r?\n/)
-              .filter(line => line.trim().length > 3) // 너무 짧은 라인 제거
-              .map(line => line.trim());
-            
-            // 3. 각 줄을 문장 단위로 분리
-            let sentences: string[] = [];
-            
-            // PDF용 문장 분리 함수 (지역 함수로 정의)
-            const segmentTextForPDF = (text: string): string[] => {
-              // PDF 특수 처리 규칙 추가
-              const pdfTextSegments = [];
-              
-              // 기본 분리: 마침표, 느낌표, 물음표 + 공백으로 구분
-              const regex = /[.!?]\s+|[.!?]$/g;
-              let match;
-              let lastIndex = 0;
-              
-              // 정규식으로 문장 분리
-              while ((match = regex.exec(text)) !== null) {
-                const sentence = text.substring(lastIndex, match.index + 1).trim();
-                if (sentence && sentence.length > 3) {
-                  pdfTextSegments.push(sentence);
-                }
-                lastIndex = match.index + match[0].length;
-              }
-              
-              // 남은 텍스트 처리
-              if (lastIndex < text.length) {
-                const remainingText = text.substring(lastIndex).trim();
-                if (remainingText && remainingText.length > 3) {
-                  pdfTextSegments.push(remainingText);
-                }
-              }
-              
-              return pdfTextSegments;
-            };
-            
-            for (const line of textLines) {
-              // 각 줄을 문장 단위로 분리해서 추가
-              const lineSentences = segmentTextForPDF(line);
-              if (lineSentences.length > 0) {
-                sentences = [...sentences, ...lineSentences];
-              } else if (line.length > 20) {
-                // 분리가 안된 긴 라인은 그대로 추가
-                sentences.push(line);
-              }
+            // 출력 디렉토리
+            const outputDir = path.join(REPO_ROOT, "uploads", "processed");
+            if (!fs.existsSync(outputDir)) {
+              fs.mkdirSync(outputDir, { recursive: true });
             }
             
-            // 4. 최종 텍스트 생성 (문장 단위로 구분)
-            text = sentences.join('\n');
+            // 디버깅용 출력 파일 생성
+            const normalizedFilename = file.originalname.normalize("NFC");
+            const outputFileName = normalizedFilename.replace(/\.pdf$/i, "-extracted.txt");
+            const outputPath = path.join(outputDir, `${Date.now()}-${outputFileName}`);
+            
+            // 문단 단위로 분리 (빈 줄 기준)
+            const paragraphs = extractedText
+              .split(/\n\s*\n/)
+              .filter((p: string) => p.trim().length > 0);
+            
+            // 각 문단을 문장 단위로 분리
+            let sentences: string[] = [];
+            for (const paragraph of paragraphs) {
+              // 문장 분리 정규식: 마침표/물음표/느낌표 + 공백으로 분리
+              const paragraphSentences = paragraph
+                .split(/(?<=[.?!])\s+/)
+                .filter((s: string) => s.trim().length > 0);
+                
+              sentences = [...sentences, ...paragraphSentences];
+            }
+            
+            // 최종 텍스트 생성 (문장 단위로 구분)
+            text = sentences.join("\n\n");
+            
+            // 디버깅용으로 추출된 텍스트 저장
+            fs.writeFileSync(outputPath, text);
             
             // 디버깅용 정보 출력
             console.log(`PDF 처리 완료: ${sentences.length}개 세그먼트 생성`);
-            console.log('첫 세그먼트 샘플:', sentences.slice(0, 2));
+            console.log("첫 세그먼트 샘플:", sentences.slice(0, 2));
           }
           
           // 진행 상황 업데이트
-          notifyProgress(0, file.originalname, 'processing', 70, 'PDF 처리 완료');
-        } catch (pdfError) {
-          console.error('PDF 처리 오류 발생:', pdfError);
-          // 오류가 발생해도 프로젝트 생성은 계속 진행
-          text = `PDF 파일 처리 중 오류가 발생했습니다. 파일명: ${Buffer.from(file.originalname).toString('utf-8')}`;
+          notifyProgress(0, file.originalname, "processing", 70, "PDF 처리 완료");
+        } catch (err) {
+          console.error("PDF 처리 중 오류:", err);
+          text = `[PDF 처리 오류] ${file.originalname} 파일을 처리하는 도중 문제가 발생했습니다.`;
         }
         break;
 
       default:
-        throw new Error('Unsupported file format');
+        throw new Error("Unsupported file format");
     }
 
     // 성공 알림
-    notifyProgress(0, file.originalname, 'completed', 100, '파일 처리 완료');
+    notifyProgress(0, file.originalname, "completed", 100, "파일 처리 완료");
     return text;
   } catch (error) {
-    console.error('Error processing file:', error);
+    console.error("Error processing file:", error);
     // 실패 알림
-    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
-    notifyProgress(0, file.originalname, 'error', 0, `오류 발생: ${errorMessage}`);
+    const errorMessage =
+      error instanceof Error ? error.message : "알 수 없는 오류";
+    notifyProgress(
+      0,
+      file.originalname,
+      "error",
+      0,
+      `오류 발생: ${errorMessage}`,
+    );
     throw error;
   }
 }
@@ -264,48 +273,32 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     // 원본 파일명 정보 보존 및 인코딩 처리
-    console.log('원본 파일명 (처리 전):', file.originalname);
-    
+    console.log("원본 파일명 (처리 전):", file.originalname);
+
     // 이름과 확장자 분리
     const originalExt = path.extname(file.originalname);
     const originalName = path.basename(file.originalname, originalExt);
-    
-    // 한글 파일명 정규화 처리
-    // 1. Buffer로 변환 후 UTF-8로 정확히 디코딩
-    let normalizedName;
-    
-    try {
-      // 다양한 인코딩 시도 (원래 이름이 깨진 경우를 대비)
-      normalizedName = Buffer.from(originalName, 'binary').toString('utf-8');
-      
-      // 특수 케이스 처리: 이미 깨진 상태인 경우 복원 시도
-      if (/ì|í|à|á|â|ã|ä|å|æ|ç|è|é|ê|ë|ì|í|î|ï|ð|ñ|ò|ó|ô|õ|ö|÷|ø|ù|ú|û|ü|ý|þ|ÿ/.test(normalizedName)) {
-        console.log('깨진 한글 파일명 감지, 복원 시도...');
-        // 다시 버퍼로 변환 후 다른 인코딩으로 시도
-        normalizedName = Buffer.from(normalizedName).toString('utf-8');
-      }
-      
-      console.log('정규화된 파일명:', normalizedName + originalExt);
-    } catch (e) {
-      console.error('파일명 정규화 오류:', e);
-      // 오류 발생 시 원본 이름 유지
-      normalizedName = originalName;
-    }
-    
+
+    // 한글 파일명 정규화 처리 (간단한 NFC 정규화)
+    let normalizedName = originalName.normalize("NFC");
+
     // 고유한 파일 이름 생성 (실제 저장용)
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const filename = file.fieldname + "-" + uniqueSuffix + originalExt;
-    
+
     // req 객체에 정규화된 원본 파일명 정보 저장
     if (!(req as any).fileOriginalNames) {
       (req as any).fileOriginalNames = {};
     }
     (req as any).fileOriginalNames[filename] = normalizedName + originalExt;
-    
+
     // 디버깅 정보 출력
-    console.log('저장될 파일명:', filename);
-    console.log('참조용 원본 파일명:', (req as any).fileOriginalNames[filename]);
-    
+    console.log("저장될 파일명:", filename);
+    console.log(
+      "참조용 원본 파일명:",
+      (req as any).fileOriginalNames[filename],
+    );
+
     console.log(`생성된 파일명: ${filename}`);
     cb(null, filename);
   },
@@ -939,11 +932,9 @@ function registerAdminRoutes(app: Express) {
         } catch (fileError: any) {
           console.error("Error processing glossary file:", fileError);
           const errorMessage = fileError.message || "Unknown error occurred";
-          return res
-            .status(500)
-            .json({
-              error: "Failed to process the glossary file: " + errorMessage,
-            });
+          return res.status(500).json({
+            error: "Failed to process the glossary file: " + errorMessage,
+          });
         } finally {
           // Clean up the temporary file
           try {
@@ -1388,7 +1379,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             try {
               // processFile 함수를 사용하여 파일 형식에 맞게 텍스트 추출
               const fileContent = await processFile(file);
-              
+
               // 추출된 텍스트만 저장 (바이너리 데이터 X)
               files.push({
                 name: file.originalname,
@@ -1414,7 +1405,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             try {
               // processFile 함수를 사용하여 파일 형식에 맞게 텍스트 추출
               const fileContent = await processFile(file);
-              
+
               // 추출된 텍스트만 저장
               files.push({
                 name: file.originalname,
@@ -1667,11 +1658,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // 클레임된 프로젝트이고 현재 사용자가 클레임하지 않았다면 접근 거부
       if (project.status === "Claimed" && project.claimedBy !== req.user?.id) {
-        return res
-          .status(403)
-          .json({
-            message: "Access denied. This project is claimed by another user.",
-          });
+        return res.status(403).json({
+          message: "Access denied. This project is claimed by another user.",
+        });
       }
 
       return res.json(project);
@@ -1863,11 +1852,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         if (project.claimedBy !== userId) {
-          return res
-            .status(403)
-            .json({
-              message: "You do not have permission to release this project",
-            });
+          return res.status(403).json({
+            message: "You do not have permission to release this project",
+          });
         }
 
         // 프로젝트 클레임 해제 처리
@@ -1914,11 +1901,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         if (project.claimedBy !== userId) {
-          return res
-            .status(403)
-            .json({
-              message: "You do not have permission to complete this project",
-            });
+          return res.status(403).json({
+            message: "You do not have permission to complete this project",
+          });
         }
 
         // 프로젝트 완료 처리
@@ -1966,11 +1951,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // 권한 확인: 이전 클레이머 또는 관리자만 재오픈 가능
         if (!isAdmin && project.claimedBy !== userId) {
-          return res
-            .status(403)
-            .json({
-              message: "You do not have permission to reopen this project",
-            });
+          return res.status(403).json({
+            message: "You do not have permission to reopen this project",
+          });
         }
 
         // 프로젝트 재오픈 처리 - 이전 클레임 사용자가 그대로 유지됨
@@ -2121,102 +2104,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return handleApiError(res, error);
     }
   });
-    // Process different file formats
-    async function processFile(file: Express.Multer.File) {
-      const ext = path.extname(file.originalname).toLowerCase();
-      let text = '';
-      
-      // 전역 함수를 통해 진행 상황 알림 (타입 보장을 위한 검사)
-      const notifyProgress = (global as any).broadcastFileProgress || 
-        ((projectId: number, filename: string, status: string, progress: number, message?: string) => {
-          console.log(`파일 진행 상황: ${filename}, 상태: ${status}, 진행률: ${progress}%, 메시지: ${message || 'N/A'}`);
-        });
-      
-      // 시작 알림
-      notifyProgress(0, file.originalname, 'processing', 0, '파일 처리 시작');
-      
-      try {
-        // 파일 형식에 따른 처리
-        notifyProgress(0, file.originalname, 'processing', 10, '파일 형식 확인');
-        switch (ext) {
-          case '.txt':
-            text = fs.readFileSync(file.path, 'utf8');
-            break;
-
-          case '.docx':
-            console.log('DOCX 파일 처리 시작:', file.originalname);
-            try {
-              const docxResult = await mammoth.extractRawText({path: file.path});
-              text = docxResult.value || '';
-              
-              if (!text || text.trim() === '') {
-                console.error('DOCX에서 텍스트를 추출했지만 결과가 비어있습니다.');
-                text = `[DOCX 파일: ${file.originalname}] - 파일에서 텍스트를 추출할 수 없습니다.`;
-              } else {
-                console.log('DOCX 텍스트 추출 성공:', text.substring(0, 100) + '...');
-              }
-            } catch (docxError) {
-              console.error('DOCX 처리 오류:', docxError);
-              text = `[DOCX 파일: ${file.originalname}] - 파일 처리 중 오류가 발생했습니다.`;
-            }
-            break;
-
-          case '.pdf':
-            // PDF 파일 처리 시작
-            console.log('PDF 파일 처리 시작:', file.originalname);
-            
-            try {
-              // PDF는 바이너리 파일이므로 binary로 읽음
-              const pdfContents = fs.readFileSync(file.path);
-              // 간단한 더미 텍스트 생성 (실제로는 더 정교한
-              // PDF 파싱 라이브러리가 필요)
-              text = `PDF 파일 "${file.originalname}" 내용입니다.\n\n`;
-              text += "파일이 성공적으로 처리되었습니다.\n";
-              text += "이것은 PDF 파일 내용의 샘플 텍스트입니다.\n";
-              text += "실제 PDF 내용을 분석하기 위해서는 PDF 파싱 라이브러리가 필요합니다.";
-              
-              console.log('PDF 처리 완료 - 텍스트 변환 성공');
-            } catch (pdfError) {
-              console.error('PDF 처리 오류:', pdfError);
-              // 오류가 발생해도 프로젝트 생성은 계속 진행
-              text = `[PDF 파일: ${file.originalname}] - PDF 파일 처리 중 오류가 발생했습니다.`;
-            }
-            break;
-
-          default:
-            throw new Error('Unsupported file format');
-        }
-
-        // Clean up the temporary file
-        try {
-          fs.unlinkSync(file.path);
-        } catch (unlinkErr) {
-          console.error(`Failed to unlink file ${file.path}:`, unlinkErr);
-        }
-
-        // 성공 알림
-        notifyProgress(0, file.originalname, 'completed', 100, '파일 처리 완료');
-        return text;
-
-      } catch (error) {
-        console.error('Error processing file:', error);
-        // 실패 알림
-        const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
-        notifyProgress(0, file.originalname, 'error', 0, `오류 발생: ${errorMessage}`);
-        throw error;
-      }
-    }
   app.post(`${apiPrefix}/files`, verifyToken, async (req, res) => {
     try {
       const file = req.file;
       if (!file) {
-        return res.status(400).json({ error: 'No file uploaded' });
+        return res.status(400).json({ error: "No file uploaded" });
       }
 
       // Check supported formats
       const ext = path.extname(file.originalname).toLowerCase();
-      if (!['.txt', '.docx', '.pdf'].includes(ext)) {
-        return res.status(400).json({ error: 'Unsupported file format' });
+      if (![".txt", ".docx", ".pdf"].includes(ext)) {
+        return res.status(400).json({ error: "Unsupported file format" });
       }
 
       const fileContent = await processFile(file);
@@ -2227,10 +2125,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projectId: 1, // 임시 프로젝트 ID
         type: "work",
         createdAt: new Date(),
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      };
 
-      const [newFile] = await db.insert(schema.files).values(fileData).returning();
+      const [newFile] = await db
+        .insert(schema.files)
+        .values(fileData)
+        .returning();
 
       // Parse content into segments by splitting into sentences
       // Use a more sophisticated sentence splitter that handles various end-of-sentence patterns
@@ -2898,11 +2799,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch(`${apiPrefix}/segments/:id`, verifyToken, async (req, res) => {
     try {
       // Authentication already checked by verifyToken middleware
-      console.log('[SEGMENT UPDATE]', {
+      console.log("[SEGMENT UPDATE]", {
         tokenAuthenticated: !!req.user,
         user: req.user,
         segmentId: req.params.id,
-        body: req.body
+        body: req.body,
       });
 
       const id = parseInt(req.params.id);
@@ -2919,7 +2820,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // 세그먼트 존재 여부 확인
       const existingSegment = await db.query.translationUnits.findFirst({
-        where: eq(schema.translationUnits.id, id)
+        where: eq(schema.translationUnits.id, id),
       });
 
       if (!existingSegment) {
@@ -2929,20 +2830,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // 업데이트할 데이터 준비
       const updateData = {
         ...data,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       // target이 변경되었고 status가 지정되지 않은 경우 status를 'Edited'로 설정
-      if (data.target !== undefined && data.target !== existingSegment.target && !data.status) {
-        updateData.status = 'Edited';
+      if (
+        data.target !== undefined &&
+        data.target !== existingSegment.target &&
+        !data.status
+      ) {
+        updateData.status = "Edited";
       }
 
       // Log update data with fileId for debugging
-      console.log('[SEGMENT UPDATE DATA]', {
+      console.log("[SEGMENT UPDATE DATA]", {
         id,
         updateData,
         existingFileId: existingSegment.fileId,
-        newFileId: data.fileId
+        newFileId: data.fileId,
       });
 
       // 업데이트 실행
@@ -2979,7 +2884,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json({
         segment: updatedSegment,
         success: true,
-        fileId: updatedSegment.fileId
+        fileId: updatedSegment.fileId,
       });
     } catch (error) {
       return handleApiError(res, error);
@@ -3757,50 +3662,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
-  
+
   // WebSocket 서버 설정 - Vite HMR 웹소켓과 충돌하지 않도록 경로 지정
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
-  
+  const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
+
   // 클라이언트 연결 관리
   const clients = new Set<WebSocket>();
-  
-  wss.on('connection', (ws) => {
-    console.log('WebSocket 클라이언트 연결됨');
+
+  wss.on("connection", (ws) => {
+    console.log("WebSocket 클라이언트 연결됨");
     clients.add(ws);
-    
-    ws.on('message', (message) => {
+
+    ws.on("message", (message) => {
       try {
-        console.log('메시지 수신:', message.toString());
+        console.log("메시지 수신:", message.toString());
         // 여기서 메시지 처리
       } catch (err) {
-        console.error('WebSocket 메시지 처리 오류:', err);
+        console.error("WebSocket 메시지 처리 오류:", err);
       }
     });
-    
-    ws.on('close', () => {
-      console.log('WebSocket 클라이언트 연결 종료');
+
+    ws.on("close", () => {
+      console.log("WebSocket 클라이언트 연결 종료");
       clients.delete(ws);
     });
-    
+
     // 연결 확인 메시지 전송
-    ws.send(JSON.stringify({ type: 'connected', message: '서버에 연결되었습니다.' }));
+    ws.send(
+      JSON.stringify({ type: "connected", message: "서버에 연결되었습니다." }),
+    );
   });
-  
+
   // 모든 클라이언트에게 메시지 브로드캐스트하는 유틸리티 함수
   const broadcastMessage = (type: string, data: any) => {
     const message = JSON.stringify({ type, data });
-    
-    clients.forEach(client => {
+
+    clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(message);
       }
     });
   };
-  
+
   // 전역 스코프에서 WebSocket 함수 접근 가능하도록 설정
-  (global as any).broadcastFileProgress = (projectId: number, filename: string, status: string, progress: number, message?: string) => {
-    broadcastMessage('file_progress', { projectId, filename, status, progress, message });
+  (global as any).broadcastFileProgress = (
+    projectId: number,
+    filename: string,
+    status: string,
+    progress: number,
+    message?: string,
+  ) => {
+    broadcastMessage("file_progress", {
+      projectId,
+      filename,
+      status,
+      progress,
+      message,
+    });
   };
-  
+
   return httpServer;
 }
