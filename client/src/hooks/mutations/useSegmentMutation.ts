@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateSegment } from "@/lib/api";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export function useSegmentMutation() {
@@ -14,16 +14,25 @@ export function useSegmentMutation() {
       fileId: number;
       origin?: string;
     }) => {
-      const response = await updateSegment(data.id, data.target, data.status, data.origin);
-      if (!response) {
-        throw new Error('No response from updateSegment');
+      const response = await apiRequest("PATCH", `/api/segments/${data.id}`, {
+        target: data.target,
+        status: data.status,
+        origin: data.origin
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to update segment: ${response.statusText}`);
       }
-      return response;
+      
+      return response.json();
     },
     onSuccess: (_, variables) => {
-      // Invalidate and refetch
+      // Invalidate and refetch - using both key formats for consistency
       queryClient.invalidateQueries({
         queryKey: [`/api/segments/${variables.fileId}`],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["segments", variables.fileId],
       });
       queryClient.invalidateQueries({
         queryKey: [`/api/files/${variables.fileId}`],
@@ -41,7 +50,7 @@ export function useSegmentMutation() {
         queryKey: [`/api/segments/${variables.fileId}`],
       });
       queryClient.invalidateQueries({
-        queryKey: [`/api/files/${variables.fileId}`],
+        queryKey: ["segments", variables.fileId],
       });
     },
   });
