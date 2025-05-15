@@ -975,18 +975,6 @@ export default function Project() {
                     <div className="space-y-2">
                       <div>
                         <div className="flex justify-between items-center mb-1">
-                          <div className="text-muted-foreground">
-                            Completion:
-                          </div>
-                          <div className="font-medium">
-                            {projectStats.completedSegments} /{" "}
-                            {projectStats.totalSegments} segments
-                            <span className="ml-1 text-primary">
-                              ({projectStats.completionPercentage}%)
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center mb-1">
                           <div className="text-muted-foreground flex items-center gap-1.5">
                             <TextCursorInput className="h-3.5 w-3.5" />
                             <span>Word Count:</span>
@@ -994,6 +982,18 @@ export default function Project() {
                           <div className="font-medium">
                             {project.wordCount || calculateTotalWordCount()}{" "}
                             words
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center mb-1">
+                          <div className="text-muted-foreground">
+                            Reviewed:
+                          </div>
+                          <div className="font-medium">
+                            {projectStats.completedSegments} /{" "}
+                            {projectStats.totalSegments} segments
+                            <span className="ml-1 text-primary">
+                              ({projectStats.completionPercentage}%)
+                            </span>
                           </div>
                         </div>
                         <Progress
