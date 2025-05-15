@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { Textarea } from "@/components/ui/textarea";
 import { useSegmentMutation } from "@/hooks/mutations/useSegmentMutation";
