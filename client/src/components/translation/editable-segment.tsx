@@ -236,26 +236,27 @@ export function EditableSegment(props: EditableSegmentProps) {
   const { mutate: updateSegment, queryClient } = useSegmentMutation();
 
   const debouncedUpdateSegment = useDebouncedCallback((updateData: any) => {
+    const currentSegment = liveSegment; // 현재 상태 캡처
+    
     updateSegment(updateData, {
       onSuccess: (data) => {
         if (onUpdate) {
           onUpdate(data.target, data.status, data.origin);
         }
-        queryClient.invalidateQueries(["segments"]);
       },
       onError: (error) => {
         console.error("Failed to update segment:", error);
-        setValue(liveSegment.target || "");
+        setValue(currentSegment.target || "");
         if (onUpdate) {
           onUpdate(
-            liveSegment.target || "",
-            liveSegment.status,
-            liveSegment.origin,
+            currentSegment.target || "",
+            currentSegment.status,
+            currentSegment.origin,
           );
         }
       }
     });
-  }, 300);
+  }, 500);
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
