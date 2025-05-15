@@ -124,7 +124,7 @@ const projectFormSchema = z.object({
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
 export default function ProjectsPage() {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"card" | "list">("list"); // Default to list view
   const [searchQuery, setSearchQuery] = useState("");
