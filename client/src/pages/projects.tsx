@@ -227,7 +227,7 @@ export default function ProjectsPage() {
               Fuzzy: 0,
               MT: 0,
               Edited: 0,
-              Rejected: 0
+              Rejected: 0,
             },
           };
           try {
@@ -269,7 +269,7 @@ export default function ProjectsPage() {
               };
               return true; // 성공
             } else if (response.status === 404 && retryCount < maxRetries) {
-              // 서버 엔드포인트가 아직 로드되지 않았거나 존재하지 않을 수 있으므로 재시도
+              // 서버 엔드포인트가 아직 로드되지 않았거io� 존재하지 않을 수 있으므로 재시도
               await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 대기
               return fetchStatsFromServer(project, retryCount + 1); // 재귀적으로 재시도
             } else {
@@ -1041,7 +1041,7 @@ export default function ProjectsPage() {
                         </FormLabel>
                         <FormDescription>
                           Upload reference files like glossaries, style guides,
-etc. Unlike work files, references can be added
+                          etc. Unlike work files, references can be added
                           anytime.
                         </FormDescription>
 
@@ -1429,7 +1429,7 @@ etc. Unlike work files, references can be added
                         {displayStatus}
                       </span>
                     </div>
-                    <div 
+                    <div
                       onClick={() => navigate(`/projects/${project.id}`)}
                       className="cursor-pointer"
                     >
@@ -1437,17 +1437,6 @@ etc. Unlike work files, references can be added
                         <CardTitle className="truncate group-hover:text-primary transition-colors">
                           {project.name}
                         </CardTitle>
-                        <CardDescription className="flex items-center gap-1 mt-1.5 line-clamp-2">
-                          <div className="flex items-center gap-1 bg-accent/50 px-2 py-0.5 rounded-full text-xs">
-                            <span className="font-medium">
-                              {project.sourceLanguage}
-                            </span>
-                            <ArrowRight className="h-3 w-3" />
-                            <span className="font-medium">
-                              {project.targetLanguage}
-                            </span>
-                          </div>
-                        </CardDescription>
                       </CardHeader>
                       <CardContent className="pb-2">
                         <div>
@@ -1464,15 +1453,18 @@ etc. Unlike work files, references can be added
                                 Fuzzy: 0,
                                 MT: 0,
                                 Edited: 0,
-                                Rejected: 0
-                              }
+                                Rejected: 0,
+                              },
                             };
-                            
+
                             // reviewedPercentage 계산
-                            const reviewedCount = stats.statusCounts?.Reviewed || 0;
+                            const reviewedCount =
+                              stats.statusCounts?.Reviewed || 0;
                             const totalSegs = stats.totalSegments || 1; // 0으로 나누기 방지
-                            const reviewedPercentage = Math.round((reviewedCount / totalSegs) * 100);
-                            
+                            const reviewedPercentage = Math.round(
+                              (reviewedCount / totalSegs) * 100,
+                            );
+
                             return (
                               <>
                                 <div className="flex justify-between items-center mb-1">
@@ -1480,22 +1472,35 @@ etc. Unlike work files, references can be added
                                     Word Count:
                                   </div>
                                   <div className="text-xs font-medium">
-                                    {stats.wordCount || project.wordCount || 0} words
+                                    {stats.wordCount || project.wordCount || 0}{" "}
+                                    words
                                   </div>
                                 </div>
-                                
                                 <div className="flex justify-between items-center mb-1">
-                                  <div className="text-muted-foreground text-xs">Reviewed:</div>
+                                  <div className="text-muted-foreground text-xs">
+                                    Num of Files:
+                                  </div>
                                   <div className="text-xs font-medium">
-                                    {stats.statusCounts.Reviewed} / {stats.totalSegments} segments
+                                    {project.files?.length || 0} files
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center mb-1">
+                                  <div className="text-muted-foreground text-xs">
+                                    Reviewed:
+                                  </div>
+                                  <div className="text-xs font-medium">
+                                    {stats.statusCounts.Reviewed} /{" "}
+                                    {stats.totalSegments} segments
                                     <span className="ml-1 text-primary">
                                       ({Math.round(stats.reviewedPercentage)}%)
                                     </span>
                                   </div>
                                 </div>
-                                
+
                                 <CombinedProgress
-                                  translatedPercentage={stats.translatedPercentage}
+                                  translatedPercentage={
+                                    stats.translatedPercentage
+                                  }
                                   reviewedPercentage={stats.reviewedPercentage}
                                   statusCounts={stats.statusCounts}
                                   totalSegments={stats.totalSegments}
@@ -1506,24 +1511,21 @@ etc. Unlike work files, references can be added
                             );
                           })()}
                         </div>
-                        <div className="text-xs text-muted-foreground mt-2 flex justify-between">
-                          <span className="inline-flex items-center gap-1">
-                            <div className="w-2 h-2 rounded-full bg-blue-300"></div>
-                            # of files: {project.files?.length || 0}
-                          </span>
-                        </div>
                       </CardContent>
                     </div>
                     <CardFooter className="pt-2 flex items-center justify-between border-t border-border/30">
                       <div className="text-xs text-muted-foreground flex items-center">
                         <Clock className="h-3.5 w-3.5 mr-1" />
                         {project.deadline
-                          ? new Date(project.deadline).toLocaleDateString(undefined, {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric'
-                            })
-                          : "No deadline"}
+                          ? new Date(project.deadline).toLocaleDateString(
+                              undefined,
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              },
+                            )
+                          : "No due date"}
                       </div>
                       <div className="flex gap-2">
                         {/* 프로젝트 상세 페이지 뷰 버튼만 제공 */}
@@ -1653,7 +1655,7 @@ etc. Unlike work files, references can be added
                       user &&
                       project.status === "Claimed" &&
                       project.claimedBy === user.id;
-                    
+
                     return (
                       <TableRow key={project.id}>
                         {isAdmin && (
@@ -1662,10 +1664,15 @@ etc. Unlike work files, references can be added
                               checked={selectedProjects.includes(project.id)}
                               onCheckedChange={(checked) => {
                                 if (checked) {
-                                  setSelectedProjects([...selectedProjects, project.id]);
+                                  setSelectedProjects([
+                                    ...selectedProjects,
+                                    project.id,
+                                  ]);
                                 } else {
                                   setSelectedProjects(
-                                    selectedProjects.filter((id) => id !== project.id)
+                                    selectedProjects.filter(
+                                      (id) => id !== project.id,
+                                    ),
                                   );
                                 }
                               }}
@@ -1683,17 +1690,17 @@ etc. Unlike work files, references can be added
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1 bg-accent/50 px-2 py-0.5 rounded-full text-xs">
-                            <span className="font-medium">{project.sourceLanguage}</span>
+                            <span className="font-medium">
+                              {project.sourceLanguage}
+                            </span>
                             <ArrowRight className="h-3 w-3" />
-                            <span className="font-medium">{project.targetLanguage}</span>
+                            <span className="font-medium">
+                              {project.targetLanguage}
+                            </span>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          {project.files?.length || 0}
-                        </TableCell>
-                        <TableCell>
-                          {liveStats.wordCount || 0}
-                        </TableCell>
+                        <TableCell>{project.files?.length || 0}</TableCell>
+                        <TableCell>{liveStats.wordCount || 0}</TableCell>
                         <TableCell>
                           <div
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}`}
@@ -1703,7 +1710,9 @@ etc. Unlike work files, references can be added
                         </TableCell>
                         <TableCell>
                           <CombinedProgress
-                            translatedPercentage={stats?.translatedPercentage || 0}
+                            translatedPercentage={
+                              stats?.translatedPercentage || 0
+                            }
                             reviewedPercentage={stats?.reviewedPercentage || 0}
                             statusCounts={stats?.statusCounts || {}}
                             totalSegments={stats?.totalSegments || 0}
