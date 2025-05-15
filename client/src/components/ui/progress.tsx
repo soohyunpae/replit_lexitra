@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils"
 const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> & {
-    indicatorClassName?: string;
+    style?: React.CSSProperties;
   }
->(({ className, value, indicatorClassName, ...props }, ref) => (
+>(({ className, value, style, ...props }, ref) => (
   <ProgressPrimitive.Root
     ref={ref}
     className={cn(
@@ -18,14 +18,16 @@ const Progress = React.forwardRef<
     )}
     {...props}
   >
-    <ProgressPrimitive.Indicator
-      className={cn(
-        "h-full w-full flex-1 bg-primary transition-all",
-        indicatorClassName
-      )}
-      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
-    />
+    <div className="h-full w-full flex overflow-hidden">
+      <div className="h-full bg-green-500/70" style={{ width: 'var(--reviewed-percent, 0%)' }} />
+      <div className="h-full bg-blue-500/70" style={{ width: 'var(--match-100-percent, 0%)' }} />
+      <div className="h-full bg-yellow-500/70" style={{ width: 'var(--fuzzy-percent, 0%)' }} />
+      <div className="h-full bg-gray-500/70" style={{ width: 'var(--mt-percent, 0%)' }} />
+      <div className="h-full bg-purple-500/70" style={{ width: 'var(--edited-percent, 0%)' }} />
+      <div className="h-full bg-red-500/70" style={{ width: 'var(--rejected-percent, 0%)' }} />
+    </div>
   </ProgressPrimitive.Root>
+))
 ))
 Progress.displayName = ProgressPrimitive.Root.displayName
 
