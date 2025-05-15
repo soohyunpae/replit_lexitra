@@ -20,7 +20,8 @@ export function useSegmentMutation() {
       const response = await apiRequest("PATCH", `/api/segments/${data.id}`, {
         target: data.target,
         status: data.status,
-        origin: data.origin
+        origin: data.origin,
+        fileId: data.fileId // Add fileId to payload
       });
       
       if (!response.ok) {

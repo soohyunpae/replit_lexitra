@@ -2589,6 +2589,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.status = 'Edited';
       }
 
+      // Log update data with fileId for debugging
+      console.log('[SEGMENT UPDATE DATA]', {
+        id,
+        updateData,
+        existingFileId: existingSegment.fileId,
+        newFileId: data.fileId
+      });
+
       // 업데이트 실행
       const [updatedSegment] = await db
         .update(schema.translationUnits)
@@ -2620,7 +2628,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      return res.json(updatedSegment);
+      return res.json({
+        segment: updatedSegment,
+        success: true,
+        fileId: updatedSegment.fileId
+      });
     } catch (error) {
       return handleApiError(res, error);
     }
