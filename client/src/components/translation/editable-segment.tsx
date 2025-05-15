@@ -198,7 +198,7 @@ export function EditableSegment(props: EditableSegmentProps) {
 
   // 상태 변경 토글
   const toggleStatus = () => {
-    if (!isSource && onUpdate) {
+    if (!isSource) {
       const newStatus =
         liveSegment.status === "Reviewed" ? "Edited" : "Reviewed";
       const needsOriginChange = isOriginInList(
@@ -210,7 +210,25 @@ export function EditableSegment(props: EditableSegmentProps) {
           ? "HT"
           : liveSegment.origin || "HT";
 
-      onUpdate(value, newStatus, newOrigin as string);
+      updateSegment(
+        {
+          id: liveSegment.id,
+          target: value,
+          status: newStatus,
+          origin: newOrigin,
+          fileId: liveSegment.fileId,
+        },
+        {
+          onSuccess: () => {
+            if (onUpdate) {
+              onUpdate(value, newStatus, newOrigin);
+            }
+          },
+          onError: (error) => {
+            console.error("Failed to update segment status:", error);
+          },
+        },
+      );
     }
   };
 
@@ -249,6 +267,8 @@ export function EditableSegment(props: EditableSegmentProps) {
         },
         {
           onSuccess: () => {
+            // Update local state immediately for better UX
+            setValue(value);
             if (onUpdate) {
               onUpdate(value, newStatus, newOrigin);
             }
