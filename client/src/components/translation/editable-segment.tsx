@@ -255,22 +255,47 @@ export function EditableSegment(props: EditableSegmentProps) {
         status: liveSegment.status || "Edited",
         origin: liveSegment.origin || "HT"
       };
+      
+      // fileId 검사 및 추가
+      if (!updateData.fileId) {
+        console.warn("fileId is missing, adding from props", { 
+          segmentId: liveSegment.id,
+          propFileId: fileId, 
+          segmentFileId: segment.fileId 
+        });
+        updateData.fileId = fileId || segment.fileId;
+      }
+      
+      // 필수 필드 모두 있는지 확인
+      if (!updateData.fileId) {
+        console.error("Failed to update segment: Missing fileId");
+        return;
+      }
 
+      // 업데이트 실행
       updateSegment(updateData, {
         onSuccess: (data) => {
-          if (onUpdate && data) {
-            onUpdate(
-              data.target || snapshot.target,
-              data.status || snapshot.status,
-              data.origin || snapshot.origin
-            );
+          try {
+            if (onUpdate && data) {
+              // 안전하게 호출
+              const updatedTarget = data.target || snapshot.target;
+              const updatedStatus = data.status || snapshot.status;
+              const updatedOrigin = data.origin || snapshot.origin;
+              onUpdate(updatedTarget, updatedStatus, updatedOrigin);
+            }
+          } catch (e) {
+            console.error("Error in onUpdate callback:", e);
           }
         },
         onError: (error) => {
           console.error("Failed to update segment:", error);
           setValue(snapshot.target);
-          if (onUpdate) {
-            onUpdate(snapshot.target, snapshot.status, snapshot.origin);
+          try {
+            if (onUpdate) {
+              onUpdate(snapshot.target, snapshot.status, snapshot.origin);
+            }
+          } catch (e) {
+            console.error("Error in onUpdate error callback:", e);
           }
         }
       });

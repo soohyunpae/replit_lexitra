@@ -29,6 +29,7 @@ import {
 } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useSegments } from "@/hooks/useSegments";
+import { useSegmentMutation } from "@/hooks/mutations/useSegmentMutation";
 import {
   Select,
   SelectContent,
@@ -63,13 +64,14 @@ export function NewTranslationEditor({
 
   // React Query로 segments 상태 관리
   const {
-    segments,
+    segments = [],
     isLoading,
     isError,
-    updateSegment,
-    debouncedUpdateSegment,
-    isMutating,
+    updateSegment: updateSegmentFromHook
   } = useSegments(fileId);
+
+  // Segment mutation 훅 사용
+  const { mutate: updateSegmentMutation } = useSegmentMutation();
 
   // 로컬 필터링 상태
   const [filteredSegments, setFilteredSegments] = useState<TranslationUnit[]>(
@@ -899,15 +901,22 @@ export function NewTranslationEditor({
                         segment={segment}
                         index={index + 1}
                         isSource={false}
+                        fileId={fileId}
                         onSelect={() => handleSegmentSelect(segment.id)}
-                        onUpdate={(target, status, origin) =>
-                          handleSegmentUpdate(
-                            segment.id,
-                            target,
-                            status,
-                            origin,
-                          )
-                        }
+                        onUpdate={(target, status, origin) => {
+                          try {
+                            if (segment && segment.id) {
+                              handleSegmentUpdate(
+                                segment.id,
+                                target || "",
+                                status,
+                                origin
+                              );
+                            }
+                          } catch (err) {
+                            console.error("Error in onUpdate callback:", err);
+                          }
+                        }}
                         onTranslateWithGPT={() =>
                           handleTranslateWithGPT(segment.id)
                         }

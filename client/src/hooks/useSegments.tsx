@@ -63,9 +63,24 @@ export const useSegments = (fileId: number) => {
     ? (statusCounts["Reviewed"] / totalSegments) * 100 
     : 0;
 
+  // 디바운스된 업데이트 함수
+  const debouncedUpdateSegment = (params: {
+    id: number;
+    target: string;
+    status: string;
+    origin?: string;
+    fileId: number;
+  }, options?: any) => {
+    setTimeout(() => {
+      updateSegmentMutation(params, options);
+    }, 300);
+  };
+
   return {
     segments,
     ...rest,
-    updateSegment: updateSegmentMutation
+    updateSegment: updateSegmentMutation,
+    debouncedUpdateSegment,
+    isMutating: false // 간단하게 추가
   };
 };
