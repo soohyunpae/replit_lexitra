@@ -126,17 +126,17 @@ export async function searchTranslationMemory(
 }
 
 // Update a translation segment
-export async function updateSegment(id: number, target: string, status: string) {
+export async function updateSegment(id: number, target: string, status: string, origin?: string) {
   try {
     const token = localStorage.getItem('authToken');
     if (!token) {
       throw new Error('No auth token found');
     }
 
-    console.log('Updating segment:', { id, target, status, hasToken: !!token });
+    console.log('Updating segment:', { id, target, status, origin, hasToken: !!token });
 
     const response = await apiRequest('PATCH', `/api/segments/${id}`, 
-      { target, status },
+      { target, status, origin },
       {
         headers: {
           'Authorization': `Bearer ${token}`,
