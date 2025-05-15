@@ -849,14 +849,7 @@ export default function Project() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">Last Updated:</div>
-                    <div className="font-medium">
-                      <span>
-                        {formatDate(project.updatedAt || project.createdAt)}
-                      </span>
-                    </div>
-                  </div>
+                  
 
                   <div className="grid grid-cols-2 gap-1 items-center">
                     <div className="text-muted-foreground">Deadline:</div>

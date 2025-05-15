@@ -302,7 +302,7 @@ const storage = multer.diskStorage({
   filename: function (req, file, cb) {
     // 원본 파일명 디코딩 및 정규화
     // 파일명 디코딩 및 정규화 처리 개선
-    const decodedName = decodeURIComponent(escape(file.originalname));
+    const decodedName = Buffer.from(file.originalname, 'binary').toString();
     console.log("원본 파일명 (처리 전):", decodedName);
 
     // 이름과 확장자 분리
