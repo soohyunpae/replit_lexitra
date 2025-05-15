@@ -311,7 +311,7 @@ export default function Project() {
     const allSegments = Object.values(allSegmentsData).flat();
     const totalSegments = allSegments.length;
     const completedSegments = allSegments.filter(
-      (seg) => seg.status === "Reviewed"
+      (seg) => seg.status === "Reviewed",
     ).length;
     const completionPercentage =
       totalSegments > 0
@@ -450,7 +450,10 @@ export default function Project() {
     // 모든 파일의 단어 수 합계 계산
     return project.files
       .filter((file: any) => file.type === "work" || !file.type)
-      .reduce((total: number, file: any) => total + getFileWordCount(file.id), 0);
+      .reduce(
+        (total: number, file: any) => total + getFileWordCount(file.id),
+        0,
+      );
   };
 
   // Calculate statistics for each file
@@ -849,10 +852,17 @@ export default function Project() {
                     </div>
                   </div>
 
-                  
+                  <div className="grid grid-cols-2 gap-1">
+                    <div className="text-muted-foreground">Last Updated:</div>
+                    <div className="font-medium">
+                      <span>
+                        {formatDate(project.updatedAt || project.createdAt)}
+                      </span>
+                    </div>
+                  </div>
 
                   <div className="grid grid-cols-2 gap-1 items-center">
-                    <div className="text-muted-foreground">Deadline:</div>
+                    <div className="text-muted-foreground">Due Date:</div>
                     {isEditing ? (
                       <div>
                         <Input
@@ -978,9 +988,7 @@ export default function Project() {
                           </div>
                         </div>
                         <div className="flex justify-between items-center mb-1">
-                          <div className="text-muted-foreground">
-                            Reviewed:
-                          </div>
+                          <div className="text-muted-foreground">Reviewed:</div>
                           <div className="font-medium">
                             {projectStats.completedSegments} /{" "}
                             {projectStats.totalSegments} segments
@@ -1421,16 +1429,19 @@ export default function Project() {
                               const segments = allSegmentsData?.[file.id] || [];
                               // 타겟이 비어있는 세그먼트 개수
                               const emptyTargets = segments.filter(
-                                seg => !seg.target || seg.target.trim() === ""
+                                (seg) =>
+                                  !seg.target || seg.target.trim() === "",
                               ).length;
                               // 총 세그먼트 수
                               const totalSegments = segments.length;
-                              
+
                               // 번역 초벌이 진행 중인지 확인 (배정된지 얼마 안된 경우)
-                              const isInitialTranslationInProgress = 
-                                emptyTargets > 0 && 
-                                new Date().getTime() - new Date(file.createdAt).getTime() < 1000 * 60 * 10; // 10분 이내 생성
-                              
+                              const isInitialTranslationInProgress =
+                                emptyTargets > 0 &&
+                                new Date().getTime() -
+                                  new Date(file.createdAt).getTime() <
+                                  1000 * 60 * 10; // 10분 이내 생성
+
                               return (
                                 <Button
                                   onClick={() =>
@@ -1442,7 +1453,8 @@ export default function Project() {
                                       project.claimedBy !== user?.id &&
                                       user?.role !== "admin") ||
                                     // 번역 초벌이 진행 중인 경우 disabled (관리자 제외)
-                                    (isInitialTranslationInProgress && user?.role !== "admin")
+                                    (isInitialTranslationInProgress &&
+                                      user?.role !== "admin")
                                   }
                                   variant={
                                     project.status === "Unclaimed" ||
@@ -1457,7 +1469,7 @@ export default function Project() {
                                   {project.status === "Unclaimed"
                                     ? "Claim Project First"
                                     : project.status === "Claimed" &&
-                                      project.claimedBy !== user?.id
+                                        project.claimedBy !== user?.id
                                       ? "Claimed by Another User"
                                       : isInitialTranslationInProgress
                                         ? "번역 초벌 진행 중..."
