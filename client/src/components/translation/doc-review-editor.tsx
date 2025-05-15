@@ -457,7 +457,7 @@ export function DocReviewEditor({
             "border-r bg-card/20",
             isMobile 
               ? (showSource ? "h-1/2 overflow-y-auto" : "hidden") 
-              : (showSidePanel ? "w-[35%]" : "w-1/2") + " overflow-auto"
+              : (showSidePanel ? "w-[40%]" : "w-1/2") + " overflow-auto"
           )}
           ref={leftPanelRef}
         >
@@ -520,7 +520,7 @@ export function DocReviewEditor({
             "bg-card/20",
             isMobile 
               ? "flex-1 overflow-auto" 
-              : (showSidePanel ? "w-[35%]" : "w-1/2") + " overflow-auto"
+              : (showSidePanel ? "flex-1" : "w-1/2") + " overflow-auto"
           )}
           ref={rightPanelRef}
         >
