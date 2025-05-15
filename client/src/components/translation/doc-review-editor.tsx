@@ -414,8 +414,8 @@ export function DocReviewEditor({
                 size="sm"
                 variant={showSidePanel && !isMobile ? "default" : "outline"}
                 onClick={() => {
-                  // For side-by-side view
-                  setShowSource(false);
+                  // For side-by-side view, show both panels
+                  setShowSource(true);
                   setShowSidePanel(true);
                 }}
                 className="h-7 hidden md:inline-flex"
@@ -460,8 +460,8 @@ export function DocReviewEditor({
               ? (showSource ? "h-1/2 overflow-y-auto" : "hidden") 
               : cn(
                   "overflow-auto",
-                  showSource && !isMobile ? "w-full" : // Full width when source is selected
-                  !showSource && !isMobile ? "hidden" : // Hidden when target is selected
+                  !showSidePanel && showSource && !isMobile ? "w-full" : // Full width when only source is selected
+                  !showSidePanel && !showSource && !isMobile ? "hidden" : // Hidden when only target is selected
                   showSidePanel ? "w-[35%]" : "w-1/2" // Default side-by-side width
                 )
           )}
