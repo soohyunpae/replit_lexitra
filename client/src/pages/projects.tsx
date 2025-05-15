@@ -1691,12 +1691,10 @@ etc. Unlike work files, references can be added
                           </div>
                         </TableCell>
                         <TableCell>
-                          {project.files?.length || 0}{" "}
-                          <span className="text-muted-foreground">files</span>
+                          {project.files?.length || 0}
                         </TableCell>
                         <TableCell>
-                          {liveStats.wordCount || 0}{" "}
-                          <span className="text-muted-foreground">words</span>
+                          {liveStats.wordCount || 0}
                         </TableCell>
                         <TableCell>
                           <div
