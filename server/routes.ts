@@ -63,16 +63,40 @@ ensureDirectories();
 async function processFile(file: Express.Multer.File) {
   const ext = path.extname(file.originalname).toLowerCase();
   let text = '';
-
+  
+  // 전역 함수를 통해 진행 상황 알림 (타입 보장을 위한 검사)
+  const notifyProgress = (global as any).broadcastFileProgress || 
+    ((projectId: number, filename: string, status: string, progress: number, message?: string) => {
+      console.log(`파일 진행 상황: ${filename}, 상태: ${status}, 진행률: ${progress}%, 메시지: ${message || 'N/A'}`);
+    });
+  
+  // 시작 알림
+  notifyProgress(0, file.originalname, 'processing', 0, '파일 처리 시작');
+  
   try {
+    // 파일 형식에 따른 처리
+    notifyProgress(0, file.originalname, 'processing', 10, '파일 형식 확인');
     switch (ext) {
       case '.txt':
         text = fs.readFileSync(file.path, 'utf8');
         break;
 
       case '.docx':
-        const docxResult = await mammoth.extractRawText({path: file.path});
-        text = docxResult.value;
+        console.log('DOCX 파일 처리 시작:', file.originalname);
+        try {
+          const docxResult = await mammoth.extractRawText({path: file.path});
+          text = docxResult.value || '';
+          
+          if (!text || text.trim() === '') {
+            console.error('DOCX에서 텍스트를 추출했지만 결과가 비어있습니다.');
+            text = `[DOCX 파일: ${file.originalname}] - 파일에서 텍스트를 추출할 수 없습니다.`;
+          } else {
+            console.log('DOCX 텍스트 추출 성공:', text.substring(0, 100) + '...');
+          }
+        } catch (docxError) {
+          console.error('DOCX 처리 오류:', docxError);
+          text = `[DOCX 파일: ${file.originalname}] - 파일 처리 중 오류가 발생했습니다.`;
+        }
         break;
 
       case '.pdf':
@@ -101,9 +125,13 @@ async function processFile(file: Express.Multer.File) {
         throw new Error('Unsupported file format');
     }
 
+    // 성공 알림
+    notifyProgress(0, file.originalname, 'completed', 100, '파일 처리 완료');
     return text;
   } catch (error) {
     console.error('Error processing file:', error);
+    // 실패 알림
+    notifyProgress(0, file.originalname, 'error', 0, `오류 발생: ${error.message || '알 수 없는 오류'}`);
     throw error;
   }
 }
@@ -1935,16 +1963,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async function processFile(file: Express.Multer.File) {
       const ext = path.extname(file.originalname).toLowerCase();
       let text = '';
-
+      
+      // 전역 함수를 통해 진행 상황 알림 (타입 보장을 위한 검사)
+      const notifyProgress = (global as any).broadcastFileProgress || 
+        ((projectId: number, filename: string, status: string, progress: number, message?: string) => {
+          console.log(`파일 진행 상황: ${filename}, 상태: ${status}, 진행률: ${progress}%, 메시지: ${message || 'N/A'}`);
+        });
+      
+      // 시작 알림
+      notifyProgress(0, file.originalname, 'processing', 0, '파일 처리 시작');
+      
       try {
+        // 파일 형식에 따른 처리
+        notifyProgress(0, file.originalname, 'processing', 10, '파일 형식 확인');
         switch (ext) {
           case '.txt':
             text = fs.readFileSync(file.path, 'utf8');
             break;
 
           case '.docx':
-            const docxResult = await mammoth.extractRawText({path: file.path});
-            text = docxResult.value;
+            console.log('DOCX 파일 처리 시작:', file.originalname);
+            try {
+              const docxResult = await mammoth.extractRawText({path: file.path});
+              text = docxResult.value || '';
+              
+              if (!text || text.trim() === '') {
+                console.error('DOCX에서 텍스트를 추출했지만 결과가 비어있습니다.');
+                text = `[DOCX 파일: ${file.originalname}] - 파일에서 텍스트를 추출할 수 없습니다.`;
+              } else {
+                console.log('DOCX 텍스트 추출 성공:', text.substring(0, 100) + '...');
+              }
+            } catch (docxError) {
+              console.error('DOCX 처리 오류:', docxError);
+              text = `[DOCX 파일: ${file.originalname}] - 파일 처리 중 오류가 발생했습니다.`;
+            }
             break;
 
           case '.pdf':
