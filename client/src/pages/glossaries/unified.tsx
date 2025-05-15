@@ -694,7 +694,7 @@ export default function UnifiedGlossaryPage() {
           </div>
 
           <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="relative flex-grow">
+            <div className="relative w-full">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search glossary terms..."
@@ -703,42 +703,6 @@ export default function UnifiedGlossaryPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Select
-              value={sourceLanguageFilter}
-              onValueChange={setSourceLanguageFilter}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Source Language" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all_source_languages">
-                  All Source Languages
-                </SelectItem>
-                {languages.source.map((lang) => (
-                  <SelectItem key={lang} value={lang}>
-                    {lang.toUpperCase()}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={targetLanguageFilter}
-              onValueChange={setTargetLanguageFilter}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Target Language" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all_target_languages">
-                  All Target Languages
-                </SelectItem>
-                {languages.target.map((lang) => (
-                  <SelectItem key={lang} value={lang}>
-                    {lang.toUpperCase()}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           {/* Search Results */}
