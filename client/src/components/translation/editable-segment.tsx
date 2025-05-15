@@ -36,6 +36,7 @@ interface EditableSegmentProps {
   onTranslateWithGPT?: () => void;
   isChecked?: boolean;
   onCheckChange?: (checked: boolean) => void;
+  fileId?: number; // 추가: fileId 매개변수
 }
 
 export function EditableSegment(props: EditableSegmentProps) {
@@ -49,6 +50,7 @@ export function EditableSegment(props: EditableSegmentProps) {
     onTranslateWithGPT,
     isChecked,
     onCheckChange,
+    fileId,
   } = props;
 
   // 상태 및 원본 변경 여부 확인을 위한 상수
@@ -211,12 +213,20 @@ export function EditableSegment(props: EditableSegmentProps) {
           ? "HT"
           : liveSegment.origin || "HT";
 
+      // 세그먼트에서 fileId 추출
+      const segmentFileId = segment.fileId;
+      if (!segmentFileId && !fileId) {
+        console.error("Missing fileId for segment update");
+        return;
+      }
+
       updateSegment(
         {
           id: liveSegment.id,
           target: value,
           status: newStatus,
           origin: newOrigin,
+          fileId: fileId || segmentFileId,
         },
         {
           onSuccess: () => {
@@ -293,11 +303,19 @@ export function EditableSegment(props: EditableSegmentProps) {
         onUpdate(newValue, newStatus, newOrigin);
       }
 
+      // 세그먼트에서 fileId 추출
+      const segmentFileId = segment.fileId;
+      if (!segmentFileId && !fileId) {
+        console.error("Missing fileId for segment update");
+        return;
+      }
+
       debouncedUpdateSegment({
         id: liveSegment.id,
         target: newValue,
         status: newStatus,
         origin: newOrigin,
+        fileId: fileId || segmentFileId,
       });
     }
   };
@@ -320,12 +338,20 @@ export function EditableSegment(props: EditableSegmentProps) {
           ? "Edited"
           : liveSegment.status;
 
+      // 세그먼트에서 fileId 추출
+      const segmentFileId = segment.fileId;
+      if (!segmentFileId && !fileId) {
+        console.error("Missing fileId for segment update");
+        return;
+      }
+
       updateSegment(
         {
           id: liveSegment.id,
           target: value,
           status: newStatus,
           origin: newOrigin,
+          fileId: fileId || segmentFileId,
         },
         {
           onSuccess: () => {
