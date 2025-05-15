@@ -26,6 +26,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import mammoth from 'mammoth';
+import { WebSocketServer, WebSocket } from 'ws';
 
 // 파일 경로를 위한 변수 설정
 const REPO_ROOT = process.cwd();
@@ -3537,5 +3538,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // WebSocket 서버 설정 - Vite HMR 웹소켓과 충돌하지 않도록 경로 지정
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // 클라이언트 연결 관리
+  const clients = new Set<WebSocket>();
+  
+  wss.on('connection', (ws) => {
+    console.log('WebSocket 클라이언트 연결됨');
+    clients.add(ws);
+    
+    ws.on('message', (message) => {
+      try {
+        console.log('메시지 수신:', message.toString());
+        // 여기서 메시지 처리
+      } catch (err) {
+        console.error('WebSocket 메시지 처리 오류:', err);
+      }
+    });
+    
+    ws.on('close', () => {
+      console.log('WebSocket 클라이언트 연결 종료');
+      clients.delete(ws);
+    });
+    
+    // 연결 확인 메시지 전송
+    ws.send(JSON.stringify({ type: 'connected', message: '서버에 연결되었습니다.' }));
+  });
+  
+  // 모든 클라이언트에게 메시지 브로드캐스트하는 유틸리티 함수
+  const broadcastMessage = (type: string, data: any) => {
+    const message = JSON.stringify({ type, data });
+    
+    clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+  };
+  
+  // 전역 스코프에서 WebSocket 함수 접근 가능하도록 설정
+  (global as any).broadcastFileProgress = (projectId: number, filename: string, status: string, progress: number, message?: string) => {
+    broadcastMessage('file_progress', { projectId, filename, status, progress, message });
+  };
+  
   return httpServer;
 }
