@@ -108,24 +108,61 @@ async function processFile(file: Express.Multer.File) {
         console.log('PDF 파일 처리 시작:', file.originalname);
         
         try {
-          // PDF는 버퍼로 읽어서 pdf-parse로 처리
-          const pdfBuffer = fs.readFileSync(file.path);
+          // 디버깅: 파일 정보 출력
+          console.log('PDF 파일 처리 정보:', {
+            path: file.path,
+            originalname: file.originalname,
+            size: file.size,
+            encoding: file.encoding,
+            mimetype: file.mimetype
+          });
+          
+          // 진행 상황 업데이트
           notifyProgress(0, file.originalname, 'processing', 30, 'PDF 내용 추출중');
           
+          // PDF는 버퍼로 읽어서 pdf-parse로 처리
+          const pdfBuffer = fs.readFileSync(file.path);
+          console.log('PDF 버퍼 크기:', pdfBuffer.length);
+          
+          // PDF 내용을 추출하기 위한 옵션 추가
+          const options = {
+            // 모든 페이지 처리
+            max: 0,
+            // PDF 유효성 오류 무시
+            throwOnBadFormat: false,
+          };
+          
           // pdf-parse를 사용하여 PDF에서 텍스트 추출
-          const pdfData = await pdfParse(pdfBuffer);
+          const pdfData = await pdfParse(pdfBuffer, options);
+          console.log('PDF 정보:', {
+            pageCount: pdfData.numpages,
+            metadata: pdfData.metadata ? JSON.stringify(pdfData.metadata).substring(0, 100) : 'N/A',
+            textLength: pdfData.text ? pdfData.text.length : 0
+          });
+          
+          // 추출된 텍스트 저장
           text = pdfData.text || '';
           
+          // 텍스트가 비어있는지 확인
           if (!text || text.trim() === '') {
             console.error('PDF에서 텍스트를 추출했지만 결과가 비어있습니다.');
-            text = `[PDF 파일: ${file.originalname}] - 파일에서 텍스트를 추출할 수 없습니다.`;
+            // 대안으로 제공하는 텍스트
+            text = `PDF 파일 내용을 추출할 수 없습니다. 파일명: ${Buffer.from(file.originalname).toString('utf-8')}`;
           } else {
-            console.log('PDF 텍스트 추출 성공:', text.substring(0, 100) + '...');
+            console.log('PDF 텍스트 추출 성공! 내용:', text.substring(0, 100) + '...');
+            
+            // 세그먼트 분리를 위한 텍스트 정리
+            text = text.replace(/\r\n/g, '\n')
+                       .replace(/\n{3,}/g, '\n\n')  // 3개 이상 연속 줄바꿈 제거
+                       .trim();
           }
+          
+          // 진행 상황 업데이트
+          notifyProgress(0, file.originalname, 'processing', 70, 'PDF 처리 완료');
         } catch (pdfError) {
-          console.error('PDF 처리 오류:', pdfError);
+          console.error('PDF 처리 오류 발생:', pdfError);
           // 오류가 발생해도 프로젝트 생성은 계속 진행
-          text = `[PDF 파일: ${file.originalname}] - PDF 파일 처리 중 오류가 발생했습니다.`;
+          text = `PDF 파일 처리 중 오류가 발생했습니다. 파일명: ${Buffer.from(file.originalname).toString('utf-8')}`;
         }
         break;
 
