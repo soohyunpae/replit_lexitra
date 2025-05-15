@@ -1000,9 +1000,7 @@ export function NewTranslationEditor({
                   <Button
                     variant="outline"
                     size="icon"
-                    ```
-// This line ensures proper code analysis.
-className="h-8 w-8"
+                    className="h-8 w-8"
                     onClick={() => handlePageChange(totalPages)}
                     disabled={currentPage === totalPages}
                   >
