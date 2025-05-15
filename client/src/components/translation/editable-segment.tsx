@@ -235,48 +235,51 @@ export function EditableSegment(props: EditableSegmentProps) {
 
   // 텍스트 변경 핸들러
   const { mutate: updateSegment } = useSegmentMutation();
+  const { queryClient } = useSegmentMutation();
 
   const debouncedUpdateSegment = useDebouncedCallback(
     (newValue: string) => {
-      const isValueChanged = newValue !== liveSegment.target;
+      if (newValue === liveSegment.target) return;
 
-      if (isValueChanged) {
-        const needsOriginChange = isOriginInList(
-          liveSegment.origin,
-          STATUS_NEED_CHANGE,
-        );
+      const needsOriginChange = isOriginInList(
+        liveSegment.origin,
+        STATUS_NEED_CHANGE,
+      );
 
-        const newOrigin = needsOriginChange ? "HT" : liveSegment.origin;
-        const newStatus = (
-          liveSegment.status === "Reviewed" ||
-          isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)
-        ) ? "Edited" : liveSegment.status;
+      const newOrigin = needsOriginChange ? "HT" : liveSegment.origin;
+      const newStatus = (
+        liveSegment.status === "Reviewed" ||
+        isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)
+      ) ? "Edited" : liveSegment.status;
 
-        updateSegment(
-          {
-            id: liveSegment.id,
-            target: newValue,
-            status: newStatus,
-            origin: newOrigin,
-            fileId: liveSegment.fileId,
-          },
-          {
-            onSuccess: () => {
-              if (onUpdate) {
-                onUpdate(newValue, newStatus, newOrigin);
-              }
-            },
-            onError: (error) => {
-              console.error("Failed to update segment:", error);
-              // 에러 발생 시 이전 값으로 되돌리지 않음
-              // setValue(liveSegment.target || "");
-            },
-          },
-        );
-      }
+      const updateData = {
+        id: liveSegment.id,
+        target: newValue,
+        status: newStatus,
+        origin: newOrigin,
+        fileId: liveSegment.fileId,
+      };
+
+      updateSegment(updateData, {
+        onMutate: async (newSegment) => {
+          // 낙관적 업데이트
+          if (onUpdate) {
+            onUpdate(newValue, newStatus, newOrigin);
+          }
+        },
+        onError: (error) => {
+          console.error("Failed to update segment:", error);
+          // 에러 발생 시 이전 값으로 복원
+          setValue(liveSegment.target || "");
+        },
+        onSettled: () => {
+          // 캐시 무효화 및 데이터 리프레시
+          queryClient.invalidateQueries(["segments"]);
+        },
+      });
     },
-    300, // 300ms 딜레이
-    [liveSegment, onUpdate]
+    500, // 딜레이 시간 증가
+    []  // 디펜던시 제거하여 불필요한 리렌더링 방지
   );
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
