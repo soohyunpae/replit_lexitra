@@ -387,7 +387,42 @@ export function DocReviewEditor({
     <div className="flex flex-col h-full w-full overflow-auto">
       {/* Controls - Fixed at the top */}
       <div className="bg-card border-b border-border py-2 px-4 sticky top-0 z-20 shadow-sm">
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant={showSource && !isMobile ? "default" : "outline"}
+              onClick={() => setShowSource(true)}
+              className="h-7"
+              title="Show source only"
+            >
+              Source
+            </Button>
+            <Button
+              size="sm"
+              variant={!showSource && !isMobile ? "default" : "outline"}
+              onClick={() => setShowSource(false)}
+              className="h-7"
+              title="Show target only"
+            >
+              Target
+            </Button>
+            <Button
+              size="sm"
+              variant={showSource && isMobile ? "default" : "outline"}
+              onClick={() => {
+                setShowSource(true);
+                // Force side-by-side on desktop
+                if (!isMobile) {
+                  setShowSidePanel(false);
+                }
+              }}
+              className="h-7 hidden md:inline-flex"
+              title="Show side by side"
+            >
+              Side by Side
+            </Button>
+          </div>
           <div className="flex items-center gap-2">
             {/* Side panel toggle button */}
             <Button
