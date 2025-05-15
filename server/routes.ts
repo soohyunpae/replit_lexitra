@@ -1,4 +1,5 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import type { Express, Response, NextFunction } from "express";
+import { Request } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
 import * as schema from "@shared/schema";
@@ -27,6 +28,15 @@ import path from "path";
 import fs from "fs";
 import mammoth from 'mammoth';
 import { WebSocketServer, WebSocket } from 'ws';
+
+// Request에 커스텀 필드 추가를 위한 타입 확장
+declare global {
+  namespace Express {
+    interface Request {
+      fileOriginalNames?: Record<string, string>;
+    }
+  }
+}
 
 // 파일 경로를 위한 변수 설정
 const REPO_ROOT = process.cwd();
@@ -194,11 +204,32 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
+    // 원본 파일명 정보 보존 및 인코딩 처리
+    console.log('원본 파일명:', file.originalname);
+    
+    // 확장자 추출
+    const extname = path.extname(file.originalname);
+    
     // 고유한 파일 이름 생성
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const filename =
-      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname);
-    console.log(`Generated filename for upload: ${filename}`);
+    const filename = file.fieldname + "-" + uniqueSuffix + extname;
+    
+    // 원본 파일명을 UTF-8로 정규화하기 위한 시도
+    try {
+      // 원본 파일명을 버퍼로 변환 후 다시 UTF-8 문자열로 디코딩
+      const normalizedOriginalname = Buffer.from(file.originalname, 'binary').toString('utf-8');
+      console.log('정규화된 파일명:', normalizedOriginalname);
+      
+      // req 객체에 원본 파일명 정보 저장 (나중에 사용)
+      if (!(req as any).fileOriginalNames) {
+        (req as any).fileOriginalNames = {};
+      }
+      (req as any).fileOriginalNames[filename] = normalizedOriginalname;
+    } catch (e) {
+      console.error('파일명 정규화 오류:', e);
+    }
+    
+    console.log(`생성된 파일명: ${filename}`);
     cb(null, filename);
   },
 });
