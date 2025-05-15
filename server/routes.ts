@@ -2261,11 +2261,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ message: "Only admins can edit project information" });
       }
 
+      // 날짜 형식 처리
+      let processedDeadline = undefined;
+      if (deadline !== undefined) {
+        if (deadline === null) {
+          processedDeadline = null;
+        } else {
+          try {
+            processedDeadline = new Date(deadline);
+            // 유효한 날짜인지 확인
+            if (isNaN(processedDeadline.getTime())) {
+              return res.status(400).json({ 
+                message: "Invalid date format for deadline" 
+              });
+            }
+          } catch (err) {
+            console.error("Date parsing error:", err);
+            return res.status(400).json({ 
+              message: "Invalid date format for deadline" 
+            });
+          }
+        }
+      }
+
       // 프로젝트 정보 업데이트
       const [updatedProject] = await db
         .update(schema.projects)
         .set({
-          ...(deadline !== undefined && { deadline }),
+          ...(processedDeadline !== undefined && { deadline: processedDeadline }),
           ...(glossaryId !== undefined && { glossaryId }),
           ...(tmId !== undefined && { tmId }),
           ...(name !== undefined && { name }),

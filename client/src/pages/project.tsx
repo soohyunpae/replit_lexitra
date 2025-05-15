@@ -962,13 +962,25 @@ export default function Project() {
                       variant="outline"
                       size="sm"
                       className="w-full flex items-center justify-center gap-1"
-                      onClick={() =>
+                      onClick={() => {
+                        // 날짜 형식 처리
+                        let formattedDeadline = null;
+                        if (deadlineInput) {
+                          try {
+                            // ISO 날짜 형식으로 변환
+                            const deadlineDate = new Date(deadlineInput);
+                            formattedDeadline = deadlineDate.toISOString();
+                          } catch (e) {
+                            console.error("날짜 형식 변환 오류:", e);
+                          }
+                        }
+                        
                         saveProjectInfo.mutate({
-                          deadline: deadlineInput || null,
+                          deadline: formattedDeadline,
                           glossaryId: glossaryInput,
                           tmId: tmInput,
-                        })
-                      }
+                        });
+                      }}
                       disabled={saveProjectInfo.isPending}
                     >
                       <span>
