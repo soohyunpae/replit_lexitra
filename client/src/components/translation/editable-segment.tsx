@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Languages } from "lucide-react";
 import { TranslationUnit } from "@/types";
 import { cn } from "@/lib/utils";
-import { useDebouncedCallback } from "use-debounce";
+import { useDebouncedCallback } from 'use-debounce';
 
 /**
  * !!! 중요 !!! 2025-05-12 개선된 세그먼트 높이 동기화 기능
