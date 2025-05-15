@@ -1434,8 +1434,8 @@ export default function ProjectsPage() {
                       className="cursor-pointer"
                     >
                       <CardHeader className="pb-2 pt-4">
-                        <CardTitle className="truncate group-hover:text-primary transition-colors">
-                          {project.name}
+                        <CardTitle className="truncate group-hover:text-primary transition-colors text-base">
+                          {project.id}: {project.name}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="pb-2">
