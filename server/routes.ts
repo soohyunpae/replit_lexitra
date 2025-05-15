@@ -176,10 +176,46 @@ async function processFile(file: Express.Multer.File) {
             
             // 3. 각 줄을 문장 단위로 분리
             let sentences: string[] = [];
+            
+            // PDF용 문장 분리 함수 (지역 함수로 정의)
+            const segmentTextForPDF = (text: string): string[] => {
+              // PDF 특수 처리 규칙 추가
+              const pdfTextSegments = [];
+              
+              // 기본 분리: 마침표, 느낌표, 물음표 + 공백으로 구분
+              const regex = /[.!?]\s+|[.!?]$/g;
+              let match;
+              let lastIndex = 0;
+              
+              // 정규식으로 문장 분리
+              while ((match = regex.exec(text)) !== null) {
+                const sentence = text.substring(lastIndex, match.index + 1).trim();
+                if (sentence && sentence.length > 3) {
+                  pdfTextSegments.push(sentence);
+                }
+                lastIndex = match.index + match[0].length;
+              }
+              
+              // 남은 텍스트 처리
+              if (lastIndex < text.length) {
+                const remainingText = text.substring(lastIndex).trim();
+                if (remainingText && remainingText.length > 3) {
+                  pdfTextSegments.push(remainingText);
+                }
+              }
+              
+              return pdfTextSegments;
+            };
+            
             for (const line of textLines) {
               // 각 줄을 문장 단위로 분리해서 추가
-              const lineSentences = segmentText(line);
-              sentences = [...sentences, ...lineSentences];
+              const lineSentences = segmentTextForPDF(line);
+              if (lineSentences.length > 0) {
+                sentences = [...sentences, ...lineSentences];
+              } else if (line.length > 20) {
+                // 분리가 안된 긴 라인은 그대로 추가
+                sentences.push(line);
+              }
             }
             
             // 4. 최종 텍스트 생성 (문장 단위로 구분)
@@ -228,29 +264,47 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     // 원본 파일명 정보 보존 및 인코딩 처리
-    console.log('원본 파일명:', file.originalname);
+    console.log('원본 파일명 (처리 전):', file.originalname);
     
-    // 확장자 추출
-    const extname = path.extname(file.originalname);
+    // 이름과 확장자 분리
+    const originalExt = path.extname(file.originalname);
+    const originalName = path.basename(file.originalname, originalExt);
     
-    // 고유한 파일 이름 생성
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const filename = file.fieldname + "-" + uniqueSuffix + extname;
+    // 한글 파일명 정규화 처리
+    // 1. Buffer로 변환 후 UTF-8로 정확히 디코딩
+    let normalizedName;
     
-    // 원본 파일명을 UTF-8로 정규화하기 위한 시도
     try {
-      // 원본 파일명을 버퍼로 변환 후 다시 UTF-8 문자열로 디코딩
-      const normalizedOriginalname = Buffer.from(file.originalname, 'binary').toString('utf-8');
-      console.log('정규화된 파일명:', normalizedOriginalname);
+      // 다양한 인코딩 시도 (원래 이름이 깨진 경우를 대비)
+      normalizedName = Buffer.from(originalName, 'binary').toString('utf-8');
       
-      // req 객체에 원본 파일명 정보 저장 (나중에 사용)
-      if (!(req as any).fileOriginalNames) {
-        (req as any).fileOriginalNames = {};
+      // 특수 케이스 처리: 이미 깨진 상태인 경우 복원 시도
+      if (/ì|í|à|á|â|ã|ä|å|æ|ç|è|é|ê|ë|ì|í|î|ï|ð|ñ|ò|ó|ô|õ|ö|÷|ø|ù|ú|û|ü|ý|þ|ÿ/.test(normalizedName)) {
+        console.log('깨진 한글 파일명 감지, 복원 시도...');
+        // 다시 버퍼로 변환 후 다른 인코딩으로 시도
+        normalizedName = Buffer.from(normalizedName).toString('utf-8');
       }
-      (req as any).fileOriginalNames[filename] = normalizedOriginalname;
+      
+      console.log('정규화된 파일명:', normalizedName + originalExt);
     } catch (e) {
       console.error('파일명 정규화 오류:', e);
+      // 오류 발생 시 원본 이름 유지
+      normalizedName = originalName;
     }
+    
+    // 고유한 파일 이름 생성 (실제 저장용)
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const filename = file.fieldname + "-" + uniqueSuffix + originalExt;
+    
+    // req 객체에 정규화된 원본 파일명 정보 저장
+    if (!(req as any).fileOriginalNames) {
+      (req as any).fileOriginalNames = {};
+    }
+    (req as any).fileOriginalNames[filename] = normalizedName + originalExt;
+    
+    // 디버깅 정보 출력
+    console.log('저장될 파일명:', filename);
+    console.log('참조용 원본 파일명:', (req as any).fileOriginalNames[filename]);
     
     console.log(`생성된 파일명: ${filename}`);
     cb(null, filename);
