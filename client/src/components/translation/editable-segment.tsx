@@ -250,7 +250,6 @@ export function EditableSegment(props: EditableSegmentProps) {
       },
       onSettled: () => {
         queryClient.invalidateQueries(["segments"]);
-        queryClient.invalidateQueries([`/api/segments/${liveSegment.fileId}`]);
       },
     });
   }, 300);
