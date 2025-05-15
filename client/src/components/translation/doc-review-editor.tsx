@@ -462,7 +462,7 @@ export function DocReviewEditor({
                   "overflow-auto",
                   !showSidePanel && showSource && !isMobile ? "w-full" : // Full width when only source is selected
                   !showSidePanel && !showSource && !isMobile ? "hidden" : // Hidden when only target is selected
-                  showSidePanel ? "w-[35%]" : "w-1/2" // Default side-by-side width
+                  showSidePanel ? "w-1/2" : "w-1/2" // Equal width for side-by-side view
                 )
           )}
           ref={leftPanelRef}
@@ -601,7 +601,7 @@ export function DocReviewEditor({
 
         {/* Side Panel - Only shown when enabled */}
         {!isMobile && showSidePanel && (
-              <div className="flex flex-col h-full sticky top-[56px] h-fit">
+              <div className="w-[30%] flex flex-col h-full sticky top-[56px] h-fit">
             <SidePanel
               tmMatches={tmMatches}
               glossaryTerms={glossaryTerms}
