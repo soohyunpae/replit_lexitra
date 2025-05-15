@@ -120,7 +120,13 @@ export function NewTranslationEditor({
       return statusMatch && originMatch;
     });
 
-    setFilteredSegments(filtered);
+    // 이전 필터링된 세그먼트와 비교하여 변경이 있을 때만 상태 업데이트
+    setFilteredSegments(prevFiltered => {
+      if (JSON.stringify(prevFiltered) === JSON.stringify(filtered)) {
+        return prevFiltered;
+      }
+      return filtered;
+    });
   }, [segments, statusFilter, originFilter]);
 
   // Reset to page 1 when filters change

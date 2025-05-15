@@ -236,7 +236,7 @@ export function EditableSegment(props: EditableSegmentProps) {
   const { mutate: updateSegment, queryClient } = useSegmentMutation();
 
   const debouncedUpdateSegment = useDebouncedCallback((updateData: any) => {
-    const currentSegment = liveSegment; // 현재 상태 캡처
+    const segmentSnapshot = { ...liveSegment }; // 현재 상태의 스냅샷 생성
     
     updateSegment(updateData, {
       onSuccess: (data) => {
@@ -246,17 +246,18 @@ export function EditableSegment(props: EditableSegmentProps) {
       },
       onError: (error) => {
         console.error("Failed to update segment:", error);
-        setValue(currentSegment.target || "");
+        // 에러 발생 시 스냅샷으로 복원
+        setValue(segmentSnapshot.target || "");
         if (onUpdate) {
           onUpdate(
-            currentSegment.target || "",
-            currentSegment.status,
-            currentSegment.origin,
+            segmentSnapshot.target || "",
+            segmentSnapshot.status,
+            segmentSnapshot.origin,
           );
         }
       }
     });
-  }, 500);
+  }, 1000); // 디바운스 시간 증가
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
