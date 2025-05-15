@@ -457,7 +457,7 @@ export function DocReviewEditor({
             "border-r bg-card/20",
             isMobile 
               ? (showSource ? "h-1/2 overflow-y-auto" : "hidden") 
-              : (!showSource ? "hidden" : showSidePanel ? "w-[40%]" : "flex-1") + " overflow-auto"
+              : (showSource ? (showSidePanel ? "w-[40%]" : "flex-1") : "hidden") + " overflow-auto"
           )}
           ref={leftPanelRef}
         >
