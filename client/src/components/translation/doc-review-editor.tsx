@@ -409,12 +409,13 @@ export function DocReviewEditor({
             </Button>
             <Button
               size="sm"
-              variant={showSource && isMobile ? "default" : "outline"}
+              variant={!showSource && !isMobile ? "default" : "outline"}
               onClick={() => {
-                setShowSource(true);
-                // Force side-by-side on desktop
+                // For side-by-side view, set showSource to false
+                setShowSource(false);
+                // Ensure both panels are visible
                 if (!isMobile) {
-                  setShowSidePanel(false);
+                  setShowSidePanel(true);
                 }
               }}
               className="h-7 hidden md:inline-flex"
