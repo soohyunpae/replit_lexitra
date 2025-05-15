@@ -86,9 +86,9 @@ const extractTextFromPdf = async (pdfPath: string): Promise<string> => {
 
     console.log(`PDF 추출 시작: ${pdfPath} -> ${tmpOutputPath}`);
 
-    // pdftotext 명령어 실행
+    // pdftotext 명령어 실행 - layout 옵션 제거하여 문장 분리 개선
     const pdfProcess = spawn("/nix/store/1f2vbia1rg1rh5cs0ii49v3hln9i36rv-poppler-utils-24.02.0/bin/pdftotext", [
-      "-layout", // 레이아웃 유지
+      // "-layout" 옵션 제거 (줄바꿈이 필요 이상으로 생기는 문제 해결)
       "-nopgbrk", // 페이지 나누기 없음
       "-enc", "UTF-8", // UTF-8 인코딩 사용
       pdfPath, // 입력 PDF 파일
@@ -227,23 +227,24 @@ async function processFile(file: Express.Multer.File) {
             const outputFileName = normalizedFilename.replace(/\.pdf$/i, "-extracted.txt");
             const outputPath = path.join(outputDir, `${Date.now()}-${outputFileName}`);
             
-            // 문단 단위로 분리 (빈 줄 기준)
-            const paragraphs = extractedText
-              .split(/\n\s*\n/)
-              .filter((p: string) => p.trim().length > 0);
+            // 보수적+정확한 처리: 모든 줄바꿈을 공백으로 대체하고 연속 공백 처리
+            const flatText = extractedText
+              .replace(/\n+/g, ' ')     // 모든 줄바꿈을 공백으로 변환
+              .replace(/\s{2,}/g, ' ')  // 연속된 공백을 하나로 통합
+              .trim();                  // 양쪽 공백 제거
             
-            console.log(`문단 수: ${paragraphs.length}`);
+            console.log(`텍스트 정리 완료. 길이: ${flatText.length} 바이트`);
             
-            // 각 문단을 문장 단위로 분리
-            let sentences: string[] = [];
-            for (const paragraph of paragraphs) {
-              // 문장 분리 정규식: 마침표/물음표/느낌표 + 공백으로 분리
-              const paragraphSentences = paragraph
-                .split(/(?<=[.?!])\s+/)
-                .filter((s: string) => s.trim().length > 0);
-                
-              sentences = [...sentences, ...paragraphSentences];
-            }
+            // 문장 단위로 직접 분리 (마침표/물음표/느낌표 + 공백)
+            let sentences = flatText
+              .split(/(?<=[.?!])\s+/)
+              .filter((s: string) => s.trim().length > 0);
+            
+            // 너무 짧은 문장은 제외 (옵션)
+            sentences = sentences.filter(sentence => sentence.length > 5);
+            
+            console.log(`문장 분리 완료: ${sentences.length}개 문장 추출`);
+            console.log("문장 샘플:", sentences.slice(0, 2));
             
             // 최종 텍스트 생성 (문장 단위로 구분)
             text = sentences.join("\n\n");
@@ -258,7 +259,8 @@ async function processFile(file: Express.Multer.File) {
           
           // 진행 상황 업데이트
           notifyProgress(0, file.originalname, "processing", 70, "PDF 처리 완료");
-        } catch (err) {
+        } catch (error) {
+          const err = error as Error;
           console.error("PDF 처리 중 오류:", err);
           text = `[PDF 처리 오류] ${file.originalname} 파일을 처리하는 도중 문제가 발생했습니다. 오류: ${err.message}`;
         }
