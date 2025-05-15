@@ -238,38 +238,64 @@ export function EditableSegment(props: EditableSegmentProps) {
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setValue(newValue);
-  };
-
-  // Document View와 동일한 저장 로직 적용
-  const handleSave = () => {
-    if (!isSource) {
-      const isValueChanged = value !== liveSegment.target;
-      const isStatusChanged = false; // 상태 변경은 toggleStatus에서 처리
-
-      // 값이 변경되었거나 상태가 변경된 경우에만 저장
-      if (!isValueChanged && !isStatusChanged) return;
-
+    
+    // 텍스트 변경 시 자동 저장 및 상태 업데이트
+    const isValueChanged = newValue !== liveSegment.target;
+    
+    if (isValueChanged) {
       const needsOriginChange = isOriginInList(
         liveSegment.origin,
         STATUS_NEED_CHANGE,
       );
       
       // MT/100%/Fuzzy에서 수정된 경우 origin을 HT로 변경
-      const newOrigin = (isValueChanged && needsOriginChange) ? "HT" : liveSegment.origin;
+      const newOrigin = needsOriginChange ? "HT" : liveSegment.origin;
       
       // Reviewed나 특수 상태에서 수정된 경우 Edited로 변경
-      const newStatus = (isValueChanged && (
+      const newStatus = (
         liveSegment.status === "Reviewed" ||
         isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)
-      )) ? "Edited" : liveSegment.status;
+      ) ? "Edited" : liveSegment.status;
 
-      console.log("텍스트 저장:", {
-        text: value,
-        status: newStatus,
-        origin: newOrigin,
-        textChanged: isValueChanged,
-        statusChanged: isStatusChanged
-      });
+      updateSegment(
+        {
+          id: liveSegment.id,
+          target: newValue,
+          status: newStatus,
+          origin: newOrigin,
+          fileId: liveSegment.fileId,
+        },
+        {
+          onSuccess: () => {
+            if (onUpdate) {
+              onUpdate(newValue, newStatus, newOrigin);
+            }
+          },
+          onError: (error) => {
+            console.error("Failed to update segment:", error);
+            setValue(liveSegment.target || "");
+          },
+        },
+      );
+    }
+  };
+
+  // 수동 저장 함수 (필요한 경우를 위해 유지)
+  const handleSave = () => {
+    if (!isSource) {
+      const isValueChanged = value !== liveSegment.target;
+      if (!isValueChanged) return;
+
+      const needsOriginChange = isOriginInList(
+        liveSegment.origin,
+        STATUS_NEED_CHANGE,
+      );
+      
+      const newOrigin = needsOriginChange ? "HT" : liveSegment.origin;
+      const newStatus = (
+        liveSegment.status === "Reviewed" ||
+        isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)
+      ) ? "Edited" : liveSegment.status;
 
       updateSegment(
         {
