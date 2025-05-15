@@ -471,6 +471,30 @@ export default function Translation() {
                       width: `${((file?.segments?.filter(s => s.status === "Reviewed").length || 0) / (file?.segments?.length || 1)) * 100}%`,
                     }}
                   />
+                  <div
+                    className="h-full bg-blue-300"
+                    style={{
+                      width: `${((file?.segments?.filter(s => s.status === "100%").length || 0) / (file?.segments?.length || 1)) * 100}%`,
+                    }}
+                  />
+                  <div
+                    className="h-full bg-yellow-300"
+                    style={{
+                      width: `${((file?.segments?.filter(s => s.status === "Fuzzy").length || 0) / (file?.segments?.length || 1)) * 100}%`,
+                    }}
+                  />
+                  <div
+                    className="h-full bg-purple-300"
+                    style={{
+                      width: `${((file?.segments?.filter(s => s.status === "Edited").length || 0) / (file?.segments?.length || 1)) * 100}%`,
+                    }}
+                  />
+                  <div
+                    className="h-full bg-gray-300"
+                    style={{
+                      width: `${((file?.segments?.filter(s => s.status === "MT").length || 0) / (file?.segments?.length || 1)) * 100}%`,
+                    }}
+                  />
                 </div>
               </div>
               <div className="text-xs font-medium text-muted-foreground whitespace-nowrap">
