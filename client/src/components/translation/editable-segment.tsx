@@ -243,6 +243,7 @@ export function EditableSegment(props: EditableSegmentProps) {
             target: newValue,
             status: newStatus,
             origin: newOrigin,
+            fileId: liveSegment.fileId, // 필수 fileId 파라미터 추가
           },
           {
             onSuccess: () => {

@@ -2,18 +2,21 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+// 세그먼트 업데이트에 필요한 데이터 타입 정의
+type SegmentUpdateData = {
+  id: number;
+  target: string;
+  status: string;
+  fileId: number;
+  origin?: string;
+};
+
 export function useSegmentMutation() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  return useMutation({
-    mutationFn: async (data: {
-      id: number;
-      target: string;
-      status: string;
-      fileId: number;
-      origin?: string;
-    }) => {
+  return useMutation<any, Error, SegmentUpdateData>({
+    mutationFn: async (data: SegmentUpdateData) => {
       const response = await apiRequest("PATCH", `/api/segments/${data.id}`, {
         target: data.target,
         status: data.status,
@@ -38,7 +41,7 @@ export function useSegmentMutation() {
         queryKey: [`/api/files/${variables.fileId}`],
       });
     },
-    onError: (error) => {
+    onError: (error, variables) => {
       console.error("Failed to update segment:", error);
       toast({
         title: "Update Failed",
