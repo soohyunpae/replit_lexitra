@@ -260,26 +260,34 @@ export function EditableSegment(props: EditableSegmentProps) {
         fileId: liveSegment.fileId,
       };
 
+      // 낙관적 업데이트를 위한 이전 상태 저장
+      const previousValue = liveSegment.target;
+      const previousStatus = liveSegment.status;
+      const previousOrigin = liveSegment.origin;
+
+      // 낙관적 업데이트 먼저 적용
+      if (onUpdate) {
+        onUpdate(newValue, newStatus, newOrigin);
+      }
+
       updateSegment(updateData, {
-        onMutate: async (newSegment) => {
-          // 낙관적 업데이트
-          if (onUpdate) {
-            onUpdate(newValue, newStatus, newOrigin);
-          }
-        },
         onError: (error) => {
           console.error("Failed to update segment:", error);
-          // 에러 발생 시 이전 값으로 복원
-          setValue(liveSegment.target || "");
+          // 에러 발생 시 이전 상태로 정확히 롤백
+          setValue(previousValue || "");
+          if (onUpdate) {
+            onUpdate(previousValue || "", previousStatus, previousOrigin);
+          }
         },
-        onSettled: () => {
-          // 캐시 무효화 및 데이터 리프레시
+        onSuccess: () => {
+          // 성공 시 쿼리 캐시 무효화
           queryClient.invalidateQueries(["segments"]);
-        },
+          queryClient.invalidateQueries([`/api/segments/${liveSegment.fileId}`]);
+        }
       });
     },
-    500, // 딜레이 시간 증가
-    []  // 디펜던시 제거하여 불필요한 리렌더링 방지
+    300,  // 디바운스 시간 최적화
+    [liveSegment.id, liveSegment.fileId]  // 필수 디펜던시만 포함
   );
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
