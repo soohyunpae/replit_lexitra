@@ -385,61 +385,10 @@ export function DocReviewEditor({
 
   return (
     <div className="flex flex-col h-full w-full overflow-auto">
-      {/* Progress bar with controls - Fixed at the top */}
+      {/* Controls - Fixed at the top */}
       <div className="bg-card border-b border-border py-2 px-4 sticky top-0 z-20 shadow-sm">
-        <div className="flex items-center gap-2 mb-1.5">
-          <div className="flex-1">
-            <div className="h-2.5 rounded-full bg-secondary overflow-hidden flex">
-              {/* Reviewed segments (green) */}
-              <div
-                className="h-full bg-green-300"
-                style={{
-                  width: `${totalSegments > 0 ? ((statusCounts["Reviewed"] || 0) / totalSegments) * 100 : 0}%`,
-                }}
-              />
-              {/* 100% segments (blue) */}
-              <div
-                className="h-full bg-blue-300"
-                style={{
-                  width: `${totalSegments > 0 ? ((statusCounts["100%"] || 0) / totalSegments) * 100 : 0}%`,
-                }}
-              />
-              {/* Fuzzy segments (yellow) */}
-              <div
-                className="h-full bg-yellow-300"
-                style={{
-                  width: `${totalSegments > 0 ? ((statusCounts["Fuzzy"] || 0) / totalSegments) * 100 : 0}%`,
-                }}
-              />
-              {/* MT segments (gray) */}
-              <div
-                className="h-full bg-gray-300"
-                style={{
-                  width: `${totalSegments > 0 ? ((statusCounts["MT"] || 0) / totalSegments) * 100 : 0}%`,
-                }}
-              />
-              {/* Edited segments (purple) */}
-              <div
-                className="h-full bg-purple-300"
-                style={{
-                  width: `${totalSegments > 0 ? ((statusCounts["Edited"] || 0) / totalSegments) * 100 : 0}%`,
-                }}
-              />
-              {/* Rejected segments (red) */}
-              <div
-                className="h-full bg-red-300"
-                style={{
-                  width: `${totalSegments > 0 ? ((statusCounts["Rejected"] || 0) / totalSegments) * 100 : 0}%`,
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="text-xs font-medium text-muted-foreground whitespace-nowrap">
-            {statusCounts["Reviewed"] || 0}/{segments.length} Reviewed
-          </div>
-
-          <div className="flex items-center gap-2 ml-1">
+        <div className="flex items-center justify-end">
+          <div className="flex items-center gap-2">
             {/* Side panel toggle button */}
             <Button
               size="sm"
