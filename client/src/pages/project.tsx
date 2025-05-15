@@ -1487,11 +1487,6 @@ export default function Project() {
                     <Upload className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg font-medium mb-2">No files yet</h3>
-                  <p className="text-muted-foreground max-w-md mx-auto mb-6">
-                    Files must be added during project creation. Per the file
-                    management policy, projects without files cannot be created,
-                    and files cannot be added or modified after creation.
-                  </p>
                 </div>
               )}
             </CardContent>
