@@ -1,66 +1,59 @@
+import React from "react";
+import * as ProgressPrimitive from "@radix-ui/react-progress";
+import { cn } from "@/lib/utils";
 
-import React from 'react';
-import { Progress } from './progress';
-
-interface CombinedProgressProps {
+interface CombinedProgressProps
+  extends React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> {
   reviewedPercentage: number;
-  statusCounts: {
-    "Reviewed": number;
-    "100%": number;
-    "Fuzzy": number;
-    "MT": number;
-    "Edited": number;
-    "Rejected": number;
-  };
-  totalSegments: number;
+  translatedPercentage: number;
   height?: string;
   showPercentage?: boolean;
+  statusCounts?: Record<string, number>;
+  totalSegments?: number;
 }
 
 export function CombinedProgress({
   reviewedPercentage,
+  translatedPercentage,
+  className,
+  height = "h-3",
+  showPercentage = false,
   statusCounts,
   totalSegments,
-  height = "h-2",
-  showPercentage = false
+  ...props
 }: CombinedProgressProps) {
-  // Debug logging
-  console.log("CombinedProgress received props:", {
-    reviewedPercentage,
-    statusCounts,
-    totalSegments
-  });
-
-  // Calculate percentages for each status
-  const total = Math.max(totalSegments, 1); // Avoid division by zero
-  const percentages = {
-    reviewed: (statusCounts?.["Reviewed"] || 0) / total * 100,
-    perfect: (statusCounts?.["100%"] || 0) / total * 100,
-    fuzzy: (statusCounts?.["Fuzzy"] || 0) / total * 100,
-    mt: (statusCounts?.["MT"] || 0) / total * 100,
-    edited: (statusCounts?.["Edited"] || 0) / total * 100,
-    rejected: (statusCounts?.["Rejected"] || 0) / total * 100
-  };
+  // Reviewed 수 계산
+  const reviewedCount = statusCounts.Reviewed || 0;
+  const reviewedPercentageNew = Math.round(
+    (reviewedCount / totalSegments) * 100,
+  );
 
   return (
-    <div className="w-full">
-      <div className="relative">
-        <Progress
-          value={100}
-          className={`${height} bg-gray-100`}
-          indicatorClassName="bg-gradient-to-r from-blue-500/20 via-blue-500/40 to-blue-500/60"
-        />
-        <div className="absolute inset-0">
-          <Progress
-            value={percentages.reviewed}
-            className={`${height} bg-transparent`}
-            indicatorClassName="bg-green-500"
+    <div className="w-full space-y-1.5">
+      <ProgressPrimitive.Root
+        className={cn(
+          "relative overflow-hidden rounded-full bg-secondary",
+          height,
+          className,
+        )}
+        {...props}
+      >
+        <div className="h-full w-full flex overflow-hidden">
+          {/* Reviewed segments (green) */}
+          <div
+            className="h-full bg-green-200"
+            style={{ width: `${reviewedPercentageNew}%` }}
           />
+          {/* 나머지는 표시하지 않음 (기본 배경색으로 표시) */}
         </div>
-      </div>
+      </ProgressPrimitive.Root>
+
       {showPercentage && (
-        <div className="text-xs text-muted-foreground mt-1">
-          {Math.round(reviewedPercentage)}% Reviewed
+        <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground my-1">
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-green-200"></div>
+            <span>Reviewed: {reviewedPercentageNew}%</span>
+          </div>
         </div>
       )}
     </div>
