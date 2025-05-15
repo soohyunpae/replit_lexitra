@@ -1454,45 +1454,51 @@ etc. Unlike work files, references can be added
                         <div>
                           {(() => {
                             const stats = projectStats[project.id];
-                            console.log(
-                              "⛳️ Project stats for",
-                              project.id,
-                              stats,
-                            );
-                            console.log(
-                              "⛳️ Status counts:",
-                              stats?.statusCounts,
-                            );
-                            console.log(
-                              "⛳️ Reviewed percentage:",
-                              stats?.reviewedPercentage,
-                            );
-                            console.log(
-                              "⛳️ Total segments:",
-                              stats?.totalSegments,
-                            );
-
+                            
+                            // 상태 카운트 계산
+                            const statusCounts = stats?.statusCounts || {
+                              Reviewed: 0,
+                              "100%": 0,
+                              Fuzzy: 0,
+                              MT: 0,
+                              Edited: 0,
+                              Rejected: 0
+                            };
+                            
+                            // Translation Summary와 동일한 형식으로 표시
                             return (
-                              <CombinedProgress
-                                translatedPercentage={
-                                  stats?.translatedPercentage || 0
-                                }
-                                reviewedPercentage={
-                                  stats?.reviewedPercentage || 0
-                                }
-                                statusCounts={stats?.statusCounts || {}}
-                                totalSegments={stats?.totalSegments || 0}
-                                height="h-2"
-                                showPercentage={true}
-                              />
+                              <>
+                                <div className="flex justify-between items-center mb-1">
+                                  <div className="text-muted-foreground text-xs flex items-center gap-1">
+                                    <TextCursorInput className="h-3 w-3" />
+                                    <span>Word Count:</span>
+                                  </div>
+                                  <div className="text-xs font-medium">
+                                    {project.wordCount || stats?.wordCount || 0} words
+                                  </div>
+                                </div>
+                                
+                                <div className="flex justify-between items-center mb-1">
+                                  <div className="text-muted-foreground text-xs">Reviewed:</div>
+                                  <div className="text-xs font-medium">
+                                    {statusCounts.Reviewed || 0} / {stats?.totalSegments || 0} segments
+                                    <span className="ml-1 text-primary">
+                                      ({Math.round(stats?.reviewedPercentage || 0)}%)
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                <CombinedProgress
+                                  translatedPercentage={stats?.translatedPercentage || 0}
+                                  reviewedPercentage={stats?.reviewedPercentage || 0}
+                                  statusCounts={statusCounts}
+                                  totalSegments={stats?.totalSegments || 0}
+                                  height="h-2"
+                                  showPercentage={false}
+                                />
+                              </>
                             );
                           })()}
-
-                          {/* 단어 수 표시 */}
-                          <div className="flex items-center mt-2 text-sm text-gray-600">
-                            <TextCursorInput className="h-3.5 w-3.5 mr-1.5" />
-                            <span>{project.wordCount || stats?.wordCount || 0} words</span>
-                          </div>
                         </div>
                         <div className="text-xs text-muted-foreground mt-2 flex justify-between">
                           <span className="inline-flex items-center gap-1">
