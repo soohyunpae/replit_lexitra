@@ -40,8 +40,17 @@ export const useSegments = (fileId: number) => {
       });
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["segments", fileId] });
+    onSuccess: (response) => {
+      console.log('Segment update in useSegments:', response);
+      
+      // Extract fileId from response if available
+      const updatedFileId = response?.fileId || fileId;
+      
+      // Invalidate queries with the correct fileId
+      queryClient.invalidateQueries({ queryKey: ["segments", updatedFileId] });
+      
+      // Also invalidate the general segments query
+      queryClient.invalidateQueries({ queryKey: ["segments"] });
     }
   });
 

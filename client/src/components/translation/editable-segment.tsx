@@ -274,13 +274,17 @@ export function EditableSegment(props: EditableSegmentProps) {
 
       // 업데이트 실행
       updateSegment(updateData, {
-        onSuccess: (data) => {
+        onSuccess: (response) => {
           try {
-            if (onUpdate && data) {
+            if (onUpdate) {
+              console.log('Segment update success:', response);
+              // Handle both old format (direct segment) and new format (with segment property)
+              const segmentData = response.segment || response;
+              
               // 안전하게 호출
-              const updatedTarget = data.target || snapshot.target;
-              const updatedStatus = data.status || snapshot.status;
-              const updatedOrigin = data.origin || snapshot.origin;
+              const updatedTarget = segmentData.target || snapshot.target;
+              const updatedStatus = segmentData.status || snapshot.status;
+              const updatedOrigin = segmentData.origin || snapshot.origin;
               onUpdate(updatedTarget, updatedStatus, updatedOrigin);
             }
           } catch (e) {

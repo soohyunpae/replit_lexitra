@@ -30,19 +30,24 @@ export function useSegmentMutation() {
       
       return response.json();
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (response, variables) => {
+      console.log('Segment update response:', response);
+      
+      // Get fileId either from response or from variables
+      const fileId = response?.fileId || variables.fileId;
+      
       // 모든 관련 쿼리 무효화
       queryClient.invalidateQueries({
         queryKey: ["segments"]
       });
       queryClient.invalidateQueries({
-        queryKey: [`/api/segments/${variables.fileId}`]
+        queryKey: [`/api/segments/${fileId}`]
       });
       queryClient.invalidateQueries({
         queryKey: ["files"]
       });
       queryClient.invalidateQueries({
-        queryKey: [`/api/files/${variables.fileId}`]
+        queryKey: [`/api/files/${fileId}`]
       });
     },
     onError: (error) => {
