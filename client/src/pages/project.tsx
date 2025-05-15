@@ -1269,44 +1269,29 @@ export default function Project() {
                   </>
                 )}
 
-                {/* Add references button (admin only) */}
-                {isAdmin && (
-                  <div className="flex items-center justify-end">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-1"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add Reference Files
-                    </Button>
+                {/* Hidden file input */}
+                <input
+                  type="file"
+                  multiple
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                      const newFiles = Array.from(e.target.files);
+                      setReferences([...references, ...newFiles]);
 
-                    {/* Hidden file input */}
-                    <input
-                      type="file"
-                      multiple
-                      ref={fileInputRef}
-                      className="hidden"
-                      onChange={(e) => {
-                        if (e.target.files && e.target.files.length > 0) {
-                          const newFiles = Array.from(e.target.files);
-                          setReferences([...references, ...newFiles]);
+                      // Reset input field after selection
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
 
-                          // Reset input field after selection
-                          if (fileInputRef.current) {
-                            fileInputRef.current.value = "";
-                          }
-
-                          // If there are files, upload them
-                          if (newFiles.length > 0) {
-                            uploadReferences.mutate(newFiles);
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-                )}
+                      // If there are files, upload them
+                      if (newFiles.length > 0) {
+                        uploadReferences.mutate(newFiles);
+                      }
+                    }
+                  }}
+                />
               </CardContent>
             </Card>
           </div>
