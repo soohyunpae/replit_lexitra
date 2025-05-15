@@ -20,6 +20,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import { FileX, AlertTriangle, LayoutTemplate, Blocks } from "lucide-react";
 import { SegmentProvider } from "@/hooks/useSegmentContext";
 
@@ -442,10 +443,10 @@ export default function Translation() {
           <div className="flex items-center justify-between gap-4">
             <Tabs
               value={editorMode}
+              className="flex-shrink-0"
               onValueChange={(value) =>
                 handleModeChange(value as "segment" | "doc")
               }
-              className="w-[400px]"
             >
               <TabsList className="grid w-[400px] grid-cols-2">
                 <TabsTrigger
@@ -461,6 +462,21 @@ export default function Translation() {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
+            <div className="flex items-center gap-3">
+              <div className="w-[200px]">
+                <div className="h-2 rounded-full bg-secondary overflow-hidden flex">
+                  <div
+                    className="h-full bg-green-300"
+                    style={{
+                      width: `${((file?.segments?.filter(s => s.status === "Reviewed").length || 0) / (file?.segments?.length || 1)) * 100}%`,
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                {file?.segments?.filter(s => s.status === "Reviewed").length || 0}/{file?.segments?.length || 0} Reviewed
+              </div>
+            </div>
           </div>
         </div>
 

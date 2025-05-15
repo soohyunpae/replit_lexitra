@@ -692,59 +692,9 @@ export function NewTranslationEditor({
 
   return (
     <main className="flex-1 flex flex-col">
-      {/* Progress bar with integrated controls - Fixed at the top */}
+      {/* Filter controls */}
       <div className="bg-card border-b border-border py-2 px-4 sticky top-0 z-20 shadow-sm">
         <div className="flex items-center gap-2 mb-1.5">
-          <div className="flex-1">
-            <div className="h-2.5 rounded-full bg-secondary overflow-hidden flex">
-              {/* Reviewed segments (green) */}
-              <div
-                className="h-full bg-green-300"
-                style={{
-                  width: `${((statusCounts["Reviewed"] || 0) / (segments?.length || 1)) * 100}%`,
-                }}
-              />
-              {/* 100% segments (blue) */}
-              <div
-                className="h-full bg-blue-300"
-                style={{
-                  width: `${((statusCounts["100%"] || 0) / (segments?.length || 1)) * 100}%`,
-                }}
-              />
-              {/* Fuzzy segments (yellow) */}
-              <div
-                className="h-full bg-yellow-300"
-                style={{
-                  width: `${((statusCounts["Fuzzy"] || 0) / (segments?.length || 1)) * 100}%`,
-                }}
-              />
-              {/* MT segments (gray) */}
-              <div
-                className="h-full bg-gray-300"
-                style={{
-                  width: `${((statusCounts["MT"] || 0) / (segments?.length || 1)) * 100}%`,
-                }}
-              />
-              {/* Edited segments (purple) */}
-              <div
-                className="h-full bg-purple-300"
-                style={{
-                  width: `${((statusCounts["Edited"] || 0) / (segments?.length || 1)) * 100}%`,
-                }}
-              />
-              {/* Rejected segments (red) */}
-              <div
-                className="h-full bg-red-300"
-                style={{
-                  width: `${((statusCounts["Rejected"] || 0) / (segments?.length || 1)) * 100}%`,
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="text-xs font-medium text-muted-foreground whitespace-nowrap">
-            {statusCounts["Reviewed"] || 0}/{segments?.length || 0} Reviewed
-          </div>
 
           <div className="flex items-center gap-4 ml-1">
             <div className="flex items-center gap-3">
