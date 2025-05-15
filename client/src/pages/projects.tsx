@@ -227,7 +227,7 @@ export default function ProjectsPage() {
               Fuzzy: 0,
               MT: 0,
               Edited: 0,
-              Rejected: 0,
+              Rejected: 0
             },
           };
           try {
@@ -1041,7 +1041,7 @@ export default function ProjectsPage() {
                         </FormLabel>
                         <FormDescription>
                           Upload reference files like glossaries, style guides,
-                          etc. Unlike work files, references can be added
+etc. Unlike work files, references can be added
                           anytime.
                         </FormDescription>
 
@@ -1372,10 +1372,10 @@ export default function ProjectsPage() {
           viewMode === "card" && (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredAndSortedProjects.map((project) => {
-                // Live project stats for display (word count)
-                const { data: stats } = useProjectStats(project.id);
                 // 사용자에게 보여질 상태 가져오기
                 const displayStatus = getDisplayStatus(project);
+                // 이미 캐시된 프로젝트 통계 사용
+                const stats = projectStats[project.id];
 
                 // Status badge color and text
                 let statusBadgeVariant:
@@ -1474,6 +1474,9 @@ export default function ProjectsPage() {
 
                             return (
                               <CombinedProgress
+                                translatedPercentage={
+                                  stats?.translatedPercentage || 0
+                                }
                                 reviewedPercentage={
                                   stats?.reviewedPercentage || 0
                                 }
@@ -1635,139 +1638,78 @@ export default function ProjectsPage() {
                       user &&
                       project.status === "Claimed" &&
                       project.claimedBy === user.id;
-
+                    
                     return (
-                      <TableRow
-                        key={project.id}
-                        className="group hover:bg-muted/40 cursor-pointer"
-                        onClick={(e) => {
-                          // 체크박스를 클릭했을 때는 페이지 이동 방지
-                          if (
-                            e.target instanceof HTMLInputElement &&
-                            e.target.type === "checkbox"
-                          ) {
-                            e.stopPropagation();
-                            return;
-                          }
-                          navigate(`/projects/${project.id}`);
-                        }}
-                      >
+                      <TableRow key={project.id}>
                         {isAdmin && (
-                          <TableCell
-                            className="w-[50px]"
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                          <TableCell>
                             <Checkbox
                               checked={selectedProjects.includes(project.id)}
                               onCheckedChange={(checked) => {
                                 if (checked) {
-                                  setSelectedProjects((prev) => [
-                                    ...prev,
-                                    project.id,
-                                  ]);
+                                  setSelectedProjects([...selectedProjects, project.id]);
                                 } else {
-                                  setSelectedProjects((prev) =>
-                                    prev.filter((id) => id !== project.id),
+                                  setSelectedProjects(
+                                    selectedProjects.filter((id) => id !== project.id)
                                   );
                                 }
                               }}
                             />
                           </TableCell>
                         )}
-                        <TableCell className="font-medium">
-                          {project.id}
-                        </TableCell>
-                        <TableCell className="font-medium text-primary hover:underline">
-                          {project.name}
-                        </TableCell>
+                        <TableCell>{project.id}</TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-1 bg-accent/50 px-2 py-0.5 rounded-full text-xs w-fit">
-                            <span className="font-medium">
-                              {project.sourceLanguage}
-                            </span>
-                            <ArrowRight className="h-3 w-3" />
-                            <span className="font-medium">
-                              {project.targetLanguage}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1.5">
-                            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                            <span className="text-sm font-medium">
-                              {project.files?.length || 0}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1.5">
-                            <TextCursorInput className="h-3.5 w-3.5 text-muted-foreground" />
-                            <span className="text-sm font-medium">
-                              {liveStats?.wordCount || 0}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={`rounded-full px-2 py-1 text-xs font-medium ${statusColor}`}
+                          <Link
+                            to={`/projects/${project.id}`}
+                            className="hover:text-primary transition-colors font-medium truncate max-w-[180px] block"
                           >
-                            {getDisplayStatus(project)}
-                          </span>
+                            {project.name}
+                          </Link>
                         </TableCell>
                         <TableCell>
-                          <div className="flex flex-col gap-1.5">
-                            {(() => {
-                              const stats = projectStats[project.id];
-                              console.log(
-                                "⛳️ Project stats for",
-                                project.id,
-                                stats,
-                              );
-                              console.log(
-                                "⛳️ Status counts:",
-                                stats?.statusCounts,
-                              );
-                              console.log(
-                                "⛳️ Reviewed percentage:",
-                                stats?.reviewedPercentage,
-                              );
-                              console.log(
-                                "⛳️ Total segments:",
-                                stats?.totalSegments,
-                              );
-
-                              return (
-                                <CombinedProgress
-                                  reviewedPercentage={
-                                    stats?.reviewedPercentage || 0
-                                  }
-                                  statusCounts={stats?.statusCounts || {}}
-                                  totalSegments={stats?.totalSegments || 0}
-                                  height="h-2.5"
-                                  showPercentage={true}
-                                />
-                              );
-                            })()}
+                          <div className="flex items-center gap-1 bg-accent/50 px-2 py-0.5 rounded-full text-xs">
+                            <span className="font-medium">{project.sourceLanguage}</span>
+                            <ArrowRight className="h-3 w-3" />
+                            <span className="font-medium">{project.targetLanguage}</span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm">
-                            {new Date(project.createdAt).toLocaleString()}
-                          </span>
+                          {project.files?.length || 0}{" "}
+                          <span className="text-muted-foreground">files</span>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm">
-                            {project.updatedAt
-                              ? new Date(project.updatedAt).toLocaleString()
-                              : "-"}
-                          </span>
+                          {liveStats.wordCount || 0}{" "}
+                          <span className="text-muted-foreground">words</span>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm">
-                            {project.deadline
-                              ? new Date(project.deadline).toLocaleString()
-                              : "Not set"}
-                          </span>
+                          <div
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}`}
+                          >
+                            {displayStatus}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <CombinedProgress
+                            translatedPercentage={stats?.translatedPercentage || 0}
+                            reviewedPercentage={stats?.reviewedPercentage || 0}
+                            statusCounts={stats?.statusCounts || {}}
+                            totalSegments={stats?.totalSegments || 0}
+                            height="h-2.5"
+                            showPercentage={true}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {new Date(project.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          {project.updatedAt
+                            ? new Date(project.updatedAt).toLocaleDateString()
+                            : "-"}
+                        </TableCell>
+                        <TableCell>
+                          {project.deadline
+                            ? new Date(project.deadline).toLocaleDateString()
+                            : "-"}
                         </TableCell>
                       </TableRow>
                     );
