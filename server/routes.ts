@@ -26,7 +26,8 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import mammoth from 'mammoth';
-import * as pdfjsLib from 'pdfjs-dist';
+// PDF 처리
+import { PDFDocumentFactory } from 'pdfjs-dist/legacy/build/pdf.js';
 
 // 파일 경로를 위한 변수 설정
 const REPO_ROOT = process.cwd();
@@ -326,8 +327,23 @@ function registerAdminRoutes(app: Express) {
 
                 case '.pdf':
                   const pdfBuffer = fs.readFileSync(file.path);
-                  const pdfData = await pdfParse(pdfBuffer);
-                  text = pdfData.text;
+                  
+                  // PDF.js를 사용하여 처리
+                  const loadingTask = pdfjsLib.getDocument({ data: pdfBuffer });
+                  const pdf = await loadingTask.promise;
+                  let pdfText = '';
+                  
+                  // 모든 페이지의 텍스트 추출
+                  for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const content = await page.getTextContent();
+                    const pageText = content.items
+                      .map((item: any) => 'str' in item ? item.str : '')
+                      .join(' ');
+                    pdfText += pageText + '\n';
+                  }
+                  
+                  text = pdfText;
                   break;
 
                 default:
@@ -1089,8 +1105,23 @@ function registerAdminRoutes(app: Express) {
 
                   case '.pdf':
                     const pdfBuffer = fs.readFileSync(file.path);
-                    const pdfData = await pdfParse(pdfBuffer);
-                    text = pdfData.text;
+                    
+                    // PDF.js를 사용하여 처리
+                    const loadingTask = pdfjsLib.getDocument({ data: pdfBuffer });
+                    const pdf = await loadingTask.promise;
+                    let pdfText = '';
+                    
+                    // 모든 페이지의 텍스트 추출
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                      const page = await pdf.getPage(i);
+                      const content = await page.getTextContent();
+                      const pageText = content.items
+                        .map((item: any) => 'str' in item ? item.str : '')
+                        .join(' ');
+                      pdfText += pageText + '\n';
+                    }
+                    
+                    text = pdfText;
                     break;
 
                   default:
@@ -1978,8 +2009,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           case '.pdf':
             const pdfBuffer = fs.readFileSync(file.path);
-            const pdfData = await pdfParse(pdfBuffer);
-            text = pdfData.text;
+            
+            // PDF.js를 사용하여 처리
+            const loadingTask = pdfjsLib.getDocument({ data: pdfBuffer });
+            const pdf = await loadingTask.promise;
+            let pdfText = '';
+            
+            // 모든 페이지의 텍스트 추출
+            for (let i = 1; i <= pdf.numPages; i++) {
+              const page = await pdf.getPage(i);
+              const content = await page.getTextContent();
+              const pageText = content.items
+                .map((item: any) => 'str' in item ? item.str : '')
+                .join(' ');
+              pdfText += pageText + '\n';
+            }
+            
+            text = pdfText;
             break;
 
           default:

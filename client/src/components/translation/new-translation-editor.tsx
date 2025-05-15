@@ -1010,7 +1010,6 @@ export function NewTranslationEditor({
 
             {/* Filtered segments count */}
             {statusFilter !== "all" && (
-              ```python
               <div className="px-4 py-2 text-sm text-muted-foreground text-center border-t border-border bg-muted/20">
                 Showing {filteredSegments.length} of {segments?.length || 0}{" "}
                 segments with status "{statusFilter}"
@@ -1037,9 +1036,7 @@ export function NewTranslationEditor({
             onSegmentUpdated={(id: number, newTarget: string) => {
               // This callback is triggered when a segment is updated
               // We're using a different approach with previousVersions state instead
-              console.log(
-                `Segment ${id} updated with new target: ${newTarget}`,
-              );
+              console.log("Segment updated with new target", id, newTarget);
             }}
           />
           </div>
