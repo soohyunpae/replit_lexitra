@@ -1,4 +1,5 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useState, useEffect } from 'react';
+import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { Textarea } from "@/components/ui/textarea";
 import { useSegmentMutation } from "@/hooks/mutations/useSegmentMutation";
 import { Button } from "@/components/ui/button";
@@ -238,13 +239,13 @@ export function EditableSegment(props: EditableSegmentProps) {
   const debouncedUpdateSegment = useDebouncedCallback(
     (newValue: string) => {
       const isValueChanged = newValue !== liveSegment.target;
-      
+
       if (isValueChanged) {
         const needsOriginChange = isOriginInList(
           liveSegment.origin,
           STATUS_NEED_CHANGE,
         );
-        
+
         const newOrigin = needsOriginChange ? "HT" : liveSegment.origin;
         const newStatus = (
           liveSegment.status === "Reviewed" ||
@@ -294,7 +295,7 @@ export function EditableSegment(props: EditableSegmentProps) {
         liveSegment.origin,
         STATUS_NEED_CHANGE,
       );
-      
+
       const newOrigin = needsOriginChange ? "HT" : liveSegment.origin;
       const newStatus = (
         liveSegment.status === "Reviewed" ||
