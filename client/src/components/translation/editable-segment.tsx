@@ -219,48 +219,46 @@ export function EditableSegment(props: EditableSegmentProps) {
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
-    setValue(newValue);
+    setValue(newValue); // 로컬 상태만 업데이트
+  };
 
+  // 저장 버튼이나 닫기 버튼 클릭 시에만 mutation 실행
+  const handleSave = () => {
     if (!isSource) {
-      const isValueChanged = newValue !== liveSegment.target;
+      const isValueChanged = value !== liveSegment.target;
       if (!isValueChanged) return;
 
-      try {
-        const needsOriginChange = isOriginInList(
-          liveSegment.origin,
-          STATUS_NEED_CHANGE,
-        );
-        const newOrigin = needsOriginChange ? "HT" : liveSegment.origin || "HT";
-        const newStatus =
-          liveSegment.status === "Reviewed" ||
-          isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)
-            ? "Edited"
-            : liveSegment.status || "Edited";
+      const needsOriginChange = isOriginInList(
+        liveSegment.origin,
+        STATUS_NEED_CHANGE,
+      );
+      const newOrigin = needsOriginChange ? "HT" : liveSegment.origin || "HT";
+      const newStatus =
+        liveSegment.status === "Reviewed" ||
+        isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)
+          ? "Edited"
+          : liveSegment.status || "Edited";
 
-        updateSegment(
-          {
-            id: liveSegment.id,
-            target: newValue,
-            status: newStatus,
-            origin: newOrigin,
-            fileId: liveSegment.fileId, // 필수 fileId 파라미터 추가
+      updateSegment(
+        {
+          id: liveSegment.id,
+          target: value,
+          status: newStatus,
+          origin: newOrigin,
+          fileId: liveSegment.fileId,
+        },
+        {
+          onSuccess: () => {
+            if (onUpdate) {
+              onUpdate(value, newStatus, newOrigin);
+            }
           },
-          {
-            onSuccess: () => {
-              if (onUpdate) {
-                onUpdate(newValue, newStatus, newOrigin);
-              }
-            },
-            onError: (error) => {
-              console.error("Failed to update segment:", error);
-              setValue(liveSegment.target || "");
-            },
+          onError: (error) => {
+            console.error("Failed to update segment:", error);
+            setValue(liveSegment.target || "");
           },
-        );
-      } catch (error) {
-        console.error("Error in handleTextareaChange:", error);
-        setValue(liveSegment.target || "");
-      }
+        },
+      );
     }
   };
 
