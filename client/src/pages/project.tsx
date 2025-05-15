@@ -303,6 +303,18 @@ export default function Project() {
     enabled: !!project?.files && project.files.length > 0,
   });
 
+  // Get status count for a specific file and status
+  const getStatusCount = (fileId: number, status: string): number => {
+    if (!fileSegmentStatusCounts[fileId]) return 0;
+    return fileSegmentStatusCounts[fileId][status as keyof typeof fileSegmentStatusCounts[number]] || 0;
+  };
+
+  // Get total segments for a file
+  const getTotalSegments = (fileId: number): number => {
+    if (!fileSegmentStatusCounts[fileId]) return 0;
+    return fileSegmentStatusCounts[fileId].total || 0;
+  };
+
   // Calculate statistics for the entire project
   const projectStats = useMemo(() => {
     if (!allSegmentsData) return null;
