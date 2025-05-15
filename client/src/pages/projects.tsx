@@ -1477,9 +1477,8 @@ etc. Unlike work files, references can be added
                             return (
                               <>
                                 <div className="flex justify-between items-center mb-1">
-                                  <div className="text-muted-foreground text-xs flex items-center gap-1">
-                                    <TextCursorInput className="h-3 w-3" />
-                                    <span>Word Count:</span>
+                                  <div className="text-muted-foreground text-xs">
+                                    Word Count:
                                   </div>
                                   <div className="text-xs font-medium">
                                     {stats.wordCount || project.wordCount || 0} words
