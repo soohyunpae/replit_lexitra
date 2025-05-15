@@ -233,10 +233,14 @@ export function EditableSegment(props: EditableSegmentProps) {
   };
 
   // 텍스트 변경 핸들러
-  const { mutate: updateSegment, queryClient } = useSegmentMutation();
+  const { mutate: updateSegment } = useSegmentMutation();
 
   const debouncedUpdateSegment = useDebouncedCallback((updateData: any) => {
-    const segmentSnapshot = { ...liveSegment }; // 현재 상태의 스냅샷 생성
+    if (!liveSegment) return;
+    
+    const currentTarget = liveSegment.target || "";
+    const currentStatus = liveSegment.status || "Edited";
+    const currentOrigin = liveSegment.origin || "HT";
     
     updateSegment(updateData, {
       onSuccess: (data) => {
@@ -246,14 +250,9 @@ export function EditableSegment(props: EditableSegmentProps) {
       },
       onError: (error) => {
         console.error("Failed to update segment:", error);
-        // 에러 발생 시 스냅샷으로 복원
-        setValue(segmentSnapshot.target || "");
+        setValue(currentTarget);
         if (onUpdate) {
-          onUpdate(
-            segmentSnapshot.target || "",
-            segmentSnapshot.status,
-            segmentSnapshot.origin,
-          );
+          onUpdate(currentTarget, currentStatus, currentOrigin);
         }
       }
     });
