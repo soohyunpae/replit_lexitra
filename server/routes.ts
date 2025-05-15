@@ -29,7 +29,7 @@ import fs from "fs";
 import * as os from "os";
 import mammoth from "mammoth";
 import { WebSocketServer, WebSocket } from "ws";
-import { spawn } from "child_process";
+import { spawn } from "child_process"; 
 import { promisify } from "util";
 
 // Request에 커스텀 필드 추가를 위한 타입 확장
@@ -74,8 +74,6 @@ ensureDirectories();
 
 // 파일 처리 함수
 // pdftotext를 사용하여 PDF에서 텍스트 추출
-import { promisify } from "util";
-import { spawn } from "child_process";
 
 // PDF에서 텍스트 추출 함수 - pdftotext 사용
 const extractTextFromPdf = async (pdfPath: string): Promise<string> => {
@@ -185,15 +183,38 @@ async function processFile(file: Express.Multer.File) {
           // 진행 상황 업데이트
           notifyProgress(0, file.originalname, "processing", 30, "PDF 내용 추출중");
           
-          // extractTextFromPdf 함수를 사용하여 텍스트 추출
-          const extractedText = await extractTextFromPdf(file.path);
+          console.log(`PDF 추출 시작: ${file.path}`);
+          console.log(`PDF 파일 크기: ${fs.statSync(file.path).size} 바이트`);
+          
+          // PDF 텍스트 추출 방식 선택
+          let extractedText = "";
+          try {
+            // pdftotext 명령어를 사용하여 텍스트 추출 시도
+            extractedText = await extractTextFromPdf(file.path);
+          } catch (pdfErr) {
+            console.error("pdftotext 처리 실패, pdf-parse 라이브러리로 시도합니다:", pdfErr);
+            
+            // pdf-parse 라이브러리를 대안으로 사용
+            try {
+              const pdfParse = require("pdf-parse");
+              const pdfBuffer = fs.readFileSync(file.path);
+              const pdfData = await pdfParse(pdfBuffer, { max: 0 });
+              extractedText = pdfData.text || "";
+              console.log("pdf-parse 추출 성공!");
+            } catch (error) {
+              const parseErr = error as Error;
+              console.error("pdf-parse 추출 실패:", parseErr);
+              throw new Error("모든 PDF 텍스트 추출 방법이 실패했습니다: " + parseErr.message);
+            }
+          }
           
           // 텍스트가 비어있는지 확인
           if (!extractedText || extractedText.trim() === "") {
             console.error("PDF에서 텍스트를 추출했지만 결과가 비어있습니다.");
             text = `PDF 파일 내용을 추출할 수 없습니다. 파일명: ${file.originalname.normalize("NFC")}`;
           } else {
-            console.log("PDF 텍스트 추출 성공! 내용:", extractedText.substring(0, 100) + "...");
+            console.log("PDF 텍스트 추출 성공! 길이:", extractedText.length);
+            console.log("텍스트 샘플:", extractedText.substring(0, 100) + "...");
             
             // 출력 디렉토리
             const outputDir = path.join(REPO_ROOT, "uploads", "processed");
@@ -210,6 +231,8 @@ async function processFile(file: Express.Multer.File) {
             const paragraphs = extractedText
               .split(/\n\s*\n/)
               .filter((p: string) => p.trim().length > 0);
+            
+            console.log(`문단 수: ${paragraphs.length}`);
             
             // 각 문단을 문장 단위로 분리
             let sentences: string[] = [];
@@ -237,7 +260,7 @@ async function processFile(file: Express.Multer.File) {
           notifyProgress(0, file.originalname, "processing", 70, "PDF 처리 완료");
         } catch (err) {
           console.error("PDF 처리 중 오류:", err);
-          text = `[PDF 처리 오류] ${file.originalname} 파일을 처리하는 도중 문제가 발생했습니다.`;
+          text = `[PDF 처리 오류] ${file.originalname} 파일을 처리하는 도중 문제가 발생했습니다. 오류: ${err.message}`;
         }
         break;
 
