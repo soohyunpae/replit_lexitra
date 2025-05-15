@@ -1022,11 +1022,19 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
                                 multiple
                                 className="hidden"
                                 onChange={(e) => {
-                                  const files = Array.from(e.target.files);                                  if (files && files.length > 0) {
-                                    const currentFiles = field.value ? (Array.isArray(field.value) ? field.value : Array.from(field.value)) : [];
+                                  // 널 체크 후 파일 배열로 변환
+                                  if (e.target.files && e.target.files.length > 0) {
+                                    const files = Array.from(e.target.files);
+                                    // 현재 값이 있는지 확인하고 적절히 배열로 변환
+                                    const currentFiles = field.value 
+                                      ? (Array.isArray(field.value) 
+                                        ? field.value 
+                                        : (field.value instanceof FileList ? Array.from(field.value) : []))
+                                      : [];
+                                    // 배열 합치기
                                     field.onChange([
                                       ...currentFiles,
-                                      ...Array.from(files),
+                                      ...files,
                                     ]);
                                   }
                                 }}

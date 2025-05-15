@@ -60,6 +60,11 @@ function ensureDirectories() {
 ensureDirectories();
 
 // 파일 처리 함수
+// PDF 처리를 위한 pdf-parse 모듈 추가
+import pdfParse from 'pdf-parse';
+// 타입 문제 해결을 위한 선언
+declare module 'pdf-parse';
+
 async function processFile(file: Express.Multer.File) {
   const ext = path.extname(file.originalname).toLowerCase();
   let text = '';
@@ -84,6 +89,7 @@ async function processFile(file: Express.Multer.File) {
       case '.docx':
         console.log('DOCX 파일 처리 시작:', file.originalname);
         try {
+          // mammoth 라이브러리를 사용하여 DOCX 파일에서 텍스트 추출
           const docxResult = await mammoth.extractRawText({path: file.path});
           text = docxResult.value || '';
           
@@ -104,16 +110,20 @@ async function processFile(file: Express.Multer.File) {
         console.log('PDF 파일 처리 시작:', file.originalname);
         
         try {
-          // PDF는 바이너리 파일이므로 binary로 읽음
-          const pdfContents = fs.readFileSync(file.path);
-          // 간단한 더미 텍스트 생성 (실제로는 더 정교한
-          // PDF 파싱 라이브러리가 필요)
-          text = `PDF 파일 "${file.originalname}" 내용입니다.\n\n`;
-          text += "파일이 성공적으로 처리되었습니다.\n";
-          text += "이것은 PDF 파일 내용의 샘플 텍스트입니다.\n";
-          text += "실제 PDF 내용을 분석하기 위해서는 PDF 파싱 라이브러리가 필요합니다.";
+          // PDF는 버퍼로 읽어서 pdf-parse로 처리
+          const pdfBuffer = fs.readFileSync(file.path);
+          notifyProgress(0, file.originalname, 'processing', 30, 'PDF 내용 추출중');
           
-          console.log('PDF 처리 완료 - 텍스트 변환 성공');
+          // pdf-parse를 사용하여 PDF에서 텍스트 추출
+          const pdfData = await pdfParse(pdfBuffer);
+          text = pdfData.text || '';
+          
+          if (!text || text.trim() === '') {
+            console.error('PDF에서 텍스트를 추출했지만 결과가 비어있습니다.');
+            text = `[PDF 파일: ${file.originalname}] - 파일에서 텍스트를 추출할 수 없습니다.`;
+          } else {
+            console.log('PDF 텍스트 추출 성공:', text.substring(0, 100) + '...');
+          }
         } catch (pdfError) {
           console.error('PDF 처리 오류:', pdfError);
           // 오류가 발생해도 프로젝트 생성은 계속 진행
@@ -1229,13 +1239,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
 
         if (uploadedFiles && uploadedFiles.files) {
+          console.log("프로젝트 파일 처리 시작");
           // 작업 파일 처리
           for (const file of uploadedFiles.files) {
             try {
-              const fileContent = fs.readFileSync(file.path, "utf8");
+              // processFile 함수를 사용하여 파일 형식에 맞게 텍스트 추출
+              const fileContent = await processFile(file);
+              
+              // 추출된 텍스트만 저장 (바이너리 데이터 X)
               files.push({
                 name: file.originalname,
-                content: fileContent,
+                content: fileContent, // 추출된 텍스트
                 projectId: project.id,
                 type: "work",
                 createdAt: new Date(),
@@ -1243,7 +1257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               });
             } catch (fileErr) {
               console.error(
-                `Error reading file ${file.originalname}:`,
+                `Error processing file ${file.originalname}:`,
                 fileErr,
               );
             }
@@ -1251,13 +1265,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         if (uploadedFiles && uploadedFiles.references) {
+          console.log("참조 파일 처리 시작");
           // 참조 파일 처리
           for (const file of uploadedFiles.references) {
             try {
-              const fileContent = fs.readFileSync(file.path, "utf8");
+              // processFile 함수를 사용하여 파일 형식에 맞게 텍스트 추출
+              const fileContent = await processFile(file);
+              
+              // 추출된 텍스트만 저장
               files.push({
                 name: file.originalname,
-                content: fileContent,
+                content: fileContent, // 추출된 텍스트
                 projectId: project.id,
                 type: "reference",
                 createdAt: new Date(),
@@ -1265,7 +1283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               });
             } catch (fileErr) {
               console.error(
-                `Error reading file ${file.originalname}:`,
+                `Error processing file ${file.originalname}:`,
                 fileErr,
               );
             }
