@@ -232,27 +232,31 @@ export function EditableSegment(props: EditableSegmentProps) {
           ? "Edited" 
           : liveSegment.status || "Edited";
 
-        updateSegment(
-        {
-          id: liveSegment.id,
-          target: newValue,
-          status: newStatus,
-          fileId: liveSegment.fileId,
-          origin: newOrigin,
-          fileId: liveSegment.fileId
-        },
-        {
-          onSuccess: () => {
-            if (onUpdate) {
-              onUpdate(newValue, newStatus, newOrigin);
+        // Debounce the update to prevent rapid re-renders
+        const timeoutId = setTimeout(() => {
+          updateSegment(
+            {
+              id: liveSegment.id,
+              target: newValue,
+              status: newStatus,
+              fileId: liveSegment.fileId,
+              origin: newOrigin
+            },
+            {
+              onSuccess: () => {
+                if (onUpdate) {
+                  onUpdate(newValue, newStatus, newOrigin);
+                }
+              },
+              onError: (error) => {
+                console.error("Failed to update segment:", error);
+                setValue(liveSegment.target || "");
+              }
             }
-          },
-          onError: (error) => {
-            console.error("Failed to update segment:", error);
-            setValue(liveSegment.target || "");
-          }
-        }
-      );
+          );
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
       } catch (error) {
         console.error("Error in handleTextareaChange:", error);
         setValue(liveSegment.target || "");
