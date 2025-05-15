@@ -1453,12 +1453,12 @@ etc. Unlike work files, references can be added
                       <CardContent className="pb-2">
                         <div>
                           {(() => {
-                            // 현재 프로젝트의 통계 데이터
+                            // 현재 프로젝트의 통계 데이터 (안전하게 기본값 처리)
                             const stats = projectStats[project.id] || {
                               translatedPercentage: 0,
                               reviewedPercentage: 0,
                               totalSegments: 0,
-                              wordCount: 0,
+                              wordCount: project.wordCount || 0,
                               statusCounts: {
                                 Reviewed: 0,
                                 "100%": 0,
@@ -1468,6 +1468,11 @@ etc. Unlike work files, references can be added
                                 Rejected: 0
                               }
                             };
+                            
+                            // reviewedPercentage 계산
+                            const reviewedCount = stats.statusCounts?.Reviewed || 0;
+                            const totalSegs = stats.totalSegments || 1; // 0으로 나누기 방지
+                            const reviewedPercentage = Math.round((reviewedCount / totalSegs) * 100);
                             
                             return (
                               <>
