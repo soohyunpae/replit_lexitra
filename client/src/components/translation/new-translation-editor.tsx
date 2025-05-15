@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import {
   Save,
   Download,
@@ -38,7 +39,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 
 interface TranslationEditorProps {
   fileName: string;
@@ -694,8 +694,156 @@ export function NewTranslationEditor({
     <main className="flex-1 flex flex-col">
       {/* Progress bar with integrated controls - Fixed at the top */}
       <div className="bg-card border-b border-border py-2 px-4 sticky top-0 z-20 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="relative flex-grow">
+        <div className="flex items-center gap-2 mb-1.5">
+          <div className="flex-1">
+            <div className="h-2.5 rounded-full bg-secondary overflow-hidden flex">
+              {/* Reviewed segments (green) */}
+              <div
+                className="h-full bg-green-300"
+                style={{
+                  width: `${((statusCounts["Reviewed"] || 0) / (segments?.length || 1)) * 100}%`,
+                }}
+              />
+              {/* 100% segments (blue) */}
+              <div
+                className="h-full bg-blue-300"
+                style={{
+                  width: `${((statusCounts["100%"] || 0) / (segments?.length || 1)) * 100}%`,
+                }}
+              />
+              {/* Fuzzy segments (yellow) */}
+              <div
+                className="h-full bg-yellow-300"
+                style={{
+                  width: `${((statusCounts["Fuzzy"] || 0) / (segments?.length || 1)) * 100}%`,
+                }}
+              />
+              {/* MT segments (gray) */}
+              <div
+                className="h-full bg-gray-300"
+                style={{
+                  width: `${((statusCounts["MT"] || 0) / (segments?.length || 1)) * 100}%`,
+                }}
+              />
+              {/* Edited segments (purple) */}
+              <div
+                className="h-full bg-purple-300"
+                style={{
+                  width: `${((statusCounts["Edited"] || 0) / (segments?.length || 1)) * 100}%`,
+                }}
+              />
+              {/* Rejected segments (red) */}
+              <div
+                className="h-full bg-red-300"
+                style={{
+                  width: `${((statusCounts["Rejected"] || 0) / (segments?.length || 1)) * 100}%`,
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+            {statusCounts["Reviewed"] || 0}/{segments?.length || 0} Reviewed
+          </div>
+
+          <div className="flex items-center gap-4 ml-1">
+            <div className="flex items-center gap-3">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-7 w-[90px] text-xs">
+                  <SelectValue placeholder="Filter by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Filter by</SelectItem>
+                  <SelectItem value="MT">
+                    MT ({statusCounts["MT"] || 0})
+                  </SelectItem>
+                  <SelectItem value="100%">
+                    100% Match ({statusCounts["100%"] || 0})
+                  </SelectItem>
+                  <SelectItem value="Fuzzy">
+                    Fuzzy Match ({statusCounts["Fuzzy"] || 0})
+                  </SelectItem>
+                  <SelectItem value="Edited">
+                    Edited ({statusCounts["Edited"] || 0})
+                  </SelectItem>
+                  <SelectItem value="Reviewed">
+                    Reviewed ({statusCounts["Reviewed"] || 0})
+                  </SelectItem>
+                  <SelectItem value="Rejected">
+                    Rejected ({statusCounts["Rejected"] || 0})
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                onValueChange={(value) => {
+                  if (value !== "none" && checkedCount > 0) {
+                    handleBulkStatusUpdate(value as StatusType);
+                  }
+                }}
+              >
+                <SelectTrigger className="h-7 w-[90px] text-xs">
+                  <SelectValue placeholder="Set as..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MT">MT</SelectItem>
+                  <SelectItem value="100%">100% Match</SelectItem>
+                  <SelectItem value="Fuzzy">Fuzzy Match</SelectItem>
+                  <SelectItem value="Edited">Edited</SelectItem>
+                  <SelectItem value="Reviewed">Reviewed</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Select All Checkbox */}
+            <div className="flex items-center space-x-1.5">
+              <Checkbox
+                id="toggle-select-all"
+                checked={
+                  Object.keys(checkedSegments).length > 0 &&
+                  segments &&
+                  Object.keys(checkedSegments).length === segments.length
+                }
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    handleSelectAll();
+                  } else {
+                    handleUnselectAll();
+                  }
+                }}
+              />
+              <div className="flex items-center">
+                <label
+                  htmlFor="toggle-select-all"
+                  className="text-xs font-medium ml-1 cursor-pointer"
+                >
+                  {checkedCount}/{segments?.length || 0}
+                </label>
+              </div>
+            </div>
+
+            {/* Side panel toggle button - placed at the end */}
+            <div className="ml-auto flex items-center">
+              <Button
+                size="sm"
+                variant={showSidePanel ? "default" : "outline"}
+                onClick={() => setShowSidePanel(!showSidePanel)}
+                className="h-7 w-7 p-0"
+                title={showSidePanel ? "Hide side panel" : "Show side panel"}
+              >
+                {showSidePanel ? (
+                  <ChevronRight className="h-3.5 w-3.5" />
+                ) : (
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center space-x-4 flex-1">
+          <div className="relative flex-grow max-w-md">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search in segments..."
@@ -710,8 +858,6 @@ export function NewTranslationEditor({
                     segment.source.toLowerCase().includes(searchText) ||
                     (segment.target && segment.target.toLowerCase().includes(searchText))
                   ) {
-                    setSelectedSegmentId(segment.id);
-                    // Scroll segment into view if needed
                     const element = document.getElementById(`segment-${segment.id}`);
                     element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     break;
@@ -721,6 +867,7 @@ export function NewTranslationEditor({
             />
           </div>
         </div>
+      </div>
       </div>
 
       {/* Warning for batch translation */}
@@ -761,6 +908,7 @@ export function NewTranslationEditor({
                         isSource={true}
                         onSelect={() => handleSegmentSelect(segment.id)}
                         isSelected={selectedSegmentId === segment.id}
+                        segmentId={`segment-${segment.id}`}
                       />
                     </div>
                   ))}
@@ -803,6 +951,7 @@ export function NewTranslationEditor({
                         onTranslateWithGPT={() => handleTranslateWithGPT(segment.id)}
                         isChecked={!!checkedSegments[segment.id]}
                         onCheckChange={(checked) => handleCheckboxChange(segment.id, checked)}
+                        segmentId={`segment-${segment.id}`}
                       />
                     </div>
                   ))}
@@ -851,7 +1000,9 @@ export function NewTranslationEditor({
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8"
+                    ```
+// This line ensures proper code analysis.
+className="h-8 w-8"
                     onClick={() => handlePageChange(totalPages)}
                     disabled={currentPage === totalPages}
                   >

@@ -440,36 +440,27 @@ export default function Translation() {
 
           {/* Tabs and Progress */}
           <div className="flex items-center justify-between gap-4">
-            <div className="flex-1">
-              <Tabs
-                value={editorMode}
-                onValueChange={(value) =>
-                  handleModeChange(value as "segment" | "doc")
-                }
-                className="w-[400px]"
-              >
-                <TabsList className="grid w-[400px] grid-cols-2">
-                  <TabsTrigger
-                    value="segment"
-                    className="flex items-center gap-2"
-                  >
-                    <Blocks className="h-4 w-4" />
-                    <span>Segment Editor</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="doc" className="flex items-center gap-2">
-                    <LayoutTemplate className="h-4 w-4" />
-                    <span>Document View</span>
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-            <div className="flex-1 max-w-md">
-              <Progress value={percentage} className="h-2" />
-              <div className="flex justify-between text-xs mt-1">
-                <span>Progress</span>
-                <span className="font-medium">{percentage}% ({completed}/{total})</span>
-              </div>
-            </div>
+            <Tabs
+              value={editorMode}
+              onValueChange={(value) =>
+                handleModeChange(value as "segment" | "doc")
+              }
+              className="w-[400px]"
+            >
+              <TabsList className="grid w-[400px] grid-cols-2">
+                <TabsTrigger
+                  value="segment"
+                  className="flex items-center gap-2"
+                >
+                  <Blocks className="h-4 w-4" />
+                  <span>Segment Editor</span>
+                </TabsTrigger>
+                <TabsTrigger value="doc" className="flex items-center gap-2">
+                  <LayoutTemplate className="h-4 w-4" />
+                  <span>Document View</span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
         </div>
 
