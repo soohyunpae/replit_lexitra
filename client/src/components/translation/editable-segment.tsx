@@ -235,49 +235,53 @@ export function EditableSegment(props: EditableSegmentProps) {
   // 텍스트 변경 핸들러
   const { mutate: updateSegment } = useSegmentMutation();
 
+  const debouncedUpdateSegment = useDebouncedCallback(
+    (newValue: string) => {
+      const isValueChanged = newValue !== liveSegment.target;
+      
+      if (isValueChanged) {
+        const needsOriginChange = isOriginInList(
+          liveSegment.origin,
+          STATUS_NEED_CHANGE,
+        );
+        
+        const newOrigin = needsOriginChange ? "HT" : liveSegment.origin;
+        const newStatus = (
+          liveSegment.status === "Reviewed" ||
+          isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)
+        ) ? "Edited" : liveSegment.status;
+
+        updateSegment(
+          {
+            id: liveSegment.id,
+            target: newValue,
+            status: newStatus,
+            origin: newOrigin,
+            fileId: liveSegment.fileId,
+          },
+          {
+            onSuccess: () => {
+              if (onUpdate) {
+                onUpdate(newValue, newStatus, newOrigin);
+              }
+            },
+            onError: (error) => {
+              console.error("Failed to update segment:", error);
+              // 에러 발생 시 이전 값으로 되돌리지 않음
+              // setValue(liveSegment.target || "");
+            },
+          },
+        );
+      }
+    },
+    300, // 300ms 딜레이
+    [liveSegment, onUpdate]
+  );
+
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setValue(newValue);
-    
-    // 텍스트 변경 시 자동 저장 및 상태 업데이트
-    const isValueChanged = newValue !== liveSegment.target;
-    
-    if (isValueChanged) {
-      const needsOriginChange = isOriginInList(
-        liveSegment.origin,
-        STATUS_NEED_CHANGE,
-      );
-      
-      // MT/100%/Fuzzy에서 수정된 경우 origin을 HT로 변경
-      const newOrigin = needsOriginChange ? "HT" : liveSegment.origin;
-      
-      // Reviewed나 특수 상태에서 수정된 경우 Edited로 변경
-      const newStatus = (
-        liveSegment.status === "Reviewed" ||
-        isOriginInList(liveSegment.status, STATUS_NEED_CHANGE)
-      ) ? "Edited" : liveSegment.status;
-
-      updateSegment(
-        {
-          id: liveSegment.id,
-          target: newValue,
-          status: newStatus,
-          origin: newOrigin,
-          fileId: liveSegment.fileId,
-        },
-        {
-          onSuccess: () => {
-            if (onUpdate) {
-              onUpdate(newValue, newStatus, newOrigin);
-            }
-          },
-          onError: (error) => {
-            console.error("Failed to update segment:", error);
-            setValue(liveSegment.target || "");
-          },
-        },
-      );
-    }
+    debouncedUpdateSegment(newValue);
   };
 
   // 수동 저장 함수 (필요한 경우를 위해 유지)
