@@ -311,7 +311,7 @@ export default function Project() {
     const allSegments = Object.values(allSegmentsData).flat();
     const totalSegments = allSegments.length;
     const completedSegments = allSegments.filter(
-      (seg) => seg.target && seg.target.trim() !== "",
+      (seg) => seg.status === "Reviewed"
     ).length;
     const completionPercentage =
       totalSegments > 0
