@@ -236,26 +236,37 @@ export function EditableSegment(props: EditableSegmentProps) {
   const { mutate: updateSegment } = useSegmentMutation();
 
   const debouncedUpdateSegment = useDebouncedCallback((updateData: any) => {
-    if (!liveSegment) return;
-    
-    const currentTarget = liveSegment.target || "";
-    const currentStatus = liveSegment.status || "Edited";
-    const currentOrigin = liveSegment.origin || "HT";
-    
-    updateSegment(updateData, {
-      onSuccess: (data) => {
-        if (onUpdate) {
-          onUpdate(data.target, data.status, data.origin);
+    try {
+      if (!liveSegment) return;
+      
+      // 현재 상태 스냅샷
+      const snapshot = {
+        target: liveSegment.target || "",
+        status: liveSegment.status || "Edited",
+        origin: liveSegment.origin || "HT"
+      };
+
+      updateSegment(updateData, {
+        onSuccess: (data) => {
+          if (onUpdate && data) {
+            onUpdate(
+              data.target || snapshot.target,
+              data.status || snapshot.status,
+              data.origin || snapshot.origin
+            );
+          }
+        },
+        onError: (error) => {
+          console.error("Failed to update segment:", error);
+          setValue(snapshot.target);
+          if (onUpdate) {
+            onUpdate(snapshot.target, snapshot.status, snapshot.origin);
+          }
         }
-      },
-      onError: (error) => {
-        console.error("Failed to update segment:", error);
-        setValue(currentTarget);
-        if (onUpdate) {
-          onUpdate(currentTarget, currentStatus, currentOrigin);
-        }
-      }
-    });
+      });
+    } catch (err) {
+      console.error("Error in debouncedUpdateSegment:", err);
+    }
   }, 1000); // 디바운스 시간 증가
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
