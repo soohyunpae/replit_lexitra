@@ -1491,14 +1491,13 @@ etc. Unlike work files, references can be added
                           {/* 단어 수 표시 */}
                           <div className="flex items-center mt-2 text-sm text-gray-600">
                             <TextCursorInput className="h-3.5 w-3.5 mr-1.5" />
-                            <span>{stats?.wordCount || 0} words</span>
+                            <span>{project.wordCount || stats?.wordCount || 0} words</span>
                           </div>
                         </div>
-                        <div className="text-xs text-muted-foreground mt-2">
+                        <div className="text-xs text-muted-foreground mt-2 flex justify-between">
                           <span className="inline-flex items-center gap-1">
                             <div className="w-2 h-2 rounded-full bg-blue-300"></div>
-                            세그먼트:{" "}
-                            {projectStats[project.id]?.totalSegments || 0}개
+                            # of files: {project.files?.length || 0}
                           </span>
                         </div>
                       </CardContent>
@@ -1507,8 +1506,12 @@ etc. Unlike work files, references can be added
                       <div className="text-xs text-muted-foreground flex items-center">
                         <Clock className="h-3.5 w-3.5 mr-1" />
                         {project.deadline
-                          ? new Date(project.deadline).toLocaleString()
-                          : "No deadline set"}
+                          ? new Date(project.deadline).toLocaleDateString(undefined, {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })
+                          : "No deadline"}
                       </div>
                       <div className="flex gap-2">
                         {/* 프로젝트 상세 페이지 뷰 버튼만 제공 */}
