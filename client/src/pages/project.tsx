@@ -1404,32 +1404,6 @@ export default function Project() {
                                 {stats.completed}/{stats.total} (
                                 {stats.percentage}%)
                               </span>
-                              
-                              {/* 파일 상태 표시 */}
-                              {(() => {
-                                const segments = allSegmentsData?.[file.id] || [];
-                                const emptyTargets = segments.filter(
-                                  seg => !seg.target || seg.target.trim() === ""
-                                ).length;
-                                const isRecent = new Date().getTime() - new Date(file.createdAt).getTime() < 1000 * 60 * 10;
-                                
-                                if (emptyTargets > 0 && isRecent) {
-                                  return (
-                                    <Badge variant="outline" className="ml-1 bg-yellow-100 text-yellow-800 text-[10px] h-5">
-                                      <RefreshCw className="mr-1 h-3 w-3 animate-spin" />
-                                      번역 초벌 진행 중
-                                    </Badge>
-                                  );
-                                } else if (stats.percentage === 100) {
-                                  return (
-                                    <Badge variant="outline" className="ml-1 bg-green-100 text-green-800 text-[10px] h-5">
-                                      <CheckCircle className="mr-1 h-3 w-3" />
-                                      번역 완료
-                                    </Badge>
-                                  );
-                                }
-                                return null;
-                              })()}
                             </div>
                           </div>
 
