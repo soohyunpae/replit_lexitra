@@ -62,8 +62,6 @@ ensureDirectories();
 // 파일 처리 함수
 // PDF 처리를 위한 pdf-parse 모듈 추가
 import pdfParse from 'pdf-parse';
-// 타입 문제 해결을 위한 선언
-declare module 'pdf-parse';
 
 async function processFile(file: Express.Multer.File) {
   const ext = path.extname(file.originalname).toLowerCase();

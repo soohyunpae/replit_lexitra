@@ -925,9 +925,10 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
                                 multiple
                                 className="hidden"
                                 onChange={(e) => {
-                                  const files = e.target.files;
-                                  if (files && files.length > 0) {
-                                    field.onChange(Array.from(files));
+                                  // 널 체크 후 파일 배열로 변환
+                                  if (e.target.files && e.target.files.length > 0) {
+                                    const files = Array.from(e.target.files);
+                                    field.onChange(files);
                                   }
                                 }}
                               />
