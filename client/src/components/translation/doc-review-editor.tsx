@@ -178,7 +178,7 @@ export function DocReviewEditor({
 }: DocReviewEditorProps) {
   // == React Hooks 정의 - 순서 중요 ==
   // 1. useState hooks
-  const [showSource, setShowSource] = useState(false);
+  const [showSource, setShowSource] = useState(true);
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [showSidePanel, setShowSidePanel] = useState(true);
   const [highlightedSegmentId, setHighlightedSegmentId] = useState<number | null>(null);
@@ -384,9 +384,9 @@ export function DocReviewEditor({
   };
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col h-full w-full overflow-auto">
       {/* Controls - Fixed at the top */}
-      <div className="bg-card border-b border-border py-2 px-4 sticky top-0 z-20 shadow-sm w-full">
+      <div className="bg-card border-b border-border py-2 px-4 sticky top-0 z-20 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button
@@ -399,35 +399,29 @@ export function DocReviewEditor({
               Source
             </Button>
             <Button
-                size="sm"
-                variant={!showSource && showSidePanel === false && !isMobile ? "default" : "outline"}
-                onClick={() => {
-                  setShowSource(false);
+              size="sm"
+              variant={!showSource && !isMobile ? "default" : "outline"}
+              onClick={() => setShowSource(false)}
+              className="h-7"
+              title="Show target only"
+            >
+              Target
+            </Button>
+            <Button
+              size="sm"
+              variant={showSource && isMobile ? "default" : "outline"}
+              onClick={() => {
+                setShowSource(true);
+                // Force side-by-side on desktop
+                if (!isMobile) {
                   setShowSidePanel(false);
-                }}
-                className="h-7"
-                title="Show target only"
-              >
-                Target
-              </Button>
-              <Button
-                size="sm"
-                variant={showSidePanel && !isMobile ? "default" : "outline"}
-                onClick={() => {
-                  // Toggle side-by-side view
-                  if (showSidePanel) {
-                    setShowSidePanel(false);
-                    setShowSource(true); // Show source only
-                  } else {
-                    setShowSidePanel(true);
-                    setShowSource(false); // Reset to show both panels
-                  }
-                }}
-                className="h-7 hidden md:inline-flex"
-                title="Show side by side"
-              >
-                Side by Side
-              </Button>
+                }
+              }}
+              className="h-7 hidden md:inline-flex"
+              title="Show side by side"
+            >
+              Side by Side
+            </Button>
           </div>
           <div className="flex items-center gap-2">
             {/* Side panel toggle button */}
@@ -453,22 +447,17 @@ export function DocReviewEditor({
       {/* Document Editor Area */}
       <div 
         className={cn(
-          "flex-1 min-h-0",
+          "flex-1",
           isMobile ? "flex flex-col" : "flex flex-row"
         )}
       >
-        {/* Source Panel */}
+        {/* Source Panel - Hidden on mobile when showSource is false */}
         <div 
           className={cn(
             "border-r bg-card/20",
             isMobile 
               ? (showSource ? "h-1/2 overflow-y-auto" : "hidden") 
-              : cn(
-                  "overflow-auto",
-                  !showSidePanel && showSource && !isMobile ? "w-full" : // Full width when only source is selected
-                  !showSidePanel && !showSource && !isMobile ? "hidden" : // Hidden when only target is selected
-                  showSidePanel ? "w-[35%]" : "w-1/2" // Adjusted width for side-by-side view with panel
-                )
+              : (showSidePanel ? "w-[35%]" : "w-1/2") + " overflow-auto"
           )}
           ref={leftPanelRef}
         >
@@ -531,14 +520,7 @@ export function DocReviewEditor({
             "bg-card/20",
             isMobile 
               ? "flex-1 overflow-auto" 
-              : cn(
-                  "overflow-auto",
-                  !showSource && !isMobile ? "w-full" : // Full width when target is selected
-                  showSource && !isMobile ? "hidden" : // Hidden when source is selected
-                  !showSource && !showSidePanel ? "w-full" : // Full width when only target is visible
-                  !showSource && showSidePanel ? "w-[35%]" : // Adjusted width when side panel is open
-                  showSidePanel ? "w-[35%]" : "w-1/2" // Default side-by-side width
-                )
+              : (showSidePanel ? "w-[35%]" : "w-1/2") + " overflow-auto"
           )}
           ref={rightPanelRef}
         >
@@ -608,7 +590,7 @@ export function DocReviewEditor({
 
         {/* Side Panel - Only shown when enabled */}
         {!isMobile && showSidePanel && (
-              <div className="w-[30%] flex flex-col h-full sticky top-[56px] h-fit">
+              <div className="flex flex-col h-full sticky top-[56px] h-fit">
             <SidePanel
               tmMatches={tmMatches}
               glossaryTerms={glossaryTerms}
