@@ -467,7 +467,7 @@ export function DocReviewEditor({
                   "overflow-auto",
                   !showSidePanel && showSource && !isMobile ? "w-full" : // Full width when only source is selected
                   !showSidePanel && !showSource && !isMobile ? "hidden" : // Hidden when only target is selected
-                  showSidePanel ? "w-1/2" : "w-1/2" // Equal width for side-by-side view
+                  showSidePanel ? "w-[50%]" : "w-1/2" // Equal width for side-by-side view
                 )
           )}
           ref={leftPanelRef}
