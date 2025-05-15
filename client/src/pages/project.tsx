@@ -1388,15 +1388,6 @@ export default function Project() {
 
                           <div className="flex items-center gap-2 flex-1 max-w-md">
                             <CombinedProgress
-                              translatedPercentage={
-                                // 번역된 퍼센트는 에디트, MT, 100% 매치의 합으로 계산
-                                Math.min(
-                                  (getStatusPercentage(file.id, "Edited" as SegmentStatus) || 0) + 
-                                  (getStatusPercentage(file.id, "MT" as SegmentStatus) || 0) + 
-                                  (getStatusPercentage(file.id, "100%" as SegmentStatus) || 0), 
-                                  100
-                                )
-                              }
                               reviewedPercentage={getStatusPercentage(
                                 file.id,
                                 "Reviewed",

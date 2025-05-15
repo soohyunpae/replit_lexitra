@@ -1488,11 +1488,18 @@ etc. Unlike work files, references can be added
                             );
                           })()}
 
-                          {/* 단어 수 표시 - 더 눈에 띄게 스타일 수정 */}
-                          <div className="flex items-center mt-2.5 text-sm font-medium">
-                            <TextCursorInput className="h-4 w-4 mr-1.5 text-primary" />
-                            <span className="text-primary-foreground/80">{stats?.wordCount || 0} words</span>
+                          {/* 단어 수 표시 */}
+                          <div className="flex items-center mt-2 text-sm text-gray-600">
+                            <TextCursorInput className="h-3.5 w-3.5 mr-1.5" />
+                            <span>{stats?.wordCount || 0} words</span>
                           </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-2">
+                          <span className="inline-flex items-center gap-1">
+                            <div className="w-2 h-2 rounded-full bg-blue-300"></div>
+                            세그먼트:{" "}
+                            {projectStats[project.id]?.totalSegments || 0}개
+                          </span>
                         </div>
                       </CardContent>
                     </div>
