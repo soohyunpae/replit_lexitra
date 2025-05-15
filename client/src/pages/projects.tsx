@@ -1453,19 +1453,22 @@ etc. Unlike work files, references can be added
                       <CardContent className="pb-2">
                         <div>
                           {(() => {
-                            const stats = projectStats[project.id];
-                            
-                            // 상태 카운트 계산
-                            const statusCounts = stats?.statusCounts || {
-                              Reviewed: 0,
-                              "100%": 0,
-                              Fuzzy: 0,
-                              MT: 0,
-                              Edited: 0,
-                              Rejected: 0
+                            // 현재 프로젝트의 통계 데이터
+                            const stats = projectStats[project.id] || {
+                              translatedPercentage: 0,
+                              reviewedPercentage: 0,
+                              totalSegments: 0,
+                              wordCount: 0,
+                              statusCounts: {
+                                Reviewed: 0,
+                                "100%": 0,
+                                Fuzzy: 0,
+                                MT: 0,
+                                Edited: 0,
+                                Rejected: 0
+                              }
                             };
                             
-                            // Translation Summary와 동일한 형식으로 표시
                             return (
                               <>
                                 <div className="flex justify-between items-center mb-1">
@@ -1474,25 +1477,25 @@ etc. Unlike work files, references can be added
                                     <span>Word Count:</span>
                                   </div>
                                   <div className="text-xs font-medium">
-                                    {project.wordCount || stats?.wordCount || 0} words
+                                    {stats.wordCount || project.wordCount || 0} words
                                   </div>
                                 </div>
                                 
                                 <div className="flex justify-between items-center mb-1">
                                   <div className="text-muted-foreground text-xs">Reviewed:</div>
                                   <div className="text-xs font-medium">
-                                    {statusCounts.Reviewed || 0} / {stats?.totalSegments || 0} segments
+                                    {stats.statusCounts.Reviewed} / {stats.totalSegments} segments
                                     <span className="ml-1 text-primary">
-                                      ({Math.round(stats?.reviewedPercentage || 0)}%)
+                                      ({Math.round(stats.reviewedPercentage)}%)
                                     </span>
                                   </div>
                                 </div>
                                 
                                 <CombinedProgress
-                                  translatedPercentage={stats?.translatedPercentage || 0}
-                                  reviewedPercentage={stats?.reviewedPercentage || 0}
-                                  statusCounts={statusCounts}
-                                  totalSegments={stats?.totalSegments || 0}
+                                  translatedPercentage={stats.translatedPercentage}
+                                  reviewedPercentage={stats.reviewedPercentage}
+                                  statusCounts={stats.statusCounts}
+                                  totalSegments={stats.totalSegments}
                                   height="h-2"
                                   showPercentage={false}
                                 />
