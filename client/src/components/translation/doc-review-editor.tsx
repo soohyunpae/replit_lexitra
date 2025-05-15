@@ -414,9 +414,14 @@ export function DocReviewEditor({
                 size="sm"
                 variant={showSidePanel && !isMobile ? "default" : "outline"}
                 onClick={() => {
-                  // For side-by-side view, show both panels
-                  setShowSource(true);
-                  setShowSidePanel(true);
+                  // Toggle side-by-side view
+                  if (showSidePanel) {
+                    setShowSidePanel(false);
+                    setShowSource(true); // Show source only
+                  } else {
+                    setShowSidePanel(true);
+                    setShowSource(false); // Reset to show both panels
+                  }
                 }}
                 className="h-7 hidden md:inline-flex"
                 title="Show side by side"
