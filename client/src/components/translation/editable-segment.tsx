@@ -409,7 +409,8 @@ export function EditableSegment(props: EditableSegmentProps) {
 
             {/* 상태 뱃지와 번역 버튼 */}
             <div className="absolute bottom-1 right-1 z-[5]">
-              <span
+              <button
+                type="button"
                 className={`cursor-pointer rounded-full px-2 py-0.5 text-xs font-medium transition ${getStatusColor(liveSegment.status)}`}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -419,7 +420,7 @@ export function EditableSegment(props: EditableSegmentProps) {
                 title={`Click to toggle status (${liveSegment.status === "Reviewed" ? "Edited" : "Reviewed"})`}
               >
                 {liveSegment.status}
-              </span>
+              </button>
 
               {/* 기계 번역 버튼 */}
               {!liveSegment.target && onTranslateWithGPT && (
