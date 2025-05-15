@@ -467,7 +467,7 @@ export function DocReviewEditor({
                   "overflow-auto",
                   !showSidePanel && showSource && !isMobile ? "w-full" : // Full width when only source is selected
                   !showSidePanel && !showSource && !isMobile ? "hidden" : // Hidden when only target is selected
-                  showSidePanel ? "w-[50%]" : "w-1/2" // Equal width for side-by-side view
+                  showSidePanel ? "w-[35%]" : "w-1/2" // Adjusted width for side-by-side view with panel
                 )
           )}
           ref={leftPanelRef}
@@ -535,6 +535,8 @@ export function DocReviewEditor({
                   "overflow-auto",
                   !showSource && !isMobile ? "w-full" : // Full width when target is selected
                   showSource && !isMobile ? "hidden" : // Hidden when source is selected
+                  !showSource && !showSidePanel ? "w-full" : // Full width when only target is visible
+                  !showSource && showSidePanel ? "w-[35%]" : // Adjusted width when side panel is open
                   showSidePanel ? "w-[35%]" : "w-1/2" // Default side-by-side width
                 )
           )}
