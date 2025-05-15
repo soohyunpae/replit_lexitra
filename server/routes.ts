@@ -293,7 +293,6 @@ async function processFile(file: Express.Multer.File) {
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadDir = path.join(REPO_ROOT, "uploads", "tmp");
-    // 업로드 직전에 디렉토리 확인
     if (!fs.existsSync(uploadDir)) {
       console.log(`Creating tmp directory for upload: ${uploadDir}`);
       fs.mkdirSync(uploadDir, { recursive: true });
@@ -301,34 +300,36 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    // 원본 파일명 정보 보존 및 인코딩 처리
-    console.log("원본 파일명 (처리 전):", file.originalname);
+    // 원본 파일명 디코딩 및 정규화
+    const decodedName = Buffer.from(file.originalname, 'binary').toString('utf8');
+    console.log("원본 파일명 (처리 전):", decodedName);
 
     // 이름과 확장자 분리
-    const originalExt = path.extname(file.originalname);
-    const originalName = path.basename(file.originalname, originalExt);
+    const originalExt = path.extname(decodedName);
+    const originalName = path.basename(decodedName, originalExt);
 
-    // 한글 파일명 정규화 처리 (간단한 NFC 정규화)
-    let normalizedName = originalName.normalize("NFC");
+    // 한글 파일명 정규화 처리 (NFC)
+    const normalizedName = originalName.normalize("NFC");
+    
+    // 저장용 파일명 생성 (타임스탬프 + 랜덤값)
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(2, 10);
+    const filename = `${timestamp}-${randomStr}${originalExt}`;
 
-    // 고유한 파일 이름 생성 (실제 저장용)
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const filename = file.fieldname + "-" + uniqueSuffix + originalExt;
-
-    // req 객체에 정규화된 원본 파일명 정보 저장
-    if (!(req as any).fileOriginalNames) {
+    // 원본 파일명 정보 저장 (정규화된 형태)
+    if (!req.fileOriginalNames) {
       (req as any).fileOriginalNames = {};
     }
-    (req as any).fileOriginalNames[filename] = normalizedName + originalExt;
+    const normalizedFullName = normalizedName + originalExt;
+    (req as any).fileOriginalNames[filename] = normalizedFullName;
 
-    // 디버깅 정보 출력
-    console.log("저장될 파일명:", filename);
-    console.log(
-      "참조용 원본 파일명:",
-      (req as any).fileOriginalNames[filename],
-    );
+    // 디버깅 로그
+    console.log({
+      original: decodedName,
+      normalized: normalizedFullName,
+      stored: filename
+    });
 
-    console.log(`생성된 파일명: ${filename}`);
     cb(null, filename);
   },
 });
