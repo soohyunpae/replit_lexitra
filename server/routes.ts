@@ -2563,6 +2563,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: z.string().optional(),
         comment: z.string().optional(),
         origin: z.string().optional(),
+        fileId: z.number().optional(), // Add fileId to accept it from client
       });
 
       const data = updateSchema.parse(req.body);
