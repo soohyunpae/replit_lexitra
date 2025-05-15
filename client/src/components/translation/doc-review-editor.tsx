@@ -178,7 +178,7 @@ export function DocReviewEditor({
 }: DocReviewEditorProps) {
   // == React Hooks 정의 - 순서 중요 ==
   // 1. useState hooks
-  const [showSource, setShowSource] = useState(true);
+  const [showSource, setShowSource] = useState(false);
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [showSidePanel, setShowSidePanel] = useState(true);
   const [highlightedSegmentId, setHighlightedSegmentId] = useState<number | null>(null);
