@@ -307,7 +307,11 @@ export default function Project() {
   // Get status count for a specific file and status
   const getStatusCount = (fileId: number, status: string): number => {
     if (!fileSegmentStatusCounts[fileId]) return 0;
-    return fileSegmentStatusCounts[fileId][status as keyof typeof fileSegmentStatusCounts[number]] || 0;
+    return (
+      fileSegmentStatusCounts[fileId][
+        status as keyof (typeof fileSegmentStatusCounts)[number]
+      ] || 0
+    );
   };
 
   // Get total segments for a file
@@ -635,7 +639,7 @@ export default function Project() {
             <div className="flex items-center">
               <h1 className="text-xl font-semibold mb-1 flex items-center">
                 <span>
-                  Project [{project.id}] {project.name}
+                  [ID {project.id}] {project.name}
                 </span>
                 <span
                   className={`ml-3 text-sm font-medium rounded-md px-2 py-0.5 ${
@@ -1381,17 +1385,20 @@ export default function Project() {
                           <div className="w-44 truncate">
                             <span className="font-medium">{file.name}</span>
                           </div>
-                          
+
                           <div className="flex items-center gap-2 flex-1 max-w-md">
                             <CombinedProgress
-                              reviewedPercentage={getStatusPercentage(file.id, "Reviewed")}
+                              reviewedPercentage={getStatusPercentage(
+                                file.id,
+                                "Reviewed",
+                              )}
                               statusCounts={{
-                                "Reviewed": getStatusCount(file.id, "Reviewed"),
+                                Reviewed: getStatusCount(file.id, "Reviewed"),
                                 "100%": getStatusCount(file.id, "100%"),
-                                "Fuzzy": getStatusCount(file.id, "Fuzzy"),
-                                "MT": getStatusCount(file.id, "MT"),
-                                "Edited": getStatusCount(file.id, "Edited"),
-                                "Rejected": getStatusCount(file.id, "Rejected")
+                                Fuzzy: getStatusCount(file.id, "Fuzzy"),
+                                MT: getStatusCount(file.id, "MT"),
+                                Edited: getStatusCount(file.id, "Edited"),
+                                Rejected: getStatusCount(file.id, "Rejected"),
                               }}
                               totalSegments={getTotalSegments(file.id)}
                               height="h-2"
