@@ -384,9 +384,9 @@ export function DocReviewEditor({
   };
 
   return (
-    <div className="flex flex-col h-full w-full overflow-auto">
+    <div className="flex flex-col h-full w-full">
       {/* Controls - Fixed at the top */}
-      <div className="bg-card border-b border-border py-2 px-4 sticky top-0 z-20 shadow-sm">
+      <div className="bg-card border-b border-border py-2 px-4 sticky top-0 z-20 shadow-sm w-full">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button
@@ -453,7 +453,7 @@ export function DocReviewEditor({
       {/* Document Editor Area */}
       <div 
         className={cn(
-          "flex-1",
+          "flex-1 min-h-0",
           isMobile ? "flex flex-col" : "flex flex-row"
         )}
       >
