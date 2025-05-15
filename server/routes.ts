@@ -131,7 +131,8 @@ async function processFile(file: Express.Multer.File) {
   } catch (error) {
     console.error('Error processing file:', error);
     // 실패 알림
-    notifyProgress(0, file.originalname, 'error', 0, `오류 발생: ${error.message || '알 수 없는 오류'}`);
+    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
+    notifyProgress(0, file.originalname, 'error', 0, `오류 발생: ${errorMessage}`);
     throw error;
   }
 }
@@ -2032,10 +2033,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error(`Failed to unlink file ${file.path}:`, unlinkErr);
         }
 
+        // 성공 알림
+        notifyProgress(0, file.originalname, 'completed', 100, '파일 처리 완료');
         return text;
 
       } catch (error) {
         console.error('Error processing file:', error);
+        // 실패 알림
+        const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
+        notifyProgress(0, file.originalname, 'error', 0, `오류 발생: ${errorMessage}`);
         throw error;
       }
     }
