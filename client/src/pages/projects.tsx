@@ -1430,8 +1430,8 @@ export default function ProjectsPage() {
                         {displayStatus}
                       </span>
                     </div>
-                    <Link
-                      to={`/projects/${project.id}`}
+                    <div 
+                      onClick={() => navigate(`/projects/${project.id}`)}
                       className="cursor-pointer"
                     >
                       <CardHeader className="pb-2 pt-4">
@@ -1499,7 +1499,7 @@ export default function ProjectsPage() {
                           </span>
                         </div>
                       </CardContent>
-                    </Link>
+                    </div>
                     <CardFooter className="pt-2 flex items-center justify-between border-t border-border/30">
                       <div className="text-xs text-muted-foreground flex items-center">
                         <Clock className="h-3.5 w-3.5 mr-1" />
