@@ -438,55 +438,38 @@ export default function Translation() {
             </h1>
           </div>
 
-          {/* Search and Tabs */}
+          {/* Tabs and Progress */}
           <div className="flex items-center justify-between gap-4">
-            <div className="relative flex-grow max-w-md">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search in file content..."
-                className="pl-8"
-                onChange={(e) => {
-                  const searchText = e.target.value.toLowerCase();
-                  if (!searchText || !file?.segments) return;
-                  
-                  const segments = file.segments;
-                  for (let i = 0; i < segments.length; i++) {
-                    const segment = segments[i];
-                    if (
-                      segment.source.toLowerCase().includes(searchText) ||
-                      (segment.target && segment.target.toLowerCase().includes(searchText))
-                    ) {
-                      setSelectedSegment(segment);
-                      // Scroll segment into view if needed
-                      const element = document.getElementById(`segment-${segment.id}`);
-                      element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      break;
-                    }
-                  }
-                }}
-              />
+            <div className="flex-1">
+              <Tabs
+                value={editorMode}
+                onValueChange={(value) =>
+                  handleModeChange(value as "segment" | "doc")
+                }
+                className="w-[400px]"
+              >
+                <TabsList className="grid w-[400px] grid-cols-2">
+                  <TabsTrigger
+                    value="segment"
+                    className="flex items-center gap-2"
+                  >
+                    <Blocks className="h-4 w-4" />
+                    <span>Segment Editor</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="doc" className="flex items-center gap-2">
+                    <LayoutTemplate className="h-4 w-4" />
+                    <span>Document View</span>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
-            <Tabs
-              value={editorMode}
-              onValueChange={(value) =>
-                handleModeChange(value as "segment" | "doc")
-              }
-              className="w-[400px]"
-            >
-              <TabsList className="grid w-[400px] grid-cols-2">
-                <TabsTrigger
-                  value="segment"
-                  className="flex items-center gap-2"
-                >
-                  <Blocks className="h-4 w-4" />
-                  <span>Segment Editor</span>
-                </TabsTrigger>
-                <TabsTrigger value="doc" className="flex items-center gap-2">
-                  <LayoutTemplate className="h-4 w-4" />
-                  <span>Document View</span>
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex-1 max-w-md">
+              <Progress value={percentage} className="h-2" />
+              <div className="flex justify-between text-xs mt-1">
+                <span>Progress</span>
+                <span className="font-medium">{percentage}% ({completed}/{total})</span>
+              </div>
+            </div>
           </div>
         </div>
 
