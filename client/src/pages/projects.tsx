@@ -1153,8 +1153,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
             </Dialog>
           </div>
           
-          {/* 파일 업로드 진행 상황 표시 - 전체 프로젝트 목록 위에 표시 */}
-          <FileProgressIndicator />
+          {/* 파일 업로드 진행 상황 표시 제거 */}
 
           {/* Admin Selection Info */}
           {isAdmin && selectedProjects.length > 0 && (
