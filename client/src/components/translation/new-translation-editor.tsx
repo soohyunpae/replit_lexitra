@@ -1010,6 +1010,7 @@ export function NewTranslationEditor({
 
             {/* Filtered segments count */}
             {statusFilter !== "all" && (
+              ```python
               <div className="px-4 py-2 text-sm text-muted-foreground text-center border-t border-border bg-muted/20">
                 Showing {filteredSegments.length} of {segments?.length || 0}{" "}
                 segments with status "{statusFilter}"

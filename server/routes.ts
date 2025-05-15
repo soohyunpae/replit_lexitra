@@ -25,6 +25,8 @@ import {
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import mammoth from 'mammoth';
+import pdfParse from 'pdf-parse';
 
 // 파일 경로를 위한 변수 설정
 const REPO_ROOT = process.cwd();
@@ -306,6 +308,46 @@ function registerAdminRoutes(app: Express) {
           console.error("Error reading TM file:", fileError);
           return res.status(500).json({ error: "Failed to process the file" });
         } finally {
+          // Process different file formats
+          async function processFile(file: Express.Multer.File) {
+            const ext = path.extname(file.originalname).toLowerCase();
+            let text = '';
+
+            try {
+              switch (ext) {
+                case '.txt':
+                  text = fs.readFileSync(file.path, 'utf8');
+                  break;
+
+                case '.docx':
+                  const docxResult = await mammoth.extractRawText({path: file.path});
+                  text = docxResult.value;
+                  break;
+
+                case '.pdf':
+                  const pdfBuffer = fs.readFileSync(file.path);
+                  const pdfData = await pdfParse(pdfBuffer);
+                  text = pdfData.text;
+                  break;
+
+                default:
+                  throw new Error('Unsupported file format');
+              }
+
+              // Clean up the temporary file
+              try {
+                fs.unlinkSync(file.path);
+              } catch (unlinkErr) {
+                console.error(`Failed to unlink file ${file.path}:`, unlinkErr);
+              }
+
+              return text;
+
+            } catch (error) {
+              console.error('Error processing file:', error);
+              throw error;
+            }
+          }
           // Clean up the temporary file
           try {
             fs.unlinkSync(file.path);
@@ -1029,6 +1071,46 @@ function registerAdminRoutes(app: Express) {
           console.error("Error converting file:", conversionError);
           return res.status(500).json({ error: "Failed to convert the file" });
         } finally {
+           // Process different file formats
+            async function processFile(file: Express.Multer.File) {
+              const ext = path.extname(file.originalname).toLowerCase();
+              let text = '';
+
+              try {
+                switch (ext) {
+                  case '.txt':
+                    text = fs.readFileSync(file.path, 'utf8');
+                    break;
+
+                  case '.docx':
+                    const docxResult = await mammoth.extractRawText({path: file.path});
+                    text = docxResult.value;
+                    break;
+
+                  case '.pdf':
+                    const pdfBuffer = fs.readFileSync(file.path);
+                    const pdfData = await pdfParse(pdfBuffer);
+                    text = pdfData.text;
+                    break;
+
+                  default:
+                    throw new Error('Unsupported file format');
+                }
+
+                // Clean up the temporary file
+                try {
+                  fs.unlinkSync(file.path);
+                } catch (unlinkErr) {
+                  console.error(`Failed to unlink file ${file.path}:`, unlinkErr);
+                }
+
+                return text;
+
+              } catch (error) {
+                console.error('Error processing file:', error);
+                throw error;
+              }
+            }
           // Clean up the temporary file
           try {
             fs.unlinkSync(file.path);
@@ -1878,11 +1960,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return handleApiError(res, error);
     }
   });
+    // Process different file formats
+    async function processFile(file: Express.Multer.File) {
+      const ext = path.extname(file.originalname).toLowerCase();
+      let text = '';
 
+      try {
+        switch (ext) {
+          case '.txt':
+            text = fs.readFileSync(file.path, 'utf8');
+            break;
+
+          case '.docx':
+            const docxResult = await mammoth.extractRawText({path: file.path});
+            text = docxResult.value;
+            break;
+
+          case '.pdf':
+            const pdfBuffer = fs.readFileSync(file.path);
+            const pdfData = await pdfParse(pdfBuffer);
+            text = pdfData.text;
+            break;
+
+          default:
+            throw new Error('Unsupported file format');
+        }
+
+        // Clean up the temporary file
+        try {
+          fs.unlinkSync(file.path);
+        } catch (unlinkErr) {
+          console.error(`Failed to unlink file ${file.path}:`, unlinkErr);
+        }
+
+        return text;
+
+      } catch (error) {
+        console.error('Error processing file:', error);
+        throw error;
+      }
+    }
   app.post(`${apiPrefix}/files`, verifyToken, async (req, res) => {
     try {
-      const fileData = schema.insertFileSchema.parse(req.body);
-      const [file] = await db.insert(schema.files).values(fileData).returning();
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+
+      // Check supported formats
+      const ext = path.extname(file.originalname).toLowerCase();
+      if (!['.txt', '.docx', '.pdf'].includes(ext)) {
+        return res.status(400).json({ error: 'Unsupported file format' });
+      }
+
+      const fileContent = await processFile(file);
+
+      const fileData = {
+        name: file.originalname,
+        content: fileContent,
+        projectId: 1, // 임시 프로젝트 ID
+        type: "work",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+
+      const [newFile] = await db.insert(schema.files).values(fileData).returning();
 
       // Parse content into segments by splitting into sentences
       // Use a more sophisticated sentence splitter that handles various end-of-sentence patterns
@@ -1926,7 +2068,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ...sentences.map((sentence) => ({
             source: sentence,
             status: "MT",
-            fileId: file.id,
+            fileId: newFile.id,
           })),
         ];
       }
@@ -1935,7 +2077,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await db.insert(schema.translationUnits).values(segments);
       }
 
-      return res.status(201).json(file);
+      return res.status(201).json(newFile);
     } catch (error) {
       return handleApiError(res, error);
     }
@@ -2210,7 +2352,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // 프로젝트 참조 파일 삭제 API
   app.delete(
-    `${apiPrefix}/projects/:id/references/:index`,
+    `${apiPrefix}/projects/:id/references/:index}`,
     verifyToken,
     async (req, res) => {
       try {
