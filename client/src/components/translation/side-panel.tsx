@@ -503,6 +503,19 @@ export function SidePanel({
         throw new Error(`Failed to add comment: ${response.status}`);
       }
 
+      // 댓글이 추가된 세그먼트 정보 다시 가져오기
+      const updatedSegmentResponse = await fetch(`/api/segments/${selectedSegment.id}`);
+      if (updatedSegmentResponse.ok) {
+        const updatedSegment = await updatedSegmentResponse.json();
+        
+        // 부모 컴포넌트에 세그먼트 업데이트 알림
+        if (onSegmentUpdated) {
+          onSegmentUpdated(selectedSegment.id, updatedSegment.target);
+        }
+        
+        // 컴포넌트 다시 렌더링을 위해 부모로부터 새 selectedSegment를 받게 됨
+      }
+
       // 입력란 초기화
       setCommentText("");
       
