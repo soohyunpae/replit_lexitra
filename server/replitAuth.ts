@@ -11,9 +11,9 @@ import { users } from "@shared/schema";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
 
-if (!process.env.REPLIT_DOMAINS) {
-  console.warn("Environment variable REPLIT_DOMAINS not provided");
-}
+// Replit 도메인 환경 변수 확인
+const replitDomains = process.env.REPLIT_DOMAINS || '';
+console.log('Replit domains:', replitDomains);
 
 const getOidcConfig = memoize(
   async () => {
