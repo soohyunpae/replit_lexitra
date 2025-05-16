@@ -197,7 +197,7 @@ export default function Dashboard() {
               <CardContent className="p-6">
                 <h3 className="font-bold mb-2">📘 Manage Glossary</h3>
                 <p className="text-sm text-muted-foreground">Edit domain-specific terms for better consistency.</p>
-                <Link href="/glossary">
+                <Link href="/glossaries">
                   <Button variant="link" className="mt-3 px-0 text-blue-600 text-sm hover:underline">
                     Open Glossary →
                   </Button>
