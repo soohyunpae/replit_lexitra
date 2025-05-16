@@ -27,16 +27,10 @@ const getOidcConfig = memoize(
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
-  const pgStore = connectPg(session);
-  const sessionStore = new pgStore({
-    pool: pool,
-    createTableIfMissing: true,
-    ttl: sessionTtl,
-    tableName: "sessions",
-  });
+  
+  // 메모리 기반 세션 스토어 사용 (개발 환경용)
   return session({
     secret: process.env.SESSION_SECRET || 'lexitra_secret_key',
-    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
