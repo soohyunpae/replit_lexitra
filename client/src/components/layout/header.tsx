@@ -116,19 +116,34 @@ export function Header({
         </div>
 
         <div className="flex items-center space-x-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-            className="h-8 w-8"
-          >
-            {mounted && isDarkMode ? (
-              <Moon className="h-4 w-4" />
-            ) : (
-              <Sun className="h-4 w-4" />
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+              className="h-8 w-8"
+            >
+              {mounted && isDarkMode ? (
+                <Moon className="h-4 w-4" />
+              ) : (
+                <Sun className="h-4 w-4" />
+              )}
+            </Button>
+
+            <Select
+              value={i18n.language}
+              onValueChange={(value) => i18n.changeLanguage(value)}
+            >
+              <SelectTrigger className="w-[70px]">
+                <SelectValue>{i18n.language === 'ko' ? 'KO' : 'EN'}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ko">한국어</SelectItem>
+                <SelectItem value="en">English</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Settings 버튼 제거 */}
 
