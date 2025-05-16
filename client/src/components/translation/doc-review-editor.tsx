@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { useMobile } from '@/hooks/use-mobile';
 import { SidePanel } from './side-panel';
 import { useSegments } from '@/hooks/useSegments';
+import { apiRequest } from '@/lib/queryClient';
 
 interface DocReviewEditorProps {
   fileName: string;
