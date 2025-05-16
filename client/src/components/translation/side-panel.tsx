@@ -496,14 +496,16 @@ export function SidePanel({
     try {
       const response = await apiRequest("POST", `/api/segments/${selectedSegment.id}/comments`, {
         text: commentText,
+        segmentId: selectedSegment.id
       });
 
       if (!response.ok) {
         throw new Error(`Failed to add comment: ${response.status}`);
       }
 
-      const result = await response.json();
-
+      // 입력란 초기화
+      setCommentText("");
+      
       // 성공 메시지 표시
       toast({
         title: "댓글 추가됨",
@@ -511,26 +513,9 @@ export function SidePanel({
         variant: "default",
       });
 
-      // 입력란 초기화
-      setCommentText("");
-      
-      // 세그먼트의 comments 배열을 새로운 배열로 업데이트
-      const updatedComments = [...(selectedSegment.comments || []), {
-        id: result.id,
-        text: commentText,
-        author: "User",
-        createdAt: new Date().toISOString()
-      }];
-      
-      // 세그먼트 객체를 새로 생성하여 업데이트
-      const updatedSegment = {
-        ...selectedSegment,
-        comments: updatedComments
-      };
-
       // 세그먼트 데이터 리프레시
       if (onSegmentUpdated) {
-        onSegmentUpdated(updatedSegment.id, updatedSegment.target || '');
+        onSegmentUpdated(selectedSegment.id, selectedSegment.target || '');
       }
 
     } catch (error) {
