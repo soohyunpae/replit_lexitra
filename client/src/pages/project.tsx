@@ -1643,6 +1643,5 @@ export default function Project() {
           </Card>
         </div>
       </main>
-    </MainLayout>
   );
 }
