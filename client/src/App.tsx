@@ -4,6 +4,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ui/theme-provider";
+import "./lib/i18n";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MainLayout } from "@/components/layout/main-layout";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
@@ -64,16 +65,16 @@ function Router() {
       <ProtectedRoute path="/projects" component={Projects} />
       <ProtectedRoute path="/projects/:id" component={Project} />
       <ProtectedRoute path="/translation/:fileId" component={Translation} />
-      
+
       {/* New unified glossary page */}
       <ProtectedRoute path="/glossaries" component={GlossariesUnified} />
-      
+
       {/* Redirect old routes to the unified page */}
       <ProtectedRoute path="/termbases" component={GlossariesUnified} />
-      
+
       {/* TM page */}
       <ProtectedRoute path="/tm" component={TMUnified} />
-      
+
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <Route path="/admin">
         <AdminRoute component={AdminConsole} />

@@ -828,7 +828,7 @@ export default function Project() {
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-lg flex items-center">
-                    <span>📋 Project Info</span>
+                    <span>📋 {t("Project Info")}</span>
                   </CardTitle>
                   {isAdmin && (
                     <Button
