@@ -505,27 +505,28 @@ export function SidePanel({
 
       const result = await response.json();
 
-      // 현재 세그먼트의 comments 배열 업데이트
-      if (selectedSegment.comments) {
-        selectedSegment.comments.push({
-          id: result.id,
-          text: commentText,
-          author: "User",
-          createdAt: new Date().toISOString()
-        });
-      } else {
-        selectedSegment.comments = [{
-          id: result.id,
-          text: commentText,
-          author: "User",
-          createdAt: new Date().toISOString()
-        }];
+      // 새로운 comments 배열 생성
+      const newComments = [...(selectedSegment.comments || [])];
+      newComments.push({
+        id: result.id,
+        text: commentText,
+        author: "User",
+        createdAt: new Date().toISOString()
+      });
+
+      // selectedSegment 객체 복사본 생성 및 업데이트
+      const updatedSegment = {
+        ...selectedSegment,
+        comments: newComments
+      };
+
+      // onSegmentUpdated 호출하여 부모 컴포넌트에 변경 알림
+      if (onSegmentUpdated) {
+        onSegmentUpdated(updatedSegment.id, updatedSegment.target || '');
       }
 
       // 입력란 초기화
       setCommentText("");
-
-      // 강제로 리렌더링을 위해 상태 업데이트
       setIsAddingComment(false);
 
       // 성공 메시지 표시
