@@ -508,12 +508,14 @@ export function SidePanel({
       if (updatedSegmentResponse.ok) {
         const updatedSegment = await updatedSegmentResponse.json();
         
+        // 현재 컴포넌트에서 직접 selectedSegment 업데이트 (중요!)
+        // 가져온 새 데이터로 직접 selectedSegment를 업데이트하면 UI에 댓글이 표시됨
+        selectedSegment.comments = updatedSegment.comments || [];
+        
         // 부모 컴포넌트에 세그먼트 업데이트 알림
         if (onSegmentUpdated) {
           onSegmentUpdated(selectedSegment.id, updatedSegment.target);
         }
-        
-        // 컴포넌트 다시 렌더링을 위해 부모로부터 새 selectedSegment를 받게 됨
       }
 
       // 입력란 초기화
