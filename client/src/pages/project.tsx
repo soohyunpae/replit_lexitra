@@ -1113,6 +1113,144 @@ export default function Project() {
             </Card>
           </div>
 
+          {/* File list */}
+          <Card className="mb-6">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Files</CardTitle>
+              <CardDescription />
+            </CardHeader>
+            <CardContent>
+              {workFiles && workFiles.length > 0 ? (
+                <div className="space-y-2">
+                  {workFiles.map((file: FileType) => {
+                    const stats = fileStats[file.id] || {
+                      total: 0,
+                      completed: 0,
+                      percentage: 0,
+                    };
+                    return (
+                      <div
+                        key={file.id}
+                        className="border border-border rounded-lg p-4 hover:border-primary/60 transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-44 truncate">
+                            <span className="font-medium">{file.name}</span>
+                          </div>
+
+                          <div className="flex items-center gap-2 flex-1 max-w-md">
+                            <CombinedProgress
+                              translatedPercentage={
+                                getStatusPercentage(file.id, "100%") +
+                                getStatusPercentage(file.id, "Edited")
+                              }
+                              reviewedPercentage={getStatusPercentage(
+                                file.id,
+                                "Reviewed",
+                              )}
+                              statusCounts={{
+                                Reviewed: getStatusCount(file.id, "Reviewed"),
+                                "100%": getStatusCount(file.id, "100%"),
+                                Fuzzy: getStatusCount(file.id, "Fuzzy"),
+                                MT: getStatusCount(file.id, "MT"),
+                                Edited: getStatusCount(file.id, "Edited"),
+                                Rejected: getStatusCount(file.id, "Rejected"),
+                              }}
+                              totalSegments={getTotalSegments(file.id)}
+                              height="h-2"
+                              showPercentage={true}
+                            />
+                          </div>
+
+                          <div className="text-sm text-muted-foreground whitespace-nowrap">
+                            {formatDate(file.updatedAt || file.createdAt)}
+                          </div>
+
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground whitespace-nowrap">
+                            <TextCursorInput className="h-3.5 w-3.5" />
+                            <span>
+                              {(file as any).wordCount ||
+                                getFileWordCount(file.id)}{" "}
+                              words
+                            </span>
+                          </div>
+
+                          <div className="flex justify-end min-w-[120px]">
+                            {/* 빈 타겟 세그먼트 개수 확인 */}
+                            {(() => {
+                              // 파일의 모든 세그먼트 가져오기
+                              const segments = allSegmentsData?.[file.id] || [];
+                              // 타겟이 비어있는 세그먼트 개수
+                              const emptyTargets = segments.filter(
+                                (seg) =>
+                                  !seg.target || seg.target.trim() === "",
+                              ).length;
+                              // 총 세그먼트 수
+                              const totalSegments = segments.length;
+
+                              // 번역 초벌이 진행 중인지 확인 (배정된지 얼마 안된 경우)
+                              const isInitialTranslationInProgress =
+                                emptyTargets > 0 &&
+                                new Date().getTime() -
+                                  new Date(file.createdAt).getTime() <
+                                  1000 * 60 * 10; // 10분 이내 생성
+
+                              return (
+                                <Button
+                                  size="sm"
+                                  onClick={() =>
+                                    navigate(`/translation/${file.id}`)
+                                  }
+                                  disabled={
+                                    project.status === "Unclaimed" ||
+                                    (project.status === "Claimed" &&
+                                      project.claimedBy !== user?.id &&
+                                      user?.role !== "admin") ||
+                                    // 번역 초벌이 진행 중인 경우 disabled (관리자 제외)
+                                    (isInitialTranslationInProgress &&
+                                      user?.role !== "admin")
+                                  }
+                                  variant={
+                                    project.status === "Unclaimed" ||
+                                    (project.status === "Claimed" &&
+                                      project.claimedBy !== user?.id &&
+                                      user?.role !== "admin") ||
+                                    isInitialTranslationInProgress
+                                      ? "outline"
+                                      : "default"
+                                  }
+                                >
+                                  {project.status === "Unclaimed"
+                                    ? "Claim Project First"
+                                    : project.status === "Claimed" &&
+                                        project.claimedBy !== user?.id
+                                      ? "Claimed by Another User"
+                                      : isInitialTranslationInProgress
+                                        ? "번역 초벌 진행 중..."
+                                        : "Open Editor"}
+                                  {isInitialTranslationInProgress && (
+                                    <RefreshCw className="ml-2 h-3 w-3 animate-spin" />
+                                  )}
+                                </Button>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12 border border-dashed border-border rounded-lg">
+                  <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-4">
+                    <Upload className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">No files yet</h3>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Reference Files Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <Card className="md:col-span-2">
@@ -1368,9 +1506,6 @@ export default function Project() {
               </CardContent>
             </Card>
           </div>
-
-          {/* File list */}
-          <Card className="mb-6">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Files</CardTitle>
               <CardDescription />
