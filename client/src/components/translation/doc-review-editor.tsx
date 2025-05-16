@@ -515,8 +515,15 @@ export function DocReviewEditor({
                             isSource={true}
                             isEditing={editingId === segment.id}
                             isDocumentMode={true}
+                            onSelectForEditing={() => {
+                              setHighlightedSegmentId(segment.id);
+                              // 사이드 패널을 위해 편집 세그먼트 설정 (실제 편집은 하지 않음)
+                              if (!editingId) {
+                                originalSelectForEditing(segment);
+                              }
+                            }}
                             className={cn(
-                              "py-0 mr-0 border-0",
+                              "py-0 mr-0 border-0 cursor-pointer",
                               (editingId === segment.id || highlightedSegmentId === segment.id) ? "bg-blue-100 dark:bg-blue-900/50 rounded px-1 shadow-sm" : ""
                             )}
                           />
@@ -588,7 +595,10 @@ export function DocReviewEditor({
                             isEditing={editingId === segment.id}
                             editedValue={editingId === segment.id ? editedValue : segment.target || ''}
                             onEditValueChange={setEditedValue}
-                            onSelectForEditing={() => selectSegmentForEditing(segment)}
+                            onSelectForEditing={() => {
+                              setHighlightedSegmentId(segment.id);
+                              selectSegmentForEditing(segment);
+                            }}
                             onSave={() => customUpdateSegment(segment.id, editedValue)}
                             onCancel={customCancelEditing}
                             onToggleStatus={() => editingStateToggleStatus(segment.id, segment.target || '')}
