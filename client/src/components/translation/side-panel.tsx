@@ -488,38 +488,47 @@ export function SidePanel({
   }, [propPreviousVersions]);
 
   // 댓글 추가 기능 구현
-  const handleAddComment = useCallback(() => {
+  const handleAddComment = useCallback(async () => {
     if (!commentText.trim() || !selectedSegment) return;
 
     setIsAddingComment(true);
 
-    // 즉시 UI 피드백을 위한, 성공을 가정한 비동기 처리
-    setTimeout(() => {
-      try {
-        // 실제 API 연동은 추후 구현 예정
-        // 임시 성공 메시지 표시
+    try {
+      const response = await apiRequest("POST", `/api/segments/${selectedSegment.id}/comments`, {
+        text: commentText,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // 성공 메시지 표시
         toast({
           title: "댓글 추가됨",
           description: "댓글이 성공적으로 추가되었습니다.",
           variant: "default",
         });
 
-        // 성공 후 입력란 초기화
+        // 세그먼트 데이터 리프레시
+        if (onSegmentUpdated) {
+          onSegmentUpdated(selectedSegment.id, selectedSegment.target || '');
+        }
+
+        // 입력란 초기화
         setCommentText("");
-      } catch (error) {
-        // 오류 발생시 토스트 메시지
-        toast({
-          title: "댓글 추가 실패",
-          description: "댓글 추가 중 오류가 발생했습니다. 다시 시도해주세요.",
-          variant: "destructive",
-        });
-        console.error("댓글 추가 중 오류:", error);
-      } finally {
-        // 버튼 상태 복원
-        setIsAddingComment(false);
+      } else {
+        throw new Error("Failed to add comment");
       }
-    }, 800); // 시각적 피드백을 위한 지연
-  }, [commentText, selectedSegment]);
+    } catch (error) {
+      toast({
+        title: "댓글 추가 실패",
+        description: "댓글 추가 중 오류가 발생했습니다. 다시 시도해주세요.",
+        variant: "destructive",
+      });
+      console.error("댓글 추가 중 오류:", error);
+    } finally {
+      setIsAddingComment(false);
+    }
+  }, [commentText, selectedSegment, onSegmentUpdated]);
 
   // Determine which TM matches to display
   const displayedTmMatches =
@@ -716,12 +725,31 @@ export function SidePanel({
             {/* Removed Active Segment section as requested */}
 
             <div className="space-y-4">
-              <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center mb-4">
-                No comments available for this segment. Add a comment below.
-              </div>
+              {/* 댓글 목록 표시 */}
+              {selectedSegment?.comments && selectedSegment.comments.length > 0 ? (
+                <div className="space-y-3">
+                  {selectedSegment.comments.map((comment, index) => (
+                    <div key={index} className="bg-accent/50 rounded-md p-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-xs font-medium">{comment.author || 'User'}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(comment.createdAt).toLocaleString()}
+                        </span>
+                      </div>
+                      <p className="text-sm mt-2">{comment.text}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center mb-4">
+                  No comments available for this segment. Add a comment below.
+                </div>
+              )}
 
               <div className="space-y-2">
-                {/* 댓글 입력 상태 관리 */}
                 <Textarea
                   placeholder="Add a comment about this segment..."
                   className="min-h-[100px] text-sm"
