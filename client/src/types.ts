@@ -30,15 +30,6 @@ export interface Project {
   files?: File[];
 }
 
-// 댓글 타입 정의
-export interface Comment {
-  id?: number;
-  text: string;
-  author?: string;
-  createdAt: string;
-  segmentId?: number;
-}
-
 // Translation Unit Type
 export interface TranslationUnit {
   id: number;
@@ -47,7 +38,6 @@ export interface TranslationUnit {
   status: string; // 'Draft', 'Reviewed', 'Rejected'
   origin?: string; // 'MT', 'Fuzzy', '100%', 'HT'
   comment?: string;
-  comments?: Comment[]; // 댓글 배열 추가
   fileId: number;
   createdAt: string;
   updatedAt: string;

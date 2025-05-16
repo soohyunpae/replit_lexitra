@@ -3730,18 +3730,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ws.on("message", (message) => {
       try {
         console.log("메시지 수신:", message.toString());
-        // 메시지 내용 파싱
-        const data = JSON.parse(message.toString());
-        
-        // 메시지 유형에 따른 처리
-        if (data.type === 'comment_broadcast') {
-          // 댓글 추가 시 모든 클라이언트에게 알림
-          broadcastMessage('comment_added', {
-            segmentId: data.data.segmentId,
-            comment: data.data.comment
-          });
-          console.log(`댓글 추가 브로드캐스트: ${data.data.comment.text.substring(0, 30)}...`);
-        }
+        // 여기서 메시지 처리
       } catch (err) {
         console.error("WebSocket 메시지 처리 오류:", err);
       }
