@@ -4,15 +4,12 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ui/theme-provider";
-import "./lib/i18n";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MainLayout } from "@/components/layout/main-layout";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
-import Dashboard from "@/pages/dashboard";
-import LandingPage from "@/pages/landing";
 import Projects from "@/pages/projects";
 import Project from "@/pages/project";
 import Translation from "@/pages/translation";
@@ -59,22 +56,20 @@ const AdminRoute = ({ component: Component, ...rest }: any) => {
 function Router() {
   return (
     <Switch>
-      <Route path="/landing" component={LandingPage} />
-      <ProtectedRoute path="/" component={Dashboard} />
-      <ProtectedRoute path="/home" component={Home} />
+      <ProtectedRoute path="/" component={Home} />
       <ProtectedRoute path="/projects" component={Projects} />
       <ProtectedRoute path="/projects/:id" component={Project} />
       <ProtectedRoute path="/translation/:fileId" component={Translation} />
-
+      
       {/* New unified glossary page */}
       <ProtectedRoute path="/glossaries" component={GlossariesUnified} />
-
+      
       {/* Redirect old routes to the unified page */}
       <ProtectedRoute path="/termbases" component={GlossariesUnified} />
-
+      
       {/* TM page */}
       <ProtectedRoute path="/tm" component={TMUnified} />
-
+      
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <Route path="/admin">
         <AdminRoute component={AdminConsole} />

@@ -20,7 +20,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Sidebar } from "./sidebar";
-import { useTranslation } from "react-i18next";
 
 interface HeaderProps {
   title?: string;
@@ -41,7 +40,6 @@ export function Header({
   const { user, logoutMutation } = useAuth();
   const [location, navigate] = useLocation();
   const { isCollapsed, getCurrentSectionTitle, activeSubSection } = useContext(SidebarContext);
-  const { i18n } = useTranslation();
 
   // Generate breadcrumbs based on current location
   const getBreadcrumbs = (): Breadcrumb[] | null => {
@@ -61,12 +59,12 @@ export function Header({
     let currentPath = "";
     paths.forEach((path, index) => {
       currentPath += `/${path}`;
-
+      
       // Check if this is a project ID
       const isProjectId = /^\d+$/.test(path) && paths[index-1] === "projects";
       // Check if this is a file ID
       const isFileId = /^\d+$/.test(path) && paths[index-1] === "translation";
-
+      
       // Skip numeric IDs in the breadcrumb labels
       let label = path;
       if (isProjectId) {
@@ -84,7 +82,7 @@ export function Header({
           label = path.charAt(0).toUpperCase() + path.slice(1);
         }
       }
-
+      
       breadcrumbs.push({
         label,
         href: currentPath,
@@ -94,7 +92,7 @@ export function Header({
 
     return breadcrumbs;
   };
-
+  
   const breadcrumbs = getBreadcrumbs();
 
   return (
@@ -114,39 +112,24 @@ export function Header({
             </Sheet>
           )}
         </div>
-
+      
         <div className="flex items-center space-x-3">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              aria-label="Toggle theme"
-              className="h-8 w-8"
-            >
-              {mounted && isDarkMode ? (
-                <Moon className="h-4 w-4" />
-              ) : (
-                <Sun className="h-4 w-4" />
-              )}
-            </Button>
-
-            <Select
-              value={i18n.language}
-              onValueChange={(value) => i18n.changeLanguage(value)}
-            >
-              <SelectTrigger className="w-[70px]">
-                <SelectValue>{i18n.language === 'ko' ? 'KO' : 'EN'}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ko">한국어</SelectItem>
-                <SelectItem value="en">English</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className="h-8 w-8"
+          >
+            {mounted && isDarkMode ? (
+              <Moon className="h-4 w-4" />
+            ) : (
+              <Sun className="h-4 w-4" />
+            )}
+          </Button>
+          
           {/* Settings 버튼 제거 */}
-
+          
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

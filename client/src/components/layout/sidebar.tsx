@@ -61,7 +61,7 @@ export function Sidebar() {
   const isMobile = useMobile();
   const [isProjectOpen, setIsProjectOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeSubSection, setActiveSubSection] = useState<string | null>(null);
 
   // State for language direction
