@@ -511,26 +511,26 @@ export function SidePanel({
         variant: "default",
       });
 
-      // 세그먼트 데이터 리프레시
-      if (onSegmentUpdated) {
-        onSegmentUpdated(selectedSegment.id, selectedSegment.target || '');
-      }
-
       // 입력란 초기화
       setCommentText("");
       
-      // 현재 세그먼트의 comments 배열 업데이트
-      const newComment = {
+      // 세그먼트의 comments 배열을 새로운 배열로 업데이트
+      const updatedComments = [...(selectedSegment.comments || []), {
         id: result.id,
         text: commentText,
         author: "User",
         createdAt: new Date().toISOString()
-      };
+      }];
       
-      if (selectedSegment.comments) {
-        selectedSegment.comments.push(newComment);
-      } else {
-        selectedSegment.comments = [newComment];
+      // 세그먼트 객체를 새로 생성하여 업데이트
+      const updatedSegment = {
+        ...selectedSegment,
+        comments: updatedComments
+      };
+
+      // 세그먼트 데이터 리프레시
+      if (onSegmentUpdated) {
+        onSegmentUpdated(updatedSegment.id, updatedSegment.target || '');
       }
 
     } catch (error) {
