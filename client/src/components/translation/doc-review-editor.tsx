@@ -233,7 +233,7 @@ export function DocReviewEditor({
       'Rejected': 0
     };
 
-    segments.forEach(segment => {
+    segments.forEach((segment: TranslationUnit) => {
       // If segment has a valid status, use it
       if (segment.status && counts[segment.status] !== undefined) {
         counts[segment.status]++;
@@ -271,7 +271,7 @@ export function DocReviewEditor({
     setHighlightedSegmentId(null);
     // 원래 세그먼트 상태로 복원
     if (editingId) {
-      const segment = segments.find(s => s.id === editingId);
+      const segment = segments.find((s: TranslationUnit) => s.id === editingId);
       if (segment) {
         setSegmentStatuses(prev => ({
           ...prev,
@@ -285,7 +285,7 @@ export function DocReviewEditor({
   // React Query 업데이트 함수를 사용하도록 수정된 저장 함수
   const customUpdateSegment = async (id: number, value: string) => {
     // 현재 편집 중인 세그먼트 찾기
-    const segment = segments.find(s => s.id === id);
+    const segment = segments.find((s: TranslationUnit) => s.id === id);
     if (segment) {
       // 값이 변경되었는지 확인
       const isValueChanged = value !== segment.target;
@@ -479,13 +479,17 @@ export function DocReviewEditor({
           ref={leftPanelRef}
         >
           {/* Mobile-only header */}
-          {isMobile && showSource && (
+          {isMobile && (
             <div className="sticky top-0 bg-card/90 backdrop-blur-sm p-2 border-b z-10 flex justify-between items-center">
               <span className="text-sm font-medium">{sourceLanguage} (Source)</span>
               <Button 
                 size="sm" 
                 variant="ghost" 
-                onClick={() => setShowSource(false)}
+                onClick={() => {
+                  setViewMode('target');
+                  setShowSource(false);
+                  setShowTarget(true);
+                }}
                 className="h-7 w-7 p-0"
               >
                 <ArrowUp className="h-4 w-4" />
@@ -543,13 +547,17 @@ export function DocReviewEditor({
           ref={rightPanelRef}
         >
           {/* Mobile-only header with show source button */}
-          {isMobile && !showSource && (
+          {isMobile && (
             <div className="sticky top-0 bg-card/90 backdrop-blur-sm p-2 border-b z-10 flex justify-between items-center">
               <span className="text-sm font-medium">{targetLanguage} (Target)</span>
               <Button 
                 size="sm" 
                 variant="ghost" 
-                onClick={() => setShowSource(true)}
+                onClick={() => {
+                  setViewMode('source');
+                  setShowSource(true);
+                  setShowTarget(false);
+                }}
                 className="h-7 w-7 p-0"
               >
                 <ArrowDown className="h-4 w-4" />
@@ -612,7 +620,7 @@ export function DocReviewEditor({
             <SidePanel
               tmMatches={tmMatches}
               glossaryTerms={glossaryTerms}
-              selectedSegment={segments.find(s => s.id === editingId)}
+              selectedSegment={segments.find((s: TranslationUnit) => s.id === editingId)}
               onUseTranslation={(translation) => {
                 if (editingId) {
                   setEditedValue(translation);
