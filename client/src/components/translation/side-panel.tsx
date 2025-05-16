@@ -21,6 +21,7 @@ import {
   Circle,
   Info,
   Loader2,
+  Wifi,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -34,6 +35,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
+import useWebSocket from "@/hooks/useWebSocket";
 
 interface SidePanelProps {
   tmMatches: TranslationMemory[];
