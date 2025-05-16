@@ -504,23 +504,29 @@ export function SidePanel({
       }
 
       const result = await response.json();
+      
+      if (!selectedSegment) return;
 
-      // 새로운 comments 배열 생성
-      const newComments = [...(selectedSegment.comments || [])];
-      newComments.push({
+      // 새로운 댓글 객체 생성
+      const newComment = {
         id: result.id,
         text: commentText,
         author: "User",
         createdAt: new Date().toISOString()
-      });
-
-      // selectedSegment 객체 복사본 생성 및 업데이트
-      const updatedSegment = {
-        ...selectedSegment,
-        comments: newComments
       };
 
-      // onSegmentUpdated 호출하여 부모 컴포넌트에 변경 알림
+      // selectedSegment를 완전히 새로운 객체로 복사
+      const updatedSegment = {
+        ...selectedSegment,
+        comments: selectedSegment.comments ? 
+          [...selectedSegment.comments, newComment] : 
+          [newComment]
+      };
+
+      // 상태 업데이트
+      setSelectedSegment(updatedSegment);
+
+      // 부모 컴포넌트에 변경 알림
       if (onSegmentUpdated) {
         onSegmentUpdated(updatedSegment.id, updatedSegment.target || '');
       }
