@@ -402,6 +402,42 @@ export function SidePanel({
   >({});
   const [commentText, setCommentText] = useState("");
   const [isAddingComment, setIsAddingComment] = useState(false);
+  const [wsConnected, setWsConnected] = useState(false);
+  
+  // WebSocket 연결 설정
+  const { status: wsStatus, lastMessage, sendMessage, isReady } = useWebSocket({
+    onOpen: () => {
+      setWsConnected(true);
+      console.log("WebSocket connected");
+    },
+    onMessage: (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        // 새 댓글 알림 처리
+        if (data.type === 'comment_added' && selectedSegment && data.data.segmentId === selectedSegment.id) {
+          // 세그먼트에 댓글 추가 처리
+          const updatedSegment = {
+            ...selectedSegment,
+            comments: selectedSegment.comments ? 
+              [...selectedSegment.comments, data.data.comment] : 
+              [data.data.comment]
+          };
+          
+          // 상태 업데이트 - UI에 바로 반영
+          toast({
+            title: "새 댓글 도착",
+            description: `${data.data.comment.author || 'User'}: ${data.data.comment.text.substring(0, 30)}${data.data.comment.text.length > 30 ? '...' : ''}`,
+          });
+        }
+      } catch (err) {
+        console.error("WebSocket message parsing error:", err);
+      }
+    },
+    onClose: () => {
+      setWsConnected(false);
+      console.log("WebSocket disconnected");
+    }
+  });
 
   // Function to search TM globally
   const searchGlobalTM = async (query: string) => {
@@ -511,25 +547,33 @@ export function SidePanel({
 
       // 새로운 댓글 객체 생성
       const newComment = {
-        id: result.id,
+        id: result.id || Date.now(), // 서버에서 ID가 없으면 임시 ID 생성
         text: commentText,
         author: "User",
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        segmentId: selectedSegment.id
       };
 
-      // selectedSegment를 완전히 새로운 객체로 복사
-      const updatedSegment = {
-        ...selectedSegment,
-        comments: selectedSegment.comments ? 
-          [...selectedSegment.comments, newComment] : 
-          [newComment]
-      };
-
-      // 상태 업데이트
-      setSelectedSegment(updatedSegment);
+      // WebSocket을 통해 댓글 추가 이벤트 브로드캐스트
+      if (isReady) {
+        sendMessage({
+          type: 'comment_broadcast',
+          data: {
+            segmentId: selectedSegment.id,
+            comment: newComment
+          }
+        });
+      }
 
       // 부모 컴포넌트에 변경 알림
       if (onSegmentUpdated) {
+        // 업데이트된 세그먼트 상태를 전달
+        const updatedSegment = {
+          ...selectedSegment,
+          comments: selectedSegment.comments ? 
+            [...selectedSegment.comments, newComment] : 
+            [newComment]
+        };
         onSegmentUpdated(updatedSegment.id, updatedSegment.target || '');
       }
 
@@ -752,6 +796,14 @@ export function SidePanel({
             {/* Removed Active Segment section as requested */}
 
             <div className="space-y-4">
+              {/* 웹소켓 연결 상태 표시 */}
+              <div className="flex items-center gap-1 text-xs mb-1">
+                <div className={`w-2 h-2 rounded-full ${wsConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <span className="text-muted-foreground">
+                  {wsConnected ? 'Real-time updates active' : 'Real-time updates inactive'}
+                </span>
+              </div>
+              
               {/* 댓글 목록 표시 */}
               {selectedSegment?.comments && selectedSegment.comments.length > 0 ? (
                 <div className="space-y-3">
