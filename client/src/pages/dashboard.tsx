@@ -41,12 +41,6 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
-  // 검토 대기중인 세그먼트 (간소화된 예시)
-  const { data: reviewStats = { totalAwaitingReview: 18 } } = useQuery<ReviewStats>({
-    queryKey: ['/api/projects/stats'],
-    enabled: !!user,
-  });
-
   // 용어집 사용 현황
   const { data: glossaryData = [] } = useQuery<any[]>({
     queryKey: ['/api/glossary/all'],
@@ -55,7 +49,7 @@ export default function Dashboard() {
 
   // 필요한 데이터 계산
   const activeProjects = projects.length || 0;
-  const segmentsAwaitingReview = reviewStats.totalAwaitingReview || 18; // 기본값
+  const segmentsAwaitingReview = 18; // 기본값 - API가 구현되면 실제 데이터로 대체
   const glossaryTermsUsed = glossaryData.length ? Math.min(glossaryData.length, 4) : 4; // 기본값
 
   // 프로젝트 진행 중인 목록 (예시 데이터)
