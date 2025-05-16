@@ -182,7 +182,7 @@ export function DocReviewEditor({
   const [viewMode, setViewMode] = useState<'source' | 'target' | 'sideBySide'>('sideBySide');
   const [showSource, setShowSource] = useState(true); // 소스 패널 표시 여부 (sideBySide, source 모드에서 true)
   const [showTarget, setShowTarget] = useState(true); // 타겟 패널 표시 여부 (sideBySide, target 모드에서 true)
-  
+
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [showSidePanel, setShowSidePanel] = useState(true); // 사이드 패널 디폴트 true로 설정
   const [highlightedSegmentId, setHighlightedSegmentId] = useState<number | null>(null);
@@ -437,7 +437,7 @@ export function DocReviewEditor({
                 Side by Side
               </Button>
             </div>
-            
+
             {/* Side panel toggle button - only show in side by side mode */}
             {!isMobile && viewMode === 'sideBySide' && (
               <Button
@@ -620,7 +620,7 @@ export function DocReviewEditor({
             <SidePanel
               tmMatches={tmMatches}
               glossaryTerms={glossaryTerms}
-              selectedSegment={segments.find((s: TranslationUnit) => s.id === editingId)}
+              selectedSegment={segments.find((s: TranslationUnit) => s.id === (editingId || highlightedSegmentId))}
               onUseTranslation={(translation) => {
                 if (editingId) {
                   setEditedValue(translation);
