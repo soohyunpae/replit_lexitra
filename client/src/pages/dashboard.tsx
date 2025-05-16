@@ -123,7 +123,7 @@ export default function Dashboard() {
           <Card className="bg-white">
             <CardContent className="p-6 text-center">
               <div className="text-2xl font-bold mb-1">🔍 {glossaryTermsUsed}</div>
-              <div className="text-sm text-muted-foreground">Glossary Terms Used Today</div>
+              <div className="text-sm text-muted-foreground">Projects Available to Claim</div>
             </CardContent>
           </Card>
         </section>
