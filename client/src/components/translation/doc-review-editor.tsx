@@ -438,20 +438,22 @@ export function DocReviewEditor({
               </Button>
             </div>
             
-            {/* Side panel toggle button */}
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setShowSidePanel(!showSidePanel)}
-              className="h-7 w-7 p-0"
-              title={showSidePanel ? "Hide side panel" : "Show side panel"}
-            >
-              {showSidePanel ? (
-                <ChevronRight className="h-4 w-4" />
-              ) : (
-                <ChevronLeft className="h-4 w-4" />
-              )}
-            </Button>
+            {/* Side panel toggle button - only show in side by side mode */}
+            {!isMobile && viewMode === 'sideBySide' && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowSidePanel(!showSidePanel)}
+                className="h-7 w-7 p-0"
+                title={showSidePanel ? "사이드 패널 숨기기" : "사이드 패널 보기"}
+              >
+                {showSidePanel ? (
+                  <ChevronRight className="h-4 w-4" />
+                ) : (
+                  <ChevronLeft className="h-4 w-4" />
+                )}
+              </Button>
+            )}
 
             {/* Device layout toggle button removed as requested */}
           </div>
@@ -465,13 +467,14 @@ export function DocReviewEditor({
           isMobile ? "flex flex-col" : "flex flex-row"
         )}
       >
-        {/* Source Panel - Hidden on mobile when showSource is false */}
+        {/* Source Panel */}
         <div 
           className={cn(
-            "border-r bg-card/20",
-            isMobile 
-              ? (showSource ? "h-1/2 overflow-y-auto" : "hidden") 
-              : (showSource ? (showSidePanel ? "w-[40%]" : "flex-1") : "hidden") + " overflow-auto"
+            "border-r bg-card/20 overflow-auto",
+            isMobile ? (showSource ? "h-1/2" : "hidden") : "",
+            !isMobile && viewMode === 'source' ? "flex-1 w-full" : "",
+            !isMobile && viewMode === 'sideBySide' ? "w-1/2" : "",
+            !isMobile && viewMode === 'target' ? "hidden" : ""
           )}
           ref={leftPanelRef}
         >
@@ -531,10 +534,11 @@ export function DocReviewEditor({
         {/* Target Panel */}
         <div 
           className={cn(
-            "bg-card/20",
-            isMobile 
-              ? "flex-1 overflow-auto" 
-              : (showSource ? (showSidePanel ? "flex-1" : "w-1/2") : "flex-1") + " overflow-auto"
+            "bg-card/20 overflow-auto",
+            isMobile ? "flex-1" : "",
+            !isMobile && viewMode === 'target' ? "flex-1 w-full" : "",
+            !isMobile && viewMode === 'sideBySide' ? "w-1/2" : "",
+            !isMobile && viewMode === 'source' ? "hidden" : ""
           )}
           ref={rightPanelRef}
         >
@@ -602,9 +606,9 @@ export function DocReviewEditor({
           </div>
         </div>
 
-        {/* Side Panel - Only shown when enabled */}
-        {!isMobile && showSidePanel && (
-              <div className="flex flex-col h-full sticky top-[56px] h-fit">
+        {/* Side Panel - Only shown when enabled in Side by Side mode */}
+        {!isMobile && showSidePanel && viewMode === 'sideBySide' && (
+          <div className="flex flex-col h-full sticky top-[56px] h-fit w-1/4 border-l border-border/30">
             <SidePanel
               tmMatches={tmMatches}
               glossaryTerms={glossaryTerms}
