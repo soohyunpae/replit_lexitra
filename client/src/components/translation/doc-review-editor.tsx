@@ -696,8 +696,8 @@ export function DocReviewEditor({
         {!isMobile && showSidePanel && viewMode === 'sideBySide' && (
           <div className="flex flex-col h-full sticky top-[56px] h-fit w-1/4 border-l border-border/30">
             <SidePanel
-              tmMatches={tmMatches}
-              glossaryTerms={glossaryTerms}
+              tmMatches={sidePanelTmMatches}
+              glossaryTerms={sidePanelGlossaryTerms}
               selectedSegment={segments.find((s: TranslationUnit) => s.id === (editingId || highlightedSegmentId))}
               onUseTranslation={(translation) => {
                 if (editingId) {
