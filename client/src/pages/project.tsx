@@ -974,7 +974,7 @@ export default function Project() {
                             console.error("날짜 형식 변환 오류:", e);
                           }
                         }
-                        
+
                         saveProjectInfo.mutate({
                           deadline: formattedDeadline,
                           glossaryId: glossaryInput,
@@ -1254,16 +1254,12 @@ export default function Project() {
                           }
                         }}
                       >
-                        <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-3">
-                          <Upload className="h-6 w-6 text-muted-foreground" />
+                        <div className="mx-auto h-8 w-8 rounded-full bg-accent flex items-center justify-center mb-3">
+                          <Upload className="h-4 w-4 text-muted-foreground" />
                         </div>
                         <h3 className="text-sm font-medium mb-1">
                           No Reference Files
                         </h3>
-                        <p className="text-muted-foreground text-xs max-w-md mx-auto mb-2">
-                          Upload reference files to help translators understand
-                          context and terminology
-                        </p>
                         <p className="text-xs text-primary">
                           Drop files here or click to upload
                         </p>
@@ -1400,13 +1396,10 @@ export default function Project() {
 
                           <div className="flex items-center gap-2 flex-1 max-w-md">
                             <CombinedProgress
-                              translatedPercentage={getStatusPercentage(
-                                file.id,
-                                "100%",
-                              ) + getStatusPercentage(
-                                file.id,
-                                "Edited",
-                              )}
+                              translatedPercentage={
+                                getStatusPercentage(file.id, "100%") +
+                                getStatusPercentage(file.id, "Edited")
+                              }
                               reviewedPercentage={getStatusPercentage(
                                 file.id,
                                 "Reviewed",
