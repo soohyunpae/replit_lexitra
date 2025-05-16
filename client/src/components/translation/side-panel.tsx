@@ -529,7 +529,7 @@ export function SidePanel({
   const glossarySourceTerms = glossaryTerms.map((term) => term.source);
 
   return (
-    <aside className="w-80 border-l border-border bg-card h-full flex flex-col overflow-hidden">
+    <aside className="w-80 border-l border-border bg-card min-h-screen flex flex-col overflow-hidden">
       <Tabs
         defaultValue="tm"
         value={activeTab}
