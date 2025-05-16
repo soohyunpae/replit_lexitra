@@ -503,35 +503,37 @@ export function SidePanel({
         throw new Error(`Failed to add comment: ${response.status}`);
       }
 
-      // 댓글이 추가된 세그먼트 정보 다시 가져오기
-      const updatedSegmentResponse = await fetch(`/api/segments/${selectedSegment.id}`);
-      if (updatedSegmentResponse.ok) {
-        const updatedSegment = await updatedSegmentResponse.json();
-        
-        // 현재 컴포넌트에서 직접 selectedSegment 업데이트 (중요!)
-        // 가져온 새 데이터로 직접 selectedSegment를 업데이트하면 UI에 댓글이 표시됨
-        selectedSegment.comments = updatedSegment.comments || [];
-        
-        // 부모 컴포넌트에 세그먼트 업데이트 알림
-        if (onSegmentUpdated) {
-          onSegmentUpdated(selectedSegment.id, updatedSegment.target);
-        }
+      const result = await response.json();
+
+      // 현재 세그먼트의 comments 배열 업데이트
+      if (selectedSegment.comments) {
+        selectedSegment.comments.push({
+          id: result.id,
+          text: commentText,
+          author: "User",
+          createdAt: new Date().toISOString()
+        });
+      } else {
+        selectedSegment.comments = [{
+          id: result.id,
+          text: commentText,
+          author: "User",
+          createdAt: new Date().toISOString()
+        }];
       }
 
       // 입력란 초기화
       setCommentText("");
-      
+
+      // 강제로 리렌더링을 위해 상태 업데이트
+      setIsAddingComment(false);
+
       // 성공 메시지 표시
       toast({
         title: "댓글 추가됨",
         description: "댓글이 성공적으로 추가되었습니다.",
         variant: "default",
       });
-
-      // 세그먼트 데이터 리프레시
-      if (onSegmentUpdated) {
-        onSegmentUpdated(selectedSegment.id, selectedSegment.target || '');
-      }
 
     } catch (error) {
       console.error("댓글 추가 중 오류:", error);
