@@ -391,18 +391,15 @@ export function DocReviewEditor({
           <div className="flex items-center justify-between w-full">
             <div className="inline-flex items-center rounded-lg border bg-card p-1 text-card-foreground shadow-sm">
               <Button
-                  size="sm"
-                  variant={showSource && !showSidePanel && !isMobile ? "default" : "ghost"}
-                  onClick={() => {
-                    setShowSource(true);
-                    setShowSidePanel(false);
-                  }}
-                  className="h-7 px-3"
-                  title="Show source only"
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Source
-                </Button>
+                size="sm"
+                variant={showSource && !isMobile ? "default" : "ghost"}
+                onClick={() => setShowSource(true)}
+                className="h-7 px-3"
+                title="Show source only"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Source
+              </Button>
               <Button
                 size="sm"
                 variant={!showSource && !isMobile ? "default" : "ghost"}
@@ -426,7 +423,7 @@ export function DocReviewEditor({
                 Side by Side
               </Button>
             </div>
-
+            
             {/* Side panel toggle button */}
             <Button
               size="sm"
