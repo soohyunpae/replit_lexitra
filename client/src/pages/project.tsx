@@ -974,7 +974,7 @@ export default function Project() {
                             console.error("날짜 형식 변환 오류:", e);
                           }
                         }
-                        
+
                         saveProjectInfo.mutate({
                           deadline: formattedDeadline,
                           glossaryId: glossaryInput,
@@ -1008,7 +1008,7 @@ export default function Project() {
                       <div>
                         <div className="flex justify-between items-center mb-1">
                           <div className="text-muted-foreground flex items-center gap-1.5">
-                            <TextCursorInput className="h-3.5 w-3.5" />
+                            <TextCursorInput className="h-35 w-3.5" />
                             <span>Word Count:</span>
                           </div>
                           <div className="font-medium">
@@ -1225,48 +1225,14 @@ export default function Project() {
                 ) : (
                   <>
                     {isAdmin ? (
-                      <div
-                        className="text-center py-8 border-2 border-dashed border-border/50 rounded-lg mb-4 hover:border-primary/50 transition-colors cursor-pointer"
-                        onClick={() => fileInputRef.current?.click()}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          e.currentTarget.classList.add("border-primary");
-                        }}
-                        onDragLeave={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          e.currentTarget.classList.remove("border-primary");
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          e.currentTarget.classList.remove("border-primary");
-
-                          if (
-                            e.dataTransfer.files &&
-                            e.dataTransfer.files.length > 0
-                          ) {
-                            const newFiles = Array.from(e.dataTransfer.files);
-                            setReferences([...references, ...newFiles]);
-                            // Upload the files
-                            uploadReferences.mutate(newFiles);
-                          }
-                        }}
-                      >
-                        <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-3">
-                          <Upload className="h-6 w-6 text-muted-foreground" />
+                      <div className="text-center py-4 border-2 border-dashed border-border/50 rounded-lg mb-2">
+                        <div className="mx-auto h-8 w-8 rounded-full bg-accent flex items-center justify-center mb-2">
+                          <Upload className="h-4 w-4 text-muted-foreground" />
                         </div>
-                        <h3 className="text-sm font-medium mb-1">
-                          No Reference Files
-                        </h3>
-                        <p className="text-muted-foreground text-xs max-w-md mx-auto mb-2">
-                          Upload reference files to help translators understand
-                          context and terminology
-                        </p>
-                        <p className="text-xs text-primary">
-                          Drop files here or click to upload
-                        </p>
+                        <div className="space-y-0.5">
+                          <h3 className="text-sm font-medium">No Reference Files</h3>
+                          <p className="text-[11px] text-muted-foreground">Drop files here or click to upload</p>
+                        </div>
                       </div>
                     ) : (
                       <div className="text-center py-8 border-2 border-border/50 rounded-lg mb-4">
