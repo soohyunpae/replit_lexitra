@@ -261,10 +261,58 @@ export function DocReviewEditor({
   const segmentGroups = groupSegmentsByParagraphs(segments);
 
   // == 사용자 정의 함수 (hooks 호출 이후에 정의) ==
-  // 하이라이트 기능이 추가된 선택 함수
-  const selectSegmentForEditing = (segment: TranslationUnit) => {
+  // TM 검색 함수
+  const searchTM = async (sourceText: string) => {
+    try {
+      const response = await apiRequest("POST", "/api/search_tm", {
+        source: sourceText,
+        sourceLanguage,
+        targetLanguage,
+        limit: 5
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("TM 검색 오류:", error);
+      return [];
+    }
+  };
+
+  // 용어 검색 함수 
+  const searchGlossary = async (text: string) => {
+    try {
+      const response = await apiRequest("GET", `/api/glossary?sourceLanguage=${sourceLanguage}&targetLanguage=${targetLanguage}`);
+      const allTerms = await response.json();
+      
+      // 텍스트에 포함된 용어만 필터링
+      return allTerms.filter((term: Glossary) => 
+        text.toLowerCase().includes(term.source.toLowerCase())
+      );
+    } catch (error) {
+      console.error("용어집 검색 오류:", error);
+      return [];
+    }
+  };
+
+  // 하이라이트 기능이 추가된 선택 함수 - TM 및 용어 검색 추가
+  const selectSegmentForEditing = async (segment: TranslationUnit) => {
     setHighlightedSegmentId(segment.id);
     originalSelectForEditing(segment);
+    
+    // 세그먼트 클릭 시 TM 및 용어 검색
+    if (segment.source) {
+      try {
+        // TM 검색 수행
+        const tmResults = await searchTM(segment.source);
+        setTmMatches(tmResults);
+        
+        // 용어 검색 수행
+        const glossaryResults = await searchGlossary(segment.source);
+        setGlossaryTerms(glossaryResults);
+      } catch (error) {
+        console.error("세그먼트 클릭 시 검색 오류:", error);
+      }
+    }
   };
 
   // 하이라이트 제거가 추가된 취소 함수
@@ -516,11 +564,26 @@ export function DocReviewEditor({
                             isSource={true}
                             isEditing={editingId === segment.id}
                             isDocumentMode={true}
-                            onSelectForEditing={() => {
+                            onSelectForEditing={async () => {
                               setHighlightedSegmentId(segment.id);
                               // 사이드 패널을 위해 편집 세그먼트 설정 (실제 편집은 하지 않음)
                               if (!editingId) {
                                 originalSelectForEditing(segment);
+                                
+                                // 선택한 세그먼트에 대한 TM/용어 검색
+                                if (segment.source) {
+                                  try {
+                                    // TM 검색 수행
+                                    const tmResults = await searchTM(segment.source);
+                                    setTmMatches(tmResults);
+                                    
+                                    // 용어 검색 수행
+                                    const glossaryResults = await searchGlossary(segment.source);
+                                    setGlossaryTerms(glossaryResults);
+                                  } catch (error) {
+                                    console.error("세그먼트 클릭 시 검색 오류:", error);
+                                  }
+                                }
                               }
                             }}
                             className={cn(
