@@ -496,10 +496,13 @@ export function SidePanel({
     try {
       const response = await apiRequest("POST", `/api/segments/${selectedSegment.id}/comments`, {
         text: commentText,
-        segmentId: selectedSegment.id,
-        author: "User", // 기본값 설정
-        createdAt: new Date().toISOString()
       });
+
+      if (!response.ok) {
+        throw new Error(`Failed to add comment: ${response.status}`);
+      }
+
+      const result = await response.json();
 
       // 성공 메시지 표시
       toast({
@@ -517,21 +520,21 @@ export function SidePanel({
       setCommentText("");
       
       // 현재 세그먼트의 comments 배열 업데이트
+      const newComment = {
+        id: result.id,
+        text: commentText,
+        author: "User",
+        createdAt: new Date().toISOString()
+      };
+      
       if (selectedSegment.comments) {
-        selectedSegment.comments.push({
-          text: commentText,
-          author: "User",
-          createdAt: new Date().toISOString()
-        });
+        selectedSegment.comments.push(newComment);
       } else {
-        selectedSegment.comments = [{
-          text: commentText,
-          author: "User",
-          createdAt: new Date().toISOString()
-        }];
+        selectedSegment.comments = [newComment];
       }
 
     } catch (error) {
+      console.error("댓글 추가 중 오류:", error);
       toast({
         title: "댓글 추가 실패",
         description: "댓글 추가 중 오류가 발생했습니다. 다시 시도해주세요.",
