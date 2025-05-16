@@ -1278,67 +1278,6 @@ export default function Project() {
             </Card>
           </div>
 
-          {/* Notes Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <Card className="md:col-span-2">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center justify-between">
-                  <span>📝 Project Notes</span>
-                  {!isNotesEditing && note && isAdmin && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsNotesEditing(true)}
-                      className="text-xs"
-                    >
-                      <Pencil className="h-3.5 w-3.5 mr-1" />
-                      Edit
-                    </Button>
-                  )}
-                </CardTitle>
-                <CardDescription />
-              </CardHeader>
-              <CardContent>
-                {isNotesEditing ? (
-                  <Textarea
-                    placeholder="Document translation guidelines, special requirements, terminology instructions..."
-                    className="min-h-24"
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    onBlur={() => {
-                      saveNotes.mutate();
-                      setIsNotesEditing(false);
-                    }}
-                    autoFocus
-                    disabled={!isAdmin}
-                  />
-                ) : (
-                  <div
-                    className={`border rounded-md p-3 min-h-24 text-sm whitespace-pre-wrap ${isAdmin ? "cursor-pointer" : ""}`}
-                    onClick={() => isAdmin && setIsNotesEditing(true)}
-                  >
-                    {note ? (
-                      note
-                    ) : isAdmin ? (
-                      <span className="text-muted-foreground">
-                        Add special requirements, terminology instructions, or
-                        other notes. Click to edit.
-                      </span>
-                    ) : (
-                      "No notes available."
-                    )}
-                  </div>
-                )}
-                {saveNotes.isPending && (
-                  <div className="mt-2 text-xs text-muted-foreground flex items-center">
-                    <div className="animate-spin mr-1 h-3 w-3 border-t-2 border-primary rounded-full"></div>
-                    Saving notes...
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
           {/* File list */}
           <Card className="mb-6">
             <CardHeader className="pb-2">
@@ -1479,6 +1418,67 @@ export default function Project() {
               )}
             </CardContent>
           </Card>
+          
+          {/* Notes Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <Card className="md:col-span-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center justify-between">
+                  <span>📝 Project Notes</span>
+                  {!isNotesEditing && note && isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsNotesEditing(true)}
+                      className="text-xs"
+                    >
+                      <Pencil className="h-3.5 w-3.5 mr-1" />
+                      Edit
+                    </Button>
+                  )}
+                </CardTitle>
+                <CardDescription />
+              </CardHeader>
+              <CardContent>
+                {isNotesEditing ? (
+                  <Textarea
+                    placeholder="Document translation guidelines, special requirements, terminology instructions..."
+                    className="min-h-24"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    onBlur={() => {
+                      saveNotes.mutate();
+                      setIsNotesEditing(false);
+                    }}
+                    autoFocus
+                    disabled={!isAdmin}
+                  />
+                ) : (
+                  <div
+                    className={`border rounded-md p-3 min-h-24 text-sm whitespace-pre-wrap ${isAdmin ? "cursor-pointer" : ""}`}
+                    onClick={() => isAdmin && setIsNotesEditing(true)}
+                  >
+                    {note ? (
+                      note
+                    ) : isAdmin ? (
+                      <span className="text-muted-foreground">
+                        Add special requirements, terminology instructions, or
+                        other notes. Click to edit.
+                      </span>
+                    ) : (
+                      "No notes available."
+                    )}
+                  </div>
+                )}
+                {saveNotes.isPending && (
+                  <div className="mt-2 text-xs text-muted-foreground flex items-center">
+                    <div className="animate-spin mr-1 h-3 w-3 border-t-2 border-primary rounded-full"></div>
+                    Saving notes...
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
     </MainLayout>
