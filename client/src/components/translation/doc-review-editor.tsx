@@ -178,9 +178,13 @@ export function DocReviewEditor({
 }: DocReviewEditorProps) {
   // == React Hooks 정의 - 순서 중요 ==
   // 1. useState hooks
-  const [showSource, setShowSource] = useState(true);
+  // 뷰 모드 관련 상태
+  const [viewMode, setViewMode] = useState<'source' | 'target' | 'sideBySide'>('sideBySide');
+  const [showSource, setShowSource] = useState(true); // 소스 패널 표시 여부 (sideBySide, source 모드에서 true)
+  const [showTarget, setShowTarget] = useState(true); // 타겟 패널 표시 여부 (sideBySide, target 모드에서 true)
+  
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
-  const [showSidePanel, setShowSidePanel] = useState(false);
+  const [showSidePanel, setShowSidePanel] = useState(true); // 사이드 패널 디폴트 true로 설정
   const [highlightedSegmentId, setHighlightedSegmentId] = useState<number | null>(null);
   const [segmentStatuses, setSegmentStatuses] = useState<Record<number, string>>({});
 
@@ -392,8 +396,12 @@ export function DocReviewEditor({
             <div className="inline-flex items-center rounded-lg border bg-card p-1 text-card-foreground shadow-sm">
               <Button
                 size="sm"
-                variant={showSource && !isMobile ? "default" : "ghost"}
-                onClick={() => setShowSource(true)}
+                variant={viewMode === 'source' ? "default" : "ghost"}
+                onClick={() => {
+                  setViewMode('source');
+                  setShowSource(true);
+                  setShowTarget(false);
+                }}
                 className="h-7 px-3"
                 title="Show source only"
               >
@@ -402,8 +410,12 @@ export function DocReviewEditor({
               </Button>
               <Button
                 size="sm"
-                variant={!showSource && !isMobile ? "default" : "ghost"}
-                onClick={() => setShowSource(false)}
+                variant={viewMode === 'target' ? "default" : "ghost"}
+                onClick={() => {
+                  setViewMode('target');
+                  setShowSource(false);
+                  setShowTarget(true);
+                }}
                 className="h-7 px-3"
                 title="Show target only"
               >
@@ -412,9 +424,11 @@ export function DocReviewEditor({
               </Button>
               <Button
                 size="sm"
-                variant={showSource && showSidePanel ? "default" : "ghost"}
+                variant={viewMode === 'sideBySide' ? "default" : "ghost"}
                 onClick={() => {
+                  setViewMode('sideBySide');
                   setShowSource(true);
+                  setShowTarget(true);
                 }}
                 className="h-7 px-3 hidden md:inline-flex"
                 title="Show side by side"
