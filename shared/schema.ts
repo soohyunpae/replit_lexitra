@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, serial, integer, timestamp, boolean, varchar } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { relations } from 'drizzle-orm';
 import { z } from 'zod';
@@ -8,7 +8,16 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  role: text("role").notNull().default("user"), // 'user' 또는 'admin' 값을 가짐
+  role: text("role").notNull().default("user"), // 'user', 'admin', 'translator', 'reviewer' 값을 가짐
+  
+  // Replit 인증 관련 필드 추가
+  replitId: varchar("replit_id", { length: 255 }).unique(),
+  email: varchar("email", { length: 255 }),
+  firstName: varchar("first_name", { length: 255 }),
+  lastName: varchar("last_name", { length: 255 }),
+  profileImageUrl: text("profile_image_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({

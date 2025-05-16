@@ -12,7 +12,7 @@ import { ko } from 'date-fns/locale';
 import { useQuery } from '@tanstack/react-query';
 
 export default function ProfilePage() {
-  const { user, isLoading, logoutMutation } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
 
   // 프로젝트 통계 가져오기 (실패해도 무시)
   const { data: projectStats } = useQuery({
