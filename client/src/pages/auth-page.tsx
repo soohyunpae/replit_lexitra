@@ -1,72 +1,25 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { Redirect } from 'wouter';
+import { Redirect, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { z } from 'zod';
-import { Loader2 } from 'lucide-react';
-
-const loginSchema = z.object({
-  username: z.string().min(1, { message: '사용자 이름을 입력해주세요.' }),
-  password: z.string().min(1, { message: '비밀번호를 입력해주세요.' }),
-});
-
-const registerSchema = z.object({
-  username: z.string().min(1, { message: '사용자 이름을 입력해주세요.' })
-    .max(30, { message: '사용자 이름은 30자를 초과할 수 없습니다.' })
-    .regex(/^[a-zA-Z0-9_-]+$/, { message: '사용자 이름은 영문, 숫자, 하이픈(-), 언더스코어(_)만 사용할 수 있습니다.' }),
-  password: z.string().min(6, { message: '비밀번호는 최소 6자 이상이어야 합니다.' }),
-  confirmPassword: z.string().min(1, { message: '비밀번호 확인을 입력해주세요.' }),
-}).refine(data => data.password === data.confirmPassword, {
-  message: '비밀번호가 일치하지 않습니다.',
-  path: ['confirmPassword'],
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
-type RegisterFormValues = z.infer<typeof registerSchema>;
+import { Loader2, LogIn } from 'lucide-react';
+import { FaGithub } from 'react-icons/fa';
 
 export default function AuthPage() {
-  const [activeTab, setActiveTab] = useState<string>('login');
-  const { user, loginMutation, registerMutation } = useAuth();
-
-  const loginForm = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      username: '',
-      password: '',
-    },
-  });
-
-  const registerForm = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      username: '',
-      password: '',
-      confirmPassword: '',
-    },
-  });
-
-  const onLoginSubmit = (data: LoginFormValues) => {
-    loginMutation.mutate(data);
-  };
-
-  const onRegisterSubmit = (data: RegisterFormValues) => {
-    registerMutation.mutate({
-      username: data.username,
-      password: data.password,
-    });
-  };
-
+  const { user, isLoading } = useAuth();
+  const [location] = useLocation();
+  
   // 이미 로그인한 경우 홈으로 리다이렉트
   if (user) {
     return <Redirect to="/" />;
   }
+
+  // 로그인 처리 함수
+  const handleReplitLogin = () => {
+    // Replit OAuth 로그인을 위한 API 라우트로 이동
+    window.location.href = '/api/login';
+  };
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -78,139 +31,49 @@ export default function AuthPage() {
             <p className="text-muted-foreground">특허 문서 전문 번역 플랫폼</p>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="login">로그인</TabsTrigger>
-              <TabsTrigger value="register">회원가입</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="login">
-              <Card>
-                <CardHeader>
-                  <CardTitle>로그인</CardTitle>
-                  <CardDescription>
-                    계정 정보를 입력하여 로그인하세요.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                      <FormField
-                        control={loginForm.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>사용자 이름</FormLabel>
-                            <FormControl>
-                              <Input placeholder="사용자 이름을 입력하세요" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={loginForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>비밀번호</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="비밀번호를 입력하세요" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={loginMutation.isPending}
-                      >
-                        {loginMutation.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            로그인 중...
-                          </>
-                        ) : (
-                          '로그인'
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="register">
-              <Card>
-                <CardHeader>
-                  <CardTitle>회원가입</CardTitle>
-                  <CardDescription>
-                    새 계정을 생성하세요.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Form {...registerForm}>
-                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                      <FormField
-                        control={registerForm.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>사용자 이름</FormLabel>
-                            <FormControl>
-                              <Input placeholder="사용자 이름을 입력하세요" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={registerForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>비밀번호</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="비밀번호를 입력하세요" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={registerForm.control}
-                        name="confirmPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>비밀번호 확인</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="비밀번호를 다시 입력하세요" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={registerMutation.isPending}
-                      >
-                        {registerMutation.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            계정 생성 중...
-                          </>
-                        ) : (
-                          '회원가입'
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          <Card>
+            <CardHeader>
+              <CardTitle>로그인</CardTitle>
+              <CardDescription>
+                Replit 계정으로 간편하게 로그인하세요.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {isLoading ? (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : (
+                <>
+                  <Button
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    onClick={handleReplitLogin}
+                  >
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Replit로 로그인
+                  </Button>
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">안전하고 쉬운 로그인</span>
+                    </div>
+                  </div>
+                  
+                  <div className="text-sm text-center text-muted-foreground">
+                    <p>Replit 계정으로 로그인하면 별도의 회원가입 없이 바로 서비스를 이용할 수 있습니다.</p>
+                  </div>
+                </>
+              )}
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-2">
+              <div className="text-sm text-muted-foreground text-center w-full">
+                로그인 시 <a href="/terms" className="underline hover:text-primary">이용약관</a>과 <a href="/privacy" className="underline hover:text-primary">개인정보 처리방침</a>에 동의하게 됩니다.
+              </div>
+            </CardFooter>
+          </Card>
         </div>
       </div>
 
