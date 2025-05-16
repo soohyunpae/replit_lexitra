@@ -188,6 +188,10 @@ export function DocReviewEditor({
   const [showSidePanel, setShowSidePanel] = useState(true); // 사이드 패널 디폴트 true로 설정
   const [highlightedSegmentId, setHighlightedSegmentId] = useState<number | null>(null);
   const [segmentStatuses, setSegmentStatuses] = useState<Record<number, string>>({});
+  
+  // TM과 용어집 관련 상태
+  const [sidePanelTmMatches, setSidePanelTmMatches] = useState<TranslationMemory[]>(tmMatches);
+  const [sidePanelGlossaryTerms, setSidePanelGlossaryTerms] = useState<Glossary[]>(glossaryTerms);
 
   // 2. useContext hooks
   const { toast } = useToast();
@@ -304,11 +308,11 @@ export function DocReviewEditor({
       try {
         // TM 검색 수행
         const tmResults = await searchTM(segment.source);
-        setTmMatches(tmResults);
+        setSidePanelTmMatches(tmResults);
         
         // 용어 검색 수행
         const glossaryResults = await searchGlossary(segment.source);
-        setGlossaryTerms(glossaryResults);
+        setSidePanelGlossaryTerms(glossaryResults);
       } catch (error) {
         console.error("세그먼트 클릭 시 검색 오류:", error);
       }
@@ -575,11 +579,11 @@ export function DocReviewEditor({
                                   try {
                                     // TM 검색 수행
                                     const tmResults = await searchTM(segment.source);
-                                    setTmMatches(tmResults);
+                                    setSidePanelTmMatches(tmResults);
                                     
                                     // 용어 검색 수행
                                     const glossaryResults = await searchGlossary(segment.source);
-                                    setGlossaryTerms(glossaryResults);
+                                    setSidePanelGlossaryTerms(glossaryResults);
                                   } catch (error) {
                                     console.error("세그먼트 클릭 시 검색 오류:", error);
                                   }
