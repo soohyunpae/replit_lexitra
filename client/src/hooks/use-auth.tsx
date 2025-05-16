@@ -1,25 +1,31 @@
 import { createContext, ReactNode, useContext } from "react";
-import { useQuery } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  UseMutationResult,
+} from "@tanstack/react-query";
 import { User } from "@shared/schema";
-import { getQueryFn, queryClient } from "../lib/queryClient";
+import { getQueryFn, apiRequest, queryClient, saveAuthToken, removeAuthToken } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
   error: Error | null;
-  isAuthenticated: boolean;
+  loginMutation: UseMutationResult<User, Error, LoginData>;
+  logoutMutation: UseMutationResult<void, Error, void>;
+  registerMutation: UseMutationResult<User, Error, RegisterData>;
 };
 
-interface ReplitUserResponse {
-  id: string;
-  email?: string | null;
-  firstName?: string | null;
-  lastName?: string | null;
-  profileImageUrl?: string | null;
-  username?: string;
-  role?: string;
-}
+type LoginData = {
+  username: string;
+  password: string;
+};
+
+type RegisterData = {
+  username: string;
+  password: string;
+};
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -30,15 +36,97 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
-  } = useQuery<ReplitUserResponse | null, Error>({
-    queryKey: ["/api/auth/user"],
+  } = useQuery<User | null, Error>({
+    queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
-    retry: false,
-    staleTime: 1000 * 60 * 5, // 5분 동안 캐싱
   });
 
-  // 로그인 상태를 확인하는 부울 값
-  const isAuthenticated = !!user;
+  const loginMutation = useMutation<User & { token?: string }, Error, LoginData>({
+    mutationFn: async (credentials: LoginData) => {
+      const res = await apiRequest("POST", "/api/login", credentials);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      // Extract token from response if exists
+      const { token, ...user } = data;
+      
+      // Save token to localStorage if it exists
+      if (token) {
+        saveAuthToken(token);
+      }
+      
+      // Update user data in query cache
+      queryClient.setQueryData(["/api/user"], user);
+      
+      toast({
+        title: "로그인 성공",
+        description: `${user.username}님, 환영합니다.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "로그인 실패",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const registerMutation = useMutation<User & { token?: string }, Error, RegisterData>({
+    mutationFn: async (credentials: RegisterData) => {
+      const res = await apiRequest("POST", "/api/register", credentials);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      // Extract token from response if exists
+      const { token, ...user } = data;
+      
+      // Save token to localStorage if it exists
+      if (token) {
+        saveAuthToken(token);
+      }
+      
+      // Update user data in query cache
+      queryClient.setQueryData(["/api/user"], user);
+      
+      toast({
+        title: "회원가입 성공",
+        description: `${user.username}님, 환영합니다.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "회원가입 실패",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const logoutMutation = useMutation<void, Error, void>({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/logout");
+    },
+    onSuccess: () => {
+      // Remove token from localStorage
+      removeAuthToken();
+      
+      // Clear user data from cache
+      queryClient.setQueryData(["/api/user"], null);
+      
+      toast({
+        title: "로그아웃 성공",
+        description: "로그아웃 되었습니다.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "로그아웃 실패",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   return (
     <AuthContext.Provider
@@ -46,7 +134,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: user || null,
         isLoading,
         error,
-        isAuthenticated,
+        loginMutation,
+        logoutMutation,
+        registerMutation,
       }}
     >
       {children}
@@ -54,18 +144,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * 인증 관련 정보와 함수들에 접근하기 위한 훅
- * 
- * ```tsx
- * const { user, isLoading, isAuthenticated } = useAuth();
- * 
- * if (isLoading) return <Loader />;
- * if (!isAuthenticated) return <Redirect to="/auth" />;
- * 
- * return <div>환영합니다, {user?.firstName || user?.username}님!</div>;
- * ```
- */
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {

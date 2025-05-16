@@ -9,7 +9,6 @@ import { fromZodError } from "zod-validation-error";
 import { ZodError } from "zod";
 import { translateWithGPT } from "./openai";
 import { setupAuth } from "./auth";
-import { setupAuth as setupReplitAuth, isAuthenticated as isReplitAuthenticated } from "./replitAuth";
 import {
   setupTokenAuth,
   verifyToken,
