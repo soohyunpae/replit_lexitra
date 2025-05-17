@@ -1134,107 +1134,76 @@ export default function Project() {
                         key={file.id}
                         className="border border-border rounded-lg p-4 hover:border-primary/60 transition-colors"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="w-44 truncate">
-                            <span className="font-medium">{file.name}</span>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                          <div className="md:col-span-2">
+                            <div className="mb-2">
+                              <h3 className="font-medium truncate">
+                                {file.name}
+                              </h3>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Progress
+                                value={stats.percentage}
+                                className="h-2 flex-1"
+                                style={
+                                  {
+                                    "--reviewed-percent": `${getStatusPercentage(file.id, "Reviewed")}%`,
+                                    "--match-100-percent": `${getStatusPercentage(file.id, "100%")}%`,
+                                    "--fuzzy-percent": `${getStatusPercentage(file.id, "Fuzzy")}%`,
+                                    "--mt-percent": `${getStatusPercentage(file.id, "MT")}%`,
+                                    "--edited-percent": `${getStatusPercentage(file.id, "Edited")}%`,
+                                    "--rejected-percent": `${getStatusPercentage(file.id, "Rejected")}%`,
+                                  } as React.CSSProperties
+                                }
+                              />
+                              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                {stats.completed}/{stats.total} (
+                                {stats.percentage}%)
+                              </span>
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-2 flex-1 max-w-md">
-                            <CombinedProgress
-                              translatedPercentage={
-                                getStatusPercentage(file.id, "100%") +
-                                getStatusPercentage(file.id, "Edited")
+                          <div className="flex flex-col gap-1">
+                            <div className="text-sm text-muted-foreground">
+                              {formatDate(file.updatedAt || file.createdAt)}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                              <TextCursorInput className="h-3.5 w-3.5" />
+                              <span>
+                                {(file as any).wordCount ||
+                                  getFileWordCount(file.id)}{" "}
+                                words
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end">
+                            <Button
+                              onClick={() =>
+                                navigate(`/translation/${file.id}`)
                               }
-                              reviewedPercentage={getStatusPercentage(
-                                file.id,
-                                "Reviewed",
-                              )}
-                              statusCounts={{
-                                Reviewed: getStatusCount(file.id, "Reviewed"),
-                                "100%": getStatusCount(file.id, "100%"),
-                                Fuzzy: getStatusCount(file.id, "Fuzzy"),
-                                MT: getStatusCount(file.id, "MT"),
-                                Edited: getStatusCount(file.id, "Edited"),
-                                Rejected: getStatusCount(file.id, "Rejected"),
-                              }}
-                              totalSegments={getTotalSegments(file.id)}
-                              height="h-2"
-                              showPercentage={true}
-                            />
-                          </div>
-
-                          <div className="text-sm text-muted-foreground whitespace-nowrap">
-                            {formatDate(file.updatedAt || file.createdAt)}
-                          </div>
-
-                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground whitespace-nowrap">
-                            <TextCursorInput className="h-3.5 w-3.5" />
-                            <span>
-                              {(file as any).wordCount ||
-                                getFileWordCount(file.id)}{" "}
-                              words
-                            </span>
-                          </div>
-
-                          <div className="flex justify-end min-w-[120px]">
-                            {/* 빈 타겟 세그먼트 개수 확인 */}
-                            {(() => {
-                              // 파일의 모든 세그먼트 가져오기
-                              const segments = allSegmentsData?.[file.id] || [];
-                              // 타겟이 비어있는 세그먼트 개수
-                              const emptyTargets = segments.filter(
-                                (seg) =>
-                                  !seg.target || seg.target.trim() === "",
-                              ).length;
-                              // 총 세그먼트 수
-                              const totalSegments = segments.length;
-
-                              // 번역 초벌이 진행 중인지 확인 (배정된지 얼마 안된 경우)
-                              const isInitialTranslationInProgress =
-                                emptyTargets > 0 &&
-                                new Date().getTime() -
-                                  new Date(file.createdAt).getTime() <
-                                  1000 * 60 * 10; // 10분 이내 생성
-
-                              return (
-                                <Button
-                                  size="sm"
-                                  onClick={() =>
-                                    navigate(`/translation/${file.id}`)
-                                  }
-                                  disabled={
-                                    project.status === "Unclaimed" ||
-                                    (project.status === "Claimed" &&
-                                      project.claimedBy !== user?.id &&
-                                      user?.role !== "admin") ||
-                                    // 번역 초벌이 진행 중인 경우 disabled (관리자 제외)
-                                    (isInitialTranslationInProgress &&
-                                      user?.role !== "admin")
-                                  }
-                                  variant={
-                                    project.status === "Unclaimed" ||
-                                    (project.status === "Claimed" &&
-                                      project.claimedBy !== user?.id &&
-                                      user?.role !== "admin") ||
-                                    isInitialTranslationInProgress
-                                      ? "outline"
-                                      : "default"
-                                  }
-                                >
-                                  {project.status === "Unclaimed"
-                                    ? "Claim Project First"
-                                    : project.status === "Claimed" &&
-                                        project.claimedBy !== user?.id
-                                      ? "Claimed by Another User"
-                                      : isInitialTranslationInProgress
-                                        ? "번역 초벌 진행 중..."
-                                        : "Open Editor"}
-                                  {isInitialTranslationInProgress && (
-                                    <RefreshCw className="ml-2 h-3 w-3 animate-spin" />
-                                  )}
-                                </Button>
-                              );
-                            })()}
+                              disabled={
+                                project.status === "Unclaimed" ||
+                                (project.status === "Claimed" &&
+                                  project.claimedBy !== user?.id &&
+                                  user?.role !== "admin")
+                              }
+                              variant={
+                                project.status === "Unclaimed" ||
+                                (project.status === "Claimed" &&
+                                  project.claimedBy !== user?.id &&
+                                  user?.role !== "admin")
+                                  ? "outline"
+                                  : "default"
+                              }
+                            >
+                              {project.status === "Unclaimed"
+                                ? "Claim Project First"
+                                : project.status === "Claimed" &&
+                                    project.claimedBy !== user?.id
+                                  ? "Claimed by Another User"
+                                  : "Open Editor"}
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -1247,6 +1216,11 @@ export default function Project() {
                     <Upload className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg font-medium mb-2">No files yet</h3>
+                  <p className="text-muted-foreground max-w-md mx-auto mb-6">
+                    Files must be added during project creation. Per the file
+                    management policy, projects without files cannot be created,
+                    and files cannot be added or modified after creation.
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -1364,18 +1338,44 @@ export default function Project() {
                 ) : (
                   <>
                     {isAdmin ? (
-                      <div className="text-center py-4 border-2 border-dashed border-border/50 rounded-lg mb-2">
-                        <div className="mx-auto h-8 w-8 rounded-full bg-accent flex items-center justify-center mb-2">
-                          <Upload className="h-4 w-4 text-muted-foreground" />
+                      <div
+                        className="text-center py-8 border-2 border-dashed border-border/50 rounded-lg mb-4 hover:border-primary/50 transition-colors cursor-pointer"
+                        onClick={() => fileInputRef.current?.click()}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.add("border-primary");
+                        }}
+                        onDragLeave={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.remove("border-primary");
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.remove("border-primary");
+
+                          if (
+                            e.dataTransfer.files &&
+                            e.dataTransfer.files.length > 0
+                          ) {
+                            const newFiles = Array.from(e.dataTransfer.files);
+                            setReferences([...references, ...newFiles]);
+                            // Upload the files
+                            uploadReferences.mutate(newFiles);
+                          }
+                        }}
+                      >
+                        <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-3">
+                          <Upload className="h-6 w-6 text-muted-foreground" />
                         </div>
-                        <div className="space-y-0.5">
-                          <h3 className="text-sm font-medium">
-                            No Reference Files
-                          </h3>
-                          <p className="text-[11px] text-muted-foreground">
-                            Drop files here or click to upload
-                          </p>
-                        </div>
+                        <h3 className="text-sm font-medium mb-1">
+                          No Reference Files
+                        </h3>
+                        <p className="text-xs text-primary">
+                          Drop files here or click to upload
+                        </p>
                       </div>
                     ) : (
                       <div className="text-center py-8 border-2 border-border/50 rounded-lg mb-4">
@@ -1393,30 +1393,6 @@ export default function Project() {
                     )}
                   </>
                 )}
-
-                {/* Hidden file input */}
-                <input
-                  type="file"
-                  multiple
-                  ref={fileInputRef}
-                  className="hidden"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files.length > 0) {
-                      const newFiles = Array.from(e.target.files);
-                      setReferences([...references, ...newFiles]);
-
-                      // Reset input field after selection
-                      if (fileInputRef.current) {
-                        fileInputRef.current.value = "";
-                      }
-
-                      // If there are files, upload them
-                      if (newFiles.length > 0) {
-                        uploadReferences.mutate(newFiles);
-                      }
-                    }
-                  }}
-                />
               </CardContent>
             </Card>
           </div>
