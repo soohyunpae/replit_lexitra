@@ -106,7 +106,7 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark" storageKey="lexitra-theme-preference">
+      <ThemeProvider defaultTheme="light" storageKey="lexitra-theme-preference">
         <TooltipProvider>
           <AuthProvider>
             <Router />

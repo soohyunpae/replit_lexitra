@@ -6,14 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { Redirect } from 'wouter';
 import { Loader2, LogOut, Moon, Sun } from 'lucide-react';
 import { useState } from 'react';
 
 export default function ProfilePage() {
   const { user, isLoading, logoutMutation } = useAuth();
-  const { toggleTheme, isDarkMode } = useThemeToggle();
+  const { theme, setTheme } = useTheme();
   const [sourceLanguage, setSourceLanguage] = useState('KO');
   const [targetLanguage, setTargetLanguage] = useState('EN');
 
@@ -84,20 +85,31 @@ export default function ProfilePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between">
+                  <div className="space-y-3">
                     <div className="space-y-1">
                       <h3 className="text-sm font-medium leading-none">
-                        Dark Mode
+                        Theme Preference
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        Switch between light and dark themes
+                        Choose your preferred theme mode
                       </p>
                     </div>
-                    <Switch
-                      checked={isDarkMode}
-                      onCheckedChange={toggleTheme}
-                      aria-label="Toggle theme"
-                    />
+                    <RadioGroup defaultValue={theme} onValueChange={setTheme}>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="light" id="theme-light" />
+                          <Label htmlFor="theme-light">Light Mode</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="dark" id="theme-dark" />
+                          <Label htmlFor="theme-dark">Dark Mode</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="system" id="theme-system" />
+                          <Label htmlFor="theme-system">System</Label>
+                        </div>
+                      </div>
+                    </RadioGroup>
                   </div>
                 </CardContent>
               </Card>
