@@ -1,4 +1,3 @@
-
 # Account Menu & Settings Integration Plan
 
 ## Current State Analysis
@@ -59,3 +58,46 @@
 5. Test thoroughly
 
 This change will create a more streamlined and intuitive user experience by consolidating all user-specific settings in one location.
+
+# File Upload Issue Analysis & Fix
+
+## Issue
+The file upload functionality in the project page's reference files section is not working when clicking the upload area. The issue appears to be related to missing file input reference handling.
+
+## Problem Areas
+1. Missing file input element reference connection
+2. Incomplete click handler implementation
+3. File input trigger not properly connected
+
+## Solution Implementation
+
+### 1. Fix File Input Reference
+
+The current code has a fileInputRef defined but not properly connected to the file input element. We need to:
+
+1. Ensure the file input ref is properly attached
+2. Connect click handler to trigger file input
+3. Handle file selection and upload
+
+### 2. Code Changes Required
+
+In `client/src/pages/project.tsx`, we need to:
+
+1. Add hidden file input with ref
+2. Connect drag & drop handlers
+3. Implement file upload logic
+
+### 3. Implementation Steps
+
+1. Fix file input reference and click handler
+2. Ensure proper file type validation
+3. Implement upload mutation handler
+
+## Testing Plan
+
+1. Test click to upload functionality
+2. Verify file selection works
+3. Confirm successful upload to server
+4. Validate file display after upload
+
+The fix will be implemented by updating the project.tsx file to properly handle file input reference and upload functionality.

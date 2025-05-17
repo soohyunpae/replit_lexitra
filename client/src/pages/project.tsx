@@ -1338,45 +1338,61 @@ export default function Project() {
                 ) : (
                   <>
                     {isAdmin ? (
-                      <div
-                        className="text-center py-8 border-2 border-dashed border-border/50 rounded-lg mb-4 hover:border-primary/50 transition-colors cursor-pointer"
-                        onClick={() => fileInputRef.current?.click()}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          e.currentTarget.classList.add("border-primary");
-                        }}
-                        onDragLeave={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          e.currentTarget.classList.remove("border-primary");
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          e.currentTarget.classList.remove("border-primary");
+                      <>
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          className="hidden"
+                          multiple
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files.length > 0) {
+                              const newFiles = Array.from(e.target.files);
+                              setReferences([...references, ...newFiles]);
+                              uploadReferences.mutate(newFiles);
+                              e.target.value = ''; // Reset input
+                            }
+                          }}
+                        />
+                        <div
+                          className="text-center py-8 border-2 border-dashed border-border/50 rounded-lg mb-4 hover:border-primary/50 transition-colors cursor-pointer"
+                          onClick={() => fileInputRef.current?.click()}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.currentTarget.classList.add("border-primary");
+                          }}
+                          onDragLeave={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.currentTarget.classList.remove("border-primary");
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.currentTarget.classList.remove("border-primary");
 
-                          if (
-                            e.dataTransfer.files &&
-                            e.dataTransfer.files.length > 0
-                          ) {
-                            const newFiles = Array.from(e.dataTransfer.files);
-                            setReferences([...references, ...newFiles]);
-                            // Upload the files
-                            uploadReferences.mutate(newFiles);
-                          }
-                        }}
-                      >
+                            if (
+                              e.dataTransfer.files &&
+                              e.dataTransfer.files.length > 0
+                            ) {
+                              const newFiles = Array.from(e.dataTransfer.files);
+                              setReferences([...references, ...newFiles]);
+                              // Upload the files
+                              uploadReferences.mutate(newFiles);
+                            }
+                          }}
+                        >
                         <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-3">
-                          <Upload className="h-6 w-6 text-muted-foreground" />
+                            <Upload className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                          <h3 className="text-sm font-medium mb-1">
+                            No Reference Files
+                          </h3>
+                          <p className="text-xs text-primary">
+                            Drop files here or click to upload
+                          </p>
                         </div>
-                        <h3 className="text-sm font-medium mb-1">
-                          No Reference Files
-                        </h3>
-                        <p className="text-xs text-primary">
-                          Drop files here or click to upload
-                        </p>
-                      </div>
+                      </>
                     ) : (
                       <div className="text-center py-8 border-2 border-border/50 rounded-lg mb-4">
                         <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-3">
