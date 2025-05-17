@@ -1,12 +1,21 @@
+
 import { MainLayout } from '@/components/layout/main-layout';
 import { useAuth } from '@/hooks/use-auth';
+import { useThemeToggle } from '@/hooks/use-theme';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Redirect } from 'wouter';
-import { Loader2, LogOut } from 'lucide-react';
+import { Loader2, LogOut, Moon, Sun } from 'lucide-react';
+import { useState } from 'react';
 
 export default function ProfilePage() {
   const { user, isLoading, logoutMutation } = useAuth();
+  const { toggleTheme, isDarkMode } = useThemeToggle();
+  const [sourceLanguage, setSourceLanguage] = useState('KO');
+  const [targetLanguage, setTargetLanguage] = useState('EN');
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -14,7 +23,7 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <MainLayout title="내 프로필">
+      <MainLayout title="My Account">
         <div className="flex items-center justify-center h-full">
           <Loader2 className="h-8 w-8 animate-spin text-border" />
         </div>
@@ -27,50 +36,135 @@ export default function ProfilePage() {
   }
 
   return (
-    <MainLayout title="내 프로필">
-      <div className="max-w-lg mx-auto py-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>프로필 정보</CardTitle>
-            <CardDescription>
-              현재 로그인된 사용자 정보입니다.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-center mb-8">
-              <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-white font-semibold text-xl">
-                {user.username.charAt(0).toUpperCase()}
-              </div>
+    <MainLayout title="My Account">
+      <div className="max-w-3xl mx-auto py-10">
+        <Tabs defaultValue="general" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="preferences">Preferences</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="general">
+            <Card>
+              <CardHeader>
+                <CardTitle>Account Information</CardTitle>
+                <CardDescription>
+                  Your basic account details and preferences
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-center mb-8">
+                  <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-white font-semibold text-xl">
+                    {user.username.charAt(0).toUpperCase()}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium text-muted-foreground">Username</h3>
+                    <p className="font-medium">{user.username}</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium text-muted-foreground">User ID</h3>
+                    <p className="font-medium">{user.id}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="preferences">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Theme Settings</CardTitle>
+                  <CardDescription>
+                    Customize the appearance of your workspace
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-medium leading-none">
+                        Dark Mode
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Switch between light and dark themes
+                      </p>
+                    </div>
+                    <Switch
+                      checked={isDarkMode}
+                      onCheckedChange={toggleTheme}
+                      aria-label="Toggle theme"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Language Preferences</CardTitle>
+                  <CardDescription>
+                    Set your default source and target languages
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Source Language</label>
+                      <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select source language" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="KO">Korean</SelectItem>
+                          <SelectItem value="EN">English</SelectItem>
+                          <SelectItem value="JA">Japanese</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Target Language</label>
+                      <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select target language" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="EN">English</SelectItem>
+                          <SelectItem value="KO">Korean</SelectItem>
+                          <SelectItem value="JA">Japanese</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button variant="outline" className="ml-auto">
+                    Save Preferences
+                  </Button>
+                </CardFooter>
+              </Card>
             </div>
-            
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground">사용자 이름</h3>
-                <p className="font-medium">{user.username}</p>
-              </div>
-              
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground">사용자 ID</h3>
-                <p className="font-medium">{user.id}</p>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-end">
-            <Button variant="outline" onClick={handleLogout} disabled={logoutMutation.isPending}>
-              {logoutMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  로그아웃 중...
-                </>
-              ) : (
-                <>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  로그아웃
-                </>
-              )}
-            </Button>
-          </CardFooter>
-        </Card>
+          </TabsContent>
+        </Tabs>
+
+        <div className="mt-6 flex justify-end">
+          <Button variant="outline" onClick={handleLogout} disabled={logoutMutation.isPending}>
+            {logoutMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Logging out...
+              </>
+            ) : (
+              <>
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </MainLayout>
   );
