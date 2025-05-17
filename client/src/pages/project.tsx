@@ -1172,8 +1172,8 @@ export default function Project() {
                                 }
                               />
                               <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                {stats.completed}/{stats.total} (
-                                {stats.percentage}%)
+                                {getStatusCount(file.id, "Reviewed")}/{getTotalSegments(file.id)} (
+                                {Math.round(getStatusPercentage(file.id, "Reviewed"))}%)
                               </span>
                             </div>
                           </div>
