@@ -347,8 +347,8 @@ export function Sidebar() {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative w-full justify-start p-2 rounded-lg">
-                  <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-white font-medium text-sm mr-3">
+                <Button variant="ghost" className={cn("relative justify-start p-2 rounded-lg", isCollapsed ? "w-8 h-8" : "w-full")}>
+                  <div className={cn("rounded-full bg-primary flex items-center justify-center text-white font-medium text-sm", isCollapsed ? "w-4 h-4 text-xs" : "w-7 h-7 mr-3")}>
                     {user.username.charAt(0).toUpperCase()}
                   </div>
                   <span className={cn("text-sm", isCollapsed ? "hidden" : "hidden lg:block")}>
