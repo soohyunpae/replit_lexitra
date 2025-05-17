@@ -216,6 +216,11 @@ export default function Project() {
   // Reference 파일 업로드 mutation
   const uploadReferences = useMutation({
     mutationFn: async (files: File[]) => {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('Authentication required - please log in again');
+      }
+
       // Create FormData to send actual files
       const formData = new FormData();
 
@@ -230,14 +235,16 @@ export default function Project() {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
           body: formData,
+          credentials: 'include',
         },
       );
 
       if (!response.ok) {
-        throw new Error("Failed to upload files");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to upload files");
       }
 
       return response.json();
