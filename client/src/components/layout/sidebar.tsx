@@ -332,6 +332,45 @@ export function Sidebar() {
             </ul>
           </div>
         )}
+
+        {/* User Account Section */}
+        <div className="mt-auto px-3 py-4 border-t border-border">
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative w-full justify-start p-2 rounded-lg">
+                  <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-white font-medium text-sm mr-3">
+                    {user.username.charAt(0).toUpperCase()}
+                  </div>
+                  <span className={cn("text-sm", isCollapsed ? "hidden" : "hidden lg:block")}>
+                    {user.username}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/profile">My Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/auth")}
+              className="w-full"
+            >
+              Login
+            </Button>
+          )}
+        </div>
       </aside>
     </SidebarContext.Provider>
   );

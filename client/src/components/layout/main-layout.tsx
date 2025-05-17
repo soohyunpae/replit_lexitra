@@ -1,5 +1,5 @@
+
 import React from "react";
-import { Header } from "./header";
 import { Sidebar } from "./sidebar";
 
 interface MainLayoutProps {
@@ -10,10 +10,9 @@ interface MainLayoutProps {
 
 export function MainLayout({ 
   children, 
-  title = "Lexitra", 
+  title = "Lexitra",
   showSidebarTrigger = false 
 }: MainLayoutProps) {
-
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       {/* Sidebar */}
@@ -21,11 +20,6 @@ export function MainLayout({
       
       {/* Main Content */}
       <div className="flex flex-col flex-1 overflow-hidden">
-        <Header 
-          title={title} 
-          showSidebarTrigger={showSidebarTrigger}
-        />
-        
         {/* Page Content */}
         <div className="flex-1 overflow-auto p-6">
           {children}
