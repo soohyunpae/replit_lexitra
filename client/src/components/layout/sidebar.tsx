@@ -368,8 +368,6 @@ export function Sidebar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Account Settings</DropdownMenuLabel>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/profile">My Account</Link>
                 </DropdownMenuItem>
