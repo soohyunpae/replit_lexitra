@@ -1353,6 +1353,7 @@ export default function Project() {
                           onChange={(e) => {
                             if (e.target.files && e.target.files.length > 0) {
                               const newFiles = Array.from(e.target.files);
+                              console.log("Files selected via dialog:", newFiles.map(f => f.name));
                               setReferences([...references, ...newFiles]);
                               uploadReferences.mutate(newFiles);
                               e.target.value = ''; // Reset input
@@ -1382,6 +1383,7 @@ export default function Project() {
                               e.dataTransfer.files.length > 0
                             ) {
                               const newFiles = Array.from(e.dataTransfer.files);
+                              console.log("Files dropped:", newFiles.map(f => f.name));
                               setReferences([...references, ...newFiles]);
                               // Upload the files
                               uploadReferences.mutate(newFiles);

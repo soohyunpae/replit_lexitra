@@ -351,7 +351,11 @@ const referenceStorage = multer.diskStorage({
     const projectId = req.params.id;
     // 원본 파일명을 유지하면서 고유성 보장
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const filename = `${projectId}_${uniqueSuffix}_${file.originalname}`;
+    
+    // 파일명에 발생할 수 있는, 운영체제에서 지원하지 않는 문자 처리
+    let safeOriginalName = file.originalname.replace(/[/\\?%*:|"<>]/g, '-');
+    
+    const filename = `${projectId}_${uniqueSuffix}_${safeOriginalName}`;
     console.log(`Generated reference filename: ${filename}`);
     cb(null, filename);
   },
@@ -2513,7 +2517,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // 프로젝트 참조 파일 삭제 API
   app.delete(
-    `${apiPrefix}/projects/:id/references/:index}`,
+    `${apiPrefix}/projects/:id/references/:index`,
     verifyToken,
     async (req, res) => {
       try {
