@@ -224,7 +224,11 @@ export default function Project() {
         formData.append("files", file);
       });
 
+      console.log("Uploading files to:", `/api/projects/${projectId}/references/upload`);
+      console.log("Files count:", files.length);
+
       // Use fetch directly with FormData
+      // Don't add Content-Type header - browser will set it with proper boundary
       const response = await fetch(
         `/api/projects/${projectId}/references/upload`,
         {
@@ -237,7 +241,9 @@ export default function Project() {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to upload files");
+        const errorText = await response.text();
+        console.error("Upload error response:", errorText);
+        throw new Error(`Failed to upload files: ${response.status} ${errorText}`);
       }
 
       return response.json();
