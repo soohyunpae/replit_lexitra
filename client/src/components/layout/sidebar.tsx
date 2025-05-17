@@ -8,10 +8,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "../ui/dropdown-menu";
 import {
   FileText,
   ChevronsUpDown,
+  LogOut,
   PlusCircle,
   FolderOpen,
   Book,
