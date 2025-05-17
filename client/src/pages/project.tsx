@@ -231,7 +231,7 @@ export default function Project() {
 
         // Debug the token issue
         console.log("Current auth token:", localStorage.getItem("auth_token") ? "Found token" : "No token found");
-        
+
         // Create a custom FormData request with the right authentication
         const response = await fetch(
           `/api/projects/${projectId}/references/upload`,
@@ -997,8 +997,7 @@ export default function Project() {
                           tmId: tmInput,
                         });
                       }}
-                      disabled={saveProjectInfo.isPending}
-                    >
+                      disabled={saveProjectInfo.isPending}>
                       <span>
                         {saveProjectInfo.isPending
                           ? "Saving..."
@@ -1038,7 +1037,7 @@ export default function Project() {
                             {projectStats.completedSegments} /{" "}
                             {projectStats.totalSegments} segments
                             <span className="ml-1 text-primary">
-                              ({projectStats.completionPercentage}%)
+                              ({Math.round((projectStats.statusCounts.Reviewed / projectStats.totalSegments) * 100)}%)
                             </span>
                           </div>
                         </div>
@@ -1368,17 +1367,17 @@ export default function Project() {
                               const newFiles = Array.from(e.target.files);
                               console.log("Files selected via dialog:", newFiles.map(f => f.name));
                               setReferences(prev => [...prev, ...newFiles]);
-                              
+
                               // Create a new FormData directly here
                               const formData = new FormData();
                               newFiles.forEach(file => {
                                 formData.append("files", file);
                                 console.log(`Added file to FormData: ${file.name}`);
                               });
-                              
+
                               // Use the mutation
                               uploadReferences.mutate(newFiles);
-                              
+
                               // Reset the input value to allow selecting the same file again
                               e.target.value = '';
                             } else {

@@ -101,3 +101,32 @@ In `client/src/pages/project.tsx`, we need to:
 4. Validate file display after upload
 
 The fix will be implemented by updating the project.tsx file to properly handle file input reference and upload functionality.
+# Fixing Reviewed Ratio Display in Project Page
+
+## Problem Analysis
+The current implementation displays `36/36 (100%)` without properly calculating the actual Reviewed segments ratio. This needs to be changed to show the correct ratio of Reviewed segments only.
+
+## Relevant Code Locations
+1. Main display: `client/src/pages/project.tsx` line ~1175
+2. Stats calculation: `client/src/pages/project.tsx` lines ~690-730
+3. Progress bar component: `client/src/components/ui/combined-progress.tsx`
+
+## Current Implementation Issues
+1. The percentage calculation doesn't specifically focus on Reviewed status
+2. The stats object structure combines different segment statuses
+3. The display needs to be updated to show only Reviewed ratio
+
+## Solution Plan
+1. Update percentage calculation logic to focus on Reviewed segments
+2. Modify the stats display to show:
+   - Total segments count
+   - Number of Reviewed segments
+   - Percentage of Reviewed segments
+
+## Implementation Details
+The fix involves updating the segment stats calculation in project.tsx to properly calculate and display the Reviewed ratio. The key change is using `reviewedCount` from `statusCounts.Reviewed` instead of the total completion percentage.
+
+## Testing Recommendations
+1. Check the displayed ratio matches actual Reviewed segments count
+2. Verify percentage updates when segments change status
+3. Ensure consistent display across different file types and sizes
