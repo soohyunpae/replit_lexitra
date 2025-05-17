@@ -347,13 +347,24 @@ export function Sidebar() {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className={cn("relative justify-start p-2 rounded-lg", isCollapsed ? "w-8 h-8" : "w-full")}>
-                  <div className={cn("rounded-full bg-primary flex items-center justify-center text-white font-medium text-sm", isCollapsed ? "w-4 h-4 text-xs" : "w-7 h-7 mr-3")}>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "p-0 rounded-full flex items-center justify-center",
+                    isCollapsed ? "w-8 h-8" : "w-full justify-start px-3 py-2",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "w-6 h-6 rounded-full bg-primary text-white font-medium flex items-center justify-center text-sm",
+                      !isCollapsed && "mr-3",
+                    )}
+                  >
                     {user.username.charAt(0).toUpperCase()}
                   </div>
-                  <span className={cn("text-sm", isCollapsed ? "hidden" : "hidden lg:block")}>
-                    {user.username}
-                  </span>
+                  {!isCollapsed && (
+                    <span className="text-sm">{user.username}</span>
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
