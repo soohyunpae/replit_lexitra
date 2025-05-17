@@ -1,22 +1,34 @@
-
-import { MainLayout } from '@/components/layout/main-layout';
-import { useAuth } from '@/hooks/use-auth';
-import { useTheme } from '@/components/ui/theme-provider';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Redirect } from 'wouter';
-import { Loader2, LogOut, Moon, Sun } from 'lucide-react';
-import { useState } from 'react';
+import { MainLayout } from "@/components/layout/main-layout";
+import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/components/ui/theme-provider";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Redirect } from "wouter";
+import { Loader2, LogOut, Moon, Sun } from "lucide-react";
+import { useState } from "react";
 
 export default function ProfilePage() {
   const { user, isLoading, logoutMutation } = useAuth();
   const { theme, setTheme } = useTheme();
-  const [sourceLanguage, setSourceLanguage] = useState('KO');
-  const [targetLanguage, setTargetLanguage] = useState('EN');
+  const [sourceLanguage, setSourceLanguage] = useState("KO");
+  const [targetLanguage, setTargetLanguage] = useState("EN");
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -59,15 +71,19 @@ export default function ProfilePage() {
                     {user.username.charAt(0).toUpperCase()}
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-2">
-                    <h3 className="text-sm font-medium text-muted-foreground">Username</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground">
+                      Username
+                    </h3>
                     <p className="font-medium">{user.username}</p>
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <h3 className="text-sm font-medium text-muted-foreground">User ID</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground">
+                      User ID
+                    </h3>
                     <p className="font-medium">{user.id}</p>
                   </div>
                 </div>
@@ -81,19 +97,11 @@ export default function ProfilePage() {
                 <CardHeader>
                   <CardTitle>Theme Settings</CardTitle>
                   <CardDescription>
-                    Customize the appearance of your workspace
+                    Choose your preferred theme mode
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    <div className="space-y-1">
-                      <h3 className="text-sm font-medium leading-none">
-                        Theme Preference
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Choose your preferred theme mode
-                      </p>
-                    </div>
                     <RadioGroup defaultValue={theme} onValueChange={setTheme}>
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
@@ -124,8 +132,13 @@ export default function ProfilePage() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Source Language</label>
-                      <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
+                      <label className="text-sm font-medium">
+                        Source Language
+                      </label>
+                      <Select
+                        value={sourceLanguage}
+                        onValueChange={setSourceLanguage}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select source language" />
                         </SelectTrigger>
@@ -138,8 +151,13 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Target Language</label>
-                      <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+                      <label className="text-sm font-medium">
+                        Target Language
+                      </label>
+                      <Select
+                        value={targetLanguage}
+                        onValueChange={setTargetLanguage}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select target language" />
                         </SelectTrigger>
@@ -163,7 +181,11 @@ export default function ProfilePage() {
         </Tabs>
 
         <div className="mt-6 flex justify-end">
-          <Button variant="outline" onClick={handleLogout} disabled={logoutMutation.isPending}>
+          <Button
+            variant="outline"
+            onClick={handleLogout}
+            disabled={logoutMutation.isPending}
+          >
             {logoutMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
