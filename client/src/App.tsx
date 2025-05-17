@@ -10,6 +10,8 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
+import Dashboard from "@/pages/dashboard";
+import LandingPage from "@/pages/landing";
 import Projects from "@/pages/projects";
 import Project from "@/pages/project";
 import Translation from "@/pages/translation";
@@ -56,7 +58,9 @@ const AdminRoute = ({ component: Component, ...rest }: any) => {
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/" component={Home} />
+      <Route path="/landing" component={LandingPage} />
+      <ProtectedRoute path="/" component={Dashboard} />
+      <ProtectedRoute path="/home" component={Home} />
       <ProtectedRoute path="/projects" component={Projects} />
       <ProtectedRoute path="/projects/:id" component={Project} />
       <ProtectedRoute path="/translation/:fileId" component={Translation} />
