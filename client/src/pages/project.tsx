@@ -229,17 +229,21 @@ export default function Project() {
         console.log("Uploading files to:", `/api/projects/${projectId}/references/upload`);
         console.log("Files count:", files.length);
 
-        // Use fetch directly with FormData
-        // Don't add Content-Type header - browser will set it with proper boundary
+        // Debug the token issue
+        console.log("Current auth token:", localStorage.getItem("auth_token") ? "Found token" : "No token found");
+        
+        // Create a custom FormData request with the right authentication
         const response = await fetch(
           `/api/projects/${projectId}/references/upload`,
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              // Use the correct token key from localStorage
+              Authorization: `Bearer ${localStorage.getItem("auth_token") || ""}`
             },
-            body: formData,
-          },
+            credentials: 'include', // Include cookies for session auth as fallback
+            body: formData
+          }
         );
 
         if (!response.ok) {
