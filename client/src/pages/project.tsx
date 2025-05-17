@@ -216,37 +216,43 @@ export default function Project() {
   // Reference 파일 업로드 mutation
   const uploadReferences = useMutation({
     mutationFn: async (files: File[]) => {
-      // Create FormData to send actual files
-      const formData = new FormData();
+      try {
+        // Create FormData to send actual files
+        const formData = new FormData();
 
-      // Add each file to FormData
-      files.forEach((file) => {
-        formData.append("files", file);
-      });
+        // Add each file to FormData
+        files.forEach((file) => {
+          console.log(`Adding file to upload: ${file.name} (${file.size} bytes, type: ${file.type})`);
+          formData.append("files", file);
+        });
 
-      console.log("Uploading files to:", `/api/projects/${projectId}/references/upload`);
-      console.log("Files count:", files.length);
+        console.log("Uploading files to:", `/api/projects/${projectId}/references/upload`);
+        console.log("Files count:", files.length);
 
-      // Use fetch directly with FormData
-      // Don't add Content-Type header - browser will set it with proper boundary
-      const response = await fetch(
-        `/api/projects/${projectId}/references/upload`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        // Use fetch directly with FormData
+        // Don't add Content-Type header - browser will set it with proper boundary
+        const response = await fetch(
+          `/api/projects/${projectId}/references/upload`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: formData,
           },
-          body: formData,
-        },
-      );
+        );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Upload error response:", errorText);
-        throw new Error(`Failed to upload files: ${response.status} ${errorText}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Upload error response:", errorText);
+          throw new Error(`Failed to upload files: ${response.status} ${errorText}`);
+        }
+
+        return response.json();
+      } catch (error) {
+        console.error("Error in uploadReferences mutation:", error);
+        throw error;
       }
-
-      return response.json();
     },
     onSuccess: (data) => {
       console.log("File upload successful, received data:", data);
@@ -1350,19 +1356,38 @@ export default function Project() {
                           ref={fileInputRef}
                           className="hidden"
                           multiple
+                          accept="*/*"
                           onChange={(e) => {
+                            console.log("File input change event triggered");
                             if (e.target.files && e.target.files.length > 0) {
+                              console.log(`Files selected: ${e.target.files.length}`);
                               const newFiles = Array.from(e.target.files);
                               console.log("Files selected via dialog:", newFiles.map(f => f.name));
-                              setReferences([...references, ...newFiles]);
+                              setReferences(prev => [...prev, ...newFiles]);
+                              
+                              // Create a new FormData directly here
+                              const formData = new FormData();
+                              newFiles.forEach(file => {
+                                formData.append("files", file);
+                                console.log(`Added file to FormData: ${file.name}`);
+                              });
+                              
+                              // Use the mutation
                               uploadReferences.mutate(newFiles);
-                              e.target.value = ''; // Reset input
+                              
+                              // Reset the input value to allow selecting the same file again
+                              e.target.value = '';
+                            } else {
+                              console.log("No files selected in file dialog");
                             }
                           }}
                         />
                         <div
                           className="text-center py-8 border-2 border-dashed border-border/50 rounded-lg mb-4 hover:border-primary/50 transition-colors cursor-pointer"
-                          onClick={() => fileInputRef.current?.click()}
+                          onClick={() => {
+                            console.log("Reference area clicked, opening file dialog");
+                            fileInputRef.current?.click();
+                          }}
                           onDragOver={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -1377,6 +1402,7 @@ export default function Project() {
                             e.preventDefault();
                             e.stopPropagation();
                             e.currentTarget.classList.remove("border-primary");
+                            console.log("Files dropped on reference area");
 
                             if (
                               e.dataTransfer.files &&

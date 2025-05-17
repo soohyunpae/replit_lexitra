@@ -401,6 +401,15 @@ const referenceUpload = multer({
     console.log(
       `Accepting reference file upload: ${file.originalname} (${ext})`,
     );
+    
+    // 디버깅을 위한 요청 정보 출력
+    console.log("[Reference Upload] Request received:", {
+      projectId: req.params.id,
+      contentType: req.headers['content-type'],
+      fileCount: req.files ? 'Files present' : 'No files yet',
+      fileName: file.originalname
+    });
+    
     return cb(null, true);
   },
 });
@@ -2427,14 +2436,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     verifyToken,
     referenceUpload.array("files"),
     async (req, res) => {
+      console.log("[Reference Upload Route] Starting file upload process");
+      
       try {
         const id = parseInt(req.params.id);
         const userId = req.user!.id;
         const userRole = req.user!.role;
+        
+        console.log(`[Reference Upload] Processing upload for project ${id} by user ${userId} (role: ${userRole})`);
 
         // 업로드된 파일 확인
         const files = req.files as Express.Multer.File[];
+        console.log(`[Reference Upload] Files received:`, files ? files.length : 'none');
+        
         if (!files || files.length === 0) {
+          console.log("[Reference Upload] Error: No files found in request");
           return res.status(400).json({ message: "No files uploaded" });
         }
 
@@ -2487,28 +2503,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // 참조 파일 메타데이터 업데이트
         const updatedReferences = [...existingReferences, ...fileMetadata];
+        console.log("[Reference Upload] Updating project with new reference files");
 
-        // 프로젝트 업데이트
-        const [updatedProject] = await db
-          .update(schema.projects)
-          .set({
-            references: JSON.stringify(updatedReferences),
-            updatedAt: new Date(),
-          })
-          .where(eq(schema.projects.id, id))
-          .returning();
+        try {
+          // 프로젝트 업데이트
+          const [updatedProject] = await db
+            .update(schema.projects)
+            .set({
+              references: JSON.stringify(updatedReferences),
+              updatedAt: new Date(),
+            })
+            .where(eq(schema.projects.id, id))
+            .returning();
+          
+          console.log("[Reference Upload] Project updated successfully");
 
-        // 클라이언트에게 필요한 정보만 반환
-        const clientMetadata = fileMetadata.map(
-          ({ name, size, type, addedAt }) => ({
-            name,
-            size,
-            type,
-            addedAt,
-          }),
-        );
+          // 클라이언트에게 필요한 정보만 반환
+          const clientMetadata = fileMetadata.map(
+            ({ name, size, type, addedAt }) => ({
+              name,
+              size,
+              type,
+              addedAt,
+            }),
+          );
 
-        return res.status(200).json(clientMetadata);
+          console.log("[Reference Upload] Returning metadata to client:", 
+            clientMetadata.map(m => m.name).join(", "));
+          
+          return res.status(200).json(clientMetadata);
+        } catch (dbError) {
+          console.error("[Reference Upload] Database error:", dbError);
+          throw dbError;
+        }
       } catch (error) {
         return handleApiError(res, error);
       }
