@@ -141,6 +141,7 @@
     "addNewTerm": "Add New Glossary Term",
     "addNewTermDescription": "Add a new term to your glossary database.",
     "selectSourceLanguage": "Select source language",
+    "selectTargetLanguage": "Select target language",
     "glossaryName": "Glossary Name",
     "glossaryDescription": "Glossary Description",
     "sourceLanguage": "Source Language",
@@ -159,6 +160,8 @@
   },
   "tm": {
     "title": "Translation Memory",
+    "entryDeletedSuccess": "Translation memory entry deleted successfully",
+    "failedToDeleteEntry": "Failed to delete entry: {{message}}",
     "entries": "Entries",
     "createEntry": "Create Entry",
     "sourceText": "Source Text",

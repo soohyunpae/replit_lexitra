@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,6 +82,7 @@ type TmEntryFormValues = z.infer<typeof tmEntryFormSchema>;
 type TmResourceFormValues = z.infer<typeof tmResourceFormSchema>;
 
 export default function UnifiedTranslationMemoryPage() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -130,15 +132,15 @@ export default function UnifiedTranslationMemoryPage() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Translation memory entry deleted successfully",
+        title: t('common.success'),
+        description: t('tm.entryDeletedSuccess'),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/tm/all"] });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: `Failed to delete entry: ${error.message}`,
+        title: t('common.error'),
+        description: t('tm.failedToDeleteEntry', { message: error.message }),
         variant: "destructive",
       });
     },

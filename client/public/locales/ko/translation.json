@@ -141,6 +141,7 @@
     "addNewTerm": "새 용어 추가",
     "addNewTermDescription": "용어집 데이터베이스에 새 용어를 추가합니다.",
     "selectSourceLanguage": "원본 언어 선택",
+    "selectTargetLanguage": "대상 언어 선택",
     "glossaryName": "용어집 이름",
     "glossaryDescription": "용어집 설명",
     "sourceLanguage": "원본 언어",
