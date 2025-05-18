@@ -187,7 +187,12 @@
     "actions": "작업",
     "administrator": "관리자",
     "user": "일반 사용자",
-    "selectRole": "역할 선택"
+    "selectRole": "역할 선택",
+    "adminConsole": "관리자 콘솔",
+    "manageSystemSettings": "시스템 설정 및 사용자 권한 관리",
+    "apiKeys": "API 키",
+    "language": "언어",
+    "userManagement": "사용자 관리"
   },
   "tm": {
     "title": "번역 메모리",

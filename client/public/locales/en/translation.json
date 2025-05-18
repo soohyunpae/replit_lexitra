@@ -187,7 +187,12 @@
     "actions": "Actions",
     "administrator": "Administrator",
     "user": "User",
-    "selectRole": "Select role"
+    "selectRole": "Select role",
+    "adminConsole": "Admin Console",
+    "manageSystemSettings": "Manage system settings and user permissions",
+    "apiKeys": "API Keys",
+    "language": "Language",
+    "userManagement": "User Management"
   },
   "tm": {
     "title": "Translation Memory",
