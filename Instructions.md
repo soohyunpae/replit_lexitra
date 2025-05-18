@@ -169,3 +169,47 @@ The fix involves updating the segment stats calculation in project.tsx to proper
 - Test authenticated user flow
 - Verify proper redirections
 - Check error handling
+# Logout Functionality Issue Analysis
+
+## Current State
+The logout functionality in the sidebar.tsx file is not working due to a missing logout mutation import and incorrect usage.
+
+## Problem Analysis
+
+### Files Involved
+1. client/src/components/layout/sidebar.tsx
+2. client/src/hooks/use-auth.tsx
+3. server/routes.ts
+4. server/auth.ts
+
+### Issues Found
+1. The `logoutMutation` is referenced directly in sidebar.tsx without being imported from useAuth hook
+2. The useAuth hook is already imported but its logoutMutation is not being destructured
+3. The onClick handler is trying to use logoutMutation directly instead of through the auth context
+
+## Solution Plan
+
+### 1. Fix Sidebar Component
+Need to properly destructure the logoutMutation from useAuth hook and use it correctly in the DropdownMenuItem.
+
+### 2. Code Changes Required
+
+In client/src/components/layout/sidebar.tsx:
+- Update useAuth hook usage to include logoutMutation
+- Modify the Logout DropdownMenuItem to use the mutation correctly
+
+### Implementation Steps
+
+1. Update the logout implementation in sidebar.tsx to use the auth hook properly
+2. Ensure proper error handling for logout process
+3. Add loading state feedback during logout
+
+### Testing Plan
+1. Test logout functionality from sidebar dropdown
+2. Verify user is properly redirected after logout
+3. Confirm local storage auth token is cleared
+4. Verify server session is terminated
+
+## Code Fix
+
+The fix requires updating the sidebar.tsx file to properly handle the logout mutation.

@@ -372,9 +372,25 @@ export function Sidebar() {
                   <Link href="/profile">My Account</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
+                <DropdownMenuItem 
+                  onClick={() => {
+                    if (logoutMutation) {
+                      logoutMutation.mutate(undefined, {
+                        onSuccess: () => {
+                          // Redirect to landing page after logout
+                          window.location.href = '/';
+                        }
+                      });
+                    }
+                  }}
+                  disabled={logoutMutation?.isPending}
+                >
+                  {logoutMutation?.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <LogOut className="h-4 w-4 mr-2" />
+                  )}
+                  {logoutMutation?.isPending ? 'Logging out...' : 'Logout'}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
