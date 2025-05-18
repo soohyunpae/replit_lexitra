@@ -176,16 +176,16 @@ export default function ProfilePage() {
                 </CardContent>
                 <CardFooter>
                   <Button variant="outline" className="ml-auto">
-                    {t('common.save')}
+                    {t('profile.savePreferences')}
                   </Button>
                 </CardFooter>
               </Card>
               
               <Card>
                 <CardHeader>
-                  <CardTitle>UI Language</CardTitle>
+                  <CardTitle>{t('profile.uiLanguage')}</CardTitle>
                   <CardDescription>
-                    Choose the language for the user interface
+                    {t('profile.chooseUiLanguage')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -210,7 +210,7 @@ export default function ProfilePage() {
                 <CardFooter>
                   <div className="flex items-center text-sm text-muted-foreground">
                     <Globe className="mr-2 h-4 w-4" />
-                    Current UI language: {language === "en" ? "English" : "한국어"}
+                    {t('profile.currentUiLanguage')}: {language === "en" ? "English" : "한국어"}
                   </div>
                 </CardFooter>
               </Card>
