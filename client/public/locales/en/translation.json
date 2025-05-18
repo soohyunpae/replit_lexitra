@@ -68,6 +68,7 @@
   "projects": {
     "title": "Projects",
     "createProject": "Create Project",
+    "newProjectDescription": "Set up a new translation project with source and target languages.",
     "projectName": "Project Name",
     "projectDescription": "Project Description",
     "sourceLanguage": "Source Language",

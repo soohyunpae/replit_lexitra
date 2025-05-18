@@ -68,6 +68,7 @@
   "projects": {
     "title": "프로젝트",
     "createProject": "프로젝트 생성",
+    "newProjectDescription": "원본 언어와 대상 언어로 새 번역 프로젝트를 설정합니다.",
     "projectName": "프로젝트 이름",
     "projectDescription": "프로젝트 설명",
     "sourceLanguage": "원본 언어",

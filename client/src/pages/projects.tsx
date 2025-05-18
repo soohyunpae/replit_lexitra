@@ -801,7 +801,7 @@ export default function ProjectsPage() {
         className="flex items-center"
       >
         <Plus className="mr-1 h-4 w-4" />
-        Create Project
+        {t('projects.createProject')}
       </Button>
     </div>
   );
@@ -813,22 +813,21 @@ export default function ProjectsPage() {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2 mb-2">
             <FolderClosed className="h-5 w-5" />
-            <h2 className="text-3xl font-bold tracking-tight">Projects</h2>
+            <h2 className="text-3xl font-bold tracking-tight">{t('projects.title')}</h2>
           </div>
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-1 h-4 w-4" />
-                New Project
+                {t('projects.createProject')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Create New Translation Project</DialogTitle>
+                <DialogTitle>{t('projects.createProject')}</DialogTitle>
                 <DialogDescription>
-                  Set up a new translation project with source and target
-                  languages.
+                  {t('projects.newProjectDescription')}
                 </DialogDescription>
               </DialogHeader>
 
@@ -843,10 +842,10 @@ export default function ProjectsPage() {
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Project Name</FormLabel>
+                          <FormLabel>{t('projects.projectName')}</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Patent Translation 2023"
+                              placeholder={t('projects.projectName')}
                               {...field}
                             />
                           </FormControl>
@@ -861,14 +860,14 @@ export default function ProjectsPage() {
                         name="sourceLanguage"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Source</FormLabel>
+                            <FormLabel>{t('projects.sourceLanguage')}</FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Source" />
+                                  <SelectValue placeholder={t('projects.sourceLanguage')} />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
