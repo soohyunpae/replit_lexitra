@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useThemeToggle } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
-import { Moon, Sun, Search, Settings, Menu, UserCircle, LogOut, ChevronRight } from "lucide-react";
+import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from "react-i18next";
+import { Moon, Sun, Search, Settings, Menu, UserCircle, LogOut, ChevronRight, Globe } from "lucide-react";
 import { SidebarContext } from "./sidebar";
 import {
   DropdownMenu,
@@ -38,6 +40,8 @@ export function Header({
 }: HeaderProps) {
   const { toggleTheme, isDarkMode, mounted } = useThemeToggle();
   const { user, logoutMutation } = useAuth();
+  const { language, setLanguage } = useLanguage();
+  const { t } = useTranslation();
   const [location, navigate] = useLocation();
   const { isCollapsed, getCurrentSectionTitle, activeSubSection } = useContext(SidebarContext);
 
@@ -114,6 +118,32 @@ export function Header({
         </div>
       
         <div className="flex items-center space-x-3">
+          {/* Language Switcher */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Globe className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>{t('common.language')}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => setLanguage('en')}
+                className={language === 'en' ? 'bg-muted' : ''}
+              >
+                {t('languages.en')}
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setLanguage('ko')}
+                className={language === 'ko' ? 'bg-muted' : ''}
+              >
+                {t('languages.ko')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Theme Switcher */}
           <Button
             variant="ghost"
             size="icon"
@@ -128,8 +158,6 @@ export function Header({
             )}
           </Button>
           
-          {/* Settings 버튼 제거 */}
-          
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -140,15 +168,15 @@ export function Header({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('common.myAccount')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/profile">My Profile</Link>
+                  <Link href="/profile">{t('common.myProfile')}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
                   <LogOut className="h-4 w-4 mr-2" />
-                  로그아웃
+                  {t('common.logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
