@@ -396,14 +396,14 @@ export default function UnifiedGlossaryPage() {
   });
 
   return (
-    <MainLayout title="Glossary">
+    <MainLayout title={t("glossaries.title")}>
       <div className="container max-w-screen-xl mx-auto p-6">
         {/* No breadcrumb - already in header */}
 
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-2">
             <BookMarked className="h-5 w-5" />
-            <h2 className="text-3xl font-bold tracking-tight">Glossary</h2>
+            <h2 className="text-3xl font-bold tracking-tight">{t("glossaries.title")}</h2>
           </div>
           {isAdmin && (
             <div className="flex gap-2">
@@ -425,7 +425,7 @@ export default function UnifiedGlossaryPage() {
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                    Add Term
+                    {t("glossaries.addTerm")}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
