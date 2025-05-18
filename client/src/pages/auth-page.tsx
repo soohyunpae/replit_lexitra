@@ -13,18 +13,18 @@ import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 
 const loginSchema = z.object({
-  username: z.string().min(1, { message: '사용자 이름을 입력해주세요.' }),
-  password: z.string().min(1, { message: '비밀번호를 입력해주세요.' }),
+  username: z.string().min(1, { message: 'Please enter your username.' }),
+  password: z.string().min(1, { message: 'Please enter your password.' }),
 });
 
 const registerSchema = z.object({
-  username: z.string().min(1, { message: '사용자 이름을 입력해주세요.' })
-    .max(30, { message: '사용자 이름은 30자를 초과할 수 없습니다.' })
-    .regex(/^[a-zA-Z0-9_-]+$/, { message: '사용자 이름은 영문, 숫자, 하이픈(-), 언더스코어(_)만 사용할 수 있습니다.' }),
-  password: z.string().min(6, { message: '비밀번호는 최소 6자 이상이어야 합니다.' }),
-  confirmPassword: z.string().min(1, { message: '비밀번호 확인을 입력해주세요.' }),
+  username: z.string().min(1, { message: 'Please enter your username.' })
+    .max(30, { message: 'Username cannot exceed 30 characters.' })
+    .regex(/^[a-zA-Z0-9_-]+$/, { message: 'Username can only contain letters, numbers, hyphens (-), and underscores (_).' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+  confirmPassword: z.string().min(1, { message: 'Please confirm your password.' }),
 }).refine(data => data.password === data.confirmPassword, {
-  message: '비밀번호가 일치하지 않습니다.',
+  message: 'Passwords do not match.',
   path: ['confirmPassword'],
 });
 
