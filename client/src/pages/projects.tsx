@@ -4,6 +4,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "react-i18next";
 import {
   Card,
   CardContent,
@@ -134,6 +135,7 @@ export default function ProjectsPage() {
   const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   // Check if user is admin
   const isAdmin = user?.role === "admin";
