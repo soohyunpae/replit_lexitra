@@ -95,9 +95,9 @@ export default function ProfilePage() {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('profile.themeSettings')}</CardTitle>
+                  <CardTitle>Theme Settings</CardTitle>
                   <CardDescription>
-                    {t('profile.chooseTheme')}
+                    Choose your preferred theme mode
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -106,11 +106,11 @@ export default function ProfilePage() {
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="light" id="theme-light" />
-                          <Label htmlFor="theme-light">{t('common.lightMode')}</Label>
+                          <Label htmlFor="theme-light">Light Mode</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="dark" id="theme-dark" />
-                          <Label htmlFor="theme-dark">{t('common.darkMode')}</Label>
+                          <Label htmlFor="theme-dark">Dark Mode</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="system" id="theme-system" />
@@ -124,7 +124,7 @@ export default function ProfilePage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('profile.language')}</CardTitle>
+                  <CardTitle>Language Preferences</CardTitle>
                   <CardDescription>
                     Set your default source and target languages for translation projects
                   </CardDescription>
@@ -172,42 +172,8 @@ export default function ProfilePage() {
                 </CardContent>
                 <CardFooter>
                   <Button variant="outline" className="ml-auto">
-                    {t('profile.savePreferences')}
+                    Save Preferences
                   </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('profile.uiLanguage')}</CardTitle>
-                  <CardDescription>
-                    {t('profile.chooseUiLanguage')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <RadioGroup 
-                      value={language} 
-                      onValueChange={(value) => setLanguage(value as "en" | "ko")}
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="en" id="lang-en" />
-                          <Label htmlFor="lang-en">English</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="ko" id="lang-ko" />
-                          <Label htmlFor="lang-ko">한국어</Label>
-                        </div>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Globe className="mr-2 h-4 w-4" />
-                    {t('profile.currentUiLanguage')}: {language === "en" ? "English" : "한국어"}
-                  </div>
                 </CardFooter>
               </Card>
             </div>
