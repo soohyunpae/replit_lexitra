@@ -43,7 +43,7 @@ export function LanguageProvider({
   // i18next translation hook
   const { i18n } = useTranslation();
 
-  // Set language handler with force reload option
+  // Set language handler
   const setLanguage = (newLanguage: LanguageType) => {
     // Set state
     setLanguageState(newLanguage);
@@ -58,9 +58,8 @@ export function LanguageProvider({
     document.documentElement.lang = newLanguage;
     document.documentElement.setAttribute('lang', newLanguage);
     
-    // Force reload to ensure all components update with new language
-    // This is a strong approach that guarantees the language change applies everywhere
-    window.location.reload();
+    // Trigger the i18next languageChanged event to update all components
+    window.dispatchEvent(new Event('languageChanged'));
     
     // Log for debugging
     console.log("Language changed to:", newLanguage);
@@ -72,13 +71,14 @@ export function LanguageProvider({
     setLanguage(newLanguage);
   };
 
-  // Effect to initialize language on mount
+  // Effect to initialize language on mount and handle changes
   useEffect(() => {
     // Ensure language is set in i18n
     i18n.changeLanguage(language);
     
     // Set HTML lang attribute
     document.documentElement.lang = language;
+    document.documentElement.setAttribute('lang', language);
     
     // Force global i18n update
     window.dispatchEvent(new Event('languageChanged'));
@@ -93,6 +93,9 @@ export function LanguageProvider({
         if (newLang && (newLang === "en" || newLang === "ko") && newLang !== language) {
           setLanguageState(newLang);
           i18n.changeLanguage(newLang);
+          document.documentElement.lang = newLang;
+          document.documentElement.setAttribute('lang', newLang);
+          window.dispatchEvent(new Event('languageChanged'));
         }
       }
     };
@@ -103,7 +106,7 @@ export function LanguageProvider({
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [language]); // Add language as dependency to ensure proper updates
 
   return (
     <LanguageContext.Provider

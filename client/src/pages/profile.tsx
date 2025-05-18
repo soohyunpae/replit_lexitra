@@ -191,7 +191,7 @@ export default function ProfilePage() {
                 <CardContent>
                   <div className="space-y-3">
                     <RadioGroup 
-                      defaultValue={language} 
+                      value={language} 
                       onValueChange={(value) => setLanguage(value as "en" | "ko")}
                     >
                       <div className="space-y-2">

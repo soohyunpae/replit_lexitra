@@ -212,7 +212,19 @@ i18n
     // Add more responsive behavior for language changes
     keySeparator: '.',
     nsSeparator: ':',
+    // Add event listener for language changes
+    returnEmptyString: false,
+    returnNull: false,
   });
+
+// Add event listener for language changes
+document.addEventListener("DOMContentLoaded", () => {
+  const savedLanguage = localStorage.getItem("lexitra-language-preference");
+  if (savedLanguage) {
+    document.documentElement.lang = savedLanguage;
+    document.documentElement.setAttribute('lang', savedLanguage);
+  }
+});
 
 // Function to change the language
 export const changeLanguage = (language: string) => {
