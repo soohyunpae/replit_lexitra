@@ -1037,12 +1037,10 @@ export default function ProjectsPage() {
                     render={({ field }) => (
                       <FormItem className="space-y-2">
                         <FormLabel className="block">
-                          Reference Files (Optional)
+                          {t('projects.referenceFiles')} ({t('common.optional')})
                         </FormLabel>
                         <FormDescription>
-                          Upload reference files like glossaries, style guides,
-                          etc. Unlike work files, references can be added
-                          anytime.
+                          {t('projects.referenceFilesDescription')}
                         </FormDescription>
 
                         <FormControl>
@@ -1249,11 +1247,11 @@ export default function ProjectsPage() {
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Projects</SelectItem>
-                <SelectItem value="Unclaimed">Unclaimed</SelectItem>
-                <SelectItem value="In Progress">In Progress</SelectItem>
-                <SelectItem value="Claimed">Claimed</SelectItem>
-                <SelectItem value="Completed">Completed</SelectItem>
+                <SelectItem value="all">{t('projects.allProjects')}</SelectItem>
+                <SelectItem value="Unclaimed">{t('projects.statusUnclaimed')}</SelectItem>
+                <SelectItem value="In Progress">{t('projects.statusInProgress')}</SelectItem>
+                <SelectItem value="Claimed">{t('projects.statusClaimed')}</SelectItem>
+                <SelectItem value="Completed">{t('projects.statusCompleted')}</SelectItem>
               </SelectContent>
             </Select>
 
@@ -1284,7 +1282,7 @@ export default function ProjectsPage() {
                 }}
               >
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Bulk Actions" />
+                  <SelectValue placeholder={t('projects.bulkActions')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="claim">
