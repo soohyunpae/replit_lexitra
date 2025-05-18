@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -34,6 +35,7 @@ interface ReviewStats {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   // 활성 프로젝트 수
   const { data: projects = [] } = useQuery<Project[]>({
@@ -109,21 +111,21 @@ export default function Dashboard() {
           <Card className="bg-white">
             <CardContent className="p-6 text-center">
               <div className="text-2xl font-bold mb-1">📁 {activeProjects}</div>
-              <div className="text-sm text-muted-foreground">Active Projects</div>
+              <div className="text-sm text-muted-foreground">{t('dashboard.activeProjects')}</div>
             </CardContent>
           </Card>
           
           <Card className="bg-white">
             <CardContent className="p-6 text-center">
               <div className="text-2xl font-bold mb-1">📝 {segmentsAwaitingReview}</div>
-              <div className="text-sm text-muted-foreground">Segments Awaiting Review</div>
+              <div className="text-sm text-muted-foreground">{t('dashboard.segmentsAwaitingReview')}</div>
             </CardContent>
           </Card>
           
           <Card className="bg-white">
             <CardContent className="p-6 text-center">
               <div className="text-2xl font-bold mb-1">🔍 {glossaryTermsUsed}</div>
-              <div className="text-sm text-muted-foreground">Projects Available to Claim</div>
+              <div className="text-sm text-muted-foreground">{t('dashboard.projectsAvailableToClaim')}</div>
             </CardContent>
           </Card>
         </section>
@@ -133,7 +135,7 @@ export default function Dashboard() {
           {/* 진행 중인 리뷰 */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Review In Progress</CardTitle>
+              <CardTitle className="text-lg">{t('dashboard.reviewInProgress')}</CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="space-y-4">
@@ -146,7 +148,7 @@ export default function Dashboard() {
                       </div>
                       <Link href={`/projects/${project.id}`}>
                         <Button variant="link" className="mt-2 px-0 text-blue-600 hover:underline text-sm">
-                          Continue Reviewing →
+                          {t('dashboard.continueReviewing')} →
                         </Button>
                       </Link>
                     </li>
