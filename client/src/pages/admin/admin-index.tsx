@@ -335,7 +335,7 @@ export default function AdminConsole() {
                     }}
                   >
                     <UserPlus className="h-4 w-4" />
-                    Add User
+                    {t('admin.addUser')}
                   </Button>
                 </div>
                 
@@ -345,9 +345,9 @@ export default function AdminConsole() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Username</TableHead>
-                        <TableHead>Current Role</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead>{t('admin.username')}</TableHead>
+                        <TableHead>{t('admin.currentRole')}</TableHead>
+                        <TableHead>{t('admin.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -360,7 +360,7 @@ export default function AdminConsole() {
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <Shield className={`h-4 w-4 ${user.role === 'admin' ? 'text-primary' : 'text-muted-foreground'}`} />
-                              {user.role === 'admin' ? 'Administrator' : 'User'}
+                              {user.role === 'admin' ? t('admin.administrator') : t('admin.user')}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -370,11 +370,11 @@ export default function AdminConsole() {
                               disabled={user.username === 'admin'} // Don't allow changing the main admin
                             >
                               <SelectTrigger className="w-32">
-                                <SelectValue placeholder="Select role" />
+                                <SelectValue placeholder={t('admin.selectRole')} />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="admin">Administrator</SelectItem>
-                                <SelectItem value="user">User</SelectItem>
+                                <SelectItem value="admin">{t('admin.administrator')}</SelectItem>
+                                <SelectItem value="user">{t('admin.user')}</SelectItem>
                               </SelectContent>
                             </Select>
                           </TableCell>

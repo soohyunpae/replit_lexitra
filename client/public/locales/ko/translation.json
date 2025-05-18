@@ -180,7 +180,14 @@
     "accessDenied": "접근 거부됨",
     "adminAccessRequired": "관리자 권한 필요",
     "noPermission": "관리자 대시보드에 접근할 권한이 없습니다.",
-    "goToHome": "홈으로 가기"
+    "goToHome": "홈으로 가기",
+    "addUser": "사용자 추가",
+    "username": "사용자 이름",
+    "currentRole": "현재 역할",
+    "actions": "작업",
+    "administrator": "관리자",
+    "user": "일반 사용자",
+    "selectRole": "역할 선택"
   },
   "tm": {
     "title": "번역 메모리",
