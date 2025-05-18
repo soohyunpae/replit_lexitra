@@ -350,8 +350,40 @@ export function Sidebar() {
           </div>
         )}
 
-        {/* User Account Section */}
-        <div className="mt-auto px-3 py-4 border-t border-border">
+        {/* Language Toggle and User Account Section */}
+        <div className="mt-auto px-3 py-4 border-t border-border space-y-3">
+          {/* Language Toggle Button */}
+          <div className="flex justify-between items-center">
+            <Button 
+              variant="ghost"
+              size="sm" 
+              className="w-full text-xs flex items-center justify-between"
+              onClick={() => {
+                // Toggle language between en and ko
+                const newLang = language === "en" ? "ko" : "en";
+                
+                // Save to localStorage
+                localStorage.setItem("lexitra-language-preference", newLang);
+                
+                // Force page reload
+                window.location.reload();
+              }}
+            >
+              <div className="flex items-center">
+                <Globe className="h-4 w-4 mr-2" />
+                {!isCollapsed && (
+                  <span>{language === "en" ? "English" : "한국어"}</span>
+                )}
+              </div>
+              {!isCollapsed && (
+                <span className="text-xs text-muted-foreground">
+                  {language === "en" ? "→ 한국어" : "→ English"}
+                </span>
+              )}
+            </Button>
+          </div>
+          
+          {/* User Account */}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
