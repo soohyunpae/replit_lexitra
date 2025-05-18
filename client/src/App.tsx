@@ -65,16 +65,16 @@ function Router() {
       <ProtectedRoute path="/projects" component={Projects} />
       <ProtectedRoute path="/projects/:id" component={Project} />
       <ProtectedRoute path="/translation/:fileId" component={Translation} />
-      
+
       {/* New unified glossary page */}
       <ProtectedRoute path="/glossaries" component={GlossariesUnified} />
-      
+
       {/* Redirect old routes to the unified page */}
       <ProtectedRoute path="/termbases" component={GlossariesUnified} />
-      
+
       {/* TM page */}
       <ProtectedRoute path="/tm" component={TMUnified} />
-      
+
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <Route path="/admin">
         <AdminRoute component={AdminConsole} />
@@ -108,14 +108,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="lexitra-theme-preference">
-        <TooltipProvider>
-          <AuthProvider>
-            <LanguageProvider defaultLanguage="en">
+        <AuthProvider>
+          <LanguageProvider defaultLanguage="en">
+            <TooltipProvider>
               <Router />
               <Toaster />
-            </LanguageProvider>
-          </AuthProvider>
-        </TooltipProvider>
+            </TooltipProvider>
+          </LanguageProvider>
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

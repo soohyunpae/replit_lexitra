@@ -1,89 +1,63 @@
-# Implementing i18n in Lexitra
+# Lexitra i18n Implementation Plan
 
-## Current State Analysis
-
-The application currently has:
-- React-based frontend using TypeScript
-- UI components in /client/src/components
-- Main layout components handling the overall structure
-- Authentication and user management
+## Current Status
+- Basic i18n setup exists with React-i18next
+- Translation files present but not fully utilized 
+- Language switching feature partially implemented but not working
 
 ## Implementation Plan
 
-### 1. Required Dependencies
-- `react-i18next` - React internationalization framework
-- `i18next` - Base i18n framework
-- `i18next-http-backend` - Load translations via HTTP
+### 1. Fix Language Provider Integration
+- Add LanguageProvider to App.tsx wrapper to fix context errors
+- Ensure provider properly initializes with saved language preference
+- Hook up language switching in profile page preferences
 
-### 2. Translation Structure
-```
-client/src/i18n/
-├── locales/
-│   ├── ko/
-│   │   └── translation.json
-│   └── en/
-│       └── translation.json
-├── index.ts
-└── types.ts
-```
+### 2. Translation Management
+- Utilize existing `/client/public/locales/{en,ko}/translation.json` files
+- Add missing translations and organize hierarchically
+- No auto-translation - all strings manually managed
 
-### 3. Integration Steps
+### 3. User Interface
+- Add language selection in Profile page preferences
+- Store user language preference in localStorage
+- Apply language changes immediately across app
 
-1. Install required packages
-2. Set up i18n configuration
-3. Create translation files
-4. Add language switcher to the header
-5. Update key components for i18n support:
-   - MainLayout
-   - Sidebar
-   - Auth pages
-   - Dashboard
-   - Project views
+### 4. Testing
+- Verify language switching works
+- Confirm translations load correctly
+- Check persistence of language selection
 
-### 4. Implementation Details
+## Components Required
 
-#### Phase 1: Basic Setup
-1. Install i18n packages
-2. Create base configuration
-3. Add language selector to header
-4. Setup initial translation files
+1. Language Provider (src/hooks/use-language.tsx)
+2. Profile Page Language Settings (src/pages/profile.tsx)
+3. Translation Files (public/locales/{en,ko}/translation.json)
 
-#### Phase 2: Content Translation
-1. Update authentication pages
-2. Translate navigation items
-3. Update project management texts
-4. Translate dashboard content
+## Implementation Notes
 
-#### Phase 3: Advanced Features
-1. Persist language preference
-2. Add language detection
-3. Implement fallback handling
-4. Add loading states for translations
+The system will:
+- Use manual translations only
+- Persist language preference
+- Support English and Korean UI
+- Allow switching via profile preferences
 
 ### 5. File Changes Required
 
 1. New Files:
-- client/src/i18n/index.ts
-- client/src/i18n/types.ts
-- client/src/i18n/locales/en/translation.json
-- client/src/i18n/locales/ko/translation.json
+- client/src/hooks/use-language.tsx
 
 2. Modified Files:
 - client/src/App.tsx
-- client/src/components/layout/header.tsx
-- client/src/components/layout/sidebar.tsx
-- client/src/pages/auth-page.tsx
-- client/src/pages/dashboard.tsx
+- client/src/pages/profile.tsx
+- client/public/locales/en/translation.json
+- client/public/locales/ko/translation.json
 
 ### 6. Implementation Order
 
-1. Setup i18n infrastructure
-2. Create language switcher
-3. Update authentication flow
-4. Translate main navigation
-5. Update project management interface
-6. Implement dashboard translations
-7. Add user preferences for language
+1. Setup Language Provider
+2. Implement language switching in profile preferences
+3. Update translation files
+4. Test language switching and persistence
 
 ### 7. Testing Checklist
 
@@ -94,9 +68,8 @@ client/src/i18n/
 - Language persistence between sessions
 - Proper handling of dynamic content
 
-## Next Steps
+## Dependencies
 
-1. Install required dependencies
-2. Create i18n configuration
-3. Implement base translation files
-4. Add language switcher component
+- `react-i18next`
+- `i18next`
+- `i18next-http-backend`
