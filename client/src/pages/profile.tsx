@@ -1,8 +1,6 @@
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/components/ui/theme-provider";
-import { useLanguage } from "@/hooks/use-language";
-import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -29,8 +27,6 @@ import { useState } from "react";
 export default function ProfilePage() {
   const { user, isLoading, logoutMutation } = useAuth();
   const { theme, setTheme } = useTheme();
-  const { language, setLanguage } = useLanguage();
-  const { t } = useTranslation();
   const [sourceLanguage, setSourceLanguage] = useState("KO");
   const [targetLanguage, setTargetLanguage] = useState("EN");
 
@@ -53,20 +49,20 @@ export default function ProfilePage() {
   }
 
   return (
-    <MainLayout title={t('common.myAccount')}>
+    <MainLayout title="My Account">
       <div className="max-w-3xl mx-auto py-10">
         <Tabs defaultValue="general" className="space-y-6">
           <TabsList>
-            <TabsTrigger value="general">{t('common.general') || 'General'}</TabsTrigger>
-            <TabsTrigger value="preferences">{t('profile.preferences') || 'Preferences'}</TabsTrigger>
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="preferences">Preferences</TabsTrigger>
           </TabsList>
 
           <TabsContent value="general">
             <Card>
               <CardHeader>
-                <CardTitle>{t('profile.accountInformation')}</CardTitle>
+                <CardTitle>Account Information</CardTitle>
                 <CardDescription>
-                  {t('profile.personalInfo')}
+                  Personal Information
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -79,14 +75,14 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium text-muted-foreground">
-                      {t('profile.username')}
+                      Username
                     </h3>
                     <p className="font-medium">{user.username}</p>
                   </div>
 
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium text-muted-foreground">
-                      {t('profile.userId')}
+                      User ID
                     </h3>
                     <p className="font-medium">{user.id}</p>
                   </div>
