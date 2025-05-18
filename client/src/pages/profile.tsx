@@ -1,7 +1,8 @@
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/components/ui/theme-provider";
-
+import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -180,7 +181,39 @@ export default function ProfilePage() {
                 </CardFooter>
               </Card>
               
-              
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('profile.uiLanguage')}</CardTitle>
+                  <CardDescription>
+                    {t('profile.chooseUiLanguage')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <RadioGroup 
+                      value={language} 
+                      onValueChange={(value) => setLanguage(value as "en" | "ko")}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="en" id="lang-en" />
+                          <Label htmlFor="lang-en">English</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="ko" id="lang-ko" />
+                          <Label htmlFor="lang-ko">한국어</Label>
+                        </div>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Globe className="mr-2 h-4 w-4" />
+                    {t('profile.currentUiLanguage')}: {language === "en" ? "English" : "한국어"}
+                  </div>
+                </CardFooter>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>
