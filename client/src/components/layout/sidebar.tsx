@@ -386,7 +386,7 @@ export function Sidebar() {
                   ) : (
                     <LogOut className="h-4 w-4 mr-2" />
                   )}
-                  {logoutMutation.isPending ? '로그아웃 중...' : '로그아웃'}
+                  {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
