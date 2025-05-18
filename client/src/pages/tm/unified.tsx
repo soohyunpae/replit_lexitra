@@ -522,20 +522,20 @@ export default function UnifiedTranslationMemoryPage() {
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="tmFile" className="text-right">
-                        File
+                        {t('tm.file')}
                       </Label>
                       <Input id="tmFile" type="file" className="col-span-3" accept=".tmx,.xlsx,.csv" />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="tmResource" className="text-right">
-                        TM Resource
+                        {t('tm.tmResource')}
                       </Label>
                       <Select defaultValue="none">
                         <SelectTrigger className="col-span-3" id="tmResource">
-                          <SelectValue placeholder="Select TM Resource" />
+                          <SelectValue placeholder={t('tm.selectTmResource')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">None (Create New)</SelectItem>
+                          <SelectItem value="none">{t('tm.noneCreateNew')}</SelectItem>
                           {tmResources.map((resource: any) => (
                             <SelectItem key={resource.id} value={resource.id.toString()}>
                               {resource.name}
@@ -546,7 +546,7 @@ export default function UnifiedTranslationMemoryPage() {
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button type="submit">Upload</Button>
+                    <Button type="submit">{t('tm.upload')}</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
