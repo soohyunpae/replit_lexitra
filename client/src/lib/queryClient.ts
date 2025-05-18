@@ -49,7 +49,7 @@ export async function apiRequest(
   // 기본 fetch 옵션
   const fetchOptions: RequestInit = {
     method,
-    credentials: 'include' as RequestCredentials,  // Still include cookies for backward compatibility
+    credentials: 'include' as RequestCredentials,  // This is critical for cookie-based auth
     mode: 'cors' as RequestMode,           // Explicitly set CORS mode
     headers,
     body: data ? (isFormData ? data : JSON.stringify(data)) : undefined,
@@ -161,18 +161,23 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 30 * 60 * 1000, // 30 minutes
       retry: 1,
-      onError: (error) => {
-        console.error("Query Error:", error);
-        // You can add global error notification here
+      onError: (error: unknown) => {
+        if (error instanceof Error) {
+          console.error("Query Error:", error.message);
+        } else {
+          console.error("Unknown Query Error:", error);
+        }
       }
     },
     mutations: {
       retry: false,
-      onError: (error) => {
-        console.error("Mutation Error:", error);
-        // You can add global error notification here
+      onError: (error: unknown) => {
+        if (error instanceof Error) {
+          console.error("Mutation Error:", error.message);
+        } else {
+          console.error("Unknown Mutation Error:", error);
+        }
       }
     },
   },

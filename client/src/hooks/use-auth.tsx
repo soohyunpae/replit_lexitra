@@ -105,7 +105,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation<void, Error, void>({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
+      try {
+        // Make the logout request
+        const response = await apiRequest("POST", "/api/logout");
+        
+        // Even if server doesn't respond properly, we should clean up client-side
+        if (!response.ok) {
+          console.warn("Server returned non-OK response for logout:", response.status);
+        }
+        
+        return;
+      } catch (error) {
+        console.error("Logout request failed, cleaning up client-side anyway:", error);
+        // Continue to onSuccess even if the request fails
+        // We want to clear local auth state regardless of server response
+        return;
+      }
     },
     onSuccess: () => {
       // Remove token from localStorage
@@ -114,17 +129,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear user data from cache
       queryClient.setQueryData(["/api/user"], null);
       
+      // Force a refetch of any protected routes to confirm logout
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
       toast({
         title: "로그아웃 성공",
         description: "로그아웃 되었습니다.",
       });
+      
+      // Redirect to homepage on successful logout
+      window.location.href = '/';
     },
     onError: (error) => {
+      console.error("Logout error:", error);
+      
+      // Clean up client side anyway even if server response fails
+      removeAuthToken();
+      queryClient.setQueryData(["/api/user"], null);
+      
       toast({
-        title: "로그아웃 실패",
-        description: error.message,
-        variant: "destructive",
+        title: "로그아웃에 문제가 있었지만 처리되었습니다",
+        description: "다시 로그인해주세요.",
       });
+      
+      // Redirect to homepage
+      window.location.href = '/';
     },
   });
 

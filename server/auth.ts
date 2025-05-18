@@ -238,15 +238,32 @@ export function setupAuth(app: Express) {
 
   // Route for logging out
   app.post("/api/logout", (req, res, next) => {
+    console.log('[LOGOUT ATTEMPT]', {
+      user: req.user,
+      sessionID: req.sessionID,
+      authenticated: req.isAuthenticated()
+    });
+    
     // For session-based auth - log out of the session
     req.logout((err) => {
-      if (err) return next(err);
+      if (err) {
+        console.error('[LOGOUT ERROR]', err);
+        return next(err);
+      }
       
-      // For token-based auth, we don't need to do anything server-side
-      // The client will remove the token from localStorage
-      
-      console.log('[LOGOUT SUCCESS]');
-      return res.status(200).json({ message: 'Logged out successfully' });
+      // Destroy the session to ensure it's completely removed
+      req.session.destroy((destroyErr) => {
+        if (destroyErr) {
+          console.error('[SESSION DESTROY ERROR]', destroyErr);
+          // Continue anyway, as we still want to log the user out
+        }
+        
+        // Clear any authentication cookies by setting them to expire in the past
+        res.clearCookie('lexitra.sid');
+        
+        console.log('[LOGOUT SUCCESS]');
+        return res.status(200).json({ message: 'Logged out successfully' });
+      });
     });
   });
 
