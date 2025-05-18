@@ -53,20 +53,20 @@ export default function ProfilePage() {
   }
 
   return (
-    <MainLayout title="My Account">
+    <MainLayout title={t('common.myAccount')}>
       <div className="max-w-3xl mx-auto py-10">
         <Tabs defaultValue="general" className="space-y-6">
           <TabsList>
-            <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
+            <TabsTrigger value="general">{t('common.general') || 'General'}</TabsTrigger>
+            <TabsTrigger value="preferences">{t('profile.preferences') || 'Preferences'}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="general">
             <Card>
               <CardHeader>
-                <CardTitle>Account Information</CardTitle>
+                <CardTitle>{t('profile.accountInformation')}</CardTitle>
                 <CardDescription>
-                  Your basic account details and preferences
+                  {t('profile.personalInfo')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -79,14 +79,14 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium text-muted-foreground">
-                      Username
+                      {t('profile.username')}
                     </h3>
                     <p className="font-medium">{user.username}</p>
                   </div>
 
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium text-muted-foreground">
-                      User ID
+                      {t('profile.userId')}
                     </h3>
                     <p className="font-medium">{user.id}</p>
                   </div>
@@ -99,9 +99,9 @@ export default function ProfilePage() {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Theme Settings</CardTitle>
+                  <CardTitle>{t('profile.themeSettings')}</CardTitle>
                   <CardDescription>
-                    Choose your preferred theme mode
+                    {t('profile.chooseTheme')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -110,11 +110,11 @@ export default function ProfilePage() {
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="light" id="theme-light" />
-                          <Label htmlFor="theme-light">Light Mode</Label>
+                          <Label htmlFor="theme-light">{t('common.lightMode')}</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="dark" id="theme-dark" />
-                          <Label htmlFor="theme-dark">Dark Mode</Label>
+                          <Label htmlFor="theme-dark">{t('common.darkMode')}</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="system" id="theme-system" />
@@ -128,9 +128,9 @@ export default function ProfilePage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Language Preferences</CardTitle>
+                  <CardTitle>{t('profile.language')}</CardTitle>
                   <CardDescription>
-                    Set your default source and target languages
+                    Set your default source and target languages for translation projects
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -176,8 +176,42 @@ export default function ProfilePage() {
                 </CardContent>
                 <CardFooter>
                   <Button variant="outline" className="ml-auto">
-                    Save Preferences
+                    {t('common.save')}
                   </Button>
+                </CardFooter>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>UI Language</CardTitle>
+                  <CardDescription>
+                    Choose the language for the user interface
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <RadioGroup 
+                      defaultValue={language} 
+                      onValueChange={(value) => setLanguage(value as "en" | "ko")}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="en" id="lang-en" />
+                          <Label htmlFor="lang-en">English</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="ko" id="lang-ko" />
+                          <Label htmlFor="lang-ko">한국어</Label>
+                        </div>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Globe className="mr-2 h-4 w-4" />
+                    Current UI language: {language === "en" ? "English" : "한국어"}
+                  </div>
                 </CardFooter>
               </Card>
             </div>

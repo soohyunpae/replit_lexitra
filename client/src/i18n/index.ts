@@ -32,7 +32,26 @@ const resources = {
         back: "Back",
         next: "Next",
         confirm: "Confirm",
-        language: "Language"
+        language: "Language",
+        general: "General"
+      },
+      profile: {
+        title: "Profile",
+        personalInfo: "Personal Information",
+        preferences: "Preferences",
+        accountInformation: "Account Information",
+        username: "Username",
+        userId: "User ID",
+        themeSettings: "Theme Settings",
+        chooseTheme: "Choose your preferred theme mode",
+        language: "Language",
+        uiLanguage: "UI Language",
+        chooseUiLanguage: "Choose the language for the user interface",
+        currentUiLanguage: "Current UI language",
+        defaultLanguages: "Set your default source and target languages for translation projects",
+        sourceLanguage: "Source Language",
+        targetLanguage: "Target Language",
+        savePreferences: "Save Preferences"
       },
       languages: {
         en: "English",
@@ -68,7 +87,26 @@ const resources = {
         back: "뒤로",
         next: "다음",
         confirm: "확인",
-        language: "언어"
+        language: "언어",
+        general: "일반"
+      },
+      profile: {
+        title: "프로필",
+        personalInfo: "개인 정보",
+        preferences: "환경 설정",
+        accountInformation: "계정 정보",
+        username: "사용자 이름",
+        userId: "사용자 ID",
+        themeSettings: "테마 설정",
+        chooseTheme: "원하는 테마 모드를 선택하세요",
+        language: "언어",
+        uiLanguage: "UI 언어",
+        chooseUiLanguage: "사용자 인터페이스 언어를 선택하세요",
+        currentUiLanguage: "현재 UI 언어",
+        defaultLanguages: "번역 프로젝트의 기본 소스 및 대상 언어 설정",
+        sourceLanguage: "소스 언어",
+        targetLanguage: "대상 언어",
+        savePreferences: "환경 설정 저장"
       },
       languages: {
         en: "영어",
