@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import { useLocation, Link, Redirect } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from "react-i18next";
 import { SidebarContext } from "@/components/layout/sidebar";
 import {
   Card,
@@ -36,6 +37,7 @@ import {
 } from "lucide-react";
 
 export default function AdminConsole() {
+  const { t } = useTranslation();
   const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("api-keys");
@@ -57,18 +59,18 @@ export default function AdminConsole() {
   ]);
   
   // 활성 탭 변경 시 SidebarContext 업데이트
-  const [activeTabLabel, setActiveTabLabel] = useState<string>("API Keys");
+  const [activeTabLabel, setActiveTabLabel] = useState<string>(t('admin.apiKeys'));
   
   // 탭 변경 핸들러
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     // 선택된 탭에 따라 적절한 라벨 설정
     if (value === "api-keys") {
-      setActiveTabLabel("API Keys");
+      setActiveTabLabel(t('admin.apiKeys'));
     } else if (value === "language") {
-      setActiveTabLabel("Language Settings");
+      setActiveTabLabel(t('admin.languageSettings'));
     } else if (value === "user-management") {
-      setActiveTabLabel("User Management");
+      setActiveTabLabel(t('admin.userManagement'));
     }
   };
   
@@ -259,19 +261,19 @@ export default function AdminConsole() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="default-source-language">Default Source Language</Label>
+                      <Label htmlFor="default-source-language">{t('admin.defaultSourceLanguage')}</Label>
                       <Select 
                         value={defaultSourceLang} 
                         onValueChange={setDefaultSourceLang}
                       >
                         <SelectTrigger id="default-source-language">
-                          <SelectValue placeholder="Select source language" />
+                          <SelectValue placeholder={t('admin.selectSourceLanguage')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="KO">Korean (KO)</SelectItem>
-                          <SelectItem value="JA">Japanese (JA)</SelectItem>
-                          <SelectItem value="EN">English (EN)</SelectItem>
-                          <SelectItem value="ZH">Chinese (ZH)</SelectItem>
+                          <SelectItem value="KO">{t('languages.korean')} (KO)</SelectItem>
+                          <SelectItem value="JA">{t('languages.japanese')} (JA)</SelectItem>
+                          <SelectItem value="EN">{t('languages.english')} (EN)</SelectItem>
+                          <SelectItem value="ZH">{t('languages.chinese')} (ZH)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

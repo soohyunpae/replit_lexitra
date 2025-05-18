@@ -158,6 +158,19 @@
     "importGlossary": "Import Glossary",
     "exportGlossary": "Export Glossary"
   },
+  "admin": {
+    "title": "Admin",
+    "console": "Admin Console", 
+    "apiKeys": "API Keys",
+    "languageSettings": "Language Settings",
+    "userManagement": "User Management",
+    "defaultSourceLanguage": "Default Source Language",
+    "selectSourceLanguage": "Select source language",
+    "accessDenied": "Access Denied",
+    "adminAccessRequired": "Admin Access Required",
+    "noPermission": "You don't have permission to access the admin dashboard.",
+    "goToHome": "Go to Home"
+  },
   "tm": {
     "title": "Translation Memory",
     "entryDeletedSuccess": "Translation memory entry deleted successfully",
