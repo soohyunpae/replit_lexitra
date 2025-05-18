@@ -182,40 +182,47 @@ const getUserLanguage = () => {
 };
 
 // Initialize i18next
-i18n
-  .use(initReactI18next)
-  .use(Backend)
-  .init({
-    // Get language from localStorage or fallback to browser language
-    lng: getUserLanguage(),
-    // Fallback language
-    fallbackLng: 'en',
-    // Debug mode for development (can be disabled in production)
-    debug: process.env.NODE_ENV === 'development',
-    // Resources for translation
-    resources,
-    // Namespace for translation files
-    defaultNS: 'translation',
-    // Options for interpolation
-    interpolation: {
-      escapeValue: false, // React already safes from XSS
-    },
-    // React configuration
-    react: {
-      useSuspense: false,
-    },
-    // Detect language changes
-    detection: {
-      order: ['localStorage', 'navigator'],
-      lookupLocalStorage: 'lexitra-language-preference',
-    },
-    // Add more responsive behavior for language changes
-    keySeparator: '.',
-    nsSeparator: ':',
-    // Add event listener for language changes
-    returnEmptyString: false,
-    returnNull: false,
-  });
+const initI18n = () => {
+  return i18n
+    .use(initReactI18next)
+    .use(Backend)
+    .init({
+      // Get language from localStorage or fallback to browser language
+      lng: getUserLanguage(),
+      // Fallback language
+      fallbackLng: 'en',
+      // Debug mode for development (can be disabled in production)
+      debug: process.env.NODE_ENV === 'development',
+      // Resources for translation
+      resources,
+      // Namespace for translation files
+      defaultNS: 'translation',
+      // Options for interpolation
+      interpolation: {
+        escapeValue: false, // React already safes from XSS
+      },
+      // React configuration
+      react: {
+        useSuspense: false,
+        bindI18n: 'languageChanged',
+        bindI18nStore: '',
+      },
+      // Detect language changes
+      detection: {
+        order: ['localStorage', 'navigator'],
+        lookupLocalStorage: 'lexitra-language-preference',
+      },
+      // Add more responsive behavior for language changes
+      keySeparator: '.',
+      nsSeparator: ':',
+      // Add event listener for language changes
+      returnEmptyString: false,
+      returnNull: false,
+    });
+};
+
+// Initialize i18n
+initI18n();
 
 // Add event listener for language changes
 document.addEventListener("DOMContentLoaded", () => {

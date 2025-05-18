@@ -190,29 +190,29 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    <RadioGroup 
-                      value={language} 
-                      onValueChange={(value) => {
-                        const newLanguage = value as "en" | "ko";
-                        // 직접 localStorage에 저장
-                        localStorage.setItem("lexitra-language-preference", newLanguage);
-                        // HTML 속성 변경
-                        document.documentElement.lang = newLanguage;
-                        // 페이지 새로고침
-                        window.location.reload();
-                      }}
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="en" id="lang-en" />
-                          <Label htmlFor="lang-en">English</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="ko" id="lang-ko" />
-                          <Label htmlFor="lang-ko">한국어</Label>
-                        </div>
-                      </div>
-                    </RadioGroup>
+                    <div className="space-y-4">
+                      <Button 
+                        className={`w-full ${language === "en" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}
+                        onClick={() => {
+                          localStorage.setItem("lexitra-language-preference", "en");
+                          document.documentElement.lang = "en";
+                          window.location.href = window.location.href;
+                        }}
+                      >
+                        English
+                      </Button>
+                      
+                      <Button
+                        className={`w-full ${language === "ko" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}
+                        onClick={() => {
+                          localStorage.setItem("lexitra-language-preference", "ko");
+                          document.documentElement.lang = "ko";
+                          window.location.href = window.location.href;
+                        }}
+                      >
+                        한국어
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
                 <CardFooter>
