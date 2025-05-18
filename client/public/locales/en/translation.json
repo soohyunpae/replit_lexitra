@@ -180,14 +180,7 @@
     "accessDenied": "Access Denied",
     "adminAccessRequired": "Admin Access Required",
     "noPermission": "You don't have permission to access the admin dashboard.",
-    "goToHome": "Go to Home",
-    "addUser": "Add User",
-    "username": "Username",
-    "currentRole": "Current Role",
-    "actions": "Actions",
-    "administrator": "Administrator",
-    "user": "User",
-    "selectRole": "Select role"
+    "goToHome": "Go to Home"
   },
   "tm": {
     "title": "Translation Memory",

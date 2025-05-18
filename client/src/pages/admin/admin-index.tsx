@@ -113,7 +113,7 @@ export default function AdminConsole() {
   // Check if user is admin
   if (!user || user.role !== "admin") {
     return (
-      <MainLayout title={t('admin.accessDenied')}>
+      <MainLayout title="Access Denied">
         <div className="flex-1 flex items-center justify-center p-6">
           <Card className="max-w-md w-full">
             <CardHeader>
@@ -121,15 +121,15 @@ export default function AdminConsole() {
                 <Lock className="h-6 w-6 text-destructive" />
               </div>
               <CardTitle className="text-center">
-                {t('admin.adminAccessRequired')}
+                Admin Access Required
               </CardTitle>
               <CardDescription className="text-center">
-                {t('admin.noPermission')}
+                You don't have permission to access the admin dashboard.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button onClick={() => navigate("/")} className="w-full">
-                {t('admin.goToHome')}
+                Go to Home
               </Button>
             </CardContent>
           </Card>
@@ -139,14 +139,14 @@ export default function AdminConsole() {
   }
 
   return (
-    <MainLayout title={t('admin.adminConsole')}>
+    <MainLayout title="Admin Console">
       <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center gap-2 mb-2">
           <Settings className="h-5 w-5" />
-          <h2 className="text-3xl font-bold tracking-tight">{t('admin.adminConsole')}</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Admin Console</h2>
         </div>
         <p className="text-muted-foreground mb-6">
-          {t('admin.manageSystemSettings')}
+          Manage system settings and user permissions
         </p>
 
         <Tabs
@@ -160,21 +160,21 @@ export default function AdminConsole() {
               className="flex items-center gap-2"
             >
               <Key className="h-4 w-4" />
-              <span>{t('admin.apiKeys')}</span>
+              <span>API Keys</span>
             </TabsTrigger>
             <TabsTrigger
               value="language"
               className="flex items-center gap-2"
             >
               <Globe className="h-4 w-4" />
-              <span>{t('admin.language')}</span>
+              <span>Language</span>
             </TabsTrigger>
             <TabsTrigger
               value="user-management"
               className="flex items-center gap-2"
             >
               <Users className="h-4 w-4" />
-              <span>{t('admin.userManagement')}</span>
+              <span>User Management</span>
             </TabsTrigger>
           </TabsList>
 
@@ -335,7 +335,7 @@ export default function AdminConsole() {
                     }}
                   >
                     <UserPlus className="h-4 w-4" />
-                    {t('admin.addUser')}
+                    Add User
                   </Button>
                 </div>
                 
@@ -345,9 +345,9 @@ export default function AdminConsole() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{t('admin.username')}</TableHead>
-                        <TableHead>{t('admin.currentRole')}</TableHead>
-                        <TableHead>{t('admin.actions')}</TableHead>
+                        <TableHead>Username</TableHead>
+                        <TableHead>Current Role</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -360,7 +360,7 @@ export default function AdminConsole() {
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <Shield className={`h-4 w-4 ${user.role === 'admin' ? 'text-primary' : 'text-muted-foreground'}`} />
-                              {user.role === 'admin' ? t('admin.administrator') : t('admin.user')}
+                              {user.role === 'admin' ? 'Administrator' : 'User'}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -370,11 +370,11 @@ export default function AdminConsole() {
                               disabled={user.username === 'admin'} // Don't allow changing the main admin
                             >
                               <SelectTrigger className="w-32">
-                                <SelectValue placeholder={t('admin.selectRole')} />
+                                <SelectValue placeholder="Select role" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="admin">{t('admin.administrator')}</SelectItem>
-                                <SelectItem value="user">{t('admin.user')}</SelectItem>
+                                <SelectItem value="admin">Administrator</SelectItem>
+                                <SelectItem value="user">User</SelectItem>
                               </SelectContent>
                             </Select>
                           </TableCell>
