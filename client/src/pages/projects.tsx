@@ -1288,37 +1288,37 @@ export default function ProjectsPage() {
                   <SelectItem value="claim">
                     <div className="flex items-center">
                       <CheckSquare className="h-4 w-4 mr-2" />
-                      <span>Claim Projects</span>
+                      <span>{t('projects.claimProjects')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="release">
                     <div className="flex items-center">
                       <Unlock className="h-4 w-4 mr-2" />
-                      <span>Release Projects</span>
+                      <span>{t('projects.releaseProjects')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="complete">
                     <div className="flex items-center">
                       <CheckCircle className="h-4 w-4 mr-2" />
-                      <span>Mark as Completed</span>
+                      <span>{t('projects.completeProjects')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="reopen">
                     <div className="flex items-center">
                       <RefreshCw className="h-4 w-4 mr-2" />
-                      <span>Reopen Projects</span>
+                      <span>{t('projects.reopenProjects')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="archive">
                     <div className="flex items-center">
                       <Archive className="h-4 w-4 mr-2" />
-                      <span>Archive Projects</span>
+                      <span>{t('projects.archiveProjects')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="delete" className="text-destructive">
                     <div className="flex items-center">
                       <Trash2 className="h-4 w-4 mr-2" />
-                      <span>Delete Projects</span>
+                      <span>{t('projects.deleteProjects')}</span>
                     </div>
                   </SelectItem>
                 </SelectContent>
