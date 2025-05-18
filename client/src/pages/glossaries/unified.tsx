@@ -260,8 +260,8 @@ export default function UnifiedGlossaryPage() {
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to add glossary resource",
+        title: t('common.error'),
+        description: error.message || t('glossaries.failedToAddResource'),
         variant: "destructive",
       });
     },
@@ -276,14 +276,14 @@ export default function UnifiedGlossaryPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/glossary/all"] });
       toast({
-        title: "Term deleted",
-        description: "The term has been deleted successfully.",
+        title: t('glossaries.termDeleted'),
+        description: t('glossaries.termDeletedSuccess'),
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to delete term",
+        title: t('common.error'),
+        description: error.message || t('glossaries.failedToDeleteTerm'),
         variant: "destructive",
       });
     },
