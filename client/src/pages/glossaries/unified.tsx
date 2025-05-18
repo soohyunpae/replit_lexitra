@@ -254,8 +254,8 @@ export default function UnifiedGlossaryPage() {
       resourceForm.reset();
       setAddResourceDialogOpen(false);
       toast({
-        title: "Glossary resource added",
-        description: "The glossary resource has been added successfully.",
+        title: t('glossaries.resourceAdded'),
+        description: t('glossaries.resourceAddedSuccess'),
       });
     },
     onError: (error: any) => {

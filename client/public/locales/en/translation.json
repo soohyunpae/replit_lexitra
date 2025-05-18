@@ -166,6 +166,8 @@
     "userManagement": "User Management",
     "defaultSourceLanguage": "Default Source Language",
     "selectSourceLanguage": "Select source language",
+    "defaultTargetLanguage": "Default Target Language",
+    "selectTargetLanguage": "Select target language",
     "accessDenied": "Access Denied",
     "adminAccessRequired": "Admin Access Required",
     "noPermission": "You don't have permission to access the admin dashboard.",

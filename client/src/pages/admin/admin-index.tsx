@@ -279,19 +279,19 @@ export default function AdminConsole() {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="default-target-language">Default Target Language</Label>
+                      <Label htmlFor="default-target-language">{t('admin.defaultTargetLanguage')}</Label>
                       <Select 
                         value={defaultTargetLang} 
                         onValueChange={setDefaultTargetLang}
                       >
                         <SelectTrigger id="default-target-language">
-                          <SelectValue placeholder="Select target language" />
+                          <SelectValue placeholder={t('admin.selectTargetLanguage')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="EN">English (EN)</SelectItem>
-                          <SelectItem value="KO">Korean (KO)</SelectItem>
-                          <SelectItem value="JA">Japanese (JA)</SelectItem>
-                          <SelectItem value="ZH">Chinese (ZH)</SelectItem>
+                          <SelectItem value="EN">{t('languages.english')} (EN)</SelectItem>
+                          <SelectItem value="KO">{t('languages.korean')} (KO)</SelectItem>
+                          <SelectItem value="JA">{t('languages.japanese')} (JA)</SelectItem>
+                          <SelectItem value="ZH">{t('languages.chinese')} (ZH)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
