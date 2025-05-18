@@ -354,14 +354,14 @@ export default function UnifiedTranslationMemoryPage() {
                         name="sourceLanguage"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Source Language</FormLabel>
+                            <FormLabel>{t('tm.sourceLanguage')}</FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select source language" />
+                                  <SelectValue placeholder={t('tm.selectSourceLanguage')} />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
@@ -509,14 +509,14 @@ export default function UnifiedTranslationMemoryPage() {
                 <DialogTrigger asChild>
                   <Button variant="outline">
                     <Upload className="mr-2 h-4 w-4" />
-                    Upload TM File
+                    {t('tm.uploadTmFile')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Upload TM File</DialogTitle>
+                    <DialogTitle>{t('tm.uploadTmFile')}</DialogTitle>
                     <DialogDescription>
-                      Upload a translation memory file to import entries.
+                      {t('tm.uploadTmFileDescription')}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">

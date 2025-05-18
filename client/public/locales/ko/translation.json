@@ -160,6 +160,8 @@
   },
   "tm": {
     "title": "번역 메모리",
+    "entryDeletedSuccess": "번역 메모리 항목이 성공적으로 삭제되었습니다",
+    "failedToDeleteEntry": "항목 삭제 실패: {{message}}",
     "entries": "항목",
     "createEntry": "항목 생성",
     "sourceText": "원본 텍스트",
