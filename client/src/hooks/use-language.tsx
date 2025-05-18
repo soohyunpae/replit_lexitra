@@ -48,18 +48,18 @@ export function LanguageProvider({
     // Set state
     setLanguageState(newLanguage);
     
-    // Update i18n
-    i18n.changeLanguage(newLanguage);
-    
-    // Save preference
+    // Save preference first
     localStorage.setItem("lexitra-language-preference", newLanguage);
     
     // Update HTML lang attribute
     document.documentElement.lang = newLanguage;
     document.documentElement.setAttribute('lang', newLanguage);
     
-    // Trigger the i18next languageChanged event to update all components
-    window.dispatchEvent(new Event('languageChanged'));
+    // Update i18n and force reload to ensure all components update
+    i18n.changeLanguage(newLanguage);
+    
+    // Force reload the page to ensure all components get the new language
+    window.location.reload();
     
     // Log for debugging
     console.log("Language changed to:", newLanguage);

@@ -230,7 +230,11 @@ document.addEventListener("DOMContentLoaded", () => {
 export const changeLanguage = (language: string) => {
   localStorage.setItem("lexitra-language-preference", language);
   document.documentElement.lang = language;
-  return i18n.changeLanguage(language);
+  document.documentElement.setAttribute('lang', language);
+  return i18n.changeLanguage(language).then(() => {
+    // Force update all components by dispatching a custom event
+    window.dispatchEvent(new Event('i18nextLanguageChanged'));
+  });
 };
 
 // Function to get the current language
