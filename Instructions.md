@@ -1,215 +1,102 @@
-# Account Menu & Settings Integration Plan
+# Implementing i18n in Lexitra
 
 ## Current State Analysis
-- Account dropdown menu currently has 3 items: My Account, My Profile, and Logout
-- Theme toggle is in header component
-- No unified settings page exists
-- Language pair preferences not centralized
 
-## Required Changes
-1. Modify sidebar.tsx to simplify dropdown menu
-2. Update profile.tsx to include theme and language settings
-3. Add language pair preference controls
-4. Remove theme toggle from header
-
-## Implementation Details
-
-### 1. Dropdown Menu Changes (sidebar.tsx)
-- Remove "My Profile" item
-- Keep "My Account" and "Logout" only
-- Update navigation to go to the unified settings page
-
-### 2. Profile Page Updates (profile.tsx)
-- Add theme toggle section
-- Add language pair preference section
-- Organize settings into logical groups using Card components
-- Add save functionality for new settings
-
-### 3. Code Changes Required
-
-#### Files to Modify:
-1. `client/src/components/layout/sidebar.tsx`
-2. `client/src/pages/profile.tsx`
-3. `client/src/hooks/use-theme.tsx` (possibly)
-
-#### Integration Points:
-- User preferences API endpoints
-- Theme context/provider integration
-- Language pair state management
-
-## Testing Plan
-1. Verify dropdown menu shows only required items
-2. Confirm theme toggle works in new location
-3. Test language pair preference saving
-4. Check settings persistence after logout/login
-
-## UI/UX Considerations
-- Group related settings together
-- Use clear, descriptive labels
-- Provide immediate feedback on changes
-- Maintain consistent styling with existing UI
+The application currently has:
+- React-based frontend using TypeScript
+- UI components in /client/src/components
+- Main layout components handling the overall structure
+- Authentication and user management
 
 ## Implementation Plan
 
-1. Update sidebar dropdown first
-2. Expand profile page layout
-3. Add new settings components
-4. Integrate state management
-5. Test thoroughly
+### 1. Required Dependencies
+- `react-i18next` - React internationalization framework
+- `i18next` - Base i18n framework
+- `i18next-http-backend` - Load translations via HTTP
 
-This change will create a more streamlined and intuitive user experience by consolidating all user-specific settings in one location.
+### 2. Translation Structure
+```
+client/src/i18n/
+├── locales/
+│   ├── ko/
+│   │   └── translation.json
+│   └── en/
+│       └── translation.json
+├── index.ts
+└── types.ts
+```
 
-# File Upload Issue Analysis & Fix
+### 3. Integration Steps
 
-## Issue
-The file upload functionality in the project page's reference files section is not working when clicking the upload area. The issue appears to be related to missing file input reference handling.
+1. Install required packages
+2. Set up i18n configuration
+3. Create translation files
+4. Add language switcher to the header
+5. Update key components for i18n support:
+   - MainLayout
+   - Sidebar
+   - Auth pages
+   - Dashboard
+   - Project views
 
-## Problem Areas
-1. Missing file input element reference connection
-2. Incomplete click handler implementation
-3. File input trigger not properly connected
+### 4. Implementation Details
 
-## Solution Implementation
+#### Phase 1: Basic Setup
+1. Install i18n packages
+2. Create base configuration
+3. Add language selector to header
+4. Setup initial translation files
 
-### 1. Fix File Input Reference
+#### Phase 2: Content Translation
+1. Update authentication pages
+2. Translate navigation items
+3. Update project management texts
+4. Translate dashboard content
 
-The current code has a fileInputRef defined but not properly connected to the file input element. We need to:
+#### Phase 3: Advanced Features
+1. Persist language preference
+2. Add language detection
+3. Implement fallback handling
+4. Add loading states for translations
 
-1. Ensure the file input ref is properly attached
-2. Connect click handler to trigger file input
-3. Handle file selection and upload
+### 5. File Changes Required
 
-### 2. Code Changes Required
+1. New Files:
+- client/src/i18n/index.ts
+- client/src/i18n/types.ts
+- client/src/i18n/locales/en/translation.json
+- client/src/i18n/locales/ko/translation.json
 
-In `client/src/pages/project.tsx`, we need to:
-
-1. Add hidden file input with ref
-2. Connect drag & drop handlers
-3. Implement file upload logic
-
-### 3. Implementation Steps
-
-1. Fix file input reference and click handler
-2. Ensure proper file type validation
-3. Implement upload mutation handler
-
-## Testing Plan
-
-1. Test click to upload functionality
-2. Verify file selection works
-3. Confirm successful upload to server
-4. Validate file display after upload
-
-The fix will be implemented by updating the project.tsx file to properly handle file input reference and upload functionality.
-# Fixing Reviewed Ratio Display in Project Page
-
-## Problem Analysis
-The current implementation displays `36/36 (100%)` without properly calculating the actual Reviewed segments ratio. This needs to be changed to show the correct ratio of Reviewed segments only.
-
-## Relevant Code Locations
-1. Main display: `client/src/pages/project.tsx` line ~1175
-2. Stats calculation: `client/src/pages/project.tsx` lines ~690-730
-3. Progress bar component: `client/src/components/ui/combined-progress.tsx`
-
-## Current Implementation Issues
-1. The percentage calculation doesn't specifically focus on Reviewed status
-2. The stats object structure combines different segment statuses
-3. The display needs to be updated to show only Reviewed ratio
-
-## Solution Plan
-1. Update percentage calculation logic to focus on Reviewed segments
-2. Modify the stats display to show:
-   - Total segments count
-   - Number of Reviewed segments
-   - Percentage of Reviewed segments
-
-## Implementation Details
-The fix involves updating the segment stats calculation in project.tsx to properly calculate and display the Reviewed ratio. The key change is using `reviewedCount` from `statusCounts.Reviewed` instead of the total completion percentage.
-
-## Testing Recommendations
-1. Check the displayed ratio matches actual Reviewed segments count
-2. Verify percentage updates when segments change status
-3. Ensure consistent display across different file types and sizes
-
-# Adding Authentication to Landing Page
-
-## Current Issues
-1. Landing page has no direct authentication functionality
-2. "Dashboard" button does not handle authentication state
-3. Missing proper navigation flow from landing to dashboard
-
-## Related Files
-- client/src/pages/landing.tsx
-- client/src/hooks/use-auth.tsx 
+2. Modified Files:
+- client/src/App.tsx
+- client/src/components/layout/header.tsx
+- client/src/components/layout/sidebar.tsx
 - client/src/pages/auth-page.tsx
+- client/src/pages/dashboard.tsx
 
-## Solution Plan
+### 6. Implementation Order
 
-### 1. Update Landing Page
-- Add authentication state check
-- Modify "Dashboard" button behavior based on auth state
-- Add login/register functionality
-- Implement proper navigation
+1. Setup i18n infrastructure
+2. Create language switcher
+3. Update authentication flow
+4. Translate main navigation
+5. Update project management interface
+6. Implement dashboard translations
+7. Add user preferences for language
 
-### 2. Required Changes
-- Add auth hook usage in landing page
-- Add auth-related UI components
-- Update navigation logic
-- Add proper routing
+### 7. Testing Checklist
 
-### 3. Implementation Steps
-1. Update landing.tsx to use auth hook
-2. Add authentication checks
-3. Modify button behavior
-4. Add proper navigation logic
-5. Test user flow
+- Language switching works correctly
+- All UI elements are translated
+- No missing translations
+- Proper fallback to default language
+- Language persistence between sessions
+- Proper handling of dynamic content
 
-### 4. Testing Plan
-- Test unauthenticated user flow
-- Test authenticated user flow
-- Verify proper redirections
-- Check error handling
-# Logout Functionality Issue Analysis
+## Next Steps
 
-## Current State
-The logout functionality in the sidebar.tsx file is not working due to a missing logout mutation import and incorrect usage.
-
-## Problem Analysis
-
-### Files Involved
-1. client/src/components/layout/sidebar.tsx
-2. client/src/hooks/use-auth.tsx
-3. server/routes.ts
-4. server/auth.ts
-
-### Issues Found
-1. The `logoutMutation` is referenced directly in sidebar.tsx without being imported from useAuth hook
-2. The useAuth hook is already imported but its logoutMutation is not being destructured
-3. The onClick handler is trying to use logoutMutation directly instead of through the auth context
-
-## Solution Plan
-
-### 1. Fix Sidebar Component
-Need to properly destructure the logoutMutation from useAuth hook and use it correctly in the DropdownMenuItem.
-
-### 2. Code Changes Required
-
-In client/src/components/layout/sidebar.tsx:
-- Update useAuth hook usage to include logoutMutation
-- Modify the Logout DropdownMenuItem to use the mutation correctly
-
-### Implementation Steps
-
-1. Update the logout implementation in sidebar.tsx to use the auth hook properly
-2. Ensure proper error handling for logout process
-3. Add loading state feedback during logout
-
-### Testing Plan
-1. Test logout functionality from sidebar dropdown
-2. Verify user is properly redirected after logout
-3. Confirm local storage auth token is cleared
-4. Verify server session is terminated
-
-## Code Fix
-
-The fix requires updating the sidebar.tsx file to properly handle the logout mutation.
+1. Install required dependencies
+2. Create i18n configuration
+3. Implement base translation files
+4. Add language switcher component
