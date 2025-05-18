@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { TranslationUnit, Project, File, Glossary } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 import {
   Card,
   CardContent,
@@ -35,6 +36,7 @@ export default function Translation() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [selectedSegment, setSelectedSegment] =
     useState<TranslationUnit | null>(null);
   const [tmMatches, setTmMatches] = useState([]);
@@ -121,8 +123,8 @@ export default function Translation() {
     },
     onSuccess: () => {
       toast({
-        title: "Project saved",
-        description: "All translations have been saved successfully.",
+        title: t('translation.projectSaved'),
+        description: t('translation.allTranslationsSaved'),
       });
     },
   });
@@ -136,8 +138,8 @@ export default function Translation() {
     },
     onSuccess: () => {
       toast({
-        title: "Export complete",
-        description: "Project has been exported successfully.",
+        title: t('translation.exportComplete'),
+        description: t('translation.projectExportedSuccess'),
       });
     },
   });
@@ -303,7 +305,7 @@ export default function Translation() {
   // Check editor access permissions
   useEffect(() => {
     if (!user) {
-      setAccessError("You must be logged in to access the editor");
+      setAccessError(t('translation.mustBeLoggedIn'));
       return;
     }
 
@@ -311,7 +313,7 @@ export default function Translation() {
       // Check project status and claimedBy property
       if (project.status === "Unclaimed") {
         setAccessError(
-          "This project must be claimed before accessing the editor",
+          t('translation.projectMustBeClaimed'),
         );
         return;
       }
