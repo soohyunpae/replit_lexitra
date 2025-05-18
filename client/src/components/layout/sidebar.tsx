@@ -359,14 +359,19 @@ export function Sidebar() {
               size="sm" 
               className="w-full text-xs flex items-center justify-between"
               onClick={() => {
-                // Toggle language between en and ko
+                // Toggle language directly
                 const newLang = language === "en" ? "ko" : "en";
                 
-                // Save to localStorage
+                // Save to localStorage first
                 localStorage.setItem("lexitra-language-preference", newLang);
                 
-                // Force page reload
-                window.location.reload();
+                // Update HTML attributes
+                document.documentElement.lang = newLang;
+                
+                // Force a hard refresh by changing the URL with a timestamp
+                // This bypasses any cached state and ensures a fresh load
+                const timestamp = new Date().getTime();
+                window.location.href = `${window.location.pathname}?ts=${timestamp}&lang=${newLang}`;
               }}
             >
               <div className="flex items-center">
