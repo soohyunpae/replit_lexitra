@@ -2,7 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import Backend from 'i18next-http-backend';
 
-// 리소스 번들 직접 정의
+// 언어 리소스 번들 직접 정의
 const resources = {
   en: {
     translation: {
@@ -33,7 +33,8 @@ const resources = {
         next: "Next",
         confirm: "Confirm",
         language: "Language",
-        general: "General"
+        general: "General",
+        system: "System"
       },
       profile: {
         title: "Profile",
@@ -51,11 +52,36 @@ const resources = {
         defaultLanguages: "Set your default source and target languages for translation projects",
         sourceLanguage: "Source Language",
         targetLanguage: "Target Language",
-        savePreferences: "Save Preferences"
+        savePreferences: "Save Preferences",
+        loggingOut: "Logging out..."
       },
       languages: {
         en: "English",
-        ko: "Korean"
+        ko: "Korean",
+        ja: "Japanese"
+      },
+      projects: {
+        title: "Projects",
+        createNewProject: "Create New Project",
+        myProjects: "My Projects",
+        allProjects: "All Projects",
+        searchProjects: "Search projects...",
+        noProjects: "No projects found",
+        projectCreated: "Project created",
+        projectName: "Project Name",
+        description: "Description",
+        created: "Created",
+        lastUpdated: "Last Updated",
+        deadline: "Deadline",
+        status: "Status",
+        actions: "Actions",
+        unclaimed: "Unclaimed",
+        inProgress: "In Progress",
+        claimed: "Claimed",
+        completed: "Completed",
+        claimProject: "Claim",
+        completeProject: "Complete",
+        viewProject: "View"
       }
     }
   },
@@ -88,7 +114,8 @@ const resources = {
         next: "다음",
         confirm: "확인",
         language: "언어",
-        general: "일반"
+        general: "일반",
+        system: "시스템"
       },
       profile: {
         title: "프로필",
@@ -106,28 +133,65 @@ const resources = {
         defaultLanguages: "번역 프로젝트의 기본 소스 및 대상 언어 설정",
         sourceLanguage: "소스 언어",
         targetLanguage: "대상 언어",
-        savePreferences: "환경 설정 저장"
+        savePreferences: "환경 설정 저장",
+        loggingOut: "로그아웃 중..."
       },
       languages: {
         en: "영어",
-        ko: "한국어"
+        ko: "한국어",
+        ja: "일본어"
+      },
+      projects: {
+        title: "프로젝트",
+        createNewProject: "새 프로젝트 생성",
+        myProjects: "내 프로젝트",
+        allProjects: "모든 프로젝트",
+        searchProjects: "프로젝트 검색...",
+        noProjects: "프로젝트가 없습니다",
+        projectCreated: "프로젝트 생성됨",
+        projectName: "프로젝트 이름",
+        description: "설명",
+        created: "생성일",
+        lastUpdated: "마지막 업데이트",
+        deadline: "마감일",
+        status: "상태",
+        actions: "작업",
+        unclaimed: "미할당",
+        inProgress: "진행 중",
+        claimed: "할당됨",
+        completed: "완료됨",
+        claimProject: "할당받기",
+        completeProject: "완료",
+        viewProject: "보기"
       }
     }
   }
 };
 
+// Get the user's preference from localStorage or use browser language
+const getUserLanguage = () => {
+  const savedLanguage = localStorage.getItem("lexitra-language-preference");
+  
+  if (savedLanguage === "en" || savedLanguage === "ko") {
+    return savedLanguage;
+  }
+  
+  // If no saved preference, try to use browser language
+  const browserLang = navigator.language.split('-')[0];
+  return browserLang === "ko" ? "ko" : "en"; // Only support en/ko for now
+};
+
 // Initialize i18next
 i18n
-  // Pass the i18n instance to react-i18next
   .use(initReactI18next)
-  // Initialize i18next
+  .use(Backend)
   .init({
-    // Default language
-    lng: 'en',
+    // Get language from localStorage or fallback to browser language
+    lng: getUserLanguage(),
     // Fallback language
     fallbackLng: 'en',
     // Debug mode for development (can be disabled in production)
-    debug: false,
+    debug: process.env.NODE_ENV === 'development',
     // Resources for translation
     resources,
     // Namespace for translation files
@@ -140,10 +204,17 @@ i18n
     react: {
       useSuspense: false,
     },
+    // Detect language changes
+    detection: {
+      order: ['localStorage', 'navigator'],
+      lookupLocalStorage: 'lexitra-language-preference',
+    },
   });
 
 // Function to change the language
 export const changeLanguage = (language: string) => {
+  localStorage.setItem("lexitra-language-preference", language);
+  document.documentElement.lang = language;
   return i18n.changeLanguage(language);
 };
 

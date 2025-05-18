@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 
 // Available languages
 export type LanguageType = "en" | "ko";
@@ -41,6 +42,10 @@ export function LanguageProvider({
     setLanguageState(newLanguage);
     i18n.changeLanguage(newLanguage);
     localStorage.setItem("lexitra-language-preference", newLanguage);
+    document.documentElement.lang = newLanguage;
+    
+    // Add debugging to verify language change
+    console.log("Language changed to:", newLanguage);
   };
 
   // Toggle between available languages
@@ -51,8 +56,13 @@ export function LanguageProvider({
 
   // Effect to sync i18next language with our state on mount
   useEffect(() => {
+    // Update language on initial mount
     i18n.changeLanguage(language);
-  }, [i18n, language]);
+    document.documentElement.lang = language;
+    
+    // Log current language for debugging
+    console.log("Current language:", language);
+  }, [language]);
 
   return (
     <LanguageContext.Provider
