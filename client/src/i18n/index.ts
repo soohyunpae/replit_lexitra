@@ -2,6 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import Backend from 'i18next-http-backend';
 
+// Initialize i18next
 i18n
   // Load translations via HTTP for production use
   .use(Backend)
@@ -14,7 +15,7 @@ i18n
     // Fallback language
     fallbackLng: 'en',
     // Debug mode for development (can be disabled in production)
-    debug: process.env.NODE_ENV === 'development',
+    debug: false,
     // Namespace for translation files
     defaultNS: 'translation',
     // Caching configuration
@@ -30,7 +31,7 @@ i18n
     },
     // React configuration
     react: {
-      useSuspense: true,
+      useSuspense: false,
     },
   });
 

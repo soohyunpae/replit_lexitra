@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MainLayout } from "@/components/layout/main-layout";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { LanguageProvider } from "@/hooks/use-language";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -109,8 +110,10 @@ function App() {
       <ThemeProvider defaultTheme="light" storageKey="lexitra-theme-preference">
         <TooltipProvider>
           <AuthProvider>
-            <Router />
-            <Toaster />
+            <LanguageProvider defaultLanguage="en">
+              <Router />
+              <Toaster />
+            </LanguageProvider>
           </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>
