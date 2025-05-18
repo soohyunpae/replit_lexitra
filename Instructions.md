@@ -4,7 +4,7 @@
 - The app has translation files in `/client/public/locales/{en,ko}/translation.json`
 - The app uses i18next library but lacks proper initialization and configuration
 - Sidebar component attempts to use untranslated strings
-- Auth page shows hard-coded Korean text
+- UI text has been standardized to English
 
 ## Implementation Plan
 
