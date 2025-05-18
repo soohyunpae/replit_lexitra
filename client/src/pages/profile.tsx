@@ -1,6 +1,8 @@
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/components/ui/theme-provider";
+import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,12 +23,14 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Redirect } from "wouter";
-import { Loader2, LogOut, Moon, Sun } from "lucide-react";
+import { Loader2, LogOut, Moon, Sun, Globe } from "lucide-react";
 import { useState } from "react";
 
 export default function ProfilePage() {
   const { user, isLoading, logoutMutation } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { language, setLanguage } = useLanguage();
+  const { t } = useTranslation();
   const [sourceLanguage, setSourceLanguage] = useState("KO");
   const [targetLanguage, setTargetLanguage] = useState("EN");
 
