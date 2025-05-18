@@ -192,7 +192,15 @@ export default function ProfilePage() {
                   <div className="space-y-3">
                     <RadioGroup 
                       value={language} 
-                      onValueChange={(value) => setLanguage(value as "en" | "ko")}
+                      onValueChange={(value) => {
+                        const newLanguage = value as "en" | "ko";
+                        // 직접 localStorage에 저장
+                        localStorage.setItem("lexitra-language-preference", newLanguage);
+                        // HTML 속성 변경
+                        document.documentElement.lang = newLanguage;
+                        // 페이지 새로고침
+                        window.location.reload();
+                      }}
                     >
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
