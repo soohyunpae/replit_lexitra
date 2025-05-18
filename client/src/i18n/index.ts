@@ -55,18 +55,7 @@ const resources = {
       },
       languages: {
         en: "English",
-        ko: "Korean",
-        ja: "Japanese"
-      },
-      profile: {
-        sourceLanguage: "Source Language",
-        targetLanguage: "Target Language",
-        selectSourceLanguage: "Select source language",
-        selectTargetLanguage: "Select target language",
-        preferences: "Preferences",
-        languageSettings: "Language Settings",
-        interfaceLanguage: "Interface Language",
-        chooseInterfaceLanguage: "Choose your preferred interface language"
+        ko: "Korean"
       }
     }
   },
@@ -121,18 +110,7 @@ const resources = {
       },
       languages: {
         en: "영어",
-        ko: "한국어",
-        ja: "일본어"
-      },
-      profile: {
-        sourceLanguage: "원본 언어",
-        targetLanguage: "목표 언어",
-        selectSourceLanguage: "원본 언어 선택",
-        selectTargetLanguage: "목표 언어 선택",
-        preferences: "환경 설정",
-        languageSettings: "언어 설정",
-        interfaceLanguage: "인터페이스 언어",
-        chooseInterfaceLanguage: "선호하는 인터페이스 언어를 선택하세요"
+        ko: "한국어"
       }
     }
   }
