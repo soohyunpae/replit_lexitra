@@ -1,8 +1,19 @@
+
 import React from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function LandingPage() {
+  const { user } = useAuth();
+  const [, navigate] = useLocation();
+
+  // Redirect to dashboard if already authenticated
+  if (user) {
+    navigate("/");
+    return null;
+  }
+
   return (
     <div className="bg-background text-foreground">
       {/* 헤더 - 간단한 네비게이션 */}
@@ -12,8 +23,8 @@ export default function LandingPage() {
           <Link href="/auth">
             <Button variant="ghost">Login</Button>
           </Link>
-          <Link href="/">
-            <Button variant="default">Dashboard</Button>
+          <Link href="/auth?tab=register">
+            <Button variant="default">Sign Up</Button>
           </Link>
         </div>
       </header>
@@ -29,7 +40,7 @@ export default function LandingPage() {
           </p>
           <Link href="/auth">
             <Button size="lg" className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-3 rounded-xl transition">
-              Try Lexitra Now
+              Get Started Now
             </Button>
           </Link>
         </div>
@@ -66,9 +77,9 @@ export default function LandingPage() {
       <section className="py-24 px-6 text-center bg-blue-900 text-white">
         <h2 className="text-3xl font-bold mb-4">Refine faster. Translate smarter.</h2>
         <p className="mb-8 text-lg">Experience the power of AI-assisted, human-refined translation.</p>
-        <Link href="/">
+        <Link href="/auth">
           <Button size="lg" className="bg-white text-blue-800 font-semibold px-6 py-3 rounded-xl shadow hover:bg-gray-100 transition">
-            Get Started for Free
+            Start Translating Now
           </Button>
         </Link>
       </section>

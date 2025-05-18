@@ -130,3 +130,42 @@ The fix involves updating the segment stats calculation in project.tsx to proper
 1. Check the displayed ratio matches actual Reviewed segments count
 2. Verify percentage updates when segments change status
 3. Ensure consistent display across different file types and sizes
+
+# Adding Authentication to Landing Page
+
+## Current Issues
+1. Landing page has no direct authentication functionality
+2. "Dashboard" button does not handle authentication state
+3. Missing proper navigation flow from landing to dashboard
+
+## Related Files
+- client/src/pages/landing.tsx
+- client/src/hooks/use-auth.tsx 
+- client/src/pages/auth-page.tsx
+
+## Solution Plan
+
+### 1. Update Landing Page
+- Add authentication state check
+- Modify "Dashboard" button behavior based on auth state
+- Add login/register functionality
+- Implement proper navigation
+
+### 2. Required Changes
+- Add auth hook usage in landing page
+- Add auth-related UI components
+- Update navigation logic
+- Add proper routing
+
+### 3. Implementation Steps
+1. Update landing.tsx to use auth hook
+2. Add authentication checks
+3. Modify button behavior
+4. Add proper navigation logic
+5. Test user flow
+
+### 4. Testing Plan
+- Test unauthenticated user flow
+- Test authenticated user flow
+- Verify proper redirections
+- Check error handling
