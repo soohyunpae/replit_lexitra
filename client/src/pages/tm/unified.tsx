@@ -497,7 +497,7 @@ export default function UnifiedTranslationMemoryPage() {
                           type="submit"
                           disabled={addEntryMutation.isPending}
                         >
-                          {addEntryMutation.isPending ? "Adding..." : "Add Entry"}
+                          {addEntryMutation.isPending ? t('tm.adding') : t('tm.addEntry')}
                         </Button>
                       </DialogFooter>
                     </form>

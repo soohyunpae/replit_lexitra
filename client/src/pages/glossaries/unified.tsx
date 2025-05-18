@@ -298,14 +298,14 @@ export default function UnifiedGlossaryPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/glossary/resources"] });
       toast({
-        title: "Glossary resource deleted",
-        description: "The glossary resource has been deleted successfully.",
+        title: t('glossaries.resourceDeleted'),
+        description: t('glossaries.resourceDeletedSuccess'),
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to delete glossary resource",
+        title: t('common.error'),
+        description: error.message || t('glossaries.failedToDeleteResource'),
         variant: "destructive",
       });
     },
