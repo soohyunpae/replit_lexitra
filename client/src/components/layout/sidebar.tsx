@@ -156,12 +156,12 @@ export function Sidebar() {
 
   // Get the current section title for the header
   const getCurrentSectionTitle = () => {
-    if (location === "/") return "Home";
-    if (location.startsWith("/projects")) return "Projects";
+    if (location === "/") return t('common.home');
+    if (location.startsWith("/projects")) return t('common.projects');
     if (location.startsWith("/termbases") || location.startsWith("/glossaries"))
-      return "Glossaries";
-    if (location.startsWith("/tm")) return "Translation Memory";
-    if (location.startsWith("/admin")) return "Admin";
+      return t('common.glossaries');
+    if (location.startsWith("/tm")) return t('common.tm');
+    if (location.startsWith("/admin")) return t('common.admin');
     return "Lexitra";
   };
 
