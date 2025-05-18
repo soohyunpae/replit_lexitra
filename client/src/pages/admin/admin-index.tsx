@@ -113,7 +113,7 @@ export default function AdminConsole() {
   // Check if user is admin
   if (!user || user.role !== "admin") {
     return (
-      <MainLayout title="Access Denied">
+      <MainLayout title={t('admin.accessDenied')}>
         <div className="flex-1 flex items-center justify-center p-6">
           <Card className="max-w-md w-full">
             <CardHeader>
@@ -121,15 +121,15 @@ export default function AdminConsole() {
                 <Lock className="h-6 w-6 text-destructive" />
               </div>
               <CardTitle className="text-center">
-                Admin Access Required
+                {t('admin.adminAccessRequired')}
               </CardTitle>
               <CardDescription className="text-center">
-                You don't have permission to access the admin dashboard.
+                {t('admin.noPermission')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button onClick={() => navigate("/")} className="w-full">
-                Go to Home
+                {t('admin.goToHome')}
               </Button>
             </CardContent>
           </Card>
@@ -139,14 +139,14 @@ export default function AdminConsole() {
   }
 
   return (
-    <MainLayout title="Admin Console">
+    <MainLayout title={t('admin.adminConsole')}>
       <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center gap-2 mb-2">
           <Settings className="h-5 w-5" />
-          <h2 className="text-3xl font-bold tracking-tight">Admin Console</h2>
+          <h2 className="text-3xl font-bold tracking-tight">{t('admin.adminConsole')}</h2>
         </div>
         <p className="text-muted-foreground mb-6">
-          Manage system settings and user permissions
+          {t('admin.manageSystemSettings')}
         </p>
 
         <Tabs
@@ -160,21 +160,21 @@ export default function AdminConsole() {
               className="flex items-center gap-2"
             >
               <Key className="h-4 w-4" />
-              <span>API Keys</span>
+              <span>{t('admin.apiKeys')}</span>
             </TabsTrigger>
             <TabsTrigger
               value="language"
               className="flex items-center gap-2"
             >
               <Globe className="h-4 w-4" />
-              <span>Language</span>
+              <span>{t('admin.language')}</span>
             </TabsTrigger>
             <TabsTrigger
               value="user-management"
               className="flex items-center gap-2"
             >
               <Users className="h-4 w-4" />
-              <span>User Management</span>
+              <span>{t('admin.userManagement')}</span>
             </TabsTrigger>
           </TabsList>
 
