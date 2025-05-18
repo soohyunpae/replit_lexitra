@@ -11,6 +11,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 type ConversionResult = {
   message: string;
@@ -54,6 +55,7 @@ export default function FileConversionPage({ embedded = false }: FileConversionP
   const [result, setResult] = useState<ConversionResult | null>(null);
   const [activeTab, setActiveTab] = useState<string>("configure");
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const conversionMutation = useMutation({
     mutationFn: async () => {
@@ -76,14 +78,14 @@ export default function FileConversionPage({ embedded = false }: FileConversionP
       setResult(data);
       setActiveTab("result"); // Auto-switch to results tab on success
       toast({
-        title: "Success",
-        description: "File successfully converted",
+        title: t('common.success'),
+        description: t('admin.fileSuccessfullyConverted'),
         variant: "default",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error converting file",
+        title: t('admin.errorConvertingFile'),
         description: error.message,
         variant: "destructive",
       });

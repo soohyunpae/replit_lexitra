@@ -32,23 +32,23 @@ export default function FileProcessingHub() {
   }
 
   return (
-    <MainLayout title="File Processing Center">
+    <MainLayout title={t('admin.fileProcessingCenter')}>
       <div className="container py-6 space-y-6">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <FileText className="h-6 w-6" />
-            <h1 className="text-2xl font-bold">File Processing Center</h1>
+            <h1 className="text-2xl font-bold">{t('admin.fileProcessingCenter')}</h1>
           </div>
           <p className="text-muted-foreground">
-            Process PDF documents and convert between file formats. Extract content for translation projects and prepare files for efficient translation workflows.
+            {t('admin.fileProcessingDesc')}
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>File Processing Tools</CardTitle>
+            <CardTitle>{t('admin.fileProcessingTools')}</CardTitle>
             <CardDescription>
-              Select a tool to process and prepare files for translation
+              {t('admin.selectToolDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -57,7 +57,7 @@ export default function FileProcessingHub() {
                 <AccordionTrigger className="py-4">
                   <div className="flex items-center gap-2">
                     <FileText className="h-5 w-5" />
-                    <span className="text-lg font-medium">PDF Processing</span>
+                    <span className="text-lg font-medium">{t('admin.pdfProcessing')}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-2 pb-6">
@@ -69,7 +69,7 @@ export default function FileProcessingHub() {
                 <AccordionTrigger className="py-4">
                   <div className="flex items-center gap-2">
                     <FileType className="h-5 w-5" />
-                    <span className="text-lg font-medium">File Format Conversion</span>
+                    <span className="text-lg font-medium">{t('admin.fileFormatConversion')}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-2 pb-6">
@@ -79,8 +79,8 @@ export default function FileProcessingHub() {
             </Accordion>
           </CardContent>
           <CardFooter className="flex justify-between border-t pt-4 text-sm text-muted-foreground">
-            <span>Supported file types: PDF, TXT, DOCX, CSV, XLIFF</span>
-            <span>Max file size: 100MB</span>
+            <span>{t('admin.supportedFileTypes')}</span>
+            <span>{t('admin.maxFileSize')}</span>
           </CardFooter>
         </Card>
       </div>
