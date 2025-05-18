@@ -111,6 +111,7 @@
     "files": "Files",
     "addFile": "Add File",
     "removeFile": "Remove File",
+    "noFiles": "No files",
     "projectCreated": "Project created successfully",
     "projectUpdated": "Project updated successfully",
     "projectDeleted": "Project deleted successfully"

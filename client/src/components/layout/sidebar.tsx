@@ -293,7 +293,7 @@ export function Sidebar() {
                 isCollapsed ? "hidden" : "hidden lg:block",
               )}
             >
-              Files
+              {t('projects.files')}
             </h3>
 
             <ul className="space-y-1">
@@ -331,7 +331,7 @@ export function Sidebar() {
                         isCollapsed ? "hidden" : "hidden lg:block",
                       )}
                     >
-                      No files
+                      {t('projects.noFiles')}
                     </span>
                   </div>
                 </li>

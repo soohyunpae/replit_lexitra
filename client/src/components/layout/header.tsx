@@ -55,7 +55,7 @@ export function Header({
 
     // Add home as first breadcrumb
     breadcrumbs.push({
-      label: "Home",
+      label: t('common.home'),
       href: "/",
     });
 
@@ -72,9 +72,9 @@ export function Header({
       // Skip numeric IDs in the breadcrumb labels
       let label = path;
       if (isProjectId) {
-        label = "Project Details";
+        label = t('projects.details');
       } else if (isFileId) {
-        label = "Translation Editor";
+        label = t('translation.editor');
       } else {
         // 활성화된 부제목이 있으면 표시 (TM, Admin, Glossaries 섹션)
         if (index === paths.length - 1 && activeSubSection && 
@@ -186,7 +186,7 @@ export function Header({
               size="sm"
               onClick={() => navigate("/auth")}
             >
-              Login
+              {t('auth.login')}
             </Button>
           )}
         </div>

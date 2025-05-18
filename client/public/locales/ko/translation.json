@@ -111,6 +111,7 @@
     "files": "파일",
     "addFile": "파일 추가",
     "removeFile": "파일 제거",
+    "noFiles": "파일 없음",
     "projectCreated": "프로젝트가 성공적으로 생성되었습니다",
     "projectUpdated": "프로젝트가 성공적으로 업데이트되었습니다",
     "projectDeleted": "프로젝트가 성공적으로 삭제되었습니다"
