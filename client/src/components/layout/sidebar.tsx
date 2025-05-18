@@ -37,6 +37,7 @@ import {
 import { Project } from "@/types";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from "react-i18next";
 
 interface ProjectFile {
   id: number;
@@ -75,6 +76,7 @@ export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [activeSubSection, setActiveSubSection] = useState<string | null>(null);
   const { logoutMutation } = useAuth();
+  const { t } = useTranslation();
 
   // State for language direction
   const [sourceLanguage, setSourceLanguage] = useState("KO");
@@ -123,22 +125,22 @@ export function Sidebar() {
   const mainNavItems: NavItem[] = [
     {
       icon: <Home className="h-5 w-5" />,
-      label: "Dashboard",
+      label: t("common.home"),
       href: "/",
     },
     {
       icon: <FolderOpen className="h-5 w-5" />,
-      label: "Projects",
+      label: t("common.projects"),
       href: "/projects",
     },
     {
       icon: <Book className="h-5 w-5" />,
-      label: "Glossaries",
+      label: t("common.glossaries"),
       href: "/glossaries",
     },
     {
       icon: <Database className="h-5 w-5" />,
-      label: "Translation Memory",
+      label: t("common.tm"),
       href: "/tm",
     },
   ];
@@ -147,7 +149,7 @@ export function Sidebar() {
   const adminNavItems: NavItem[] = [
     {
       icon: <ShieldCheck className="h-5 w-5" />,
-      label: "Admin Console",
+      label: t("common.admin"),
       href: "/admin",
     },
     // Removed standalone items per UI review feedback
@@ -161,12 +163,12 @@ export function Sidebar() {
 
   // Get the current section title for the header
   const getCurrentSectionTitle = () => {
-    if (location === "/") return "Dashboard";
-    if (location.startsWith("/projects")) return "Projects";
+    if (location === "/") return t("common.home");
+    if (location.startsWith("/projects")) return t("common.projects");
     if (location.startsWith("/termbases") || location.startsWith("/glossaries"))
-      return "Glossaries";
-    if (location.startsWith("/tm")) return "Translation Memory";
-    if (location.startsWith("/admin")) return "Admin Console";
+      return t("common.glossaries");
+    if (location.startsWith("/tm")) return t("common.tm");
+    if (location.startsWith("/admin")) return t("common.admin");
     return "Lexitra";
   };
 
@@ -298,7 +300,7 @@ export function Sidebar() {
                 isCollapsed ? "hidden" : "hidden lg:block",
               )}
             >
-              Project Files
+              {t("projects.files")}
             </h3>
 
             <ul className="space-y-1">
@@ -372,7 +374,7 @@ export function Sidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href="/profile">My Account</Link>
+                  <Link href="/profile">{t('common.myAccount')}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
@@ -386,7 +388,7 @@ export function Sidebar() {
                   ) : (
                     <LogOut className="h-4 w-4 mr-2" />
                   )}
-                  {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                  {logoutMutation.isPending ? t('common.loading') : t('common.logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -397,7 +399,7 @@ export function Sidebar() {
               onClick={() => navigate("/auth")}
               className="w-full"
             >
-              Login
+              {t('common.login')}
             </Button>
           )}
         </div>
