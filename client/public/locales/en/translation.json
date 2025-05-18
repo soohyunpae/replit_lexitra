@@ -192,7 +192,19 @@
     "manageSystemSettings": "Manage system settings and user permissions",
     "apiKeys": "API Keys",
     "language": "Language",
-    "userManagement": "User Management"
+    "userManagement": "User Management",
+    "openaiApiKey": "OpenAI API Key",
+    "openaiApiKeyDescription": "OpenAI API key is used for GPT-powered translations.",
+    "getApiKey": "Get your API key",
+    "apiKeySecurityNote": "API keys are stored securely and never shared with anyone.",
+    "saveApiKey": "Save API Key",
+    "hide": "Hide",
+    "show": "Show",
+    "manageApiKeys": "Manage API keys for external services like OpenAI.",
+    "defaultSourceLanguage": "Default Source Language",
+    "selectSourceLanguage": "Select source language",
+    "defaultTargetLanguage": "Default Target Language",
+    "selectTargetLanguage": "Select target language"
   },
   "tm": {
     "title": "Translation Memory",

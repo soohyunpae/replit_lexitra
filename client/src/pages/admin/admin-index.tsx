@@ -242,18 +242,18 @@ export default function AdminConsole() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Globe className="h-5 w-5 mr-2" />
-                  Language Settings
+                  {t('admin.languageSettings')}
                 </CardTitle>
                 <CardDescription>
-                  Set default language preferences for translation projects.
+                  {t('admin.setDefaultLanguage')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-medium">Default Languages</h3>
+                    <h3 className="text-lg font-medium">{t('admin.defaultLanguages')}</h3>
                     <p className="text-sm text-muted-foreground">
-                      These will be pre-selected when creating new translation projects.
+                      {t('admin.defaultLanguagesDescription')}
                     </p>
                   </div>
                   
