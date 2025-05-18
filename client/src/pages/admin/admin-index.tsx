@@ -184,20 +184,20 @@ export default function AdminConsole() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Key className="h-5 w-5 mr-2" />
-                  {t('admin.apiKeys')}
+                  API Keys
                 </CardTitle>
                 <CardDescription>
-                  {t('admin.manageApiKeys')}
+                  Manage API keys for external services like OpenAI.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-medium">{t('admin.openaiApiKey')}</h3>
+                    <h3 className="text-lg font-medium">OpenAI API Key</h3>
                     <p className="text-sm text-muted-foreground">
-                      {t('admin.openaiApiKeyDescription')}
+                      OpenAI API key is used for GPT-powered translations.
                       <a href="https://platform.openai.com/api-keys" target="_blank" className="text-primary underline ml-1">
-                        {t('admin.getApiKey')}
+                        Get your API key
                       </a>
                     </p>
                   </div>
@@ -205,7 +205,7 @@ export default function AdminConsole() {
                   <Separator />
                   
                   <div className="space-y-2">
-                    <Label htmlFor="openai-api-key">{t('admin.openaiApiKey')}</Label>
+                    <Label htmlFor="openai-api-key">OpenAI API Key</Label>
                     <div className="flex">
                       <Input
                         id="openai-api-key"
@@ -220,16 +220,16 @@ export default function AdminConsole() {
                         className="ml-2" 
                         onClick={() => setApiKeyVisible(!apiKeyVisible)}
                       >
-                        {apiKeyVisible ? t('admin.hide') : t('admin.show')}
+                        {apiKeyVisible ? "Hide" : "Show"}
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {t('admin.apiKeySecurityNote')}
+                      API keys are stored securely and never shared with anyone.
                     </p>
                   </div>
                   
                   <div className="flex justify-end">
-                    <Button onClick={handleSaveApiKey}>{t('admin.saveApiKey')}</Button>
+                    <Button onClick={handleSaveApiKey}>Save API Key</Button>
                   </div>
                 </div>
               </CardContent>
@@ -242,18 +242,18 @@ export default function AdminConsole() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Globe className="h-5 w-5 mr-2" />
-                  {t('admin.languageSettings')}
+                  Language Settings
                 </CardTitle>
                 <CardDescription>
-                  {t('admin.setDefaultLanguage')}
+                  Set default language preferences for translation projects.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-medium">{t('admin.defaultLanguages')}</h3>
+                    <h3 className="text-lg font-medium">Default Languages</h3>
                     <p className="text-sm text-muted-foreground">
-                      {t('admin.defaultLanguagesDescription')}
+                      These will be pre-selected when creating new translation projects.
                     </p>
                   </div>
                   
@@ -300,7 +300,7 @@ export default function AdminConsole() {
                   <Separator />
                   
                   <div className="flex justify-end">
-                    <Button onClick={handleSaveLanguagePreferences}>{t('admin.saveLanguagePreferences')}</Button>
+                    <Button onClick={handleSaveLanguagePreferences}>Save Preferences</Button>
                   </div>
                 </div>
               </CardContent>
