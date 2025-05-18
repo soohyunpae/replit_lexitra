@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Sidebar } from "./sidebar";
+import { useTranslation } from "react-i18next";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -13,6 +14,8 @@ export function MainLayout({
   title = "Lexitra",
   showSidebarTrigger = false 
 }: MainLayoutProps) {
+  const { t } = useTranslation();
+  
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       {/* Sidebar */}

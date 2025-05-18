@@ -155,7 +155,7 @@ export default function Dashboard() {
                   ))
                 ) : (
                   <li className="text-center py-4 text-muted-foreground">
-                    No reviews in progress
+                    {t('dashboard.noReviewsInProgress')}
                   </li>
                 )}
               </ul>
@@ -165,7 +165,7 @@ export default function Dashboard() {
           {/* 용어집 + TM 업데이트 */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Recent Activity</CardTitle>
+              <CardTitle className="text-lg">{t('dashboard.recentActivity')}</CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="text-sm space-y-3 text-gray-700">
@@ -181,15 +181,15 @@ export default function Dashboard() {
 
         {/* 빠른 액세스 */}
         <section className="mt-12">
-          <h2 className="text-lg font-semibold mb-4">Quick Access</h2>
+          <h2 className="text-lg font-semibold mb-4">{t('dashboard.quickAccess')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
               <CardContent className="p-6">
-                <h3 className="font-bold mb-2">📂 View All Projects</h3>
-                <p className="text-sm text-muted-foreground">Access all projects you have permission to view and contribute to.</p>
+                <h3 className="font-bold mb-2">📂 {t('dashboard.viewAllProjects')}</h3>
+                <p className="text-sm text-muted-foreground">{t('dashboard.accessProjectsDescription')}</p>
                 <Link href="/projects">
                   <Button variant="link" className="mt-3 px-0 text-blue-600 text-sm hover:underline">
-                    Go to Projects →
+                    {t('dashboard.goToProjects')} →
                   </Button>
                 </Link>
               </CardContent>
@@ -197,11 +197,11 @@ export default function Dashboard() {
             
             <Card>
               <CardContent className="p-6">
-                <h3 className="font-bold mb-2">📘 Manage Glossary</h3>
-                <p className="text-sm text-muted-foreground">Edit domain-specific terms for better consistency.</p>
+                <h3 className="font-bold mb-2">📘 {t('dashboard.manageGlossary')}</h3>
+                <p className="text-sm text-muted-foreground">{t('dashboard.editTermsDescription')}</p>
                 <Link href="/glossaries">
                   <Button variant="link" className="mt-3 px-0 text-blue-600 text-sm hover:underline">
-                    Open Glossary →
+                    {t('dashboard.openGlossary')} →
                   </Button>
                 </Link>
               </CardContent>
@@ -209,11 +209,11 @@ export default function Dashboard() {
             
             <Card>
               <CardContent className="p-6">
-                <h3 className="font-bold mb-2">🧠 Translation Memory</h3>
-                <p className="text-sm text-muted-foreground">Review and update saved translations across projects.</p>
+                <h3 className="font-bold mb-2">🧠 {t('dashboard.translationMemory')}</h3>
+                <p className="text-sm text-muted-foreground">{t('dashboard.tmDescription')}</p>
                 <Link href="/tm">
                   <Button variant="link" className="mt-3 px-0 text-blue-600 text-sm hover:underline">
-                    View TM →
+                    {t('dashboard.viewTM')} →
                   </Button>
                 </Link>
               </CardContent>
@@ -224,7 +224,7 @@ export default function Dashboard() {
 
       {/* Footer */}
       <footer className="text-sm text-center py-6 text-muted-foreground">
-        © 2025 Lexitra. Built for the new era of translation.
+        {t('dashboard.footer')}
       </footer>
     </MainLayout>
   );
