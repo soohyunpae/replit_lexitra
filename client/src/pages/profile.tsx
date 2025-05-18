@@ -31,8 +31,8 @@ export default function ProfilePage() {
   const { theme, setTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
   const { t } = useTranslation();
-  const [sourceLanguage, setSourceLanguage] = useState("KO");
-  const [targetLanguage, setTargetLanguage] = useState("EN");
+  const [translationSourceLang, setTranslationSourceLang] = useState("KO");
+  const [translationTargetLang, setTranslationTargetLang] = useState("EN");
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -137,38 +137,38 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">
-                        Source Language
+                        {t('profile.sourceLanguage')}
                       </label>
                       <Select
-                        value={sourceLanguage}
-                        onValueChange={setSourceLanguage}
+                        value={translationSourceLang}
+                        onValueChange={setTranslationSourceLang}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select source language" />
+                          <SelectValue placeholder={t('profile.selectSourceLanguage')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="KO">Korean</SelectItem>
-                          <SelectItem value="EN">English</SelectItem>
-                          <SelectItem value="JA">Japanese</SelectItem>
+                          <SelectItem value="KO">{t('languages.ko')}</SelectItem>
+                          <SelectItem value="EN">{t('languages.en')}</SelectItem>
+                          <SelectItem value="JA">{t('languages.ja')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-2">
                       <label className="text-sm font-medium">
-                        Target Language
+                        {t('profile.targetLanguage')}
                       </label>
                       <Select
-                        value={targetLanguage}
-                        onValueChange={setTargetLanguage}
+                        value={translationTargetLang}
+                        onValueChange={setTranslationTargetLang}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select target language" />
+                          <SelectValue placeholder={t('profile.selectTargetLanguage')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="EN">English</SelectItem>
-                          <SelectItem value="KO">Korean</SelectItem>
-                          <SelectItem value="JA">Japanese</SelectItem>
+                          <SelectItem value="EN">{t('languages.en')}</SelectItem>
+                          <SelectItem value="KO">{t('languages.ko')}</SelectItem>
+                          <SelectItem value="JA">{t('languages.ja')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

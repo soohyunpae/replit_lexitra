@@ -36,11 +36,12 @@ export function LanguageProvider({
   // i18next translation hook
   const { i18n } = useTranslation();
 
-  // Set language handler
+  // Set language handler with persistence
   const setLanguage = (newLanguage: LanguageType) => {
     setLanguageState(newLanguage);
     i18n.changeLanguage(newLanguage);
     localStorage.setItem("lexitra-language-preference", newLanguage);
+    document.documentElement.setAttribute("lang", newLanguage);
   };
 
   // Toggle between available languages
