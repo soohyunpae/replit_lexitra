@@ -110,8 +110,10 @@ function App() {
       <ThemeProvider defaultTheme="light" storageKey="lexitra-theme-preference">
         <TooltipProvider>
           <AuthProvider>
-            <Router />
-            <Toaster />
+            <LanguageProvider defaultLanguage="en">
+              <Router />
+              <Toaster />
+            </LanguageProvider>
           </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>
