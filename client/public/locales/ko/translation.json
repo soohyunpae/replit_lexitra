@@ -27,7 +27,6 @@
     "confirm": "확인",
     "language": "언어"
   },
-  
   "auth": {
     "login": "로그인",
     "signup": "회원가입",
@@ -39,7 +38,6 @@
     "loginError": "유효하지 않은 사용자 이름 또는 비밀번호",
     "logoutSuccess": "성공적으로 로그아웃되었습니다"
   },
-  
   "dashboard": {
     "title": "대시보드",
     "welcomeMessage": "Lexitra 번역 플랫폼에 오신 것을 환영합니다",
@@ -49,7 +47,6 @@
     "projectsCompleted": "완료된 프로젝트",
     "pendingTasks": "대기 중인 작업"
   },
-  
   "projects": {
     "title": "프로젝트",
     "createProject": "프로젝트 생성",
@@ -71,7 +68,6 @@
     "projectUpdated": "프로젝트가 성공적으로 업데이트되었습니다",
     "projectDeleted": "프로젝트가 성공적으로 삭제되었습니다"
   },
-  
   "translation": {
     "editor": "번역 편집기",
     "source": "원본",
@@ -92,7 +88,6 @@
     "translationError": "번역 저장 중 오류 발생",
     "segmentUpdated": "세그먼트가 성공적으로 업데이트되었습니다"
   },
-  
   "glossary": {
     "title": "용어집",
     "createGlossary": "용어집 생성",
@@ -112,7 +107,6 @@
     "importGlossary": "용어집 가져오기",
     "exportGlossary": "용어집 내보내기"
   },
-  
   "tm": {
     "title": "번역 메모리",
     "entries": "항목",
@@ -128,7 +122,6 @@
     "alignment": "정렬",
     "cleanup": "정리"
   },
-  
   "profile": {
     "title": "프로필",
     "personalInfo": "개인 정보",
@@ -145,7 +138,6 @@
     "preferences": "환경 설정",
     "language": "언어"
   },
-  
   "admin": {
     "title": "관리자 콘솔",
     "users": "사용자",
@@ -164,7 +156,6 @@
     "tmManagement": "TM 관리",
     "glossaryManagement": "용어집 관리"
   },
-  
   "languages": {
     "en": "영어",
     "ko": "한국어"

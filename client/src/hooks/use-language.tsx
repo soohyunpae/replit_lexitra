@@ -1,6 +1,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 
 type LanguageType = 'en' | 'ko';
 
@@ -17,8 +18,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return (saved === 'en' || saved === 'ko') ? saved : 'ko';
   });
 
-  const { i18n } = useTranslation();
-
   const setLanguage = (newLanguage: LanguageType) => {
     setLanguageState(newLanguage);
     i18n.changeLanguage(newLanguage);
@@ -29,7 +28,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     i18n.changeLanguage(language);
     document.documentElement.lang = language;
-  }, []);
+  }, [language]);
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage }}>

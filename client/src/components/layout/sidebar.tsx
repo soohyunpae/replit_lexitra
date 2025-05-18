@@ -38,6 +38,8 @@ import {
 import { Project } from "@/types";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/use-language";
 
 interface ProjectFile {
   id: number;
@@ -76,6 +78,8 @@ export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [activeSubSection, setActiveSubSection] = useState<string | null>(null);
   const { logoutMutation } = useAuth();
+  const { t } = useTranslation();
+  const { language, setLanguage } = useLanguage();
 
   // Get current user
   const { data: user } = useQuery<{
@@ -114,22 +118,22 @@ export function Sidebar() {
   const mainNavItems: NavItem[] = [
     {
       icon: <Home className="h-5 w-5" />,
-      label: "Home",
+      label: t('common.home'),
       href: "/",
     },
     {
       icon: <FolderOpen className="h-5 w-5" />,
-      label: "Projects",
+      label: t('common.projects'),
       href: "/projects",
     },
     {
       icon: <Book className="h-5 w-5" />,
-      label: "Glossaries",
+      label: t('common.glossaries'),
       href: "/glossaries",
     },
     {
       icon: <Database className="h-5 w-5" />,
-      label: "Translation Memory",
+      label: t('common.tm'),
       href: "/tm",
     },
   ];
@@ -138,7 +142,7 @@ export function Sidebar() {
   const adminNavItems: NavItem[] = [
     {
       icon: <ShieldCheck className="h-5 w-5" />,
-      label: "Admin",
+      label: t('common.admin'),
       href: "/admin",
     },
     // Removed standalone items per UI review feedback
@@ -363,7 +367,32 @@ export function Sidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href="/profile">My Account</Link>
+                  <Link href="/profile">{t('common.myAccount')}</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <div className="flex items-center w-full" onClick={(e) => e.stopPropagation()}>
+                    <Globe className="h-4 w-4 mr-2" />
+                    <div className="flex items-center space-x-2">
+                      <span className="mr-2">{t('common.language')}:</span>
+                      <Button
+                        variant={language === 'en' ? "default" : "outline"}
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={() => setLanguage('en')}
+                      >
+                        EN
+                      </Button>
+                      <Button
+                        variant={language === 'ko' ? "default" : "outline"}
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={() => setLanguage('ko')}
+                      >
+                        KO
+                      </Button>
+                    </div>
+                  </div>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
@@ -377,7 +406,7 @@ export function Sidebar() {
                   ) : (
                     <LogOut className="h-4 w-4 mr-2" />
                   )}
-                  {logoutMutation.isPending ? "Loading..." : "Logout"}
+                  {logoutMutation.isPending ? t('common.loading') : t('common.logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -388,7 +417,7 @@ export function Sidebar() {
               onClick={() => navigate("/auth")}
               className="w-full"
             >
-              Login
+              {t('common.login')}
             </Button>
           )}
         </div>

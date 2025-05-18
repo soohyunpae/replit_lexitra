@@ -27,7 +27,6 @@
     "confirm": "Confirm",
     "language": "Language"
   },
-  
   "auth": {
     "login": "Login",
     "signup": "Sign Up",
@@ -39,7 +38,6 @@
     "loginError": "Invalid username or password",
     "logoutSuccess": "You have been logged out successfully"
   },
-  
   "dashboard": {
     "title": "Dashboard",
     "welcomeMessage": "Welcome to Lexitra Translation Platform",
@@ -49,7 +47,6 @@
     "projectsCompleted": "Projects Completed",
     "pendingTasks": "Pending Tasks"
   },
-  
   "projects": {
     "title": "Projects",
     "createProject": "Create Project",
@@ -71,7 +68,6 @@
     "projectUpdated": "Project updated successfully",
     "projectDeleted": "Project deleted successfully"
   },
-  
   "translation": {
     "editor": "Translation Editor",
     "source": "Source",
@@ -92,7 +88,6 @@
     "translationError": "Error saving translation",
     "segmentUpdated": "Segment updated successfully"
   },
-  
   "glossary": {
     "title": "Glossaries",
     "createGlossary": "Create Glossary",
@@ -112,7 +107,6 @@
     "importGlossary": "Import Glossary",
     "exportGlossary": "Export Glossary"
   },
-  
   "tm": {
     "title": "Translation Memory",
     "entries": "Entries",
@@ -128,7 +122,6 @@
     "alignment": "Alignment",
     "cleanup": "Cleanup"
   },
-  
   "profile": {
     "title": "Profile",
     "personalInfo": "Personal Information",
@@ -145,7 +138,6 @@
     "preferences": "Preferences",
     "language": "Language"
   },
-  
   "admin": {
     "title": "Admin Console",
     "users": "Users",
@@ -164,7 +156,6 @@
     "tmManagement": "TM Management",
     "glossaryManagement": "Glossary Management"
   },
-  
   "languages": {
     "en": "English",
     "ko": "Korean"
