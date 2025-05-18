@@ -8,15 +8,17 @@ import { Button } from "@/components/ui/button";
 import { FileText, FileType, Loader2 } from "lucide-react";
 import PDFProcessing from "./pdf";
 import FileConversion from "./conversion";
+import { useTranslation } from "react-i18next";
 
 export default function FileProcessingHub() {
   const { user, isLoading } = useAuth();
+  const { t } = useTranslation();
   const [activeSection, setActiveSection] = useState<string>("pdf");
 
   // Loading state
   if (isLoading) {
     return (
-      <MainLayout title="File Processing Center">
+      <MainLayout title={t('admin.fileProcessingCenter')}>
         <div className="flex items-center justify-center min-h-screen">
           <Loader2 className="h-8 w-8 animate-spin text-border" />
         </div>

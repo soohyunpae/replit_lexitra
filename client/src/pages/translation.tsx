@@ -279,8 +279,8 @@ export default function Translation() {
 
       setAutoTranslationDone(true);
       toast({
-        title: "Auto-translation complete",
-        description: `Applied translations to ${untranslatedSegments.length} segments`,
+        title: t('translation.autoTranslationComplete'),
+        description: t('translation.translationsApplied', { count: untranslatedSegments.length }),
       });
     };
 
@@ -428,13 +428,13 @@ export default function Translation() {
 
   // 메인 UI 렌더링
   return (
-    <MainLayout title={`Translating: ${file.name}`}>
+    <MainLayout title={`${t('translation.editor')}: ${file.name}`}>
       <div className="flex flex-col h-full">
         <div className="border-b bg-card px-6 py-4 flex-shrink-0">
           {/* Breadcrumb Navigation and Save Button */}
           <div className="mb-4">
             <h1 className="text-lg font-semibold">
-              Project {project.id}: {project.name} / {file.name}
+              {t('projects.title')} {project.id}: {project.name} / {file.name}
             </h1>
           </div>
 
