@@ -75,21 +75,21 @@ export default function AuthPage() {
         <div className="mx-auto w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold tracking-tight mb-2">Lexitra</h1>
-            <p className="text-muted-foreground">특허 문서 전문 번역 플랫폼</p>
+            <p className="text-muted-foreground">Professional Patent Document Translation Platform</p>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="login">로그인</TabsTrigger>
-              <TabsTrigger value="register">회원가입</TabsTrigger>
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="register">Register</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
               <Card>
                 <CardHeader>
-                  <CardTitle>로그인</CardTitle>
+                  <CardTitle>Login</CardTitle>
                   <CardDescription>
-                    계정 정보를 입력하여 로그인하세요.
+                    Enter your account information to log in.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -100,9 +100,9 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>사용자 이름</FormLabel>
+                            <FormLabel>Username</FormLabel>
                             <FormControl>
-                              <Input placeholder="사용자 이름을 입력하세요" {...field} />
+                              <Input placeholder="Enter your username" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -113,9 +113,9 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>비밀번호</FormLabel>
+                            <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <Input type="password" placeholder="비밀번호를 입력하세요" {...field} />
+                              <Input type="password" placeholder="Enter your password" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -129,10 +129,10 @@ export default function AuthPage() {
                         {loginMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            로그인 중...
+                            Logging in...
                           </>
                         ) : (
-                          '로그인'
+                          'Login'
                         )}
                       </Button>
                     </form>
@@ -144,9 +144,9 @@ export default function AuthPage() {
             <TabsContent value="register">
               <Card>
                 <CardHeader>
-                  <CardTitle>회원가입</CardTitle>
+                  <CardTitle>Register</CardTitle>
                   <CardDescription>
-                    새 계정을 생성하세요.
+                    Create a new account.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -157,9 +157,9 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>사용자 이름</FormLabel>
+                            <FormLabel>Username</FormLabel>
                             <FormControl>
-                              <Input placeholder="사용자 이름을 입력하세요" {...field} />
+                              <Input placeholder="Enter your username" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -170,9 +170,9 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>비밀번호</FormLabel>
+                            <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <Input type="password" placeholder="비밀번호를 입력하세요" {...field} />
+                              <Input type="password" placeholder="Enter your password" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -183,9 +183,9 @@ export default function AuthPage() {
                         name="confirmPassword"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>비밀번호 확인</FormLabel>
+                            <FormLabel>Confirm Password</FormLabel>
                             <FormControl>
-                              <Input type="password" placeholder="비밀번호를 다시 입력하세요" {...field} />
+                              <Input type="password" placeholder="Re-enter your password" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -199,10 +199,10 @@ export default function AuthPage() {
                         {registerMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            계정 생성 중...
+                            Creating account...
                           </>
                         ) : (
-                          '회원가입'
+                          'Register'
                         )}
                       </Button>
                     </form>
@@ -218,7 +218,7 @@ export default function AuthPage() {
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-600 via-primary to-primary-400 text-white flex-col justify-center p-12">
         <div className="max-w-lg mx-auto">
           <h2 className="text-4xl font-bold mb-6">Lexitra</h2>
-          <p className="text-xl mb-8">특허 문서 번역을 위한 최적의 플랫폼</p>
+          <p className="text-xl mb-8">The Optimal Platform for Patent Document Translation</p>
           
           <div className="space-y-4">
             <div className="flex items-start">
@@ -228,8 +228,8 @@ export default function AuthPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold">고급 AI 번역</h3>
-                <p className="text-white/80">GPT 기반 기술을 활용하여 기술 문서에 최적화된 번역 제공</p>
+                <h3 className="text-lg font-semibold">Advanced AI Translation</h3>
+                <p className="text-white/80">GPT-powered technology optimized for technical document translation</p>
               </div>
             </div>
             
@@ -240,8 +240,8 @@ export default function AuthPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold">번역 메모리(TM) 관리</h3>
-                <p className="text-white/80">번역 이력을 저장하고 활용하여 일관성 있는 번역 품질 유지</p>
+                <h3 className="text-lg font-semibold">Translation Memory (TM) Management</h3>
+                <p className="text-white/80">Store and utilize translation history to maintain consistent translation quality</p>
               </div>
             </div>
             
@@ -252,8 +252,8 @@ export default function AuthPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold">용어집(TB) 지원</h3>
-                <p className="text-white/80">특허 용어 관리로 전문 용어의 일관성 유지</p>
+                <h3 className="text-lg font-semibold">Terminology Base (TB) Support</h3>
+                <p className="text-white/80">Maintain consistency of technical terms through patent terminology management</p>
               </div>
             </div>
           </div>
