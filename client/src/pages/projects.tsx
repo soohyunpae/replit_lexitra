@@ -889,14 +889,14 @@ export default function ProjectsPage() {
                         name="targetLanguage"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Target</FormLabel>
+                            <FormLabel>{t('projects.targetLanguage')}</FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Target" />
+                                  <SelectValue placeholder={t('projects.targetLanguage')} />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
@@ -921,12 +921,12 @@ export default function ProjectsPage() {
                     name="deadline"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Deadline (Optional)</FormLabel>
+                        <FormLabel>{t('projects.deadline')} ({t('common.optional')})</FormLabel>
                         <FormControl>
                           <Input type="date" {...field} />
                         </FormControl>
                         <FormDescription>
-                          Set a deadline for this translation project.
+                          {t('projects.deadlineDescription')}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -940,12 +940,11 @@ export default function ProjectsPage() {
                     render={({ field }) => (
                       <FormItem className="space-y-2">
                         <FormLabel className="block">
-                          Upload Files{" "}
+                          {t('projects.uploadFiles')}{" "}
                           <span className="text-destructive">*</span>
                         </FormLabel>
                         <FormDescription>
-                          Files must be uploaded during project creation. You
-                          won't be able to add or modify work files later.
+                          {t('projects.fileUploadDescription')}
                         </FormDescription>
 
                         <FormControl>

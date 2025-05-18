@@ -15,7 +15,7 @@
     "save": "Save",
     "cancel": "Cancel",
     "search": "Search",
-    "loading": "Loading...",
+    "loading": "Loading",
     "error": "Error",
     "success": "Success",
     "noData": "No data available",
@@ -25,7 +25,8 @@
     "back": "Back",
     "next": "Next",
     "confirm": "Confirm",
-    "language": "Language"
+    "language": "Language",
+    "optional": "Optional"
   },
   "auth": {
     "login": "Login",
@@ -76,9 +77,12 @@
     "status": "Status",
     "progress": "Progress",
     "deadline": "Deadline",
+    "deadlineDescription": "Set a deadline for this translation project.",
     "actions": "Actions",
     "noProjects": "No projects found",
     "filterProjects": "Filter Projects",
+    "uploadFiles": "Upload Files",
+    "fileUploadDescription": "Files must be uploaded during project creation. You won't be able to add or modify work files later.",
     "details": "Project Details",
     "files": "Files",
     "addFile": "Add File",
