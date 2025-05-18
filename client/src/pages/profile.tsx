@@ -1,6 +1,7 @@
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/components/ui/theme-provider";
+import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,10 +24,13 @@ import { Label } from "@/components/ui/label";
 import { Redirect } from "wouter";
 import { Loader2, LogOut, Moon, Sun, Globe } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function ProfilePage() {
   const { user, isLoading, logoutMutation } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { language, setLanguage } = useLanguage();
+  const { t } = useTranslation();
   const [sourceLanguage, setSourceLanguage] = useState("KO");
   const [targetLanguage, setTargetLanguage] = useState("EN");
 
@@ -93,11 +97,11 @@ export default function ProfilePage() {
 
           <TabsContent value="preferences">
             <div className="space-y-6">
-              <Card>
+              <Card className="mb-6">
                 <CardHeader>
-                  <CardTitle>Theme Settings</CardTitle>
+                  <CardTitle>{t('profile.themeSettings')}</CardTitle>
                   <CardDescription>
-                    Choose your preferred theme mode
+                    {t('profile.themeDescription')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -106,18 +110,52 @@ export default function ProfilePage() {
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="light" id="theme-light" />
-                          <Label htmlFor="theme-light">Light Mode</Label>
+                          <Label htmlFor="theme-light">{t('common.lightMode')}</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="dark" id="theme-dark" />
-                          <Label htmlFor="theme-dark">Dark Mode</Label>
+                          <Label htmlFor="theme-dark">{t('common.darkMode')}</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="system" id="theme-system" />
-                          <Label htmlFor="theme-system">System</Label>
+                          <Label htmlFor="theme-system">{t('profile.systemTheme')}</Label>
                         </div>
                       </div>
                     </RadioGroup>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('profile.languageSettings')}</CardTitle>
+                  <CardDescription>
+                    {t('profile.interfaceLanguage')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="mb-2 block">{t('common.language')}</Label>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant={language === 'en' ? "default" : "outline"}
+                          size="sm"
+                          className="px-3"
+                          onClick={() => setLanguage('en')}
+                        >
+                          English
+                        </Button>
+                        <Button
+                          variant={language === 'ko' ? "default" : "outline"}
+                          size="sm"
+                          className="px-3"
+                          onClick={() => setLanguage('ko')}
+                        >
+                          한국어
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

@@ -370,31 +370,6 @@ export function Sidebar() {
                   <Link href="/profile">{t('common.myAccount')}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <div className="flex items-center w-full" onClick={(e) => e.stopPropagation()}>
-                    <Globe className="h-4 w-4 mr-2" />
-                    <div className="flex items-center space-x-2">
-                      <span className="mr-2">{t('common.language')}:</span>
-                      <Button
-                        variant={language === 'en' ? "default" : "outline"}
-                        size="sm"
-                        className="h-7 px-2"
-                        onClick={() => setLanguage('en')}
-                      >
-                        EN
-                      </Button>
-                      <Button
-                        variant={language === 'ko' ? "default" : "outline"}
-                        size="sm"
-                        className="h-7 px-2"
-                        onClick={() => setLanguage('ko')}
-                      >
-                        KO
-                      </Button>
-                    </div>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   onClick={() => {
                     logoutMutation.mutate();

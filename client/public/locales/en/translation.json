@@ -224,7 +224,12 @@
     "passwordChanged": "Password changed successfully",
     "profileUpdated": "Profile updated successfully",
     "preferences": "Preferences",
-    "language": "Language"
+    "language": "Language",
+    "themeSettings": "Theme Settings",
+    "themeDescription": "Choose your preferred theme mode",
+    "systemTheme": "System",
+    "languageSettings": "Language Settings",
+    "interfaceLanguage": "Choose your preferred interface language"
   },
   "admin": {
     "title": "Admin Console",
