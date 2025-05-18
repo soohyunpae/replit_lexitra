@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -85,6 +86,7 @@ export default function UnifiedTranslationMemoryPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const isAdmin = user?.role === "admin";
+  const { t } = useTranslation();
   
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -320,14 +322,14 @@ export default function UnifiedTranslationMemoryPage() {
   }
 
   return (
-    <MainLayout title="Translation Memory">
+    <MainLayout title={t("tm.title")}>
       <div className="container max-w-screen-xl mx-auto p-6">
         {/* Removed breadcrumb navigation per UI update */}
 
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Database className="h-5 w-5" />
-            <h2 className="text-3xl font-bold tracking-tight">Translation Memory</h2>
+            <h2 className="text-3xl font-bold tracking-tight">{t("tm.title")}</h2>
           </div>
           {isAdmin && (
             <div className="flex gap-2">
@@ -335,7 +337,7 @@ export default function UnifiedTranslationMemoryPage() {
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                    Add TM Entry
+                    {t("tm.addEntry")}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
