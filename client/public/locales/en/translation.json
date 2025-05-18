@@ -28,6 +28,13 @@
     "language": "Language",
     "optional": "Optional"
   },
+  "languages": {
+    "english": "English",
+    "korean": "Korean",
+    "japanese": "Japanese",
+    "chinese": "Chinese",
+    "spanish": "Spanish"
+  },
   "auth": {
     "login": "Login",
     "signup": "Sign Up",
@@ -129,6 +136,9 @@
     "title": "Glossaries",
     "createGlossary": "Create Glossary",
     "addTerm": "Add Term",
+    "addNewTerm": "Add New Glossary Term",
+    "addNewTermDescription": "Add a new term to your glossary database.",
+    "selectSourceLanguage": "Select source language",
     "glossaryName": "Glossary Name",
     "glossaryDescription": "Glossary Description",
     "sourceLanguage": "Source Language",

@@ -28,6 +28,13 @@
     "language": "언어",
     "optional": "선택 사항"
   },
+  "languages": {
+    "english": "영어",
+    "korean": "한국어",
+    "japanese": "일본어",
+    "chinese": "중국어",
+    "spanish": "스페인어"
+  },
   "auth": {
     "login": "로그인",
     "signup": "회원가입",
@@ -129,6 +136,9 @@
     "title": "용어집",
     "createGlossary": "용어집 생성",
     "addTerm": "용어 추가",
+    "addNewTerm": "새 용어 추가",
+    "addNewTermDescription": "용어집 데이터베이스에 새 용어를 추가합니다.",
+    "selectSourceLanguage": "원본 언어 선택",
     "glossaryName": "용어집 이름",
     "glossaryDescription": "용어집 설명",
     "sourceLanguage": "원본 언어",

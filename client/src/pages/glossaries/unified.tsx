@@ -442,14 +442,14 @@ export default function UnifiedGlossaryPage() {
                         name="sourceLanguage"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Source Language</FormLabel>
+                            <FormLabel>{t('glossaries.sourceLanguage')}</FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select source language" />
+                                  <SelectValue placeholder={t('glossaries.selectSourceLanguage')} />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
