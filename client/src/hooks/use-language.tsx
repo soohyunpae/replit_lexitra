@@ -48,6 +48,9 @@ export function LanguageProvider({
     // Set state
     setLanguageState(newLanguage);
     
+    // Update i18n
+    i18n.changeLanguage(newLanguage);
+    
     // Save preference
     localStorage.setItem("lexitra-language-preference", newLanguage);
     
@@ -55,15 +58,11 @@ export function LanguageProvider({
     document.documentElement.lang = newLanguage;
     document.documentElement.setAttribute('lang', newLanguage);
     
-    // Update i18n - this will trigger the i18nextLanguageChanged event
-    i18n.changeLanguage(newLanguage).then(() => {
-      // Dispatch the custom event for App.tsx to force re-render
-      const event = new Event('i18nextLanguageChanged');
-      document.dispatchEvent(event);
-      
-      // Log for debugging
-      console.log("Language changed to:", newLanguage);
-    });
+    // Trigger the i18next languageChanged event to update all components
+    window.dispatchEvent(new Event('languageChanged'));
+    
+    // Log for debugging
+    console.log("Language changed to:", newLanguage);
   };
 
   // Toggle between available languages

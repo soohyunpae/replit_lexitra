@@ -190,29 +190,21 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    <div className="space-y-4">
-                      <Button 
-                        className={`w-full ${language === "en" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}
-                        onClick={() => {
-                          localStorage.setItem("lexitra-language-preference", "en");
-                          document.documentElement.lang = "en";
-                          window.location.href = window.location.href;
-                        }}
-                      >
-                        English
-                      </Button>
-                      
-                      <Button
-                        className={`w-full ${language === "ko" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}
-                        onClick={() => {
-                          localStorage.setItem("lexitra-language-preference", "ko");
-                          document.documentElement.lang = "ko";
-                          window.location.href = window.location.href;
-                        }}
-                      >
-                        한국어
-                      </Button>
-                    </div>
+                    <RadioGroup 
+                      value={language} 
+                      onValueChange={(value) => setLanguage(value as "en" | "ko")}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="en" id="lang-en" />
+                          <Label htmlFor="lang-en">English</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="ko" id="lang-ko" />
+                          <Label htmlFor="lang-ko">한국어</Label>
+                        </div>
+                      </div>
+                    </RadioGroup>
                   </div>
                 </CardContent>
                 <CardFooter>

@@ -350,45 +350,8 @@ export function Sidebar() {
           </div>
         )}
 
-        {/* Language Toggle and User Account Section */}
-        <div className="mt-auto px-3 py-4 border-t border-border space-y-3">
-          {/* Language Toggle Button */}
-          <div className="flex justify-between items-center">
-            <Button 
-              variant="ghost"
-              size="sm" 
-              className="w-full text-xs flex items-center justify-between"
-              onClick={() => {
-                // Toggle language directly
-                const newLang = language === "en" ? "ko" : "en";
-                
-                // Save to localStorage first
-                localStorage.setItem("lexitra-language-preference", newLang);
-                
-                // Update HTML attributes
-                document.documentElement.lang = newLang;
-                
-                // Force a hard refresh by changing the URL with a timestamp
-                // This bypasses any cached state and ensures a fresh load
-                const timestamp = new Date().getTime();
-                window.location.href = `${window.location.pathname}?ts=${timestamp}&lang=${newLang}`;
-              }}
-            >
-              <div className="flex items-center">
-                <Globe className="h-4 w-4 mr-2" />
-                {!isCollapsed && (
-                  <span>{language === "en" ? "English" : "한국어"}</span>
-                )}
-              </div>
-              {!isCollapsed && (
-                <span className="text-xs text-muted-foreground">
-                  {language === "en" ? "→ 한국어" : "→ English"}
-                </span>
-              )}
-            </Button>
-          </div>
-          
-          {/* User Account */}
+        {/* User Account Section */}
+        <div className="mt-auto px-3 py-4 border-t border-border">
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
