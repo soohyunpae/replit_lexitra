@@ -190,8 +190,8 @@ export default function Translation() {
       }
 
       toast({
-        title: "Auto-translation",
-        description: `Applying TM matches and machine translation to ${untranslatedSegments.length} segments...`,
+        title: t('translation.autoTranslation'),
+        description: t('translation.applyingTMMatches', { count: untranslatedSegments.length }),
       });
 
       // Create a copy of all segments
@@ -325,7 +325,7 @@ export default function Translation() {
         user.role !== "admin"
       ) {
         setAccessError(
-          `This project is claimed by another user (${project.claimer?.username || "User #" + project.claimedBy})`,
+          t('translation.projectClaimedByOther') + ` (${project.claimer?.username || "User #" + project.claimedBy})`,
         );
         return;
       }
@@ -365,7 +365,7 @@ export default function Translation() {
   // 로딩 상태
   if (isFileLoading || isProjectLoading) {
     return (
-      <MainLayout title="Loading...">
+      <MainLayout title={t('translation.loading')}>
         <div className="flex-1 flex items-center justify-center">
           <div className="animate-pulse text-center">
             <div className="h-8 w-40 bg-accent rounded-full mx-auto mb-4"></div>
@@ -379,13 +379,12 @@ export default function Translation() {
   // 파일이나 프로젝트가 없는 경우
   if (!file || !project) {
     return (
-      <MainLayout title="File Not Found">
+      <MainLayout title={t('translation.fileNotFound')}>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-xl font-medium mb-2">File not found</h2>
+            <h2 className="text-xl font-medium mb-2">{t('translation.fileNotFound')}</h2>
             <p className="text-muted-foreground">
-              The translation file you're looking for doesn't exist or you don't
-              have access to it.
+              {t('translation.fileNotFoundDesc')}
             </p>
           </div>
         </div>
@@ -396,14 +395,14 @@ export default function Translation() {
   // 접근 권한 오류
   if (accessError) {
     return (
-      <MainLayout title="Access Denied">
+      <MainLayout title={t('translation.accessDenied')}>
         <div className="flex-1 flex items-center justify-center p-6">
           <Card className="max-w-md w-full">
             <CardHeader>
               <div className="mx-auto h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
                 <AlertTriangle className="h-6 w-6 text-destructive" />
               </div>
-              <CardTitle className="text-center">Access Denied</CardTitle>
+              <CardTitle className="text-center">{t('translation.accessDenied')}</CardTitle>
               <CardDescription className="text-center">
                 {accessError}
               </CardDescription>
@@ -411,15 +410,13 @@ export default function Translation() {
             <CardContent>
               <div className="flex flex-col space-y-4">
                 <p className="text-muted-foreground text-center text-sm">
-                  You don't have permission to access this editor. Only the user
-                  who has claimed the project or an admin can access the
-                  translation editor.
+                  {t('translation.accessDeniedDesc')}
                 </p>
                 <Button
                   onClick={() => setLocation(`/project/${project.id}`)}
                   className="w-full"
                 >
-                  Go Back to Project
+                  {t('translation.goBackToProject')}
                 </Button>
               </div>
             </CardContent>
@@ -456,11 +453,11 @@ export default function Translation() {
                   className="flex items-center gap-2"
                 >
                   <Blocks className="h-4 w-4" />
-                  <span>Segment Editor</span>
+                  <span>{t('translation.segmentEditor')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="doc" className="flex items-center gap-2">
                   <LayoutTemplate className="h-4 w-4" />
-                  <span>Document View</span>
+                  <span>{t('translation.documentView')}</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
