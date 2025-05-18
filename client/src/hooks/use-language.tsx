@@ -56,9 +56,11 @@ export function LanguageProvider({
     
     // Update HTML lang attribute
     document.documentElement.lang = newLanguage;
+    document.documentElement.setAttribute('lang', newLanguage);
     
-    // Force global i18n update - this ensures all components update
-    window.dispatchEvent(new Event('languageChanged'));
+    // Force reload to ensure all components update with new language
+    // This is a strong approach that guarantees the language change applies everywhere
+    window.location.reload();
     
     // Log for debugging
     console.log("Language changed to:", newLanguage);

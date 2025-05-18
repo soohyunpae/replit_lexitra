@@ -209,6 +209,9 @@ i18n
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: 'lexitra-language-preference',
     },
+    // Add more responsive behavior for language changes
+    keySeparator: '.',
+    nsSeparator: ':',
   });
 
 // Function to change the language

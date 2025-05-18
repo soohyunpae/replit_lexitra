@@ -37,6 +37,7 @@ import {
 import { Project } from "@/types";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/use-language";
 import { useTranslation } from "react-i18next";
 
 interface ProjectFile {
@@ -77,6 +78,7 @@ export function Sidebar() {
   const [activeSubSection, setActiveSubSection] = useState<string | null>(null);
   const { logoutMutation } = useAuth();
   const { t } = useTranslation();
+  const { language, setLanguage } = useLanguage();
 
   // State for language direction
   const [sourceLanguage, setSourceLanguage] = useState("KO");
@@ -375,6 +377,17 @@ export function Sidebar() {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
                   <Link href="/profile">{t('common.myAccount')}</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {/* Language switcher */}
+                <DropdownMenuItem 
+                  onClick={() => {
+                    const newLanguage = language === "en" ? "ko" : "en";
+                    setLanguage(newLanguage);
+                  }}
+                >
+                  <Globe className="h-4 w-4 mr-2" />
+                  {language === "en" ? "한국어로 전환" : "Switch to English"}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
