@@ -38,8 +38,7 @@ import {
 import { Project } from "@/types";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
-import { useLanguage } from "@/hooks/use-language";
-import { useTranslation } from "react-i18next";
+
 
 interface ProjectFile {
   id: number;
