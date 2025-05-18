@@ -125,3 +125,117 @@ function App() {
 4. Monitor for any performance impacts
 
 This plan addresses the core issues preventing proper language switching and provides a clear path to implementation.
+# UI Language Setting Feature Analysis
+
+## Current Implementation Overview
+
+The UI language setting functionality is implemented across several files:
+
+1. Language Provider (`client/src/hooks/use-language.tsx`):
+- Manages language state
+- Handles language switching
+- Persists language preference 
+
+2. i18n Configuration (`client/src/i18n/index.ts`):
+- Sets up internationalization
+- Manages translations
+- Handles language detection
+
+3. Profile Page (`client/src/pages/profile.tsx`):
+- Contains UI language selection interface
+- Integrates with language context
+
+4. Translation Files:
+- Located in `client/public/locales/{en,ko}/translation.json`
+- Contains translation strings
+
+## Issues Identified
+
+1. Language State Management:
+- Multiple re-renders occurring during language changes
+- Unnecessary event dispatching
+- Complex state synchronization
+
+2. Component Re-rendering:
+- Inefficient update propagation
+- Components re-rendering unnecessarily
+
+3. Performance Impact:
+- Large translation bundles loaded synchronously
+- Language switching causing UI flicker
+
+## Removal Assessment
+
+### Safe to Remove:
+1. Language selection UI in profile page
+2. Language provider context
+3. Translation files
+4. i18n configuration
+
+### Dependencies to Consider:
+- React-i18next library
+- i18next-http-backend
+- Associated type definitions
+
+### Impact Areas:
+1. Profile page layout
+2. Sidebar language display
+3. Text content throughout app
+
+## Recommended Approach
+
+1. Phase 1: Remove Language UI
+- Remove language selection from profile page
+- Remove language indicator from sidebar
+- Clean up language-related components
+
+2. Phase 2: Remove Core Implementation  
+- Remove language provider
+- Remove i18n configuration
+- Remove translation files
+- Clean up language hooks
+
+3. Phase 3: Update Dependencies
+- Remove language-related packages
+- Update component text to use direct strings
+- Clean up type definitions
+
+## Files to Modify:
+
+1. Remove Files:
+- `client/src/hooks/use-language.tsx`
+- `client/src/i18n/index.ts`
+- `client/src/i18n/types.ts`
+- `client/public/locales/**/*`
+
+2. Update Files:
+- `client/src/pages/profile.tsx` (remove language section)
+- `client/src/components/layout/sidebar.tsx` (remove language display)
+- `client/src/App.tsx` (remove language provider)
+
+3. Package Updates:
+- Remove i18n related dependencies from package.json
+
+## Success Criteria
+
+1. Application runs without language switching functionality
+2. No regression in other features
+3. Improved performance from reduced complexity
+4. No console errors related to missing translations
+
+## Testing Plan
+
+1. Verify Application:
+- Check all pages load correctly
+- Ensure no missing text/content
+- Verify no runtime errors
+
+2. Performance Testing:
+- Measure load times
+- Check memory usage
+- Monitor re-render counts
+
+3. Regression Testing:
+- Test all main features
+- Verify navigation works
+- Check form submissions
