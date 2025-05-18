@@ -33,7 +33,9 @@
     "korean": "Korean",
     "japanese": "Japanese",
     "chinese": "Chinese",
-    "spanish": "Spanish"
+    "spanish": "Spanish",
+    "french": "French",
+    "german": "German"
   },
   "auth": {
     "login": "Login",

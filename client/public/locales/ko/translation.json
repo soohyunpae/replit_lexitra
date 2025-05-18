@@ -33,7 +33,9 @@
     "korean": "한국어",
     "japanese": "일본어",
     "chinese": "중국어",
-    "spanish": "스페인어"
+    "spanish": "스페인어",
+    "french": "프랑스어",
+    "german": "독일어"
   },
   "auth": {
     "login": "로그인",
