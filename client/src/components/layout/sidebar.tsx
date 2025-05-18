@@ -24,6 +24,7 @@ import {
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMobile } from "@/hooks/use-mobile";
@@ -35,6 +36,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Project } from "@/types";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ProjectFile {
   id: number;
@@ -66,12 +68,13 @@ export const SidebarContext = React.createContext<SidebarContextType>({
 });
 
 export function Sidebar() {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const isMobile = useMobile();
   const [isProjectOpen, setIsProjectOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [activeSubSection, setActiveSubSection] = useState<string | null>(null);
+  const { logoutMutation } = useAuth();
 
   // State for language direction
   const [sourceLanguage, setSourceLanguage] = useState("KO");
@@ -374,23 +377,16 @@ export function Sidebar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   onClick={() => {
-                    if (logoutMutation) {
-                      logoutMutation.mutate(undefined, {
-                        onSuccess: () => {
-                          // Redirect to landing page after logout
-                          window.location.href = '/';
-                        }
-                      });
-                    }
+                    logoutMutation.mutate();
                   }}
-                  disabled={logoutMutation?.isPending}
+                  disabled={logoutMutation.isPending}
                 >
-                  {logoutMutation?.isPending ? (
+                  {logoutMutation.isPending ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
                     <LogOut className="h-4 w-4 mr-2" />
                   )}
-                  {logoutMutation?.isPending ? 'Logging out...' : 'Logout'}
+                  {logoutMutation.isPending ? '로그아웃 중...' : '로그아웃'}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

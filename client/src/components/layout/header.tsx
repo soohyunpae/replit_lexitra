@@ -148,7 +148,7 @@ export function Header({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
                   <LogOut className="h-4 w-4 mr-2" />
-                  Logout
+                  로그아웃
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
