@@ -2,7 +2,6 @@ import React, { useState, useContext, useEffect } from "react";
 import { useLocation, Link, Redirect } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/use-auth";
-import { useTranslation } from "react-i18next";
 import { SidebarContext } from "@/components/layout/sidebar";
 import {
   Card,
@@ -41,7 +40,6 @@ export default function AdminConsole() {
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("api-keys");
   const { setActiveSubSection } = useContext(SidebarContext);
-  const { t } = useTranslation();
   
   // API Key states
   const [apiKey, setApiKey] = useState<string>("");
@@ -139,14 +137,14 @@ export default function AdminConsole() {
   }
 
   return (
-    <MainLayout title={t("admin.title")}>
+    <MainLayout title="Admin Console">
       <div className="container max-w-screen-xl mx-auto p-6">
         <div className="flex items-center gap-2 mb-2">
           <Settings className="h-5 w-5" />
-          <h2 className="text-3xl font-bold tracking-tight">{t("admin.title")}</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Admin Console</h2>
         </div>
         <p className="text-muted-foreground mb-6">
-          {t("admin.description")}
+          Manage system settings and user permissions
         </p>
 
         <Tabs

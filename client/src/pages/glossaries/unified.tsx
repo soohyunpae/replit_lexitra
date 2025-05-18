@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -89,7 +88,6 @@ export default function UnifiedGlossaryPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const isAdmin = user?.role === "admin";
-  const { t } = useTranslation();
   
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -396,14 +394,14 @@ export default function UnifiedGlossaryPage() {
   });
 
   return (
-    <MainLayout title={t("glossaries.title")}>
+    <MainLayout title="Glossary">
       <div className="container max-w-screen-xl mx-auto p-6">
         {/* No breadcrumb - already in header */}
 
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-2">
             <BookMarked className="h-5 w-5" />
-            <h2 className="text-3xl font-bold tracking-tight">{t("glossaries.title")}</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Glossary</h2>
           </div>
           {isAdmin && (
             <div className="flex gap-2">
@@ -425,7 +423,7 @@ export default function UnifiedGlossaryPage() {
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                    {t("glossaries.addTerm")}
+                    Add Term
                   </Button>
                 </DialogTrigger>
                 <DialogContent>

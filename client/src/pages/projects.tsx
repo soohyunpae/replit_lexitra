@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useLocation, Link } from "wouter";
-import { useTranslation } from "react-i18next";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -135,7 +134,6 @@ export default function ProjectsPage() {
   const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
-  const { t } = useTranslation();
 
   // Check if user is admin
   const isAdmin = user?.role === "admin";
