@@ -1,75 +1,127 @@
-# Lexitra i18n Implementation Plan
 
-## Current Status
-- Basic i18n setup exists with React-i18next
-- Translation files present but not fully utilized 
-- Language switching feature partially implemented but not working
+# Language Switching Implementation Plan
+
+## Current Issues
+1. Language switching is only affecting profile page instead of entire application
+2. Language selection in preferences does not properly propagate changes
+3. The i18n configuration needs optimization
+
+## Analysis
+
+### Related Files
+1. `client/src/hooks/use-language.tsx` - Main language context provider
+2. `client/src/pages/auth-page.tsx` - Auth page showing language handling
+3. `client/src/i18n/index.ts` - i18n configuration
+4. `client/src/pages/profile.tsx` - Profile page with language preferences
+
+### Root Cause
+1. Language change not being propagated to i18n instance correctly
+2. Missing language context provider at app root level
+3. Inconsistent language state management between local storage and context
 
 ## Implementation Plan
 
-### 1. Fix Language Provider Integration
-- Add LanguageProvider to App.tsx wrapper to fix context errors
-- Ensure provider properly initializes with saved language preference
-- Hook up language switching in profile page preferences
+### 1. Update Language Provider
+The current language provider needs to ensure:
+- Proper initialization from localStorage
+- Consistent language state across app
+- Proper propagation of language changes
 
-### 2. Translation Management
-- Utilize existing `/client/public/locales/{en,ko}/translation.json` files
-- Add missing translations and organize hierarchically
-- No auto-translation - all strings manually managed
+### 2. Update i18n Configuration
+Need to:
+- Ensure proper language detection
+- Handle language changes correctly
+- Maintain consistent state with provider
 
-### 3. User Interface
-- Add language selection in Profile page preferences
-- Store user language preference in localStorage
-- Apply language changes immediately across app
+### 3. Fix Profile Page Integration
+Must:
+- Connect language selection to global context
+- Properly trigger language changes
+- Update UI immediately on change
 
-### 4. Testing
-- Verify language switching works
-- Confirm translations load correctly
-- Check persistence of language selection
+## Code Changes Required
 
-## Components Required
+1. Update `use-language.tsx`:
+```typescript
+export function LanguageProvider({
+  children,
+  defaultLanguage = "en",
+}: LanguageProviderProps) {
+  const [language, setLanguageState] = useState<LanguageType>(() => {
+    const savedLanguage = localStorage.getItem("lexitra-language-preference");
+    return (savedLanguage === "en" || savedLanguage === "ko") ? savedLanguage : defaultLanguage;
+  });
 
-1. Language Provider (src/hooks/use-language.tsx)
-2. Profile Page Language Settings (src/pages/profile.tsx)
-3. Translation Files (public/locales/{en,ko}/translation.json)
+  const { i18n } = useTranslation();
 
-## Implementation Notes
+  const setLanguage = (newLanguage: LanguageType) => {
+    setLanguageState(newLanguage);
+    i18n.changeLanguage(newLanguage);
+    localStorage.setItem("lexitra-language-preference", newLanguage);
+    document.documentElement.lang = newLanguage;
+  };
 
-The system will:
-- Use manual translations only
-- Persist language preference
-- Support English and Korean UI
-- Allow switching via profile preferences
+  // Initialize on mount
+  useEffect(() => {
+    i18n.changeLanguage(language);
+    document.documentElement.lang = language;
+  }, []);
 
-### 5. File Changes Required
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+}
+```
 
-1. New Files:
-- client/src/hooks/use-language.tsx
+2. Update `App.tsx` to wrap entire application with LanguageProvider:
+```typescript
+function App() {
+  return (
+    <LanguageProvider>
+      {/* Rest of app components */}
+    </LanguageProvider>
+  );
+}
+```
 
-2. Modified Files:
-- client/src/App.tsx
-- client/src/pages/profile.tsx
-- client/public/locales/en/translation.json
-- client/public/locales/ko/translation.json
+## Testing Plan
 
-### 6. Implementation Order
+1. Test Language Switch:
+- Change language in profile preferences
+- Verify all components update
+- Check persistence after refresh
 
-1. Setup Language Provider
-2. Implement language switching in profile preferences
-3. Update translation files
-4. Test language switching and persistence
+2. Test Language Detection:
+- Clear localStorage
+- Verify proper default language
+- Check browser language detection
 
-### 7. Testing Checklist
+3. Test Components:
+- Verify sidebar updates
+- Check auth pages
+- Validate all translated content
 
-- Language switching works correctly
-- All UI elements are translated
-- No missing translations
-- Proper fallback to default language
-- Language persistence between sessions
-- Proper handling of dynamic content
+## Success Criteria
 
-## Dependencies
+1. Language switch in profile updates entire application UI
+2. Language persists across page refreshes
+3. All components properly reflect selected language
+4. No UI flicker during language switch
+5. Consistent language state across all pages
 
-- `react-i18next`
-- `i18next`
-- `i18next-http-backend`
+## Implementation Steps
+
+1. Apply code changes in sequence:
+   - Update language provider
+   - Fix i18n configuration
+   - Update profile page integration
+   
+2. Test each change incrementally
+
+3. Verify full application functionality after changes
+
+4. Monitor for any performance impacts
+
+This plan addresses the core issues preventing proper language switching and provides a clear path to implementation.
