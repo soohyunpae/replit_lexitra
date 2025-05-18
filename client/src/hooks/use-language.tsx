@@ -31,20 +31,36 @@ export function LanguageProvider({
       return savedLanguage;
     }
     
+    // If no saved language, try browser language
+    const browserLang = navigator.language.split('-')[0] as LanguageType;
+    if (browserLang === "ko") {
+      return "ko";
+    }
+    
     return defaultLanguage;
   });
 
   // i18next translation hook
   const { i18n } = useTranslation();
 
-  // Set language handler
+  // Set language handler with force reload option
   const setLanguage = (newLanguage: LanguageType) => {
+    // Set state
     setLanguageState(newLanguage);
+    
+    // Update i18n
     i18n.changeLanguage(newLanguage);
+    
+    // Save preference
     localStorage.setItem("lexitra-language-preference", newLanguage);
+    
+    // Update HTML lang attribute
     document.documentElement.lang = newLanguage;
     
-    // Add debugging to verify language change
+    // Force global i18n update - this ensures all components update
+    window.dispatchEvent(new Event('languageChanged'));
+    
+    // Log for debugging
     console.log("Language changed to:", newLanguage);
   };
 
@@ -54,15 +70,38 @@ export function LanguageProvider({
     setLanguage(newLanguage);
   };
 
-  // Effect to sync i18next language with our state on mount
+  // Effect to initialize language on mount
   useEffect(() => {
-    // Update language on initial mount
+    // Ensure language is set in i18n
     i18n.changeLanguage(language);
+    
+    // Set HTML lang attribute
     document.documentElement.lang = language;
     
-    // Log current language for debugging
+    // Force global i18n update
+    window.dispatchEvent(new Event('languageChanged'));
+    
+    // Log initial language
     console.log("Current language:", language);
-  }, [language]);
+    
+    // Add event listener for language changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'lexitra-language-preference') {
+        const newLang = e.newValue as LanguageType;
+        if (newLang && (newLang === "en" || newLang === "ko") && newLang !== language) {
+          setLanguageState(newLang);
+          i18n.changeLanguage(newLang);
+        }
+      }
+    };
+    
+    // Listen for localStorage changes (for multi-tab support)
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   return (
     <LanguageContext.Provider
