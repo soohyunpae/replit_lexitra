@@ -105,6 +105,24 @@ function Router() {
 }
 
 function App() {
+  // Force re-render on language change
+  const [, forceUpdate] = React.useState({});
+  
+  React.useEffect(() => {
+    // Listen for language changes
+    const handleLanguageChange = () => {
+      // Force a re-render of the entire app
+      forceUpdate({});
+    };
+    
+    // Use the i18next's built-in event
+    document.addEventListener('i18nextLanguageChanged', handleLanguageChange);
+    
+    return () => {
+      document.removeEventListener('i18nextLanguageChanged', handleLanguageChange);
+    };
+  }, []);
+  
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="lexitra-theme-preference">
