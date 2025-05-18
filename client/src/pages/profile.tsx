@@ -189,23 +189,22 @@ export default function ProfilePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={language === "en" ? "default" : "outline"}
-                      onClick={() => setLanguage("en")}
-                      className="flex-1"
+                  <div className="space-y-3">
+                    <RadioGroup 
+                      value={language} 
+                      onValueChange={(value) => setLanguage(value as "en" | "ko")}
                     >
-                      <Globe className="mr-2 h-4 w-4" />
-                      English
-                    </Button>
-                    <Button
-                      variant={language === "ko" ? "default" : "outline"}
-                      onClick={() => setLanguage("ko")}
-                      className="flex-1"
-                    >
-                      <Globe className="mr-2 h-4 w-4" />
-                      한국어
-                    </Button>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="en" id="lang-en" />
+                          <Label htmlFor="lang-en">English</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="ko" id="lang-ko" />
+                          <Label htmlFor="lang-ko">한국어</Label>
+                        </div>
+                      </div>
+                    </RadioGroup>
                   </div>
                 </CardContent>
                 <CardFooter>
