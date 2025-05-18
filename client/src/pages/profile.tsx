@@ -57,16 +57,16 @@ export default function ProfilePage() {
       <div className="max-w-3xl mx-auto py-10">
         <Tabs defaultValue="general" className="space-y-6">
           <TabsList>
-            <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
+            <TabsTrigger value="general">{t('profile.personalInfo')}</TabsTrigger>
+            <TabsTrigger value="preferences">{t('profile.preferences')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="general">
             <Card>
               <CardHeader>
-                <CardTitle>Account Information</CardTitle>
+                <CardTitle>{t('profile.title')}</CardTitle>
                 <CardDescription>
-                  Personal Information
+                  {t('profile.personalInfo')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -79,14 +79,14 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium text-muted-foreground">
-                      Username
+                      {t('profile.username')}
                     </h3>
                     <p className="font-medium">{user.username}</p>
                   </div>
 
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium text-muted-foreground">
-                      User ID
+                      {t('profile.role')}
                     </h3>
                     <p className="font-medium">{user.id}</p>
                   </div>
@@ -162,47 +162,47 @@ export default function ProfilePage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Language Preferences</CardTitle>
+                  <CardTitle>{t('profile.languageSettings')}</CardTitle>
                   <CardDescription>
-                    Set your default source and target languages for translation projects
+                    {t('admin.defaultSourceLanguage')} / {t('admin.defaultTargetLanguage')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">
-                        Source Language
+                        {t('projects.sourceLanguage')}
                       </label>
                       <Select
                         value={sourceLanguage}
                         onValueChange={setSourceLanguage}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select source language" />
+                          <SelectValue placeholder={t('admin.selectSourceLanguage')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="KO">Korean</SelectItem>
-                          <SelectItem value="EN">English</SelectItem>
-                          <SelectItem value="JA">Japanese</SelectItem>
+                          <SelectItem value="KO">{t('languages.korean')}</SelectItem>
+                          <SelectItem value="EN">{t('languages.english')}</SelectItem>
+                          <SelectItem value="JA">{t('languages.japanese')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-2">
                       <label className="text-sm font-medium">
-                        Target Language
+                        {t('projects.targetLanguage')}
                       </label>
                       <Select
                         value={targetLanguage}
                         onValueChange={setTargetLanguage}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select target language" />
+                          <SelectValue placeholder={t('admin.selectTargetLanguage')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="EN">English</SelectItem>
-                          <SelectItem value="KO">Korean</SelectItem>
-                          <SelectItem value="JA">Japanese</SelectItem>
+                          <SelectItem value="EN">{t('languages.english')}</SelectItem>
+                          <SelectItem value="KO">{t('languages.korean')}</SelectItem>
+                          <SelectItem value="JA">{t('languages.japanese')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -210,7 +210,7 @@ export default function ProfilePage() {
                 </CardContent>
                 <CardFooter>
                   <Button variant="outline" className="ml-auto">
-                    Save Preferences
+                    {t('common.save')}
                   </Button>
                 </CardFooter>
               </Card>
@@ -227,12 +227,12 @@ export default function ProfilePage() {
             {logoutMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Logging out...
+                {t('auth.loggingOut')}
               </>
             ) : (
               <>
                 <LogOut className="mr-2 h-4 w-4" />
-                Logout
+                {t('common.logout')}
               </>
             )}
           </Button>

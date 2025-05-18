@@ -46,7 +46,8 @@
     "forgotPassword": "Forgot Password?",
     "resetPassword": "Reset Password",
     "loginError": "Invalid username or password",
-    "logoutSuccess": "You have been logged out successfully"
+    "logoutSuccess": "You have been logged out successfully",
+    "loggingOut": "Logging out..."
   },
   "dashboard": {
     "title": "Dashboard",

@@ -46,7 +46,8 @@
     "forgotPassword": "비밀번호를 잊으셨나요?",
     "resetPassword": "비밀번호 재설정",
     "loginError": "유효하지 않은 사용자 이름 또는 비밀번호",
-    "logoutSuccess": "성공적으로 로그아웃되었습니다"
+    "logoutSuccess": "성공적으로 로그아웃되었습니다",
+    "loggingOut": "로그아웃 중..."
   },
   "dashboard": {
     "title": "대시보드",
