@@ -300,7 +300,7 @@ export default function AdminConsole() {
                   <Separator />
                   
                   <div className="flex justify-end">
-                    <Button onClick={handleSaveLanguagePreferences}>Save Preferences</Button>
+                    <Button onClick={handleSaveLanguagePreferences}>{t('admin.saveLanguagePreferences')}</Button>
                   </div>
                 </div>
               </CardContent>

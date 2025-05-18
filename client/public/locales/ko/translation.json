@@ -204,7 +204,12 @@
     "defaultSourceLanguage": "기본 원본 언어",
     "selectSourceLanguage": "원본 언어 선택",
     "defaultTargetLanguage": "기본 대상 언어",
-    "selectTargetLanguage": "대상 언어 선택"
+    "selectTargetLanguage": "대상 언어 선택",
+    "languageSettings": "언어 설정",
+    "setDefaultLanguage": "번역 프로젝트의 기본 언어 환경설정을 지정합니다.",
+    "defaultLanguages": "기본 언어",
+    "defaultLanguagesDescription": "새 번역 프로젝트를 만들 때 미리 선택됩니다.",
+    "saveLanguagePreferences": "언어 환경설정 저장"
   },
   "tm": {
     "title": "번역 메모리",

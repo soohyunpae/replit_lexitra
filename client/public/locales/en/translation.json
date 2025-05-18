@@ -204,7 +204,12 @@
     "defaultSourceLanguage": "Default Source Language",
     "selectSourceLanguage": "Select source language",
     "defaultTargetLanguage": "Default Target Language",
-    "selectTargetLanguage": "Select target language"
+    "selectTargetLanguage": "Select target language",
+    "languageSettings": "Language Settings",
+    "setDefaultLanguage": "Set default language preferences for translation projects.",
+    "defaultLanguages": "Default Languages",
+    "defaultLanguagesDescription": "These will be pre-selected when creating new translation projects.",
+    "saveLanguagePreferences": "Save Language Preferences"
   },
   "tm": {
     "title": "Translation Memory",
