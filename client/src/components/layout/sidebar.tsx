@@ -25,6 +25,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Loader2,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMobile } from "@/hooks/use-mobile";
@@ -377,17 +378,6 @@ export function Sidebar() {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
                   <Link href="/profile">{t('common.myAccount')}</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {/* Language switcher */}
-                <DropdownMenuItem 
-                  onClick={() => {
-                    const newLanguage = language === "en" ? "ko" : "en";
-                    setLanguage(newLanguage);
-                  }}
-                >
-                  <Globe className="h-4 w-4 mr-2" />
-                  {language === "en" ? "한국어로 전환" : "Switch to English"}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
