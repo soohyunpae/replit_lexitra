@@ -125,9 +125,10 @@
     "translationError": "번역 저장 중 오류 발생",
     "segmentUpdated": "세그먼트가 성공적으로 업데이트되었습니다"
   },
-  "glossary": {
+  "glossaries": {
     "title": "용어집",
     "createGlossary": "용어집 생성",
+    "addTerm": "용어 추가",
     "glossaryName": "용어집 이름",
     "glossaryDescription": "용어집 설명",
     "sourceLanguage": "원본 언어",

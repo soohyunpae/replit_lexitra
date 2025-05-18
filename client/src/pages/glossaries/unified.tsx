@@ -87,6 +87,7 @@ type GlossaryResourceFormValues = z.infer<typeof glossaryResourceFormSchema>;
 export default function UnifiedGlossaryPage() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const isAdmin = user?.role === "admin";
   
@@ -395,14 +396,14 @@ export default function UnifiedGlossaryPage() {
   });
 
   return (
-    <MainLayout title="Glossary">
+    <MainLayout title={t('common.glossaries')}>
       <div className="container max-w-screen-xl mx-auto p-6">
         {/* No breadcrumb - already in header */}
 
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-2">
             <BookMarked className="h-5 w-5" />
-            <h2 className="text-3xl font-bold tracking-tight">Glossary</h2>
+            <h2 className="text-3xl font-bold tracking-tight">{t('common.glossaries')}</h2>
           </div>
           {isAdmin && (
             <div className="flex gap-2">
@@ -424,14 +425,14 @@ export default function UnifiedGlossaryPage() {
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                    Add Term
+                    {t('glossaries.addTerm')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add New Glossary Term</DialogTitle>
+                    <DialogTitle>{t('glossaries.addNewTerm')}</DialogTitle>
                     <DialogDescription>
-                      Add a new term to your glossary database.
+                      {t('glossaries.addNewTermDescription')}
                     </DialogDescription>
                   </DialogHeader>
                   <Form {...termForm}>

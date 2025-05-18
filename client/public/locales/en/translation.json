@@ -125,9 +125,10 @@
     "translationError": "Error saving translation",
     "segmentUpdated": "Segment updated successfully"
   },
-  "glossary": {
+  "glossaries": {
     "title": "Glossaries",
     "createGlossary": "Create Glossary",
+    "addTerm": "Add Term",
     "glossaryName": "Glossary Name",
     "glossaryDescription": "Glossary Description",
     "sourceLanguage": "Source Language",
