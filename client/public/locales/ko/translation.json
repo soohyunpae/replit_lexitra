@@ -155,6 +155,9 @@
     "applyingTMMatches": "{{count}}개의 세그먼트에 TM 매치와 기계 번역을 적용하는 중...",
     "autoTranslationComplete": "자동 번역 완료",
     "translationsApplied": "{{count}}개의 세그먼트에 번역이 적용되었습니다",
+    "toggleStatus": "클릭하여 상태 전환 ({{status}})",
+    "statusReviewed": "검토됨",
+    "statusEdited": "편집됨",
     "docReview": {
       "source": "원본",
       "target": "대상",
@@ -348,6 +351,33 @@
     "fileSuccessfullyConverted": "파일이 성공적으로 변환되었습니다. 아래 버튼을 클릭하여 다운로드하세요.",
     "tmManagement": "TM 관리",
     "glossaryManagement": "용어집 관리"
+  },
+  "sidePanel": {
+    "useTranslation": "번역 사용",
+    "useTerm": "용어 사용",
+    "applying": "적용 중...",
+    "segmentInformation": "세그먼트 정보",
+    "selectSegmentForInfo": "세그먼트를 선택하여 상태 정보를 확인하세요",
+    "selectSegmentForHistory": "세그먼트를 선택하여 수정 기록을 확인하세요",
+    "status": "상태",
+    "comment": "댓글",
+    "created": "생성일",
+    "updated": "수정일",
+    "commentAdded": "댓글 추가됨",
+    "commentAddedDesc": "댓글이 성공적으로 추가되었습니다.",
+    "failedToAddComment": "댓글 추가 실패",
+    "failedToAddCommentDesc": "댓글 추가 중 오류가 발생했습니다. 다시 시도해주세요.",
+    "addComment": "댓글 추가",
+    "comments": "댓글",
+    "glossary": "용어집",
+    "statusDescriptions": {
+      "reviewed": "최종 승인 버전",
+      "rejected": "부적절 표시됨",
+      "edited": "사람이 수정함",
+      "exactMatch": "TM에서 정확히 일치",
+      "fuzzyMatch": "TM에서 부분 일치",
+      "machineTranslated": "기계 번역됨"
+    }
   },
   "tm": {
     "title": "번역 메모리",

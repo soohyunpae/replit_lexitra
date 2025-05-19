@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   X,
@@ -61,6 +62,7 @@ function TmMatch({
   sourceSimilarity,
   highlightTerms = [],
 }: TmMatchProps) {
+  const { t } = useTranslation();
   const [isApplying, setIsApplying] = useState(false);
 
   // Function to highlight terms in the text
@@ -160,7 +162,7 @@ function TmMatch({
               적용 중...
             </>
           ) : (
-            "Use Translation"
+            "            {t('sidePanel.useTranslation')}"
           )}
         </Button>
       </div>

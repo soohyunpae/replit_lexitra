@@ -41,6 +41,7 @@ interface EditableSegmentProps {
 }
 
 export function EditableSegment(props: EditableSegmentProps) {
+  const { t } = useTranslation();
   const {
     segment,
     index,
@@ -471,7 +472,7 @@ export function EditableSegment(props: EditableSegmentProps) {
                 boxShadow: "none",
                 outline: "none",
               }}
-              placeholder="Enter translation..."
+              placeholder={t('translation.enterTranslation')}
             />
 
             {/* 상태 뱃지와 번역 버튼 */}
@@ -484,7 +485,7 @@ export function EditableSegment(props: EditableSegmentProps) {
                   if (liveSegment.status === "Rejected") return;
                   toggleStatus();
                 }}
-                title={`Click to toggle status (${liveSegment.status === "Reviewed" ? "Edited" : "Reviewed"})`}
+                title={t('translation.toggleStatus', { status: liveSegment.status === "Reviewed" ? t('translation.statusEdited') : t('translation.statusReviewed') })}
               >
                 {liveSegment.status}
               </button>

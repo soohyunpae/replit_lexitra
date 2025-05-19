@@ -155,6 +155,9 @@
     "applyingTMMatches": "Applying TM matches and machine translation to {{count}} segments...",
     "autoTranslationComplete": "Auto-translation complete",
     "translationsApplied": "Applied translations to {{count}} segments",
+    "toggleStatus": "Click to toggle status ({{status}})",
+    "statusReviewed": "Reviewed",
+    "statusEdited": "Edited",
     "docReview": {
       "source": "Source",
       "target": "Target",
@@ -231,6 +234,33 @@
     "adminAccessRequired": "Admin Access Required",
     "noPermission": "You don't have permission to access the admin dashboard.",
     "goToHome": "Go to Home"
+  },
+  "sidePanel": {
+    "useTranslation": "Use Translation",
+    "useTerm": "Use Term",
+    "applying": "Applying...",
+    "segmentInformation": "Segment Information",
+    "selectSegmentForInfo": "Select a segment to view its status information",
+    "selectSegmentForHistory": "Select a segment to view its revision history.",
+    "status": "Status",
+    "comment": "Comment",
+    "created": "Created",
+    "updated": "Updated",
+    "commentAdded": "Comment added",
+    "commentAddedDesc": "The comment has been added successfully.",
+    "failedToAddComment": "Failed to add comment",
+    "failedToAddCommentDesc": "There was an error adding the comment. Please try again.",
+    "addComment": "Add Comment",
+    "comments": "Comments",
+    "glossary": "Glossary",
+    "statusDescriptions": {
+      "reviewed": "Final approved version",
+      "rejected": "Marked as incorrect",
+      "edited": "Modified by human",
+      "exactMatch": "Exact match from TM",
+      "fuzzyMatch": "Partial match from TM",
+      "machineTranslated": "Machine translated"
+    }
   },
   "tm": {
     "title": "Translation Memory",
