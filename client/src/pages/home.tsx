@@ -493,7 +493,7 @@ export default function Home() {
                     variant="ghost"
                     size="sm"
                     className="h-8 px-2"
-                    onClick={() => navigate("/glossary")}
+                    onClick={() => navigate("/glossaries")}
                   >
                     View
                     <ChevronRight className="h-4 w-4 ml-1" />
