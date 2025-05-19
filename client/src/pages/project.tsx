@@ -1229,11 +1229,9 @@ export default function Project() {
                   <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-4">
                     <Upload className="h-6 w-6 text-muted-foreground" />
                   </div>
-                  <h3 className="text-lg font-medium mb-2">No files yet</h3>
+                  <h3 className="text-lg font-medium mb-2">{t('projects.noFilesYet')}</h3>
                   <p className="text-muted-foreground max-w-md mx-auto mb-6">
-                    Files must be added during project creation. Per the file
-                    management policy, projects without files cannot be created,
-                    and files cannot be added or modified after creation.
+                    {t('projects.fileManagementPolicy')}
                   </p>
                 </div>
               )}
@@ -1245,7 +1243,7 @@ export default function Project() {
             <Card className="md:col-span-2">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
-                  <span>📂 Reference Files</span>
+                  <span>📂 {t('projects.referenceFiles')}</span>
                 </CardTitle>
                 <CardDescription />
               </CardHeader>
@@ -1344,7 +1342,7 @@ export default function Project() {
                       >
                         <Upload className="h-6 w-6 text-muted-foreground mb-2" />
                         <p className="text-xs text-muted-foreground">
-                          Drop files here or click to add more
+                          {t('projects.dropFilesHere')}
                         </p>
                       </div>
                     )}
