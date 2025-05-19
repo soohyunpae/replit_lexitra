@@ -151,13 +151,13 @@ export function RightPanel({
           
           {activeTab === "tb" && (
             <div className="p-4">
-              <div className="text-sm font-medium mb-2">Terminology Base</div>
+              <div className="text-sm font-medium mb-2">{t('sidePanel.glossary.title')}</div>
               
               {/* TB Search */}
               <div className="mb-4">
                 <div className="relative">
                   <Input
-                    placeholder="Search terminology base..."
+                    placeholder={t('sidePanel.glossary.searchPlaceholder')}
                     className="pr-10"
                     value={tbSearchQuery}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTbSearchQuery(e.target.value)}
@@ -173,7 +173,7 @@ export function RightPanel({
               
               {selectedSegment?.source && !tbSearchQuery ? (
                 <div className="mb-4">
-                  <div className="text-xs font-semibold mb-1 text-muted-foreground">Source Text</div>
+                  <div className="text-xs font-semibold mb-1 text-muted-foreground">{t('glossaries.sourceText')}</div>
                   <div className="text-sm mb-2 bg-accent p-2 rounded">{selectedSegment.source}</div>
                 </div>
               ) : null}
@@ -202,7 +202,7 @@ export function RightPanel({
                             className="h-6 text-xs" 
                             onClick={() => handleUseTranslation(term.target)}
                           >
-                            Use Term
+                            {t('sidePanel.useTerm')}
                           </Button>
                         </div>
                       </div>
@@ -210,12 +210,12 @@ export function RightPanel({
                 </div>
               ) : selectedSegment?.source ? (
                 <div className="bg-accent rounded-md p-3 text-sm text-muted-foreground">
-                  {tbSearchQuery ? "No terms found for your search." : "No matching terms found in the glossary for this segment."}
+                  {tbSearchQuery ? t('sidePanel.glossary.noSearchResults') : t('sidePanel.glossary.noMatchingTerms')}
                 </div>
               ) : (
                 <div className="flex items-center justify-center py-8">
                   <div className="text-sm text-muted-foreground">
-                    {tbSearchQuery ? "No terms found for your search." : "Select a segment to see matching glossary terms."}
+                    {tbSearchQuery ? t('sidePanel.glossary.noSearchResults') : t('glossaries.selectSegment', 'Select a segment to see matching glossary terms.')}
                   </div>
                 </div>
               )}
@@ -223,7 +223,7 @@ export function RightPanel({
               <div className="mt-4 pt-3 border-t border-border">
                 <Button asChild variant="outline" size="sm" className="w-full">
                   <a href="/glossary" target="_blank" rel="noopener noreferrer">
-                    Manage Terminology Base
+                    {t('glossaries.manageEntries')}
                   </a>
                 </Button>
               </div>
@@ -232,10 +232,10 @@ export function RightPanel({
           
           {activeTab === "history" && (
             <div className="p-4">
-              <div className="text-sm font-medium mb-2">Revision History</div>
+              <div className="text-sm font-medium mb-2">{t('sidePanel.history.title')}</div>
               <div className="flex items-center justify-center py-8">
                 <div className="text-sm text-muted-foreground">
-                  No revision history available for this segment.
+                  {t('sidePanel.selectSegmentForHistory')}
                 </div>
               </div>
             </div>

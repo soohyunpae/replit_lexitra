@@ -27,7 +27,8 @@
     "next": "Next",
     "confirm": "Confirm",
     "language": "Language",
-    "optional": "Optional"
+    "optional": "Optional",
+    "showAll": "Show All"
   },
   "languages": {
     "english": "English",
@@ -219,7 +220,8 @@
     "list": "Glossary List",
     "goToEntries": "Go to Glossary Entries",
     "goToList": "Go to Glossary List",
-    "redirectingToEntries": "Redirecting to Glossary Entries..."
+    "redirectingToEntries": "Redirecting to Glossary Entries...",
+    "selectSegment": "Select a segment to see matching glossary terms."
   },
   "admin": {
     "title": "Admin",
@@ -355,7 +357,14 @@
     "importTM": "Import TM",
     "exportTM": "Export TM",
     "alignment": "Alignment",
-    "cleanup": "Cleanup"
+    "cleanup": "Cleanup",
+    "integration": {
+      "title": "GPT & TM Integration Info",
+      "description": "When using GPT translation, this segment will be paired with the following TM context:",
+      "exactMatch": "100% match from segments with similar patterns",
+      "fuzzyMatch": "Fuzzy matches with similarity > 70%",
+      "terminology": "Terminology from glossary will be prioritized"
+    }
   },
   "profile": {
     "title": "Profile",

@@ -27,7 +27,8 @@
     "next": "다음",
     "confirm": "확인",
     "language": "언어",
-    "optional": "선택 사항"
+    "optional": "선택 사항",
+    "showAll": "모두 보기"
   },
   "languages": {
     "english": "영어",
