@@ -225,6 +225,7 @@
     "deleteConfirmation": "이 용어를 삭제하시겠습니까?",
     "resourceDeleteConfirmation": "이 용어집 리소스를 삭제하시겠습니까? 이 리소스와 관련된 모든 용어도 함께 삭제됩니다.",
     "fileUploaded": "파일 업로드 완료",
+    "added": "추가됨",
     "fileUploadedSuccess": "용어집 파일이 성공적으로 업로드 및 처리되었습니다.",
     "uploadFailed": "업로드 실패",
     "failedToUploadFile": "용어집 파일 업로드에 실패했습니다. 파일 형식을 확인해 주세요.",
