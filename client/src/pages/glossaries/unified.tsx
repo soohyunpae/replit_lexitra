@@ -583,7 +583,7 @@ export default function UnifiedGlossaryPage() {
                 ) : (
                   <>
                     <Upload className="mr-2 h-4 w-4" />
-                    Upload Glossary File
+                    {t('glossaries.uploadGlossaryFile')}
                   </>
                 )}
               </Button>

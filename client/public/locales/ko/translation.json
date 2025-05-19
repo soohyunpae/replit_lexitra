@@ -235,6 +235,7 @@
     "fileUploadedSuccess": "용어집 파일이 성공적으로 업로드 및 처리되었습니다.",
     "uploadFailed": "업로드 실패",
     "failedToUploadFile": "용어집 파일 업로드에 실패했습니다. 파일 형식을 확인해 주세요.",
+    "uploadGlossaryFile": "용어집 파일 업로드",
     "searchAndManage": "용어집 용어 및 리소스 검색 및 관리",
     "defaultLanguages": "기본 언어",
     "domain": "도메인",
