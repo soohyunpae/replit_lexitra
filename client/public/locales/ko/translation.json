@@ -307,6 +307,7 @@
     "administrationTools": "관리 도구",
     "adminOnly": "관리자 전용",
     "manageTmAndGlossary": "TM 및 용어집 관리",
+    "settingsDesc": "시스템 설정 및 사용자 권한 관리",
     "openAIApiDesc": "OpenAI API 키는 GPT 기반 번역에 사용됩니다.",
     "getApiKey": "API 키 얻기",
     "enterApiKey": "API 키 입력",
