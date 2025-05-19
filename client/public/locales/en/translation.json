@@ -450,6 +450,11 @@
     "tmFileUploaded": "The translation memory file has been uploaded and processed",
     "saveSuccess": "Saved Successfully", 
     "saveFailed": "Save Failed",
+    "notesSavedSuccess": "Project notes have been saved successfully",
+    "notesFailedToSave": "Failed to save notes. Please try again",
+    "fileDeleted": "File Deleted",
+    "referenceFileRemoved": "The reference file has been removed successfully",
+    "referenceFileDeleteFailed": "Failed to delete reference file. Please try again",
     "deleteSuccess": "Deleted Successfully",
     "deleteFailed": "Delete Failed",
     "errorOccurred": "An error occurred"

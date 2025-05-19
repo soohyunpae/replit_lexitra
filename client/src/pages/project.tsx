@@ -170,8 +170,8 @@ export default function Project() {
     },
     onSuccess: () => {
       toast({
-        title: "Notes saved",
-        description: "Project notes have been saved successfully.",
+        title: "notifications.saveSuccess",
+        description: "notifications.notesSavedSuccess",
       });
       queryClient.invalidateQueries({
         queryKey: [`/api/projects/${projectId}`],
@@ -179,8 +179,8 @@ export default function Project() {
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to save notes. Please try again.",
+        title: "notifications.saveFailed",
+        description: "notifications.notesFailedToSave", 
         variant: "destructive",
       });
     },
@@ -197,8 +197,8 @@ export default function Project() {
     },
     onSuccess: () => {
       toast({
-        title: "Reference file deleted",
-        description: "The reference file has been removed successfully.",
+        title: "notifications.fileDeleted",
+        description: "notifications.referenceFileRemoved",
       });
 
       // 프로젝트 데이터 새로고침
@@ -208,8 +208,8 @@ export default function Project() {
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to delete reference file. Please try again.",
+        title: "notifications.deleteFailed",
+        description: "notifications.referenceFileDeleteFailed",
         variant: "destructive",
       });
     },
