@@ -31,6 +31,7 @@ interface Project {
 interface ReviewStats {
   totalAwaitingReview: number;
   totalCompleted: number;
+  availableProjects: number;
 }
 
 export default function Dashboard() {
@@ -44,7 +45,7 @@ export default function Dashboard() {
   });
 
   // 검토 통계 데이터 가져오기
-  const { data: reviewStats = { totalAwaitingReview: 0 } } = useQuery<ReviewStats>({
+  const { data: reviewStats = { totalAwaitingReview: 0, availableProjects: 0 } } = useQuery<ReviewStats>({
     queryKey: ['/api/projects/review-stats'],
     enabled: !!user,
   });
@@ -58,13 +59,20 @@ export default function Dashboard() {
   // 필요한 데이터 계산
   const activeProjects = projects.filter(p => p.status !== "Completed").length || 0;
   const segmentsAwaitingReview = reviewStats.totalAwaitingReview;
-  const glossaryTermsUsed = glossaryData.length;
+  const availableProjects = reviewStats.availableProjects || 0;
 
-  // 프로젝트 진행 중인 목록 (예시 데이터)
-  const inProgressProjects = projects.slice(0, 2).map((project: Project) => ({
-    ...project,
-    progress: Math.floor(Math.random() * 100) // 임시 진행률
-  })) || [];
+  // 진행 중인 프로젝트 목록 (실제 데이터)
+  const inProgressProjects = projects
+    .filter(p => p.status === "In Progress" || p.status === "Claimed")
+    .slice(0, 3)
+    .map((project: Project) => {
+      // 실제 진행률 계산 로직 (나중에 API에서 제공될 수 있음)
+      // 현재는 기본 진행률은 0으로 설정, 있다면 그대로 사용
+      return {
+        ...project,
+        progress: project.progress || 0
+      };
+    }) || [];
 
   // 최근 활동 (예시 데이터)
   const recentActivities = [
@@ -130,7 +138,7 @@ export default function Dashboard() {
           
           <Card className="bg-white">
             <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold mb-1">🔍 {glossaryTermsUsed}</div>
+              <div className="text-2xl font-bold mb-1">🔍 {availableProjects}</div>
               <div className="text-sm text-muted-foreground">{t('dashboard.projectsAvailableToClaim')}</div>
             </CardContent>
           </Card>

@@ -1361,10 +1361,14 @@ app.get(`${apiPrefix}/projects/review-stats`, verifyToken, async (req, res) => {
 
     // "Edited" 상태인 세그먼트 카운트
     const awaitingReview = segments.filter(seg => seg.status === "Edited").length;
+    
+    // 참여 가능한 프로젝트 수 계산 (Unclaimed 상태)
+    const availableProjects = projects.filter(p => p.status === "Unclaimed").length;
 
     return res.json({
       totalAwaitingReview: awaitingReview,
-      totalCompleted: segments.filter(seg => seg.status === "Reviewed").length
+      totalCompleted: segments.filter(seg => seg.status === "Reviewed").length,
+      availableProjects: availableProjects
     });
   } catch (error) {
     return handleApiError(res, error);
