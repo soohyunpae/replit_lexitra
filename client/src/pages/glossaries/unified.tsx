@@ -90,17 +90,17 @@ export default function UnifiedGlossaryPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const isAdmin = user?.role === "admin";
-  
+
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>("all_source_languages");
   const [targetLanguageFilter, setTargetLanguageFilter] = useState<string>("all_target_languages");
   const [resourceFilter, setResourceFilter] = useState<number | undefined>(undefined);
-  
+
   // Dialog states
   const [addTermDialogOpen, setAddTermDialogOpen] = useState(false);
   const [addResourceDialogOpen, setAddResourceDialogOpen] = useState(false);
-  
+
   // Glossary term form setup
   const termForm = useForm<GlossaryFormValues>({
     resolver: zodResolver(glossaryFormSchema),
@@ -112,7 +112,7 @@ export default function UnifiedGlossaryPage() {
       resourceId: undefined,
     },
   });
-  
+
   // Glossary resource form setup
   const resourceForm = useForm<GlossaryResourceFormValues>({
     resolver: zodResolver(glossaryResourceFormSchema),
@@ -209,7 +209,7 @@ export default function UnifiedGlossaryPage() {
         targetLanguageFilter && targetLanguageFilter !== "all_target_languages"
           ? term.targetLanguage === targetLanguageFilter
           : true;
-          
+
       const matchesResource = 
         resourceFilter !== undefined
           ? term.resourceId === resourceFilter
@@ -331,11 +331,11 @@ export default function UnifiedGlossaryPage() {
       deleteResourceMutation.mutate(id);
     }
   }
-  
+
   // Handle file upload for glossary
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
-  
+
   const uploadFileMutation = useMutation({
     mutationFn: async (formData: FormData) => {
       setIsUploading(true);
@@ -347,18 +347,18 @@ export default function UnifiedGlossaryPage() {
         if (!formData.has('targetLanguage')) {
           formData.append('targetLanguage', 'en');
         }
-        
+
         // Use the admin route for glossary file upload
         const response = await apiRequest("POST", "/api/admin/tb/upload", formData, {
           // Let the browser set the content type with proper boundary for FormData
         });
-        
+
         // Handle any errors that might not throw exceptions
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || 'Failed to upload glossary file');
         }
-        
+
         return await response.json();
       } catch (err: any) {
         console.error("File upload error:", err);
@@ -374,7 +374,7 @@ export default function UnifiedGlossaryPage() {
         description: t('glossaries.fileUploadedSuccess', "The glossary file has been uploaded and processed successfully.") + ` ${data.message || ''}`,
       });
       setIsUploading(false);
-      
+
       // Reset the file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -387,7 +387,7 @@ export default function UnifiedGlossaryPage() {
         variant: "destructive",
       });
       setIsUploading(false);
-      
+
       // Reset the file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -593,7 +593,7 @@ export default function UnifiedGlossaryPage() {
         <p className="text-muted-foreground mb-6">
           {t('glossaries.searchAndManage', 'Search and manage glossary terms and resources')}
         </p>
-        
+
         {/* Glossary List Section - Now moved to the top */}
         <div className="bg-card border rounded-lg p-6 mb-8">
           <div className="flex justify-between items-center mb-4">
@@ -612,7 +612,7 @@ export default function UnifiedGlossaryPage() {
                   <TableHead>{t('glossaries.defaultLanguages', 'Default Languages')}</TableHead>
                   <TableHead>{t('glossaries.domain', 'Domain')}</TableHead>
                   <TableHead>{t('glossaries.terms', 'Terms')}</TableHead>
-                  {isAdmin && <TableHead className="text-right">{t('common.actions', 'Actions')}</TableHead>}
+                  {isAdmin && <TableHead className="text-right">{t('common.actions')}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -681,7 +681,7 @@ export default function UnifiedGlossaryPage() {
             <div className="flex items-center gap-2">
               <Search className="h-5 w-5" />
               <h3 className="text-xl font-semibold">Search Terms</h3>
-              
+
               {resourceFilter !== undefined && (
                 <Badge 
                   variant="secondary" 
