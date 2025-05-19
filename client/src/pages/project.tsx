@@ -289,8 +289,8 @@ export default function Project() {
     onError: (error) => {
       console.error("File upload error:", error);
       toast({
-        title: "Error",
-        description: "Failed to upload files. Please try again.",
+        title: "notifications.uploadFailed",
+        description: "notifications.fileUploadError",
         variant: "destructive",
       });
     },

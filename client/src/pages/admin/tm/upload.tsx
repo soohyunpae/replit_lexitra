@@ -63,8 +63,8 @@ export default function TMUpload({ embedded = false }: TMUploadProps) {
     },
     onSuccess: () => {
       toast({
-        title: "Upload successful",
-        description: "The translation memory file has been uploaded and processed.",
+        title: "notifications.uploadSuccess",
+        description: "notifications.tmFileUploaded",
       });
       form.reset();
       setUploadProgress(null);
@@ -72,7 +72,7 @@ export default function TMUpload({ embedded = false }: TMUploadProps) {
     },
     onError: (error: Error) => {
       toast({
-        title: "Upload failed",
+        title: "notifications.uploadFailed",
         description: error.message,
         variant: "destructive",
       });
