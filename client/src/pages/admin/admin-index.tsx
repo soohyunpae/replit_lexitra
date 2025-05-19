@@ -220,7 +220,7 @@ export default function AdminConsole() {
                         className="ml-2" 
                         onClick={() => setApiKeyVisible(!apiKeyVisible)}
                       >
-                        {apiKeyVisible ? t('common.hide') : t('common.show')}
+                        {apiKeyVisible ? t('admin.hide') : t('admin.show')}
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">

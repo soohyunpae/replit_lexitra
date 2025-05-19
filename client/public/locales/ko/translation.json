@@ -29,7 +29,8 @@
     "confirm": "확인",
     "language": "언어",
     "optional": "선택 사항",
-    "showAll": "모두 보기"
+    "showAll": "모두 보기",
+    "show": "표시"
   },
   "languages": {
     "english": "영어",
