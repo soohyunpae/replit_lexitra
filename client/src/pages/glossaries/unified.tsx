@@ -517,7 +517,7 @@ export default function UnifiedGlossaryPage() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="none">No glossary</SelectItem>
+                                <SelectItem value="none">{t('glossaries.noGlossary', 'No glossary')}</SelectItem>
                                 {glossaryResources.map((resource: any) => (
                                   <SelectItem
                                     key={resource.id}
@@ -538,9 +538,9 @@ export default function UnifiedGlossaryPage() {
                         name="source"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Source Term</FormLabel>
+                            <FormLabel>{t('glossaries.sourceText')}</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter source term" {...field} />
+                              <Input placeholder={t('glossaries.enterSourceTerm', 'Enter source term')} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -552,9 +552,9 @@ export default function UnifiedGlossaryPage() {
                         name="target"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Target Term</FormLabel>
+                            <FormLabel>{t('glossaries.targetText')}</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter target term" {...field} />
+                              <Input placeholder={t('glossaries.enterTargetTerm', 'Enter target term')} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -699,7 +699,7 @@ export default function UnifiedGlossaryPage() {
             <div className="relative w-full">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search glossary terms..."
+                placeholder={t('glossaries.searchTermsPlaceholder', 'Search glossary terms...')}
                 className="pl-8"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
