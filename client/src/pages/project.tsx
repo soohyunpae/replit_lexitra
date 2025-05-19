@@ -1015,7 +1015,7 @@ export default function Project() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
-                  <span>📊 Translation Summary</span>
+                  <span>📊 {t('projects.translationSummary')}</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-sm space-y-4">
