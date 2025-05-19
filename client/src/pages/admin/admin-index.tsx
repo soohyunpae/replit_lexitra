@@ -83,13 +83,13 @@ export default function AdminConsole() {
   const handleSaveApiKey = () => {
     // In a real app, you would save this to a secure storage
     console.log("Saving API key:", apiKey);
-    alert("API key saved successfully!");
+    alert(t('admin.apiKeySaved', 'API key saved successfully!'));
   };
 
   // Handle language preferences save
   const handleSaveLanguagePreferences = () => {
     console.log("Saving language preferences:", { defaultSourceLang, defaultTargetLang });
-    alert("Language preferences saved successfully!");
+    alert(t('admin.languagePreferencesSaved', '언어 설정이 성공적으로 저장되었습니다!'));
   };
 
   // Handle role change
@@ -113,7 +113,7 @@ export default function AdminConsole() {
   // Check if user is admin
   if (!user || user.role !== "admin") {
     return (
-      <MainLayout title="Access Denied">
+      <MainLayout title={t('admin.accessDenied')}>
         <div className="flex-1 flex items-center justify-center p-6">
           <Card className="max-w-md w-full">
             <CardHeader>
@@ -121,15 +121,15 @@ export default function AdminConsole() {
                 <Lock className="h-6 w-6 text-destructive" />
               </div>
               <CardTitle className="text-center">
-                Admin Access Required
+                {t('admin.accessRequired')}
               </CardTitle>
               <CardDescription className="text-center">
-                You don't have permission to access the admin dashboard.
+                {t('admin.noPermission')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button onClick={() => navigate("/")} className="w-full">
-                Go to Home
+                {t('admin.goToHome')}
               </Button>
             </CardContent>
           </Card>
