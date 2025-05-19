@@ -220,7 +220,8 @@
     "list": "용어집 목록",
     "goToEntries": "용어집 항목으로 이동",
     "goToList": "용어집 목록으로 이동",
-    "redirectingToEntries": "용어집 항목으로 리디렉션 중..."
+    "redirectingToEntries": "용어집 항목으로 리디렉션 중...",
+    "selectSegment": "세그먼트를 선택하여 일치하는 용어집 항목을 확인하세요."
   },
   "admin": {
     "title": "관리자 콘솔",
@@ -477,7 +478,14 @@
     "importTM": "TM 가져오기",
     "exportTM": "TM 내보내기",
     "alignment": "정렬",
-    "cleanup": "정리"
+    "cleanup": "정리",
+    "integration": {
+      "title": "GPT 및 TM 통합 정보",
+      "description": "GPT 번역을 사용할 때 이 세그먼트는 다음 TM 컨텍스트와 함께 제공됩니다:",
+      "exactMatch": "유사한 패턴을 가진 세그먼트에서 100% 일치",
+      "fuzzyMatch": "70% 이상 유사도를 가진 퍼지 매치",
+      "terminology": "용어집의 용어가 우선시됩니다"
+    }
   },
   "profile": {
     "title": "프로필",
