@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Languages } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type TranslationUnit } from "@/types";
+import { useTranslation } from "react-i18next";
 
 interface SegmentItemProps {
   segment: TranslationUnit;
@@ -19,8 +20,9 @@ export function SegmentItem({
   onClick,
   onTranslateWithGPT
 }: SegmentItemProps) {
+  const { t } = useTranslation();
   const { source, target, status } = segment;
-  
+
   // Helper function to get the badge class
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -36,7 +38,7 @@ export function SegmentItem({
         return 'bg-gray-200/20 text-gray-700 dark:bg-gray-200/10 dark:text-gray-400';
     }
   };
-  
+
   // Fixed height for segments to match source and target
   // This ensures both segment versions have the same height
   const minSegmentHeight = 'min-h-[120px] h-full';
@@ -58,7 +60,7 @@ export function SegmentItem({
       </div>
     );
   }
-  
+
   // For target panel
   return (
     <div 
@@ -96,7 +98,7 @@ export function SegmentItem({
           </Button>
         </div>
       </div>
-      
+
       {target ? (
         <div 
           className="font-mono text-sm leading-relaxed bg-accent rounded-md p-3 cursor-pointer flex-1 flex items-start"
