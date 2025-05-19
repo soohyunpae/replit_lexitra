@@ -747,38 +747,36 @@ export function SidePanel({
 
         <TabsContent value="comments" className="flex-1 overflow-y-auto">
           <div className="p-4 pt-2">
-            <div className="text-sm font-medium mb-2">Comments</div>
+            <div className="text-sm font-medium mb-2">{t('sidePanel.commentsTitle')}</div>
 
             {/* Removed Active Segment section as requested */}
 
             <div className="space-y-4">
-              {/* 댓글 목록 표시 */}
-              {selectedSegment?.comments && selectedSegment.comments.length > 0 ? (
+              {/* 댓글 표시 */}
+              {selectedSegment?.comment ? (
                 <div className="space-y-3">
-                  {selectedSegment.comments.map((comment, index) => (
-                    <div key={index} className="bg-accent/50 rounded-md p-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-xs font-medium">{comment.author || 'User'}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(comment.createdAt).toLocaleString()}
-                        </span>
+                  <div className="bg-accent/50 rounded-md p-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-xs font-medium">{t('sidePanel.comments.user')}</span>
                       </div>
-                      <p className="text-sm mt-2">{comment.text}</p>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date().toLocaleString()}
+                      </span>
                     </div>
-                  ))}
+                    <p className="text-sm mt-2">{selectedSegment.comment}</p>
+                  </div>
                 </div>
               ) : (
                 <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center mb-4">
-                  No comments available for this segment. Add a comment below.
+                  {t('sidePanel.comments.noComments')}
                 </div>
               )}
 
               <div className="space-y-2">
                 <Textarea
-                  placeholder="Add a comment about this segment..."
+                  placeholder={t('sidePanel.comments.addCommentPlaceholder')}
                   className="min-h-[100px] text-sm"
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
