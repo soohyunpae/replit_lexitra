@@ -329,7 +329,7 @@ export default function UnifiedTranslationMemoryPage() {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Database className="h-5 w-5" />
-            <h2 className="text-3xl font-bold tracking-tight">Translation Memory</h2>
+            <h2 className="text-3xl font-bold tracking-tight">{t('tm.title')}</h2>
           </div>
           {isAdmin && (
             <div className="flex gap-2">
