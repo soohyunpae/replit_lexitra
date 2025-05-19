@@ -178,7 +178,9 @@
     "notesPlaceholder": "번역 지침, 특별 요구 사항, 용어 지침 등을 작성하세요...",
     "clickToAddNotes": "특별 요구 사항, 용어 지침 또는 기타 노트를 추가하세요. 클릭하여 편집하세요.",
     "noNotesAvailable": "이용 가능한 노트가 없습니다.",
-    "downloadFile": "파일 다운로드"
+    "downloadFile": "파일 다운로드",
+    "deleteFile": "파일 삭제",
+    "savingNotes": "노트 저장 중..."
   },
   "translation": {
     "editor": "번역 편집기",
@@ -302,6 +304,17 @@
     "enterSourceTerm": "원본 용어 입력",
     "enterTargetTerm": "대상 용어 입력",
     "searchTermsPlaceholder": "용어집 용어 검색..."
+  },
+  "notifications": {
+    "downloadFailed": "다운로드 실패",
+    "fileDownloadError": "파일을 다운로드하는 중 오류가 발생했습니다",
+    "uploadFailed": "업로드 실패",
+    "fileUploadError": "파일을 업로드하는 중 오류가 발생했습니다",
+    "saveSuccess": "저장 성공", 
+    "saveFailed": "저장 실패",
+    "deleteSuccess": "삭제 성공",
+    "deleteFailed": "삭제 실패",
+    "errorOccurred": "오류가 발생했습니다"
   },
   "admin": {
     "title": "관리자 콘솔",

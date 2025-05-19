@@ -127,7 +127,9 @@
     "notesPlaceholder": "Document translation guidelines, special requirements, terminology instructions...",
     "clickToAddNotes": "Add special requirements, terminology instructions, or other notes. Click to edit.",
     "noNotesAvailable": "No notes available.",
-    "downloadFile": "Download file"
+    "downloadFile": "Download file",
+    "deleteFile": "Delete file",
+    "savingNotes": "Saving notes..."
   },
   "translation": {
     "editor": "Translation Editor",
@@ -438,6 +440,17 @@
     "systemTheme": "System",
     "languageSettings": "Language Settings",
     "interfaceLanguage": "Choose your preferred interface language"
+  },
+  "notifications": {
+    "downloadFailed": "Download Failed",
+    "fileDownloadError": "An error occurred while downloading the file",
+    "uploadFailed": "Upload Failed",
+    "fileUploadError": "An error occurred while uploading the file",
+    "saveSuccess": "Saved Successfully", 
+    "saveFailed": "Save Failed",
+    "deleteSuccess": "Deleted Successfully",
+    "deleteFailed": "Delete Failed",
+    "errorOccurred": "An error occurred"
   },
   "admin": {
     "title": "Admin Console",

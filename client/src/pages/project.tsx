@@ -1281,9 +1281,8 @@ export default function Project() {
                               ).catch((err) => {
                                 console.error("Download error:", err);
                                 toast({
-                                  title: "다운로드 실패",
-                                  description:
-                                    "파일을 다운로드하는 중 오류가 발생했습니다",
+                                  title: t('notifications.downloadFailed'),
+                                  description: t('notifications.fileDownloadError'),
                                   variant: "destructive",
                                 });
                               });
@@ -1300,7 +1299,7 @@ export default function Project() {
                               className="h-7 w-7"
                               onClick={() => deleteReferenceFile.mutate(index)}
                               disabled={deleteReferenceFile.isPending}
-                              title="Delete file"
+                              title={t('projects.deleteFile')}
                             >
                               <X className="h-3 w-3" />
                             </Button>
@@ -1499,7 +1498,7 @@ export default function Project() {
                 {saveNotes.isPending && (
                   <div className="mt-2 text-xs text-muted-foreground flex items-center">
                     <div className="animate-spin mr-1 h-3 w-3 border-t-2 border-primary rounded-full"></div>
-                    Saving notes...
+                    {t('projects.savingNotes')}
                   </div>
                 )}
               </CardContent>
