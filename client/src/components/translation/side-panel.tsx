@@ -273,7 +273,7 @@ function StatusInfoPanel({
               <MessageSquare className="h-4 w-4 text-blue-500" />
             </div>
             <div className="flex-1">
-              <div className="text-xs text-muted-foreground mb-1">Comment</div>
+              <div className="text-xs text-muted-foreground mb-1">{t('sidePanel.comment')}</div>
               <div className="text-sm bg-muted/30 p-2 rounded">
                 {segment.comment}
               </div>
@@ -286,11 +286,11 @@ function StatusInfoPanel({
           <Separator className="mb-3" />
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div>
-              <div className="text-muted-foreground mb-1">Created</div>
+              <div className="text-muted-foreground mb-1">{t('sidePanel.created')}</div>
               <div>{new Date(segment.createdAt).toLocaleDateString()}</div>
             </div>
             <div>
-              <div className="text-muted-foreground mb-1">Updated</div>
+              <div className="text-muted-foreground mb-1">{t('sidePanel.updated')}</div>
               <div>{new Date(segment.updatedAt).toLocaleDateString()}</div>
             </div>
           </div>
@@ -320,8 +320,8 @@ function GlossaryTerm({
 
       // 성공 토스트 메시지 표시
       toast({
-        title: "용어 적용됨",
-        description: "선택한 용어가 세그먼트에 적용되었습니다.",
+        title: t('sidePanel.glossary.termApplied'),
+        description: t('sidePanel.glossary.termAppliedDescription'),
         variant: "default",
       });
     } catch (error) {
