@@ -117,7 +117,12 @@
     "noFiles": "파일 없음",
     "projectCreated": "프로젝트가 성공적으로 생성되었습니다",
     "projectUpdated": "프로젝트가 성공적으로 업데이트되었습니다",
-    "projectDeleted": "프로젝트가 성공적으로 삭제되었습니다"
+    "projectDeleted": "프로젝트가 성공적으로 삭제되었습니다",
+    "projectId": "프로젝트 ID",
+    "languagePair": "언어 쌍",
+    "wordCount": "단어 수",
+    "created": "생성일",
+    "lastUpdated": "최종 수정일"
   },
   "translation": {
     "editor": "번역 편집기",

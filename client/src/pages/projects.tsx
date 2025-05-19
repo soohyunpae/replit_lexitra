@@ -1575,28 +1575,28 @@ export default function ProjectsPage() {
                       </TableHead>
                     )}
                     <TableHead className="w-[80px]">
-                      {renderSortButton("id", "Project ID")}
+                      {renderSortButton("id", t('projects.projectId'))}
                     </TableHead>
                     <TableHead className="w-[220px]">
-                      {renderSortButton("name", "Project Name")}
+                      {renderSortButton("name", t('projects.projectName'))}
                     </TableHead>
-                    <TableHead className="w-[120px]">Language Pair</TableHead>
-                    <TableHead className="w-[80px]">Files</TableHead>
-                    <TableHead className="w-[100px]">Word Count</TableHead>
+                    <TableHead className="w-[120px]">{t('projects.languagePair')}</TableHead>
+                    <TableHead className="w-[80px]">{t('projects.files')}</TableHead>
+                    <TableHead className="w-[100px]">{t('projects.wordCount')}</TableHead>
                     <TableHead className="w-[120px]">
-                      {renderSortButton("status", "Status")}
+                      {renderSortButton("status", t('projects.status'))}
                     </TableHead>
                     <TableHead className="w-[220px]">
-                      {renderSortButton("progress", "Progress")}
+                      {renderSortButton("progress", t('projects.progress'))}
                     </TableHead>
                     <TableHead className="w-[120px]">
-                      {renderSortButton("createdAt", "Created")}
+                      {renderSortButton("createdAt", t('projects.created'))}
                     </TableHead>
                     <TableHead className="w-[120px]">
-                      {renderSortButton("updatedAt", "Last Updated")}
+                      {renderSortButton("updatedAt", t('projects.lastUpdated'))}
                     </TableHead>
                     <TableHead className="w-[120px]">
-                      {renderSortButton("deadline", "Deadline")}
+                      {renderSortButton("deadline", t('projects.deadline'))}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
