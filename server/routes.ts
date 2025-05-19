@@ -1407,6 +1407,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // 프로젝트 추가
         const [project] = await db
           .insert(schema.projects)
+
+// Get all project stats
+app.get(`${apiPrefix}/projects/stats/all`, verifyToken, async (req, res) => {
+  try {
+    const projects = await db.query.projects.findMany({
+      with: {
+        files: {
+          with: {
+            segments: true
+          }
+        }
+      }
+    });
+
+    const stats: {[key: string]: any} = {};
+
+    for (const project of projects) {
+      const segments = project.files.flatMap(file => file.segments);
+      
+      // Count segments by status
+      const statusCounts = {
+        Reviewed: 0,
+        "100%": 0,
+        Fuzzy: 0,
+        MT: 0,
+        Edited: 0,
+        Rejected: 0
+      };
+
+      segments.forEach(segment => {
+        if (segment.status in statusCounts) {
+          statusCounts[segment.status as keyof typeof statusCounts]++;
+        }
+      });
+
+      stats[project.id] = {
+        totalSegments: segments.length,
+        statusCounts
+      };
+    }
+
+    return res.json(stats);
+  } catch (error) {
+    return handleApiError(res, error);
+  }
+});
+
           .values(projectData)
           .returning();
 

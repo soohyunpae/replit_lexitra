@@ -37,22 +37,24 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { t } = useTranslation();
 
-  // 활성 프로젝트 수
+  // 프로젝트 데이터 쿼리
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ['/api/projects'],
     enabled: !!user,
   });
 
-  // 용어집 사용 현황
-  const { data: glossaryData = [] } = useQuery<any[]>({
-    queryKey: ['/api/glossary/all'],
+  // 프로젝트 통계 데이터 쿼리
+  const { data: allProjectStats = {} } = useQuery<{[key: string]: any}>({
+    queryKey: ['/api/projects/stats/all'],
     enabled: !!user,
   });
 
   // 필요한 데이터 계산
-  const activeProjects = projects.length || 0;
-  const segmentsAwaitingReview = 18; // 기본값 - API가 구현되면 실제 데이터로 대체
-  const glossaryTermsUsed = glossaryData.length ? Math.min(glossaryData.length, 4) : 4; // 기본값
+  const activeProjects = projects.filter(p => p.status === 'Claimed').length;
+  const segmentsAwaitingReview = Object.values(allProjectStats).reduce((total, stats: any) => {
+    return total + (stats.statusCounts?.MT || 0);
+  }, 0);
+  const unclaimedProjects = projects.filter(p => p.status === 'Unclaimed').length;
 
   // 프로젝트 진행 중인 목록 (예시 데이터)
   const inProgressProjects = projects.slice(0, 2).map((project: Project) => ({
@@ -118,13 +120,13 @@ export default function Dashboard() {
           <Card className="bg-white">
             <CardContent className="p-6 text-center">
               <div className="text-2xl font-bold mb-1">📝 {segmentsAwaitingReview}</div>
-              <div className="text-sm text-muted-foreground">{t('dashboard.segmentsAwaitingReview')}</div>
+              <div className="text-sm text-muted-foreground">{t('dashboard.segmentsAwaitingReview')}</div>  
             </CardContent>
           </Card>
           
           <Card className="bg-white">
             <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold mb-1">🔍 {glossaryTermsUsed}</div>
+              <div className="text-2xl font-bold mb-1">🔍 {unclaimedProjects}</div>
               <div className="text-sm text-muted-foreground">{t('dashboard.projectsAvailableToClaim')}</div>
             </CardContent>
           </Card>
