@@ -162,7 +162,12 @@
     "defaultTM": "기본 TM",
     "patentsTM": "특허 TM",
     "technicalTM": "기술 TM",
-    "saveProjectInfo": "프로젝트 정보 저장"
+    "saveProjectInfo": "프로젝트 정보 저장",
+    "claimProjectFirst": "먼저 프로젝트 할당받기",
+    "claimedByAnotherUser": "다른 사용자가 할당받음",
+    "openEditor": "편집기 열기",
+    "numberOfFiles": "파일 수",
+    "fileCount": "파일"
   },
   "translation": {
     "editor": "번역 편집기",

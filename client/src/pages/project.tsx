@@ -964,9 +964,9 @@ export default function Project() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground"># of Files:</div>
+                    <div className="text-muted-foreground">{t('projects.numberOfFiles')}:</div>
                     <div className="font-medium">
-                      <span>{workFiles?.length || 0} file(s)</span>
+                      <span>{workFiles?.length || 0} {t('projects.fileCount')}</span>
                     </div>
                   </div>
                 </div>
@@ -1186,7 +1186,7 @@ export default function Project() {
                               <span>
                                 {(file as any).wordCount ||
                                   getFileWordCount(file.id)}{" "}
-                                words
+                                {t('projects.words')}
                               </span>
                             </div>
                           </div>
@@ -1212,11 +1212,11 @@ export default function Project() {
                               }
                             >
                               {project.status === "Unclaimed"
-                                ? "Claim Project First"
+                                ? t('projects.claimProjectFirst')
                                 : project.status === "Claimed" &&
                                     project.claimedBy !== user?.id
-                                  ? "Claimed by Another User"
-                                  : "Open Editor"}
+                                  ? t('projects.claimedByAnotherUser')
+                                  : t('projects.openEditor')}
                             </Button>
                           </div>
                         </div>
