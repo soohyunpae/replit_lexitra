@@ -666,10 +666,10 @@ export function SidePanel({
             ) : (
               <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground">
                 {isSearching
-                  ? "Searching translation memory..."
+                  ? t('sidePanel.tm.searching')
                   : tmSearchQuery
-                    ? "No matches found for your search."
-                    : "No TM matches found for this segment."}
+                    ? t('sidePanel.tm.noSearchResults')
+                    : t('sidePanel.tm.noMatches')}
               </div>
             )}
           </div>
@@ -677,12 +677,12 @@ export function SidePanel({
 
         <TabsContent value="tb" className="flex-1 overflow-y-auto">
           <div className="p-4 pt-2">
-            <div className="text-sm font-medium mb-2">Terminology Base</div>
+            <div className="text-sm font-medium mb-2">{t('sidePanel.glossary.title')}</div>
 
             <div className="mb-4">
               <div className="relative">
                 <Input
-                  placeholder="Search terminology..."
+                  placeholder={t('sidePanel.glossary.searchPlaceholder')}
                   className="pr-10"
                   value={tbSearchQuery}
                   onChange={(e) => setTbSearchQuery(e.target.value)}
@@ -723,8 +723,8 @@ export function SidePanel({
               ) : (
                 <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground">
                   {isSearching
-                    ? "Searching terminology..."
-                    : "No terms found for your search."}
+                    ? t('sidePanel.glossary.searching')
+                    : t('sidePanel.glossary.noSearchResults')}
                 </div>
               )
             ) : glossaryTerms.length > 0 ? (
@@ -739,7 +739,7 @@ export function SidePanel({
               </div>
             ) : (
               <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground">
-                No matching terms found in the glossary for this segment.
+                {t('sidePanel.glossary.noMatchingTerms')}
               </div>
             )}
           </div>
