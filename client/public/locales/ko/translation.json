@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "렉시트라",
+    "appName": "Lexitra",
     "home": "홈",
     "projects": "프로젝트",
     "glossaries": "용어집",
@@ -241,7 +241,7 @@
   },
   "admin": {
     "title": "관리자 콘솔",
-    "console": "관리자 콘솔", 
+    "console": "관리자 콘솔",
     "apiKeys": "API 키",
     "users": "사용자",
     "projects": "프로젝트",
