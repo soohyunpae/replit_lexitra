@@ -10,7 +10,6 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { LanguageProvider } from "@/hooks/use-language";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import NotFound from "@/pages/not-found";
-import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
 import LandingPage from "@/pages/landing";
 import Projects from "@/pages/projects";
