@@ -369,6 +369,7 @@
     "failedToAddCommentDesc": "댓글 추가 중 오류가 발생했습니다. 다시 시도해주세요.",
     "addComment": "댓글 추가",
     "comments": "댓글",
+    "commentsTitle": "댓글",
     "glossary": "용어집",
     "statusDescriptions": {
       "reviewed": "최종 승인 버전",
@@ -377,6 +378,41 @@
       "exactMatch": "TM에서 정확히 일치",
       "fuzzyMatch": "TM에서 부분 일치",
       "machineTranslated": "기계 번역됨"
+    },
+    "comments": {
+      "user": "사용자",
+      "adding": "추가 중...",
+      "addComment": "댓글 추가",
+      "noComments": "이 세그먼트에 대한 댓글이 없습니다. 아래에 댓글을 추가하세요.",
+      "addCommentPlaceholder": "이 세그먼트에 대한 댓글을 추가하세요...",
+      "tip": "팁",
+      "markdownTip": "댓글에 간단한 마크다운을 사용할 수 있습니다: **굵게**, *기울임체*, `코드`, • 글머리 기호."
+    },
+    "tm": {
+      "searching": "번역 메모리 검색 중...",
+      "noSearchResults": "검색 결과가 없습니다.",
+      "noMatches": "이 세그먼트에 대한 TM 일치 항목이 없습니다."
+    },
+    "glossary": {
+      "title": "용어 데이터베이스",
+      "searchPlaceholder": "용어 검색...",
+      "searching": "용어 검색 중...",
+      "noSearchResults": "검색 결과에 해당하는 용어가 없습니다.",
+      "noMatchingTerms": "이 세그먼트에 대해 용어집에서 일치하는 용어를 찾을 수 없습니다.",
+      "termApplied": "용어 적용됨",
+      "termAppliedDescription": "선택한 용어가 세그먼트에 적용되었습니다.",
+      "termApplyFailed": "용어 적용 실패",
+      "termApplyFailedDescription": "용어 적용 중 오류가 발생했습니다. 다시 시도해주세요."
+    },
+    "history": {
+      "title": "수정 기록",
+      "currentVersion": "현재 버전",
+      "previousVersion": "이전 버전",
+      "lastModified": "마지막 수정일",
+      "noTranslation": "(번역 없음)"
+    },
+    "status": {
+      "draft": "초안"
     }
   },
   "tm": {
