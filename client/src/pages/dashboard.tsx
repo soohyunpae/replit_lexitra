@@ -37,22 +37,28 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { t } = useTranslation();
 
-  // 활성 프로젝트 수
+  // 프로젝트 데이터 가져오기
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ['/api/projects'],
     enabled: !!user,
   });
 
-  // 용어집 사용 현황
+  // 검토 통계 데이터 가져오기
+  const { data: reviewStats = { totalAwaitingReview: 0 } } = useQuery<ReviewStats>({
+    queryKey: ['/api/projects/review-stats'],
+    enabled: !!user,
+  });
+
+  // 용어집 데이터 가져오기
   const { data: glossaryData = [] } = useQuery<any[]>({
     queryKey: ['/api/glossary/all'],
     enabled: !!user,
   });
 
   // 필요한 데이터 계산
-  const activeProjects = projects.length || 0;
-  const segmentsAwaitingReview = 18; // 기본값 - API가 구현되면 실제 데이터로 대체
-  const glossaryTermsUsed = glossaryData.length ? Math.min(glossaryData.length, 4) : 4; // 기본값
+  const activeProjects = projects.filter(p => p.status !== "Completed").length || 0;
+  const segmentsAwaitingReview = reviewStats.totalAwaitingReview;
+  const glossaryTermsUsed = glossaryData.length;
 
   // 프로젝트 진행 중인 목록 (예시 데이터)
   const inProgressProjects = projects.slice(0, 2).map((project: Project) => ({

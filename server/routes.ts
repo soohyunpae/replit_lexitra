@@ -1339,7 +1339,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Projects API
-  app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
+  // 프로젝트 검토 통계 API
+app.get(`${apiPrefix}/projects/review-stats`, verifyToken, async (req, res) => {
+  try {
+    // 모든 프로젝트의 파일 ID 가져오기
+    const projects = await db.query.projects.findMany({
+      with: {
+        files: true,
+      },
+    });
+
+    // 모든 파일 ID 추출
+    const fileIds = projects.flatMap(project => 
+      project.files.map(file => file.id)
+    );
+
+    // 검토 대기 중인 세그먼트 수 계산
+    const segments = await db.query.translationUnits.findMany({
+      where: inArray(schema.translationUnits.fileId, fileIds),
+    });
+
+    // "Edited" 상태인 세그먼트 카운트
+    const awaitingReview = segments.filter(seg => seg.status === "Edited").length;
+
+    return res.json({
+      totalAwaitingReview: awaitingReview,
+      totalCompleted: segments.filter(seg => seg.status === "Reviewed").length
+    });
+  } catch (error) {
+    return handleApiError(res, error);
+  }
+});
+
+app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
     try {
       console.log("[PROJECTS API]", {
         tokenAuthenticated: !!req.user,
