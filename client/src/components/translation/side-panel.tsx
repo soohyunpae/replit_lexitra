@@ -366,10 +366,10 @@ function GlossaryTerm({
           {isApplying ? (
             <>
               <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
-              적용 중...
+              {t('sidePanel.applying')}
             </>
           ) : (
-            "Use Term"
+            t('sidePanel.glossary.useTerm')
           )}
         </Button>
       </div>
