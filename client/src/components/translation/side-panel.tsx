@@ -580,7 +580,7 @@ export function SidePanel({
               className="flex items-center justify-center"
             >
               <Database className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">TM</span>
+              <span className="hidden sm:inline">{t('common.tm')}</span>
             </TabsTrigger>
 
             <TabsTrigger
@@ -588,7 +588,7 @@ export function SidePanel({
               className="flex items-center justify-center"
             >
               <Lightbulb className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">Terms</span>
+              <span className="hidden sm:inline">{t('common.glossaries')}</span>
             </TabsTrigger>
 
             <TabsTrigger
@@ -596,7 +596,7 @@ export function SidePanel({
               className="flex items-center justify-center"
             >
               <MessageSquare className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">Comments</span>
+              <span className="hidden sm:inline">{t('sidePanel.commentsTitle')}</span>
             </TabsTrigger>
 
             <TabsTrigger
@@ -604,7 +604,7 @@ export function SidePanel({
               className="flex items-center justify-center"
             >
               <History className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">History</span>
+              <span className="hidden sm:inline">{t('sidePanel.history.title')}</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -702,7 +702,7 @@ export function SidePanel({
               </div>
               {tbSearchQuery.length > 0 && tbSearchQuery.length < 2 && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Type at least 2 characters to search
+                  {t('sidePanel.search.minCharacters')}
                 </p>
               )}
             </div>
