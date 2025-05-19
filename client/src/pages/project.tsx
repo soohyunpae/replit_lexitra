@@ -844,7 +844,7 @@ export default function Project() {
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-lg flex items-center">
-                    <span>📋 Project Info</span>
+                    <span>📋 {t('projects.projectInfo')}</span>
                   </CardTitle>
                   {isAdmin && (
                     <Button
@@ -853,7 +853,7 @@ export default function Project() {
                       className="h-8 px-2 text-xs"
                       onClick={() => setIsEditing(!isEditing)}
                     >
-                      {isEditing ? "Cancel" : "Edit"}
+                      {isEditing ? t('common.cancel') : t('common.edit')}
                     </Button>
                   )}
                 </div>
@@ -861,12 +861,12 @@ export default function Project() {
               <CardContent className="text-sm space-y-3">
                 <div className="flex flex-col space-y-3">
                   <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">Project Name:</div>
+                    <div className="text-muted-foreground">{t('projects.projectName')}:</div>
                     <div className="font-medium">{project.name}</div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">Language Pair:</div>
+                    <div className="text-muted-foreground">{t('projects.languagePair')}:</div>
                     <div className="font-medium flex items-center">
                       <span className="px-2 py-0.5 bg-primary/10 rounded-md text-xs">
                         {project.sourceLanguage}
@@ -879,14 +879,14 @@ export default function Project() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">Created:</div>
+                    <div className="text-muted-foreground">{t('projects.created')}:</div>
                     <div className="font-medium">
                       <span>{formatDate(project.createdAt)}</span>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">Last Updated:</div>
+                    <div className="text-muted-foreground">{t('projects.lastUpdated')}:</div>
                     <div className="font-medium">
                       <span>
                         {formatDate(project.updatedAt || project.createdAt)}
@@ -895,7 +895,7 @@ export default function Project() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-1 items-center">
-                    <div className="text-muted-foreground">Due Date:</div>
+                    <div className="text-muted-foreground">{t('projects.deadline')}:</div>
                     {isEditing ? (
                       <div>
                         <Input
