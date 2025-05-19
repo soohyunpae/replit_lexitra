@@ -1420,10 +1420,10 @@ export default function Project() {
                             <Upload className="h-6 w-6 text-muted-foreground" />
                           </div>
                           <h3 className="text-sm font-medium mb-1">
-                            No Reference Files
+                            {t('projects.noReferenceFiles')}
                           </h3>
                           <p className="text-xs text-primary">
-                            Drop files here or click to upload
+                            {t('projects.dropFilesHere')}
                           </p>
                         </div>
                       </>
@@ -1433,11 +1433,10 @@ export default function Project() {
                           <File className="h-6 w-6 text-muted-foreground" />
                         </div>
                         <h3 className="text-sm font-medium mb-1">
-                          No Reference Files
+                          {t('projects.noReferenceFiles')}
                         </h3>
                         <p className="text-muted-foreground text-xs max-w-md mx-auto">
-                          No reference files have been added to this project
-                          yet.
+                          {t('projects.noReferenceFilesDesc')}
                         </p>
                       </div>
                     )}
@@ -1452,7 +1451,7 @@ export default function Project() {
             <Card className="md:col-span-2">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center justify-between">
-                  <span>📝 Project Notes</span>
+                  <span>📝 {t('projects.projectNotes')}</span>
                   {!isNotesEditing && note && isAdmin && (
                     <Button
                       variant="ghost"
@@ -1461,7 +1460,7 @@ export default function Project() {
                       className="text-xs"
                     >
                       <Pencil className="h-3.5 w-3.5 mr-1" />
-                      Edit
+                      {t('common.edit')}
                     </Button>
                   )}
                 </CardTitle>
@@ -1470,7 +1469,7 @@ export default function Project() {
               <CardContent>
                 {isNotesEditing ? (
                   <Textarea
-                    placeholder="Document translation guidelines, special requirements, terminology instructions..."
+                    placeholder={t('projects.notesPlaceholder')}
                     className="min-h-24"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
@@ -1490,11 +1489,10 @@ export default function Project() {
                       note
                     ) : isAdmin ? (
                       <span className="text-muted-foreground">
-                        Add special requirements, terminology instructions, or
-                        other notes. Click to edit.
+                        {t('projects.clickToAddNotes')}
                       </span>
                     ) : (
-                      "No notes available."
+                      t('projects.noNotesAvailable')
                     )}
                   </div>
                 )}
