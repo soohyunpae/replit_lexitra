@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Search, X } from "lucide-react";
 import { TmMatch } from "@/components/translation/tm-match";
 import { type TranslationMemory, type Glossary } from "@/types";
+import { useTranslation } from "react-i18next";
 
 interface RightPanelProps {
   tmMatches?: TranslationMemory[];
@@ -26,6 +27,7 @@ export function RightPanel({
   const [activeTab, setActiveTab] = useState("tm");
   const [tmSearchQuery, setTmSearchQuery] = useState("");
   const [tbSearchQuery, setTbSearchQuery] = useState("");
+  const { t } = useTranslation();
   
   // Create a callback handler that safely calls onUseTranslation if defined
   const handleUseTranslation = (translation: string) => {
@@ -41,10 +43,10 @@ export function RightPanel({
         <div className="px-4 py-3 border-b border-border">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid grid-cols-4">
-              <TabsTrigger value="tm">TM Matches</TabsTrigger>
-              <TabsTrigger value="tb">Glossary</TabsTrigger>
-              <TabsTrigger value="comments">Comments</TabsTrigger>
-              <TabsTrigger value="history">History</TabsTrigger>
+              <TabsTrigger value="tm">{t('translation.suggestions')}</TabsTrigger>
+              <TabsTrigger value="tb">{t('common.glossaries')}</TabsTrigger>
+              <TabsTrigger value="comments">{t('translation.comments')}</TabsTrigger>
+              <TabsTrigger value="history">{t('translation.history')}</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -54,13 +56,13 @@ export function RightPanel({
             <div className="flex flex-col h-full">
               {/* TM Matches content */}
               <div className="p-4">
-                <div className="text-sm font-medium mb-2">Translation Memory</div>
+                <div className="text-sm font-medium mb-2">{t('common.tm')}</div>
                 
                 {/* TM Search */}
                 <div className="mb-4">
                   <div className="relative">
                     <Input
-                      placeholder="Search translation memory..."
+                      placeholder={t('tm.searchEntries')}
                       className="pr-10"
                       value={tmSearchQuery}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTmSearchQuery(e.target.value)}
@@ -91,19 +93,19 @@ export function RightPanel({
                     ))
                 ) : (
                   <div className="bg-accent rounded-md p-3 text-sm text-muted-foreground">
-                    {tmSearchQuery ? "No matches found for your search." : "No TM matches found for this segment."}
+                    {tmSearchQuery ? t('sidePanel.tm.noSearchResults') : t('sidePanel.tm.noMatches')}
                   </div>
                 )}
                 
                 {/* TM Context info */}
                 <div className="bg-accent rounded-md p-3 mt-4">
-                  <div className="text-sm font-medium mb-2">GPT &amp; TM Integration Info</div>
+                  <div className="text-sm font-medium mb-2">{t('tm.integration.title', 'GPT & TM Integration Info')}</div>
                   <div className="text-xs text-muted-foreground">
-                    <p className="mb-2">When using GPT translation, this segment will be paired with the following TM context:</p>
+                    <p className="mb-2">{t('tm.integration.description', 'When using GPT translation, this segment will be paired with the following TM context:')}</p>
                     <ul className="list-disc pl-4 space-y-1">
-                      <li>100% match from segments with similar patterns</li>
-                      <li>Fuzzy matches with similarity &gt; 70%</li>
-                      <li>Terminology from glossary will be prioritized</li>
+                      <li>{t('tm.integration.exactMatch', '100% match from segments with similar patterns')}</li>
+                      <li>{t('tm.integration.fuzzyMatch', 'Fuzzy matches with similarity > 70%')}</li>
+                      <li>{t('tm.integration.terminology', 'Terminology from glossary will be prioritized')}</li>
                     </ul>
                   </div>
                 </div>
@@ -112,9 +114,9 @@ export function RightPanel({
               {/* Glossary section */}
               <div className="border-t border-border p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm font-medium">Project Glossary</div>
+                  <div className="text-sm font-medium">{t('glossaries.title')}</div>
                   <Button variant="link" size="sm" className="h-5 p-0 text-xs">
-                    Show All
+                    {t('common.showAll', 'Show All')}
                   </Button>
                 </div>
                 
@@ -128,7 +130,7 @@ export function RightPanel({
                     ))
                   ) : (
                     <div className="text-xs text-muted-foreground italic">
-                      No glossary terms available.
+                      {t('glossaries.noGlossaries')}
                     </div>
                   )}
                 </div>
@@ -138,10 +140,10 @@ export function RightPanel({
           
           {activeTab === "comments" && (
             <div className="p-4">
-              <div className="text-sm font-medium mb-2">Comments</div>
+              <div className="text-sm font-medium mb-2">{t('translation.comments')}</div>
               <div className="flex items-center justify-center py-8">
                 <div className="text-sm text-muted-foreground">
-                  No comments available for this segment.
+                  {t('sidePanel.comments.noComments')}
                 </div>
               </div>
             </div>

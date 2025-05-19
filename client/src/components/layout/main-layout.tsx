@@ -11,7 +11,7 @@ interface MainLayoutProps {
 
 export function MainLayout({ 
   children, 
-  title = "Lexitra",
+  title,
   showSidebarTrigger = false 
 }: MainLayoutProps) {
   const { t } = useTranslation();
