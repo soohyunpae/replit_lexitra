@@ -365,6 +365,7 @@
     "userRole": "User",
     "userDesc": "Can work on translation projects but has limited administrative access.",
     "selectRole": "Select role",
+    "settingsAffectAll": "These settings affect the entire application and all users",
     "selectTargetLanguage": "Select target language",
     "failedToConvert": "Failed to convert file",
     "fileSuccessfullyConverted": "Your file has been successfully converted. Click the button below to download it.",

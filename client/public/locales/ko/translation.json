@@ -274,6 +274,7 @@
     "userRole": "사용자",
     "userDesc": "번역 프로젝트에서 작업할 수 있지만 관리 액세스가 제한됩니다.",
     "selectRole": "역할 선택",
+    "settingsAffectAll": "이 설정은 전체 애플리케이션과 모든 사용자에게 영향을 미칩니다",
     "selectTargetLanguage": "대상 언어 선택",
     "languageSettings": "언어 설정",
     "userManagement": "사용자 관리",

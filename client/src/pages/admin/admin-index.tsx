@@ -370,11 +370,11 @@ export default function AdminConsole() {
                               disabled={user.username === 'admin'} // Don't allow changing the main admin
                             >
                               <SelectTrigger className="w-32">
-                                <SelectValue placeholder="Select role" />
+                                <SelectValue placeholder={t('admin.selectRole')} />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="admin">Administrator</SelectItem>
-                                <SelectItem value="user">User</SelectItem>
+                                <SelectItem value="admin">{t('admin.administratorRole')}</SelectItem>
+                                <SelectItem value="user">{t('admin.userRole')}</SelectItem>
                               </SelectContent>
                             </Select>
                           </TableCell>
