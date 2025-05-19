@@ -1,28 +1,139 @@
-# UI Internationalization Implementation Guide
 
-## Missing Translations
-현재 누락된 번역 키들:
+# Lexitra 로컬라이제이션 감사 및 구현 계획
 
-1. TM (Translation Memory) 섹션:
-- tm.added: "추가됨"
-- tm.modifiedBy: "수정한 사람"
+## 1. 현재 상태
 
-## Translation Files
-- 영어: `/client/public/locales/en/translation.json`
-- 한국어: `/client/public/locales/ko/translation.json`
+### 1.1 구현된 i18n 시스템
+- i18n 기본 설정 완료 (`client/src/i18n/index.ts`)
+- 언어 전환 기능 구현 (`client/src/hooks/use-language.tsx`)
+- 기본 번역 파일 존재 (en/ko `client/public/locales/[lang]/translation.json`)
 
-## Implementation Steps
-1. 각 컴포넌트에서 하드코딩된 텍스트 검사
-2. useTranslation 훅 사용 확인
-3. 번역 키 추가 및 업데이트
-4. 컴포넌트 리팩토링
+### 1.2 누락된 번역 확인
 
-## Priority Components
-1. /client/src/components/layout/
-2. /client/src/components/translation/
-3. /client/src/pages/
+다음 컴포넌트/페이지들에서 번역이 누락되었거나 하드코딩된 텍스트가 발견되었습니다:
 
-## Testing
-- 각 언어 전환 시 UI 텍스트 확인
-- 누락된 번역 키 검사
-- 컨텍스트에 맞는 번역 검증
+#### 컴포넌트
+1. `client/src/components/translation/segment-item.tsx`
+   - 세그먼트 상태 표시 
+   - 에러 메시지
+
+2. `client/src/components/translation/doc-review-editor.tsx`
+   - 문서 보기 관련 UI 텍스트
+   - 상태 메시지
+
+#### 페이지
+1. `client/src/pages/auth-debug.tsx`
+   - 디버그 관련 메시지
+   - 오류 상태 표시
+
+2. `client/src/pages/projects.tsx`
+   - 프로젝트 상태 필터
+   - 정렬 옵션
+
+### 1.3 누락된 번역 키
+
+translation.json 파일에 다음 키들이 누락되었습니다:
+
+```json
+{
+  "translation": {
+    "segmentStatus": {
+      "draft": "초안",
+      "reviewing": "검토 중",
+      "approved": "승인됨",
+      "rejected": "반려됨"
+    },
+    "docReview": {
+      "loadingError": "문서 로딩 중 오류가 발생했습니다",
+      "tryAgain": "다시 시도"
+    }
+  }
+}
+```
+
+## 2. 구현 계획
+
+### 2.1 단계별 구현
+
+1. 누락된 번역 키 추가
+   - en/ko translation.json 파일 업데이트
+   - 새로운 섹션에 대한 번역 추가
+
+2. 컴포넌트 리팩토링
+   - useTranslation 훅 추가
+   - 하드코딩된 텍스트를 번역 키로 교체
+
+3. 테스트 및 검증
+   - 각 언어 전환 테스트
+   - 누락된 번역 키 확인
+   - 컨텍스트 정확성 검증
+
+### 2.2 우선순위
+
+1. 높은 우선순위
+   - 사용자 인터페이스 핵심 요소
+   - 오류 메시지
+   - 상태 표시
+
+2. 중간 우선순위
+   - 도움말 텍스트
+   - 부가 설명
+
+3. 낮은 우선순위
+   - 디버그 메시지
+   - 관리자 인터페이스
+
+## 3. 구현 가이드라인
+
+### 3.1 번역 키 네이밍 규칙
+- 계층 구조 사용 (예: `common.actions.save`)
+- 컨텍스트 포함 (예: `projects.status.inProgress`)
+- 일관된 케이스 사용 (camelCase)
+
+### 3.2 코드 예시
+
+```typescript
+// Before
+<span>Loading...</span>
+
+// After
+<span>{t('common.loading')}</span>
+
+// Before
+<Button>Save Changes</Button>
+
+// After
+<Button>{t('common.actions.save')}</Button>
+```
+
+### 3.3 컴포넌트 리팩토링 체크리스트
+
+- [ ] useTranslation 훅 import 확인
+- [ ] 하드코딩된 문자열 식별
+- [ ] 적절한 번역 키 생성
+- [ ] translation.json 파일 업데이트
+- [ ] 번역된 텍스트로 교체
+- [ ] 테스트 및 검증
+
+## 4. 테스트 플랜
+
+1. 정적 검사
+   - 누락된 번역 키 확인
+   - 중복 키 검사
+
+2. 동적 테스트
+   - 언어 전환 테스트
+   - 컨텍스트 정확성
+   - 레이아웃 깨짐 확인
+
+## 5. 유지보수 가이드라인
+
+1. 새로운 기능 추가 시
+   - 번역 키 즉시 추가
+   - 양쪽 언어 모두 업데이트
+
+2. 코드 리뷰 체크리스트
+   - 하드코딩된 문자열 확인
+   - 번역 키 네이밍 규칙 준수
+   - 컨텍스트 적절성 검토
+
