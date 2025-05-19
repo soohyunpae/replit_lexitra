@@ -251,9 +251,9 @@ export default function AdminConsole() {
               <CardContent className="space-y-6">
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-medium">Default Languages</h3>
+                    <h3 className="text-lg font-medium">{t('admin.defaultLanguages')}</h3>
                     <p className="text-sm text-muted-foreground">
-                      These will be pre-selected when creating new translation projects.
+                      {t('admin.defaultLanguagesDesc')}
                     </p>
                   </div>
                   
@@ -300,7 +300,7 @@ export default function AdminConsole() {
                   <Separator />
                   
                   <div className="flex justify-end">
-                    <Button onClick={handleSaveLanguagePreferences}>Save Preferences</Button>
+                    <Button onClick={handleSaveLanguagePreferences}>{t('common.save')} {t('profile.preferences')}</Button>
                   </div>
                 </div>
               </CardContent>
@@ -313,10 +313,10 @@ export default function AdminConsole() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <UserCog className="h-5 w-5 mr-2" />
-                  User Management
+                  {t('admin.userManagement')}
                 </CardTitle>
                 <CardDescription>
-                  Manage user roles and permissions.
+                  {t('admin.userManagementDesc')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
