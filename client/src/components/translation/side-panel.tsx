@@ -159,10 +159,10 @@ function TmMatch({
           {isApplying ? (
             <>
               <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
-              적용 중...
+              {t('sidePanel.applying')}
             </>
           ) : (
-            "            {t('sidePanel.useTranslation')}"
+            t('sidePanel.useTranslation')
           )}
         </Button>
       </div>
@@ -176,12 +176,13 @@ function StatusInfoPanel({
 }: {
   segment: TranslationUnit | null | undefined;
 }) {
+  const { t } = useTranslation();
   if (!segment) {
     return (
       <div className="bg-muted/50 rounded-md p-4 text-center text-muted-foreground">
         <Info className="h-5 w-5 mx-auto mb-2 opacity-50" />
         <p className="text-sm">
-          Select a segment to view its status information
+          {t('sidePanel.selectSegmentForInfo')}
         </p>
       </div>
     );
@@ -229,31 +230,31 @@ function StatusInfoPanel({
   const getStatusDescription = () => {
     switch (segment.status) {
       case "Reviewed":
-        return "Final approved version";
+        return t('sidePanel.statusDescriptions.reviewed');
       case "Rejected":
-        return "Marked as incorrect";
+        return t('sidePanel.statusDescriptions.rejected');
       case "Edited":
-        return "Modified by human";
+        return t('sidePanel.statusDescriptions.edited');
       case "100%":
-        return "Exact match from TM";
+        return t('sidePanel.statusDescriptions.exactMatch');
       case "Fuzzy":
-        return "Partial match from TM";
+        return t('sidePanel.statusDescriptions.fuzzyMatch');
       case "MT":
       default:
-        return "Machine translated";
+        return t('sidePanel.statusDescriptions.machineTranslated');
     }
   };
 
   return (
     <div className="bg-card rounded-md border p-4 mb-4">
-      <h3 className="text-sm font-medium mb-3">Segment Information</h3>
+      <h3 className="text-sm font-medium mb-3">{t('sidePanel.segmentInformation')}</h3>
 
       <div className="space-y-3">
         {/* Status */}
         <div className="flex items-start gap-3">
           <div className="bg-muted/50 rounded-full p-2">{getStatusIcon()}</div>
           <div className="flex-1">
-            <div className="text-xs text-muted-foreground mb-1">Status</div>
+            <div className="text-xs text-muted-foreground mb-1">{t('sidePanel.status')}</div>
             <div className="flex items-center gap-2">
               <Badge className={cn("font-normal", getStatusColor())}>
                 {segment.status || "MT"}
