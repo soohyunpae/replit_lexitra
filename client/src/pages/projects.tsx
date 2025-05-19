@@ -1221,7 +1221,7 @@ export default function ProjectsPage() {
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
-              <span className="text-sm text-muted-foreground">View:</span>
+              <span className="text-sm text-muted-foreground">{t('projects.view')}:</span>
               <div className="border rounded-md overflow-hidden flex">
                 <Button
                   variant={viewMode === "list" ? "default" : "ghost"}

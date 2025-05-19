@@ -120,10 +120,14 @@
     "projectUpdated": "프로젝트가 성공적으로 업데이트되었습니다",
     "projectDeleted": "프로젝트가 성공적으로 삭제되었습니다",
     "projectId": "프로젝트 ID",
-    "languagePair": "언어 쌍",
+    "projectName": "프로젝트 이름",
+    "view": "보기",
+    "files": "파일",
     "wordCount": "단어 수",
+    "progress": "진행 상황",
     "created": "생성일",
-    "lastUpdated": "최종 수정일"
+    "lastUpdated": "최종 수정일",
+    "deadline": "마감일"
   },
   "translation": {
     "editor": "번역 편집기",
@@ -354,7 +358,7 @@
     "fileProcessing": "파일 처리",
     "fileProcessingCenter": "파일 처리 센터",
     "fileProcessingTools": "파일 처리 도구",
-    "fileProcessingDesc": "PDF 문서를 처리하고 파일 형식 간 변환합니다. 번역 프로젝트를 위한 콘텐츠를 추출하고 효율적인 번역 워크플로를 위해 파일을 준비합니다.",
+    "fileProcessingDesc": "PDF 문서를 처리하고 파일 형식 간 변환합니다. 번역 프로젝트를 위한 콘텐츠를 추출하고 효율적인 번역 워크플로우를 위해 파일을 준비합니다.",
     "selectToolDesc": "번역을 위한 파일을 처리하고 준비하는 도구를 선택하세요",
     "pdfProcessing": "PDF 처리",
     "fileFormatConversion": "파일 형식 변환",
