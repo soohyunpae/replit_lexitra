@@ -1580,7 +1580,7 @@ export default function ProjectsPage() {
                     <TableHead className="w-[220px]">
                       {renderSortButton("name", t('projects.projectName'))}
                     </TableHead>
-                    <TableHead className="w-[120px]">{t('projects.languagePair')}</TableHead>
+                    <TableHead className="w-[120px]">{t('languages.languagePair')}</TableHead>
                     <TableHead className="w-[80px]">{t('projects.files')}</TableHead>
                     <TableHead className="w-[100px]">{t('projects.wordCount')}</TableHead>
                     <TableHead className="w-[120px]">
