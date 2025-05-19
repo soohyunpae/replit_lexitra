@@ -641,7 +641,7 @@ export function SidePanel({
               </div>
               {tmSearchQuery.length > 0 && tmSearchQuery.length < 2 && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Type at least 2 characters to search
+                  {t('sidePanel.search.minCharacters')}
                 </p>
               )}
             </div>
@@ -794,12 +794,12 @@ export function SidePanel({
                     {isAddingComment ? (
                       <>
                         <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                        추가 중...
+                        {t('sidePanel.comments.adding')}
                       </>
                     ) : (
                       <>
                         <MessageSquarePlus className="h-3.5 w-3.5 mr-1.5" />
-                        Add Comment
+                        {t('sidePanel.comments.addComment')}
                       </>
                     )}
                   </Button>
@@ -807,9 +807,7 @@ export function SidePanel({
               </div>
 
               <div className="text-xs text-muted-foreground mt-2">
-                <span className="font-medium">Tip:</span> You can use simple
-                Markdown in comments: **bold**, *italic*, `code`, and • bullet
-                points.
+                <span className="font-medium">{t('sidePanel.comments.tip')}:</span> {t('sidePanel.comments.markdownTip')}
               </div>
             </div>
           </div>
@@ -817,7 +815,7 @@ export function SidePanel({
 
         <TabsContent value="history" className="flex-1 overflow-y-auto">
           <div className="p-4 pt-2">
-            <div className="text-sm font-medium mb-2">Revision History</div>
+            <div className="text-sm font-medium mb-2">{t('sidePanel.history.title')}</div>
 
             {/* Removed Active Segment section as requested */}
 
@@ -826,7 +824,7 @@ export function SidePanel({
                 <>
                   <div className="border border-border rounded-md overflow-hidden">
                     <div className="bg-accent/30 px-3 py-2 border-b border-border flex justify-between items-center">
-                      <div className="text-xs font-medium">Current Version</div>
+                      <div className="text-xs font-medium">{t('sidePanel.history.currentVersion')}</div>
                       <div className="text-xs text-muted-foreground">
                         <span className="font-semibold">
                           {selectedSegment.status}
