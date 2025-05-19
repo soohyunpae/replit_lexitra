@@ -322,9 +322,9 @@ export default function AdminConsole() {
               <CardContent className="space-y-6">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-lg font-medium">Users</h3>
+                    <h3 className="text-lg font-medium">{t('admin.users')}</h3>
                     <p className="text-sm text-muted-foreground">
-                      Manage user access to different features.
+                      {t('admin.manageUserAccess')}
                     </p>
                   </div>
                   <Button 
@@ -335,7 +335,7 @@ export default function AdminConsole() {
                     }}
                   >
                     <UserPlus className="h-4 w-4" />
-                    Add User
+                    {t('admin.addUser')}
                   </Button>
                 </div>
                 
@@ -345,9 +345,9 @@ export default function AdminConsole() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Username</TableHead>
-                        <TableHead>Current Role</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead>{t('admin.username')}</TableHead>
+                        <TableHead>{t('admin.role')}</TableHead>
+                        <TableHead>{t('admin.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -360,7 +360,7 @@ export default function AdminConsole() {
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <Shield className={`h-4 w-4 ${user.role === 'admin' ? 'text-primary' : 'text-muted-foreground'}`} />
-                              {user.role === 'admin' ? 'Administrator' : 'User'}
+                              {user.role === 'admin' ? t('admin.administratorRole') : t('admin.userRole')}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -385,15 +385,15 @@ export default function AdminConsole() {
                 </div>
                 
                 <p className="text-xs text-muted-foreground mt-4">
-                  <strong>Administrator:</strong> Can manage all settings, users, TMs, and glossaries.<br />
-                  <strong>User:</strong> Can work on translation projects but has limited administrative access.
+                  <strong>{t('admin.administratorRole')}:</strong> {t('admin.administratorDesc')}<br />
+                  <strong>{t('admin.userRole')}:</strong> {t('admin.userDesc')}
                 </p>
               </CardContent>
             </Card>
           </TabsContent>
 
           <div className="text-sm text-muted-foreground mt-6 pt-4 border-t">
-            These settings affect the entire application and all users
+            {t('admin.settingsAffectAll')}
           </div>
         </Tabs>
       </div>
