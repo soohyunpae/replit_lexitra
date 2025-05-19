@@ -61,7 +61,7 @@ function Router() {
     <Switch>
       <Route path="/landing" component={LandingPage} />
       <ProtectedRoute path="/" component={Dashboard} />
-      <ProtectedRoute path="/home" component={Home} />
+      <ProtectedRoute path="/dashboard" component={Dashboard} />
       <ProtectedRoute path="/projects" component={Projects} />
       <ProtectedRoute path="/projects/:id" component={Project} />
       <ProtectedRoute path="/translation/:fileId" component={Translation} />
