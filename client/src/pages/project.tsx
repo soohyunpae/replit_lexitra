@@ -1288,7 +1288,7 @@ export default function Project() {
                                 });
                               });
                             }}
-                            title="Download file"
+                            title={t('projects.downloadFile')}
                           >
                             <FileDownIcon className="h-3 w-3" />
                           </Button>

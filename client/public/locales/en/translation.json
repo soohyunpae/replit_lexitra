@@ -116,7 +116,18 @@
     "noFiles": "No files",
     "projectCreated": "Project created successfully",
     "projectUpdated": "Project updated successfully",
-    "projectDeleted": "Project deleted successfully"
+    "projectDeleted": "Project deleted successfully",
+    "noFilesYet": "No files yet",
+    "fileManagementPolicy": "Files must be added during project creation. Per the file management policy, projects without files cannot be created, and files cannot be added or modified after creation.",
+    "referenceFiles": "Reference Files",
+    "noReferenceFiles": "No Reference Files",
+    "noReferenceFilesDesc": "No reference files have been added to this project yet.",
+    "dropFilesHere": "Drop files here or click to upload",
+    "projectNotes": "Project Notes",
+    "notesPlaceholder": "Document translation guidelines, special requirements, terminology instructions...",
+    "clickToAddNotes": "Add special requirements, terminology instructions, or other notes. Click to edit.",
+    "noNotesAvailable": "No notes available.",
+    "downloadFile": "Download file"
   },
   "translation": {
     "editor": "Translation Editor",
