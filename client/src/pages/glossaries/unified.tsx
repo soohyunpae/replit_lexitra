@@ -712,12 +712,12 @@ export default function UnifiedGlossaryPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Target</TableHead>
-                  <TableHead>Languages</TableHead>
-                  <TableHead>Glossary</TableHead>
-                  <TableHead>Added</TableHead>
-                  {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+                  <TableHead>{t('glossaries.sourceText')}</TableHead>
+                  <TableHead>{t('glossaries.targetText')}</TableHead>
+                  <TableHead>{t('common.language')}</TableHead>
+                  <TableHead>{t('glossaries.glossaryName')}</TableHead>
+                  <TableHead>{t('glossaries.added')}</TableHead>
+                  {isAdmin && <TableHead className="text-right">{t('common.actions')}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
