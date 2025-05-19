@@ -513,7 +513,7 @@ export default function UnifiedGlossaryPage() {
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select Glossary" />
+                                  <SelectValue placeholder={t('glossaries.selectGlossary', 'Select Glossary')} />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
@@ -591,7 +591,7 @@ export default function UnifiedGlossaryPage() {
           )}
         </div>
         <p className="text-muted-foreground mb-6">
-          Search and manage glossary terms and resources
+          {t('glossaries.searchAndManage', 'Search and manage glossary terms and resources')}
         </p>
         
         {/* Glossary List Section - Now moved to the top */}
@@ -599,7 +599,7 @@ export default function UnifiedGlossaryPage() {
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-2">
               <BookMarked className="h-5 w-5" />
-              <h3 className="text-xl font-semibold">Glossary List</h3>
+              <h3 className="text-xl font-semibold">{t('glossaries.list')}</h3>
             </div>
           </div>
 
@@ -607,25 +607,25 @@ export default function UnifiedGlossaryPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Default Languages</TableHead>
-                  <TableHead>Domain</TableHead>
-                  <TableHead>Terms</TableHead>
-                  {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+                  <TableHead>{t('glossaries.glossaryName')}</TableHead>
+                  <TableHead>{t('glossaries.glossaryDescription')}</TableHead>
+                  <TableHead>{t('glossaries.defaultLanguages', 'Default Languages')}</TableHead>
+                  <TableHead>{t('glossaries.domain', 'Domain')}</TableHead>
+                  <TableHead>{t('glossaries.terms', 'Terms')}</TableHead>
+                  {isAdmin && <TableHead className="text-right">{t('common.actions', 'Actions')}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoadingResources ? (
                   <TableRow>
                     <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
-                      Loading glossary resources...
+                      {t('common.loading')}...
                     </TableCell>
                   </TableRow>
                 ) : glossaryResources.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
-                      No glossary resources found
+                      {t('glossaries.noGlossaries')}
                     </TableCell>
                   </TableRow>
                 ) : (
