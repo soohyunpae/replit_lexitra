@@ -252,6 +252,7 @@
     "failedToAddCommentDesc": "There was an error adding the comment. Please try again.",
     "addComment": "Add Comment",
     "comments": "Comments",
+    "commentsTitle": "Comments",
     "glossary": "Glossary",
     "statusDescriptions": {
       "reviewed": "Final approved version",
@@ -260,6 +261,41 @@
       "exactMatch": "Exact match from TM",
       "fuzzyMatch": "Partial match from TM",
       "machineTranslated": "Machine translated"
+    },
+    "comments": {
+      "user": "User",
+      "adding": "Adding...",
+      "addComment": "Add Comment",
+      "noComments": "No comments available for this segment. Add a comment below.",
+      "addCommentPlaceholder": "Add a comment about this segment...",
+      "tip": "Tip",
+      "markdownTip": "You can use simple Markdown in comments: **bold**, *italic*, `code`, and • bullet points."
+    },
+    "tm": {
+      "searching": "Searching translation memory...",
+      "noSearchResults": "No matches found for your search.",
+      "noMatches": "No TM matches found for this segment."
+    },
+    "glossary": {
+      "title": "Terminology Base",
+      "searchPlaceholder": "Search terminology...",
+      "searching": "Searching terminology...",
+      "noSearchResults": "No terms found for your search.",
+      "noMatchingTerms": "No matching terms found in the glossary for this segment.",
+      "termApplied": "Term applied",
+      "termAppliedDescription": "The selected term has been applied to the segment.",
+      "termApplyFailed": "Failed to apply term",
+      "termApplyFailedDescription": "There was an error applying the term. Please try again."
+    },
+    "history": {
+      "title": "Revision History",
+      "currentVersion": "Current Version",
+      "previousVersion": "Previous Version",
+      "lastModified": "Last modified",
+      "noTranslation": "(No translation)"
+    },
+    "status": {
+      "draft": "Draft"
     }
   },
   "tm": {

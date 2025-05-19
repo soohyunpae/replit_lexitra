@@ -837,10 +837,10 @@ export function SidePanel({
                     </div>
                     <div className="p-3">
                       <div className="font-mono text-xs">
-                        {selectedSegment.target || "(No translation)"}
+                        {selectedSegment.target || t('sidePanel.history.noTranslation')}
                       </div>
                       <div className="text-xs text-muted-foreground mt-2">
-                        Last modified:{" "}
+                        {t('sidePanel.history.lastModified')}: {" "}
                         {new Date(selectedSegment.updatedAt).toLocaleString()}
                       </div>
                     </div>
@@ -854,12 +854,12 @@ export function SidePanel({
                     <div className="border border-muted rounded-md overflow-hidden opacity-80">
                       <div className="bg-muted/30 px-3 py-2 border-b border-border flex justify-between items-center">
                         <div className="text-xs font-medium">
-                          Previous Version
+                          {t('sidePanel.history.previousVersion')}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           <span className="font-semibold">
                             {selectedSegment.status === "Reviewed"
-                              ? "Draft"
+                              ? t('sidePanel.status.draft')
                               : selectedSegment.status}
                           </span>
                           {selectedSegment.origin && (
