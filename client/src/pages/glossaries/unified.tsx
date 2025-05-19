@@ -680,7 +680,7 @@ export default function UnifiedGlossaryPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Search className="h-5 w-5" />
-              <h3 className="text-xl font-semibold">Search Terms</h3>
+              <h3 className="text-xl font-semibold">{t('glossaries.searchTerms')}</h3>
 
               {resourceFilter !== undefined && (
                 <Badge 
