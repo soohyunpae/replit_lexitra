@@ -195,9 +195,9 @@ export default function AdminConsole() {
                   <div>
                     <h3 className="text-lg font-medium">OpenAI API Key</h3>
                     <p className="text-sm text-muted-foreground">
-                      OpenAI API key is used for GPT-powered translations.
+                      {t('admin.openAIApiDesc')}
                       <a href="https://platform.openai.com/api-keys" target="_blank" className="text-primary underline ml-1">
-                        Get your API key
+                        {t('admin.getApiKey')}
                       </a>
                     </p>
                   </div>
@@ -220,16 +220,16 @@ export default function AdminConsole() {
                         className="ml-2" 
                         onClick={() => setApiKeyVisible(!apiKeyVisible)}
                       >
-                        {apiKeyVisible ? "Hide" : "Show"}
+                        {apiKeyVisible ? t('common.hide') : t('common.show')}
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      API keys are stored securely and never shared with anyone.
+                      {t('admin.apiKeysSecure')}
                     </p>
                   </div>
                   
                   <div className="flex justify-end">
-                    <Button onClick={handleSaveApiKey}>Save API Key</Button>
+                    <Button onClick={handleSaveApiKey}>{t('common.save')} {t('admin.apiKeys')}</Button>
                   </div>
                 </div>
               </CardContent>
@@ -242,10 +242,10 @@ export default function AdminConsole() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Globe className="h-5 w-5 mr-2" />
-                  Language Settings
+                  {t('admin.languageSettings')}
                 </CardTitle>
                 <CardDescription>
-                  Set default language preferences for translation projects.
+                  {t('admin.languageSettingsDesc')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
