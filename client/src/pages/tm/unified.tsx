@@ -554,7 +554,7 @@ export default function UnifiedTranslationMemoryPage() {
           )}
         </div>
         <p className="text-muted-foreground mb-6">
-          Search and manage your translation memory database
+          {t('tm.uploadTmFileDescription')}
         </p>
 
         {/* TM Resources Section */}
@@ -562,7 +562,7 @@ export default function UnifiedTranslationMemoryPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Database className="h-5 w-5" />
-              <h3 className="text-xl font-semibold">TM List</h3>
+              <h3 className="text-xl font-semibold">{t('tm.tmResources')}</h3>
             </div>
           </div>
 
@@ -571,25 +571,25 @@ export default function UnifiedTranslationMemoryPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Default Languages</TableHead>
-                  <TableHead>Entries</TableHead>
-                  <TableHead>Created</TableHead>
-                  {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+                  <TableHead>{t('tm.resourceName')}</TableHead>
+                  <TableHead>{t('tm.description')}</TableHead>
+                  <TableHead>{t('common.language')}</TableHead>
+                  <TableHead>{t('tm.entries')}</TableHead>
+                  <TableHead>{t('tm.created')}</TableHead>
+                  {isAdmin && <TableHead className="text-right">{t('tm.actions')}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoadingResources ? (
                   <TableRow>
                     <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
-                      Loading TM resources...
+                      {t('common.loading')}
                     </TableCell>
                   </TableRow>
                 ) : tmResources.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
-                      No translation memory resources found
+                      {t('tm.noTMs')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -607,10 +607,10 @@ export default function UnifiedTranslationMemoryPage() {
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="text-xs text-muted-foreground">
-                            Source: {resource.defaultSourceLanguage.toUpperCase()}
+                            {t('tm.source')}: {resource.defaultSourceLanguage.toUpperCase()}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            Target: {resource.defaultTargetLanguage.toUpperCase()}
+                            {t('tm.target')}: {resource.defaultTargetLanguage.toUpperCase()}
                           </span>
                         </div>
                       </TableCell>
@@ -646,7 +646,7 @@ export default function UnifiedTranslationMemoryPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Search className="h-5 w-5" />
-              <h3 className="text-xl font-semibold">Search TM Entries</h3>
+              <h3 className="text-xl font-semibold">{t('tm.searchTmEntries')}</h3>
               
               {resourceFilter !== "all_resources" && (
                 <Badge 
@@ -668,7 +668,7 @@ export default function UnifiedTranslationMemoryPage() {
               <div className="relative flex-grow">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search in Translation Memory..."
+                  placeholder={t('tm.searchEntries')}
                   className="pl-8"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -686,13 +686,13 @@ export default function UnifiedTranslationMemoryPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Target</TableHead>
-                  <TableHead>Project</TableHead>
-                  <TableHead>Origin</TableHead>
-                  <TableHead>Added</TableHead>
-                  <TableHead>Modified by</TableHead>
-                  {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+                  <TableHead>{t('tm.source')}</TableHead>
+                  <TableHead>{t('tm.target')}</TableHead>
+                  <TableHead>{t('common.projects')}</TableHead>
+                  <TableHead>{t('tm.origin')}</TableHead>
+                  <TableHead>{t('tm.added')}</TableHead>
+                  <TableHead>{t('tm.modifiedBy')}</TableHead>
+                  {isAdmin && <TableHead className="text-right">{t('tm.actions')}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
