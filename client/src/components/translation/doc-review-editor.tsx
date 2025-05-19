@@ -368,8 +368,8 @@ export function DocReviewEditor({
       } catch (error) {
         console.error("Failed to update segment:", error);
         toast({
-          title: "Error",
-          description: "Failed to update segment",
+          title: t('translation.docReview.errorTitle'),
+          description: t('translation.docReview.failedToUpdateSegment'),
           variant: "destructive"
         });
         setHighlightedSegmentId(null);
@@ -382,6 +382,8 @@ export function DocReviewEditor({
 
   // == 조건부 렌더링 ==
   // 로딩 상태 표시
+  const { t } = useTranslation();
+  
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -399,9 +401,9 @@ export function DocReviewEditor({
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <AlertCircle className="h-10 w-10 text-destructive mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Failed to load segments</h3>
-          <p className="text-muted-foreground mb-4">There was an error loading translation segments.</p>
-          <Button onClick={() => window.location.reload()}>Retry</Button>
+          <h3 className="text-lg font-semibold mb-2">{t('translation.docReview.failedToLoadSegments')}</h3>
+          <p className="text-muted-foreground mb-4">{t('translation.docReview.loadingErrorDescription')}</p>
+          <Button onClick={() => window.location.reload()}>{t('translation.docReview.retry')}</Button>
         </div>
       </div>
     );
@@ -436,8 +438,8 @@ export function DocReviewEditor({
   const handleSave = () => {
     onSave?.();
     toast({
-      title: "Changes saved",
-      description: "Your translations have been saved successfully."
+      title: t('translation.docReview.changesSaved'),
+      description: t('translation.docReview.translationsSavedSuccessfully')
     });
   };
 
@@ -457,10 +459,10 @@ export function DocReviewEditor({
                   setShowTarget(false);
                 }}
                 className="h-7 px-3"
-                title="Show source only"
+                title={t('translation.docReview.showSourceOnly')}
               >
                 <FileText className="h-4 w-4 mr-2" />
-                Source
+                {t('translation.docReview.source')}
               </Button>
               <Button
                 size="sm"
@@ -474,7 +476,7 @@ export function DocReviewEditor({
                 title="Show target only"
               >
                 <FileText className="h-4 w-4 mr-2" />
-                Target
+                {t('translation.docReview.target')}
               </Button>
               <Button
                 size="sm"
@@ -488,7 +490,7 @@ export function DocReviewEditor({
                 title="Show side by side"
               >
                 <Languages className="h-4 w-4 mr-2" />
-                Side by Side
+                {t('translation.docReview.sideBySide')}
               </Button>
             </div>
 
@@ -499,7 +501,7 @@ export function DocReviewEditor({
                 variant="ghost"
                 onClick={() => setShowSidePanel(!showSidePanel)}
                 className="h-7 w-7 p-0"
-                title={showSidePanel ? "사이드 패널 숨기기" : "사이드 패널 보기"}
+                title={showSidePanel ? t('translation.docReview.hideSidePanel') : t('translation.docReview.showSidePanel')}
               >
                 {showSidePanel ? (
                   <ChevronRight className="h-4 w-4" />
