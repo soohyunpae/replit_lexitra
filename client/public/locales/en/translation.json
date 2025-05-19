@@ -118,6 +118,7 @@
   },
   "translation": {
     "editor": "Translation Editor",
+    "enterTranslation": "Enter translation...",
     "source": "Source",
     "target": "Target",
     "suggestions": "Suggestions",

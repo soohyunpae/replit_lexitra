@@ -473,7 +473,7 @@ export function DocReviewEditor({
                   setShowTarget(true);
                 }}
                 className="h-7 px-3"
-                title="Show target only"
+                title={t('translation.docReview.showTargetOnly')}
               >
                 <FileText className="h-4 w-4 mr-2" />
                 {t('translation.docReview.target')}
@@ -487,7 +487,7 @@ export function DocReviewEditor({
                   setShowTarget(true);
                 }}
                 className="h-7 px-3 hidden md:inline-flex"
-                title="Show side by side"
+                title={t('translation.docReview.showSideBySide')}
               >
                 <Languages className="h-4 w-4 mr-2" />
                 {t('translation.docReview.sideBySide')}
@@ -537,7 +537,7 @@ export function DocReviewEditor({
           {/* Mobile-only header */}
           {isMobile && (
             <div className="sticky top-0 bg-card/90 backdrop-blur-sm p-2 border-b z-10 flex justify-between items-center">
-              <span className="text-sm font-medium">{sourceLanguage} (Source)</span>
+              <span className="text-sm font-medium">{sourceLanguage} ({t('translation.docReview.sourcePanel')})</span>
               <Button 
                 size="sm" 
                 variant="ghost" 
@@ -627,7 +627,7 @@ export function DocReviewEditor({
           {/* Mobile-only header with show source button */}
           {isMobile && (
             <div className="sticky top-0 bg-card/90 backdrop-blur-sm p-2 border-b z-10 flex justify-between items-center">
-              <span className="text-sm font-medium">{targetLanguage} (Target)</span>
+              <span className="text-sm font-medium">{targetLanguage} ({t('translation.docReview.targetPanel')})</span>
               <Button 
                 size="sm" 
                 variant="ghost" 

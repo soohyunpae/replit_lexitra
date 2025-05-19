@@ -7,6 +7,7 @@ import { Languages } from "lucide-react";
 import { TranslationUnit } from "@/types";
 import { cn } from "@/lib/utils";
 import { useDebouncedCallback } from "use-debounce";
+import { useTranslation } from "react-i18next";
 
 /**
  * !!! 중요 !!! 2025-05-12 개선된 세그먼트 높이 동기화 기능

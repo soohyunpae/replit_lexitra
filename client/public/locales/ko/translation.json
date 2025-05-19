@@ -118,6 +118,7 @@
   },
   "translation": {
     "editor": "번역 편집기",
+    "enterTranslation": "번역을 입력하세요...",
     "source": "원본",
     "target": "대상",
     "suggestions": "제안",
