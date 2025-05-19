@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useLocation, useRoute } from "wouter";
+import { useTranslation } from "react-i18next";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,7 @@ export default function Project() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   // 관리자 권한 체크
   const isAdmin = useMemo(() => user?.role === "admin", [user?.role]);
