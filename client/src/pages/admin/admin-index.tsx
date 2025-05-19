@@ -331,7 +331,7 @@ export default function AdminConsole() {
                     className="flex items-center gap-2"
                     onClick={() => {
                       /* Add user functionality can be implemented here */
-                      alert("Add user functionality not implemented yet");
+                      alert(t('admin.userFunctionalityNotImplemented', '사용자 추가 기능이 아직 구현되지 않았습니다'));
                     }}
                   >
                     <UserPlus className="h-4 w-4" />
