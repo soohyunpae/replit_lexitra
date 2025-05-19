@@ -321,13 +321,13 @@ export default function UnifiedGlossaryPage() {
   }
 
   function handleDeleteTerm(id: number) {
-    if (window.confirm("Are you sure you want to delete this term?")) {
+    if (window.confirm(t('glossaries.deleteConfirmation'))) {
       deleteGlossaryMutation.mutate(id);
     }
   }
 
   function handleDeleteResource(id: number) {
-    if (window.confirm("Are you sure you want to delete this glossary resource? This will also delete all terms associated with this resource.")) {
+    if (window.confirm(t('glossaries.resourceDeleteConfirmation', "Are you sure you want to delete this glossary resource? This will also delete all terms associated with this resource."))) {
       deleteResourceMutation.mutate(id);
     }
   }
@@ -370,8 +370,8 @@ export default function UnifiedGlossaryPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/glossary/all"] });
       queryClient.invalidateQueries({ queryKey: ["/api/glossary/resources"] });
       toast({
-        title: "File uploaded",
-        description: `The glossary file has been uploaded and processed successfully. ${data.message || ''}`,
+        title: t('glossaries.fileUploaded', "File uploaded"),
+        description: t('glossaries.fileUploadedSuccess', "The glossary file has been uploaded and processed successfully.") + ` ${data.message || ''}`,
       });
       setIsUploading(false);
       
@@ -382,8 +382,8 @@ export default function UnifiedGlossaryPage() {
     },
     onError: (error: any) => {
       toast({
-        title: "Upload failed",
-        description: error.message || "Failed to upload glossary file. Please check the file format.",
+        title: t('glossaries.uploadFailed', "Upload failed"),
+        description: error.message || t('glossaries.failedToUploadFile', "Failed to upload glossary file. Please check the file format."),
         variant: "destructive",
       });
       setIsUploading(false);
