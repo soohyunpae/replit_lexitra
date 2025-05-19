@@ -650,7 +650,7 @@ export default function Project() {
   }
 
   return (
-    <MainLayout title="Project Detail">
+    <MainLayout title={t('projects.projectDetail')}>
       <main className="flex-1 p-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -670,7 +670,7 @@ export default function Project() {
                           : "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
                   }`}
                 >
-                  {project.status}
+                  {t(`projects.status${project.status}`)}
                 </span>
               </h1>
             </div>
@@ -684,7 +684,7 @@ export default function Project() {
                   onClick={() => claimProject.mutate()}
                   disabled={claimProject.isPending}
                 >
-                  {claimProject.isPending ? "Claiming..." : "Claim"}
+                  {claimProject.isPending ? t('projects.claiming') : t('projects.claim')}
                 </Button>
               )}
 
@@ -697,7 +697,7 @@ export default function Project() {
                       onClick={() => setShowReleaseDialog(true)}
                       disabled={releaseProject.isPending}
                     >
-                      {releaseProject.isPending ? "Releasing..." : "Release"}
+                      {releaseProject.isPending ? t('projects.releasing') : t('projects.release')}
                     </Button>
                     <Button
                       variant="default"
@@ -705,7 +705,7 @@ export default function Project() {
                       onClick={() => setShowCompleteDialog(true)}
                       disabled={completeProject.isPending}
                     >
-                      {completeProject.isPending ? "Completing..." : "Complete"}
+                      {completeProject.isPending ? t('projects.completing') : t('projects.complete')}
                     </Button>
                   </>
                 )}
@@ -718,7 +718,7 @@ export default function Project() {
                     onClick={() => setShowReopenDialog(true)}
                     disabled={reopenProject.isPending}
                   >
-                    {reopenProject.isPending ? "Reopening..." : "Reopen"}
+                    {reopenProject.isPending ? t('projects.reopening') : t('projects.reopen')}
                   </Button>
                 )}
 
@@ -729,10 +729,9 @@ export default function Project() {
               >
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Confirm Release</DialogTitle>
+                    <DialogTitle>{t('projects.confirmRelease')}</DialogTitle>
                     <DialogDescription>
-                      Releasing the project will allow other users to claim it.
-                      Are you sure you want to release this project?
+                      {t('projects.releaseDescription')}
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
@@ -740,7 +739,7 @@ export default function Project() {
                       variant="outline"
                       onClick={() => setShowReleaseDialog(false)}
                     >
-                      Cancel
+                      {t('common.cancel')}
                     </Button>
                     <Button
                       variant="default"
@@ -750,7 +749,7 @@ export default function Project() {
                         releaseProject.mutate();
                       }}
                     >
-                      Release
+                      {t('projects.release')}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -763,10 +762,9 @@ export default function Project() {
               >
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Confirm Complete</DialogTitle>
+                    <DialogTitle>{t('projects.confirmComplete')}</DialogTitle>
                     <DialogDescription>
-                      Are you sure you want to mark this project as completed?
-                      Completed projects cannot be edited further.
+                      {t('projects.completeDescription')}
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
@@ -774,7 +772,7 @@ export default function Project() {
                       variant="outline"
                       onClick={() => setShowCompleteDialog(false)}
                     >
-                      Cancel
+                      {t('common.cancel')}
                     </Button>
                     <Button
                       variant="default"
@@ -784,7 +782,7 @@ export default function Project() {
                         completeProject.mutate();
                       }}
                     >
-                      Complete
+                      {t('projects.complete')}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -797,10 +795,9 @@ export default function Project() {
               >
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Confirm Reopen</DialogTitle>
+                    <DialogTitle>{t('projects.confirmReopen')}</DialogTitle>
                     <DialogDescription>
-                      Are you sure you want to reopen this completed project and
-                      change its status back to in progress?
+                      {t('projects.reopenDescription')}
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
@@ -808,7 +805,7 @@ export default function Project() {
                       variant="outline"
                       onClick={() => setShowReopenDialog(false)}
                     >
-                      Cancel
+                      {t('common.cancel')}
                     </Button>
                     <Button
                       variant="default"
@@ -818,7 +815,7 @@ export default function Project() {
                         reopenProject.mutate();
                       }}
                     >
-                      Reopen
+                      {t('projects.reopen')}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -831,7 +828,7 @@ export default function Project() {
                   onClick={() => deleteProject.mutate()}
                   disabled={deleteProject.isPending}
                 >
-                  {deleteProject.isPending ? "Deleting..." : "Delete"}
+                  {deleteProject.isPending ? t('projects.deleting') : t('common.delete')}
                 </Button>
               )}
             </div>
@@ -925,9 +922,9 @@ export default function Project() {
                           value={glossaryInput}
                           onChange={(e) => setGlossaryInput(e.target.value)}
                         >
-                          <option value="default">Default Glossary</option>
-                          <option value="patents">Patents Glossary</option>
-                          <option value="technical">Technical Glossary</option>
+                          <option value="default">{t('projects.defaultGlossary')}</option>
+                          <option value="patents">{t('projects.patentsGlossary')}</option>
+                          <option value="technical">{t('projects.technicalGlossary')}</option>
                         </select>
                       </div>
                     ) : (
@@ -1015,7 +1012,7 @@ export default function Project() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
-                  <span>📊 Translation Summary</span>
+                  <span>📊 {t('projects.translationSummary')}</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-sm space-y-4">
@@ -1026,18 +1023,18 @@ export default function Project() {
                         <div className="flex justify-between items-center mb-1">
                           <div className="text-muted-foreground flex items-center gap-1.5">
                             <TextCursorInput className="h-35 w-3.5" />
-                            <span>Word Count:</span>
+                            <span>{t('projects.wordCount')}:</span>
                           </div>
                           <div className="font-medium">
                             {project.wordCount || calculateTotalWordCount()}{" "}
-                            words
+                            {t('projects.words')}
                           </div>
                         </div>
                         <div className="flex justify-between items-center mb-1">
-                          <div className="text-muted-foreground">Reviewed:</div>
+                          <div className="text-muted-foreground">{t('projects.reviewed')}:</div>
                           <div className="font-medium">
                             {projectStats.completedSegments} /{" "}
-                            {projectStats.totalSegments} segments
+                            {projectStats.totalSegments} {t('projects.segments')}
                             <span className="ml-1 text-primary">
                               ({Math.round((projectStats.statusCounts.Reviewed / projectStats.totalSegments) * 100)}%)
                             </span>
@@ -1062,47 +1059,47 @@ export default function Project() {
 
                     <div className="grid grid-cols-2 gap-2 mt-4">
                       <div className="text-muted-foreground">
-                        TM Match Breakdown:
+                        {t('projects.tmMatchBreakdown')}:
                       </div>
                       <div>
                         <div className="flex items-center gap-1 mb-1">
                           <div className="w-2 h-2 rounded-full bg-green-300"></div>
-                          <span>Reviewed:</span>
+                          <span>{t('projects.reviewed')}:</span>
                           <span className="font-medium ml-auto">
                             {projectStats.statusCounts["Reviewed"]}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 mb-1">
                           <div className="w-2 h-2 rounded-full bg-blue-300"></div>
-                          <span>100% Match:</span>
+                          <span>{t('projects.match100')}:</span>
                           <span className="font-medium ml-auto">
                             {projectStats.statusCounts["100%"]}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 mb-1">
                           <div className="w-2 h-2 rounded-full bg-yellow-300"></div>
-                          <span>Fuzzy Match:</span>
+                          <span>{t('projects.fuzzyMatch')}:</span>
                           <span className="font-medium ml-auto">
                             {projectStats.statusCounts["Fuzzy"]}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 mb-1">
                           <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                          <span>MT:</span>
+                          <span>{t('projects.mt')}:</span>
                           <span className="font-medium ml-auto">
                             {projectStats.statusCounts["MT"]}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 mb-1">
                           <div className="w-2 h-2 rounded-full bg-purple-300"></div>
-                          <span>Edited:</span>
+                          <span>{t('projects.edited')}:</span>
                           <span className="font-medium ml-auto">
                             {projectStats.statusCounts.Edited || 0}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
                           <div className="w-2 h-2 rounded-full bg-red-300"></div>
-                          <span>Rejected:</span>
+                          <span>{t('projects.rejected')}:</span>
                           <span className="font-medium ml-auto">
                             {projectStats.statusCounts.Rejected || 0}
                           </span>
@@ -1112,10 +1109,10 @@ export default function Project() {
 
                     <div className="grid grid-cols-2 gap-1 mt-2">
                       <div className="text-muted-foreground">
-                        Glossary Usage:
+                        {t('projects.glossaryUsage')}:
                       </div>
                       <div className="font-medium">
-                        {projectStats.glossaryMatchCount} term matches
+                        {projectStats.glossaryMatchCount} {t('projects.termMatches')}
                       </div>
                     </div>
                   </>
@@ -1134,7 +1131,7 @@ export default function Project() {
           {/* File list */}
           <Card className="mb-6">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Files</CardTitle>
+              <CardTitle className="text-lg">{t('projects.files')}</CardTitle>
               <CardDescription />
             </CardHeader>
             <CardContent>
