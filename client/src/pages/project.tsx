@@ -930,10 +930,10 @@ export default function Project() {
                     ) : (
                       <div className="font-medium">
                         {project.glossaryId === "patents"
-                          ? "Patents Glossary"
+                          ? t('projects.patentsGlossary')
                           : project.glossaryId === "technical"
-                            ? "Technical Glossary"
-                            : "Default Glossary"}
+                            ? t('projects.technicalGlossary')
+                            : t('projects.defaultGlossary')}
                       </div>
                     )}
                   </div>
@@ -947,18 +947,18 @@ export default function Project() {
                           value={tmInput}
                           onChange={(e) => setTmInput(e.target.value)}
                         >
-                          <option value="default">Default TM</option>
-                          <option value="patents">Patents TM</option>
-                          <option value="technical">Technical TM</option>
+                          <option value="default">{t('projects.defaultTM')}</option>
+                          <option value="patents">{t('projects.patentsTM')}</option>
+                          <option value="technical">{t('projects.technicalTM')}</option>
                         </select>
                       </div>
                     ) : (
                       <div className="font-medium">
                         {project.tmId === "patents"
-                          ? "Patents TM"
+                          ? t('projects.patentsTM')
                           : project.tmId === "technical"
-                            ? "Technical TM"
-                            : "Default TM"}
+                            ? t('projects.technicalTM')
+                            : t('projects.defaultTM')}
                       </div>
                     )}
                   </div>
@@ -999,8 +999,8 @@ export default function Project() {
                       disabled={saveProjectInfo.isPending}>
                       <span>
                         {saveProjectInfo.isPending
-                          ? "Saving..."
-                          : "Save Project Info"}
+                          ? t('common.saving')
+                          : t('projects.saveProjectInfo')}
                       </span>
                     </Button>
                   </div>
