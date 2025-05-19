@@ -160,21 +160,21 @@ export default function AdminConsole() {
               className="flex items-center gap-2"
             >
               <Key className="h-4 w-4" />
-              <span>API Keys</span>
+              <span>{t('admin.apiKeys')}</span>
             </TabsTrigger>
             <TabsTrigger
               value="language"
               className="flex items-center gap-2"
             >
               <Globe className="h-4 w-4" />
-              <span>Language</span>
+              <span>{t('common.language')}</span>
             </TabsTrigger>
             <TabsTrigger
               value="user-management"
               className="flex items-center gap-2"
             >
               <Users className="h-4 w-4" />
-              <span>User Management</span>
+              <span>{t('admin.userManagement')}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -184,10 +184,10 @@ export default function AdminConsole() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Key className="h-5 w-5 mr-2" />
-                  API Keys
+                  {t('admin.apiKeys')}
                 </CardTitle>
                 <CardDescription>
-                  Manage API keys for external services like OpenAI.
+                  {t('admin.apiKeyDesc')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">

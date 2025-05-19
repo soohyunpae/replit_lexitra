@@ -689,7 +689,7 @@ export default function UnifiedTranslationMemoryPage() {
                   <TableHead>{t('tm.source')}</TableHead>
                   <TableHead>{t('tm.target')}</TableHead>
                   <TableHead>{t('common.projects')}</TableHead>
-                  <TableHead>{t('tm.origin')}</TableHead>
+                  <TableHead>{t('tm.status')}</TableHead>
                   <TableHead>{t('tm.added')}</TableHead>
                   <TableHead>{t('tm.modifiedBy')}</TableHead>
                   {isAdmin && <TableHead className="text-right">{t('tm.actions')}</TableHead>}
@@ -699,13 +699,13 @@ export default function UnifiedTranslationMemoryPage() {
                 {isLoadingEntries ? (
                   <TableRow>
                     <TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-8 text-muted-foreground">
-                      Loading TM entries...
+                      {t('common.loading')}
                     </TableCell>
                   </TableRow>
                 ) : filteredTM.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-8 text-muted-foreground">
-                      No translation memory entries found
+                      {t('tm.noTMs')}
                     </TableCell>
                   </TableRow>
                 ) : (
