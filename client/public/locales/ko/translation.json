@@ -167,7 +167,7 @@
     "glossaryDescription": "용어집 설명",
     "sourceLanguage": "원본 언어",
     "targetLanguage": "대상 언어",
-    "entries": "항목",
+    "entries": "용어집 항목",
     "noGlossaries": "용어집을 찾을 수 없습니다",
     "resourceAdded": "용어집 리소스 추가됨",
     "resourceAddedSuccess": "용어집 리소스가 성공적으로 추가되었습니다",
@@ -186,7 +186,14 @@
     "entryUpdated": "항목이 성공적으로 업데이트되었습니다",
     "entryDeleted": "항목이 성공적으로 삭제되었습니다",
     "importGlossary": "용어집 가져오기",
-    "exportGlossary": "용어집 내보내기"
+    "exportGlossary": "용어집 내보내기",
+    "manageGlossaryDesc": "용어집 항목 및 목록 관리",
+    "manageEntries": "용어집 항목, 원본 및 대상 용어 관리",
+    "manageList": "용어집 목록, 도메인 및 언어 쌍 관리",
+    "list": "용어집 목록",
+    "goToEntries": "용어집 항목으로 이동",
+    "goToList": "용어집 목록으로 이동",
+    "redirectingToEntries": "용어집 항목으로 리디렉션 중..."
   },
   "admin": {
     "title": "관리자",

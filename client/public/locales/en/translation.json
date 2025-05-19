@@ -167,7 +167,7 @@
     "glossaryDescription": "Glossary Description",
     "sourceLanguage": "Source Language",
     "targetLanguage": "Target Language",
-    "entries": "Entries",
+    "entries": "Glossary Entries",
     "noGlossaries": "No glossaries found",
     "resourceAdded": "Glossary resource added",
     "resourceAddedSuccess": "The glossary resource has been added successfully",
@@ -186,7 +186,14 @@
     "entryUpdated": "Entry updated successfully",
     "entryDeleted": "Entry deleted successfully",
     "importGlossary": "Import Glossary",
-    "exportGlossary": "Export Glossary"
+    "exportGlossary": "Export Glossary",
+    "manageGlossaryDesc": "Manage glossary entries and list",
+    "manageEntries": "Manage glossary entries, source and target terms",
+    "manageList": "Manage glossary list, domains, and language pairs",
+    "list": "Glossary List",
+    "goToEntries": "Go to Glossary Entries",
+    "goToList": "Go to Glossary List",
+    "redirectingToEntries": "Redirecting to Glossary Entries..."
   },
   "admin": {
     "title": "Admin",
