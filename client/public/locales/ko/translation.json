@@ -128,7 +128,6 @@
     "projectName": "프로젝트 이름",
     "projectDescription": "프로젝트 설명",
     "sourceLanguage": "원본 언어",
-    "edit": "편집",
     "targetLanguage": "대상 언어",
     "status": "상태",
     "progress": "진행 상황",

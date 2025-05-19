@@ -1,6 +1,3 @@
-The code replaces the translation key for the edit button in the project info card to ensure proper translation in Korean.
-```
-```replit_final_file
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -858,7 +855,7 @@ export default function Project() {
                       className="h-8 px-2 text-xs"
                       onClick={() => setIsEditing(!isEditing)}
                     >
-                      {isEditing ? t('common.cancel') : t('projects.edit')}
+                      {isEditing ? t('common.cancel') : t('common.edit')}
                     </Button>
                   )}
                 </div>
@@ -992,4 +989,531 @@ export default function Project() {
                             const deadlineDate = new Date(deadlineInput);
                             formattedDeadline = deadlineDate.toISOString();
                           } catch (e) {
-                            console.
+                            console.error("날짜 형식 변환 오류:", e);
+                          }
+                        }
+
+                        saveProjectInfo.mutate({
+                          deadline: formattedDeadline,
+                          glossaryId: glossaryInput,
+                          tmId: tmInput,
+                        });
+                      }}
+                      disabled={saveProjectInfo.isPending}>
+                      <span>
+                        {saveProjectInfo.isPending
+                          ? "Saving..."
+                          : "Save Project Info"}
+                      </span>
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Translation Summary Card */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center">
+                  <span>📊 {t('projects.translationSummary')}</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm space-y-4">
+                {projectStats ? (
+                  <>
+                    <div className="space-y-2">
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <div className="text-muted-foreground flex items-center gap-1.5">
+                            <TextCursorInput className="h-35 w-3.5" />
+                            <span>Word Count:</span>
+                          </div>
+                          <div className="font-medium">
+                            {project.wordCount || calculateTotalWordCount()}{" "}
+                            words
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center mb-1">
+                          <div className="text-muted-foreground">Reviewed:</div>
+                          <div className="font-medium">
+                            {projectStats.completedSegments} /{" "}
+                            {projectStats.totalSegments} segments
+                            <span className="ml-1 text-primary">
+                              ({Math.round((projectStats.statusCounts.Reviewed / projectStats.totalSegments) * 100)}%)
+                            </span>
+                          </div>
+                        </div>
+                        <Progress
+                          value={projectStats.completionPercentage}
+                          className="h-2"
+                          style={
+                            {
+                              "--reviewed-percent": `${((projectStats.statusCounts.Reviewed || 0) / projectStats.totalSegments) * 100}%`,
+                              "--match-100-percent": `${((projectStats.statusCounts["100%"] || 0) / projectStats.totalSegments) * 100}%`,
+                              "--fuzzy-percent": `${((projectStats.statusCounts.Fuzzy || 0) / projectStats.totalSegments) * 100}%`,
+                              "--mt-percent": `${((projectStats.statusCounts.MT || 0) / projectStats.totalSegments) * 100}%`,
+                              "--edited-percent": `${((projectStats.statusCounts.Edited || 0) / projectStats.totalSegments) * 100}%`,
+                              "--rejected-percent": `${((projectStats.statusCounts.Rejected || 0) / projectStats.totalSegments) * 100}%`,
+                            } as React.CSSProperties
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 mt-4">
+                      <div className="text-muted-foreground">
+                        TM Match Breakdown:
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1 mb-1">
+                          <div className="w-2 h-2 rounded-full bg-green-300"></div>
+                          <span>Reviewed:</span>
+                          <span className="font-medium ml-auto">
+                            {projectStats.statusCounts["Reviewed"]}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 mb-1">
+                          <div className="w-2 h-2 rounded-full bg-blue-300"></div>
+                          <span>100% Match:</span>
+                          <span className="font-medium ml-auto">
+                            {projectStats.statusCounts["100%"]}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 mb-1">
+                          <div className="w-2 h-2 rounded-full bg-yellow-300"></div>
+                          <span>Fuzzy Match:</span>
+                          <span className="font-medium ml-auto">
+                            {projectStats.statusCounts["Fuzzy"]}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 mb-1">
+                          <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                          <span>MT:</span>
+                          <span className="font-medium ml-auto">
+                            {projectStats.statusCounts["MT"]}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 mb-1">
+                          <div className="w-2 h-2 rounded-full bg-purple-300"></div>
+                          <span>Edited:</span>
+                          <span className="font-medium ml-auto">
+                            {projectStats.statusCounts.Edited || 0}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-red-300"></div>
+                          <span>Rejected:</span>
+                          <span className="font-medium ml-auto">
+                            {projectStats.statusCounts.Rejected || 0}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-1 mt-2">
+                      <div className="text-muted-foreground">
+                        Glossary Usage:
+                      </div>
+                      <div className="font-medium">
+                        {projectStats.glossaryMatchCount} term matches
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="animate-pulse space-y-2 py-2">
+                    <div className="h-4 bg-accent rounded w-full"></div>
+                    <div className="h-4 bg-accent rounded w-3/4"></div>
+                    <div className="h-4 bg-accent rounded w-1/2"></div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Work Files Section */}
+          {/* File list */}
+          <Card className="mb-6">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Files</CardTitle>
+              <CardDescription />
+            </CardHeader>
+            <CardContent>
+              {workFiles && workFiles.length > 0 ? (
+                <div className="space-y-2">
+                  {workFiles.map((file: FileType) => {
+                    const stats = fileStats[file.id] || {
+                      total: 0,
+                      completed: 0,
+                      percentage: 0,
+                    };
+                    return (
+                      <div
+                        key={file.id}
+                        className="border border-border rounded-lg p-4 hover:border-primary/60 transition-colors"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                          <div className="md:col-span-2">
+                            <div className="mb-2">
+                              <h3 className="font-medium truncate">
+                                {file.name}
+                              </h3>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Progress
+                                value={stats.percentage}
+                                className="h-2 flex-1"
+                                style={
+                                  {
+                                    "--reviewed-percent": `${getStatusPercentage(file.id, "Reviewed")}%`,
+                                    "--match-100-percent": `${getStatusPercentage(file.id, "100%")}%`,
+                                    "--fuzzy-percent": `${getStatusPercentage(file.id, "Fuzzy")}%`,
+                                    "--mt-percent": `${getStatusPercentage(file.id, "MT")}%`,
+                                    "--edited-percent": `${getStatusPercentage(file.id, "Edited")}%`,
+                                    "--rejected-percent": `${getStatusPercentage(file.id, "Rejected")}%`,
+                                  } as React.CSSProperties
+                                }
+                              />
+                              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                {getStatusCount(file.id, "Reviewed")}/{getTotalSegments(file.id)} (
+                                {Math.round(getStatusPercentage(file.id, "Reviewed"))}%)
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-1">
+                            <div className="text-sm text-muted-foreground">
+                              {formatDate(file.updatedAt || file.createdAt)}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                              <TextCursorInput className="h-3.5 w-3.5" />
+                              <span>
+                                {(file as any).wordCount ||
+                                  getFileWordCount(file.id)}{" "}
+                                words
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end">
+                            <Button
+                              onClick={() =>
+                                navigate(`/translation/${file.id}`)
+                              }
+                              disabled={
+                                project.status === "Unclaimed" ||
+                                (project.status === "Claimed" &&
+                                  project.claimedBy !== user?.id &&
+                                  user?.role !== "admin")
+                              }
+                              variant={
+                                project.status === "Unclaimed" ||
+                                (project.status === "Claimed" &&
+                                  project.claimedBy !== user?.id &&
+                                  user?.role !== "admin")
+                                  ? "outline"
+                                  : "default"
+                              }
+                            >
+                              {project.status === "Unclaimed"
+                                ? "Claim Project First"
+                                : project.status === "Claimed" &&
+                                    project.claimedBy !== user?.id
+                                  ? "Claimed by Another User"
+                                  : "Open Editor"}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12 border border-dashed border-border rounded-lg">
+                  <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-4">
+                    <Upload className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">No files yet</h3>
+                  <p className="text-muted-foreground max-w-md mx-auto mb-6">
+                    Files must be added during project creation. Per the file
+                    management policy, projects without files cannot be created,
+                    and files cannot be added or modified after creation.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Reference Files Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <Card className="md:col-span-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center">
+                  <span>📂 Reference Files</span>
+                </CardTitle>
+                <CardDescription />
+              </CardHeader>
+              <CardContent>
+                {/* Reference files list */}
+                {savedReferences.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+                    {savedReferences.map((file, index) => (
+                      <div
+                        key={`file-ref-${index}`}
+                        className="flex items-center justify-between border border-border/70 rounded-md p-3 hover:border-primary/60 transition-colors"
+                      >
+                        <div className="flex items-center gap-2 truncate mr-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <div className="truncate">
+                            <div className="text-sm text-primary truncate">
+                              {file.name}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Added {formatDate(file.addedAt)}
+                              {file.size && ` • ${formatFileSize(file.size)}`}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => {
+                              // 새로 만든 API 헬퍼 함수를 이용해 다운로드 처리
+                              downloadFile(
+                                `/api/projects/${projectId}/references/${index}/download`,
+                                file.name || `reference-${index}.file`,
+                              ).catch((err) => {
+                                console.error("Download error:", err);
+                                toast({
+                                  title: "다운로드 실패",
+                                  description:
+                                    "파일을 다운로드하는 중 오류가 발생했습니다",
+                                  variant: "destructive",
+                                });
+                              });
+                            }}
+                            title="Download file"
+                          >
+                            <FileDownIcon className="h-3 w-3" />
+                          </Button>
+
+                          {isAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => deleteReferenceFile.mutate(index)}
+                              disabled={deleteReferenceFile.isPending}
+                              title="Delete file"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Drag and drop area for adding more files (admin only) */}
+                    {isAdmin && (
+                      <div
+                        className="border-2 border-dashed border-border/50 rounded-md p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
+                        onClick={() => fileInputRef.current?.click()}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.add("border-primary");
+                        }}
+                        onDragLeave={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.remove("border-primary");
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.remove("border-primary");
+
+                          if (
+                            e.dataTransfer.files &&
+                            e.dataTransfer.files.length > 0
+                          ) {
+                            const newFiles = Array.from(e.dataTransfer.files);
+                            setReferences([...references, ...newFiles]);
+                            // Upload the files
+                            uploadReferences.mutate(newFiles);
+                          }
+                        }}
+                      >
+                        <Upload className="h-6 w-6 text-muted-foreground mb-2" />
+                        <p className="text-xs text-muted-foreground">
+                          Drop files here or click to add more
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    {isAdmin ? (
+                      <>
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          className="hidden"
+                          multiple
+                          accept="*/*"
+                          onChange={(e) => {
+                            console.log("File input change event triggered");
+                            if (e.target.files && e.target.files.length > 0) {
+                              console.log(`Files selected: ${e.target.files.length}`);
+                              const newFiles = Array.from(e.target.files);
+                              console.log("Files selected via dialog:", newFiles.map(f => f.name));
+                              setReferences(prev => [...prev, ...newFiles]);
+
+                              // Create a new FormData directly here
+                              const formData = new FormData();
+                              newFiles.forEach(file => {
+                                formData.append("files", file);
+                                console.log(`Added file to FormData: ${file.name}`);
+                              });
+
+                              // Use the mutation
+                              uploadReferences.mutate(newFiles);
+
+                              // Reset the input value to allow selecting the same file again
+                              e.target.value = '';
+                            } else {
+                              console.log("No files selected in file dialog");
+                            }
+                          }}
+                        />
+                        <div
+                          className="text-center py-8 border-2 border-dashed border-border/50 rounded-lg mb-4 hover:border-primary/50 transition-colors cursor-pointer"
+                          onClick={() => {
+                            console.log("Reference area clicked, opening file dialog");
+                            fileInputRef.current?.click();
+                          }}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.currentTarget.classList.add("border-primary");
+                          }}
+                          onDragLeave={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.currentTarget.classList.remove("border-primary");
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.currentTarget.classList.remove("border-primary");
+                            console.log("Files dropped on reference area");
+
+                            if (
+                              e.dataTransfer.files &&
+                              e.dataTransfer.files.length > 0
+                            ) {
+                              const newFiles = Array.from(e.dataTransfer.files);
+                              console.log("Files dropped:", newFiles.map(f => f.name));
+                              setReferences([...references, ...newFiles]);
+                              // Upload the files
+                              uploadReferences.mutate(newFiles);
+                            }
+                          }}
+                        >
+                        <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-3">
+                            <Upload className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                          <h3 className="text-sm font-medium mb-1">
+                            No Reference Files
+                          </h3>
+                          <p className="text-xs text-primary">
+                            Drop files here or click to upload
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-8 border-2 border-border/50 rounded-lg mb-4">
+                        <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-3">
+                          <File className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-sm font-medium mb-1">
+                          No Reference Files
+                        </h3>
+                        <p className="text-muted-foreground text-xs max-w-md mx-auto">
+                          No reference files have been added to this project
+                          yet.
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Notes Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <Card className="md:col-span-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center justify-between">
+                  <span>📝 Project Notes</span>
+                  {!isNotesEditing && note && isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsNotesEditing(true)}
+                      className="text-xs"
+                    >
+                      <Pencil className="h-3.5 w-3.5 mr-1" />
+                      Edit
+                    </Button>
+                  )}
+                </CardTitle>
+                <CardDescription />
+              </CardHeader>
+              <CardContent>
+                {isNotesEditing ? (
+                  <Textarea
+                    placeholder="Document translation guidelines, special requirements, terminology instructions..."
+                    className="min-h-24"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    onBlur={() => {
+                      saveNotes.mutate();
+                      setIsNotesEditing(false);
+                    }}
+                    autoFocus
+                    disabled={!isAdmin}
+                  />
+                ) : (
+                  <div
+                    className={`border rounded-md p-3 min-h-24 text-sm whitespace-pre-wrap ${isAdmin ? "cursor-pointer" : ""}`}
+                    onClick={() => isAdmin && setIsNotesEditing(true)}
+                  >
+                    {note ? (
+                      note
+                    ) : isAdmin ? (
+                      <span className="text-muted-foreground">
+                        Add special requirements, terminology instructions, or
+                        other notes. Click to edit.
+                      </span>
+                    ) : (
+                      "No notes available."
+                    )}
+                  </div>
+                )}
+                {saveNotes.isPending && (
+                  <div className="mt-2 text-xs text-muted-foreground flex items-center">
+                    <div className="animate-spin mr-1 h-3 w-3 border-t-2 border-primary rounded-full"></div>
+                    Saving notes...
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </main>
+    </MainLayout>
+  );
+}
