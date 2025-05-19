@@ -137,8 +137,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "로그아웃 되었습니다.",
       });
       
-      // Redirect to homepage on successful logout
-      window.location.href = '/';
+      // Redirect to landing page on successful logout
+      window.location.href = '/landing';
     },
     onError: (error) => {
       console.error("Logout error:", error);
@@ -152,8 +152,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "다시 로그인해주세요.",
       });
       
-      // Redirect to homepage
-      window.location.href = '/';
+      // Redirect to landing page even on error
+      window.location.href = '/landing';
     },
   });
 

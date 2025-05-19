@@ -137,3 +137,43 @@ translation.json 파일에 다음 키들이 누락되었습니다:
    - 번역 키 네이밍 규칙 준수
    - 컨텍스트 적절성 검토
 
+# Logout Redirection Implementation Plan
+
+## Current State
+- In `useAuth` hook (client/src/hooks/use-auth.tsx), the logout mutation redirects to '/' after successful logout
+- The landing page (client/src/pages/landing.tsx) already has logic to handle authenticated users but needs to be the default logout destination
+
+## Implementation Steps
+
+1. **Current Issues**
+- Logout redirects to '/' which routes to Dashboard for unauthenticated users instead of landing page
+- This creates a poor user experience with unnecessary redirects
+
+2. **Solution**
+- Modify the logout mutation to redirect to '/landing' instead of '/'
+- Ensure landing page properly handles the logged out state
+
+3. **Files to Modify**
+- hooks/use-auth.tsx: Update logout redirection
+- App.tsx: Ensure routing configuration is correct
+
+## Implementation Details
+
+1. In useAuth.tsx:
+- Update logoutMutation to redirect to '/landing' instead of '/'
+- Ensure proper error handling maintains the redirection
+
+2. In landing.tsx:
+- Verify authentication check works correctly
+- No changes needed as current logic is correct
+
+3. Testing Plan:
+- Test logout flow from different pages
+- Verify landing page loads correctly after logout
+- Check authentication state management
+- Ensure no redirect loops occur
+
+## Benefits
+- Clear user flow after logout
+- Consistent with application architecture
+- Better user experience
