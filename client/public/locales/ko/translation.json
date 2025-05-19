@@ -1,5 +1,6 @@
 {
   "common": {
+    "actions": "작업",
     "appName": "Lexitra",
     "home": "홈",
     "projects": "프로젝트",
