@@ -844,7 +844,8 @@ export default function Project() {
             {/* Project Info Card (with Edit Toggle) */}
             <Card className="border-border/50">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-lg flex items-center">
                     <span>📋 {t('projects.projectInfo')}</span>
                   </CardTitle>
                   {isAdmin && (
