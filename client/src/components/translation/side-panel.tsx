@@ -309,6 +309,7 @@ function GlossaryTerm({
   onUse: (term: string) => void;
 }) {
   const [isApplying, setIsApplying] = useState(false);
+  const { t } = useTranslation();
 
   // 최적화된 UI 업데이트를 위한 함수
   const handleUseTerm = useCallback(() => {
@@ -327,9 +328,8 @@ function GlossaryTerm({
     } catch (error) {
       // 오류 발생시 토스트 메시지 표시
       toast({
-        title: "용어 적용 실패",
-        description:
-          "용어를 적용하는 중 오류가 발생했습니다. 다시 시도해주세요.",
+        title: t('sidePanel.glossary.termApplyFailed'),
+        description: t('sidePanel.glossary.termApplyFailedDescription'),
         variant: "destructive",
       });
       console.error("용어 적용 중 오류:", error);
@@ -339,14 +339,14 @@ function GlossaryTerm({
         setIsApplying(false);
       }, 500);
     }
-  }, [term.target, onUse]);
+  }, [term.target, onUse, t]);
 
   return (
     <div className="bg-accent/50 rounded-md p-3 mb-3">
       <div className="flex justify-between items-center mb-1">
         <div className="font-mono text-sm">{term.source}</div>
         <div className="text-xs text-muted-foreground">
-          <span className="font-semibold">Glossary</span>
+          <span className="font-semibold">{t('sidePanel.glossary.title')}</span>
         </div>
       </div>
       <div className="font-mono text-xs text-muted-foreground mb-2">
