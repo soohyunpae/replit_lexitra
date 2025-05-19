@@ -844,7 +844,7 @@ export default function Project() {
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-lg flex items-center">
-                    <span>📋 프로젝트 정보</span>
+                    <span>📋 Project Info</span>
                   </CardTitle>
                   {isAdmin && (
                     <Button
@@ -861,12 +861,12 @@ export default function Project() {
               <CardContent className="text-sm space-y-3">
                 <div className="flex flex-col space-y-3">
                   <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">프로젝트 이름:</div>
+                    <div className="text-muted-foreground">Project Name:</div>
                     <div className="font-medium">{project.name}</div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">언어 쌍:</div>
+                    <div className="text-muted-foreground">Language Pair:</div>
                     <div className="font-medium flex items-center">
                       <span className="px-2 py-0.5 bg-primary/10 rounded-md text-xs">
                         {project.sourceLanguage}
@@ -879,14 +879,14 @@ export default function Project() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">생성일:</div>
+                    <div className="text-muted-foreground">Created:</div>
                     <div className="font-medium">
                       <span>{formatDate(project.createdAt)}</span>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">최종 수정일:</div>
+                    <div className="text-muted-foreground">Last Updated:</div>
                     <div className="font-medium">
                       <span>
                         {formatDate(project.updatedAt || project.createdAt)}
@@ -895,7 +895,7 @@ export default function Project() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-1 items-center">
-                    <div className="text-muted-foreground">마감일:</div>
+                    <div className="text-muted-foreground">Due Date:</div>
                     {isEditing ? (
                       <div>
                         <Input
@@ -997,7 +997,7 @@ export default function Project() {
                           tmId: tmInput,
                         });
                       }}
-                      disabled{saveProjectInfo.isPending}>
+                      disabled={saveProjectInfo.isPending}>
                       <span>
                         {saveProjectInfo.isPending
                           ? "Saving..."
