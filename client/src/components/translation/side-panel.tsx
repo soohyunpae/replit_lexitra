@@ -388,6 +388,7 @@ export function SidePanel({
   previousVersions: propPreviousVersions,
   showStatusInfo = false,
 }: SidePanelProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("tm");
   const [tmSearchQuery, setTmSearchQuery] = useState("");
   const [tbSearchQuery, setTbSearchQuery] = useState("");
@@ -521,13 +522,11 @@ export function SidePanel({
       // selectedSegment를 완전히 새로운 객체로 복사
       const updatedSegment = {
         ...selectedSegment,
-        comments: selectedSegment.comments ? 
-          [...selectedSegment.comments, newComment] : 
-          [newComment]
+        comment: newComment.text // TranslationUnit에는 comment 필드만 있음 (comments 배열 없음)
       };
 
       // 상태 업데이트
-      setSelectedSegment(updatedSegment);
+      // selectedSegment 상태는 부모 컴포넌트에서 관리됨
 
       // 부모 컴포넌트에 변경 알림
       if (onSegmentUpdated) {
