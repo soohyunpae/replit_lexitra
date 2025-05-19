@@ -153,7 +153,28 @@
     "autoTranslation": "자동 번역",
     "applyingTMMatches": "{{count}}개의 세그먼트에 TM 매치와 기계 번역을 적용하는 중...",
     "autoTranslationComplete": "자동 번역 완료",
-    "translationsApplied": "{{count}}개의 세그먼트에 번역이 적용되었습니다"
+    "translationsApplied": "{{count}}개의 세그먼트에 번역이 적용되었습니다",
+    "docReview": {
+      "source": "원본",
+      "target": "대상",
+      "sideBySide": "양쪽 보기",
+      "sourcePanel": "원본",
+      "targetPanel": "대상",
+      "showSourceOnly": "원본만 보기",
+      "showTargetOnly": "대상만 보기",
+      "showSideBySide": "양쪽 보기",
+      "hideSidePanel": "사이드 패널 숨기기",
+      "showSidePanel": "사이드 패널 보기",
+      "changesSaved": "변경 사항 저장됨",
+      "translationsSavedSuccessfully": "번역이 성공적으로 저장되었습니다.",
+      "failedToLoadSegments": "세그먼트 로딩 실패",
+      "loadingErrorDescription": "번역 세그먼트를 로딩하는 중 오류가 발생했습니다.",
+      "retry": "다시 시도",
+      "errorTitle": "오류",
+      "failedToUpdateSegment": "세그먼트 업데이트 실패",
+      "noSegmentsAvailable": "번역할 세그먼트가 없습니다",
+      "allSegmentsHaveTranslations": "모든 세그먼트에 이미 번역이 있습니다"
+    }
   },
   "glossaries": {
     "title": "용어집",

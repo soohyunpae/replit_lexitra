@@ -153,7 +153,28 @@
     "autoTranslation": "Auto-translation",
     "applyingTMMatches": "Applying TM matches and machine translation to {{count}} segments...",
     "autoTranslationComplete": "Auto-translation complete",
-    "translationsApplied": "Applied translations to {{count}} segments"
+    "translationsApplied": "Applied translations to {{count}} segments",
+    "docReview": {
+      "source": "Source",
+      "target": "Target",
+      "sideBySide": "Side by Side",
+      "sourcePanel": "Source",
+      "targetPanel": "Target",
+      "showSourceOnly": "Show source only",
+      "showTargetOnly": "Show target only",
+      "showSideBySide": "Show side by side",
+      "hideSidePanel": "Hide side panel",
+      "showSidePanel": "Show side panel",
+      "changesSaved": "Changes saved",
+      "translationsSavedSuccessfully": "Your translations have been saved successfully.",
+      "failedToLoadSegments": "Failed to load segments",
+      "loadingErrorDescription": "There was an error loading translation segments.",
+      "retry": "Retry",
+      "errorTitle": "Error",
+      "failedToUpdateSegment": "Failed to update segment",
+      "noSegmentsAvailable": "No segments available to translate",
+      "allSegmentsHaveTranslations": "All segments already have translations"
+    }
   },
   "glossaries": {
     "title": "Glossaries",

@@ -19,6 +19,7 @@ import { useMobile } from '@/hooks/use-mobile';
 import { SidePanel } from './side-panel';
 import { useSegments } from '@/hooks/useSegments';
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from 'react-i18next';
 
 interface DocReviewEditorProps {
   fileName: string;
