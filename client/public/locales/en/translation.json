@@ -59,6 +59,7 @@
     "translationProgress": "Translation Progress",
     "projectsCompleted": "Projects Completed",
     "pendingTasks": "Pending Tasks",
+    "inProgressProjects": "Projects In Progress",
     "activeProjects": "Active Projects",
     "segmentsAwaitingReview": "Segments Awaiting Review",
     "projectsAvailableToClaim": "Projects Available to Claim",

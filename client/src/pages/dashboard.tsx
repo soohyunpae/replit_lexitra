@@ -59,10 +59,9 @@ export default function Dashboard() {
   });
 
   // 실제 데이터 계산
-  const activeProjects = projects.filter(p => p.status !== "Completed").length || 0;
+  const inProgressProjects = projects.filter(p => p.status === "In Progress").length || 0;
   const segmentsAwaitingReview = reviewStats.totalAwaitingReview || 0;
   const availableProjects = reviewStats.availableProjects || 0;
-  const completedSegments = reviewStats.totalCompleted || 0;
 
   // 진행 중인 프로젝트 목록 (실제 데이터)
   const inProgressProjects = projects
@@ -147,8 +146,8 @@ export default function Dashboard() {
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <Card className="bg-white">
             <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold mb-1">📁 {activeProjects}</div>
-              <div className="text-sm text-muted-foreground">{t('dashboard.activeProjects')}</div>
+              <div className="text-2xl font-bold mb-1">📁 {inProgressProjects}</div>
+              <div className="text-sm text-muted-foreground">{t('dashboard.inProgressProjects')}</div>
             </CardContent>
           </Card>
           
@@ -156,9 +155,6 @@ export default function Dashboard() {
             <CardContent className="p-6 text-center">
               <div className="text-2xl font-bold mb-1">📝 {segmentsAwaitingReview}</div>
               <div className="text-sm text-muted-foreground">{t('dashboard.segmentsAwaitingReview')}</div>
-              <div className="text-xs text-muted-foreground mt-1">
-                ({completedSegments} 완료됨)
-              </div>
             </CardContent>
           </Card>
           
