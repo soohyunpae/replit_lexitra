@@ -58,6 +58,7 @@ import {
 import { formatDate } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { ArrowRight } from "lucide-react";
 
 // Form schema for adding TM entries
 const tmEntryFormSchema = z.object({
@@ -87,18 +88,18 @@ export default function UnifiedTranslationMemoryPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const isAdmin = user?.role === "admin";
-  
+
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>("all_source_languages");
   const [targetLanguageFilter, setTargetLanguageFilter] = useState<string>("all_target_languages");
   const [statusFilter, setStatusFilter] = useState<string>("all_statuses");
   const [resourceFilter, setResourceFilter] = useState<string>("all_resources");
-  
+
   // Dialog states
   const [addEntryDialogOpen, setAddEntryDialogOpen] = useState(false);
   const [addResourceDialogOpen, setAddResourceDialogOpen] = useState(false);
-  
+
   // Entry form setup
   const entryForm = useForm<TmEntryFormValues>({
     resolver: zodResolver(tmEntryFormSchema),
@@ -111,7 +112,7 @@ export default function UnifiedTranslationMemoryPage() {
       status: "100%",
     },
   });
-  
+
   // Resource form setup
   const resourceForm = useForm<TmResourceFormValues>({
     resolver: zodResolver(tmResourceFormSchema),
@@ -123,7 +124,7 @@ export default function UnifiedTranslationMemoryPage() {
       isActive: true,
     },
   });
-  
+
   // Delete TM entry mutation
   const deleteTmEntryMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -315,7 +316,7 @@ export default function UnifiedTranslationMemoryPage() {
   function onSubmitResource(data: TmResourceFormValues) {
     addResourceMutation.mutate(data);
   }
-  
+
   // Handle TM resource click for filtering
   function handleResourceClick(resourceId: string) {
     setResourceFilter(resourceId);
@@ -604,13 +605,14 @@ export default function UnifiedTranslationMemoryPage() {
                         </button>
                       </TableCell>
                       <TableCell>{resource.description || "—"}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="text-xs text-muted-foreground">
-                            {t('tm.source')}: {resource.defaultSourceLanguage.toUpperCase()}
+                      <TableCell className="text-center">
+                        <div className="inline-flex items-center gap-1 bg-accent/50 px-2 py-0.5 rounded-full text-xs">
+                          <span className="font-medium">
+                            {resource.defaultSourceLanguage.toUpperCase()}
                           </span>
-                          <span className="text-xs text-muted-foreground">
-                            {t('tm.target')}: {resource.defaultTargetLanguage.toUpperCase()}
+                          <ArrowRight className="h-3 w-3" />
+                          <span className="font-medium">
+                            {resource.defaultTargetLanguage.toUpperCase()}
                           </span>
                         </div>
                       </TableCell>
@@ -647,7 +649,7 @@ export default function UnifiedTranslationMemoryPage() {
             <div className="flex items-center gap-2">
               <Search className="h-5 w-5" />
               <h3 className="text-xl font-semibold">{t('tm.searchTmEntries')}</h3>
-              
+
               {resourceFilter !== "all_resources" && (
                 <Badge 
                   variant="secondary" 
@@ -674,8 +676,8 @@ export default function UnifiedTranslationMemoryPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              
-              
+
+
             </div>
           </div>
 
