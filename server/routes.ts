@@ -498,9 +498,10 @@ const storage = multer.diskStorage({
     const decodedName = Buffer.from(file.originalname, 'binary').toString();
     console.log("원본 파일명 (처리 전):", decodedName);
 
-    // 이름과 확장자 분리
-    const originalExt = path.extname(decodedName);
-    const originalName = path.basename(decodedName, originalExt);
+    // URL 디코딩 및 이름과 확장자 분리
+    const decodedNameUtf8 = decodeURIComponent(decodedName);
+    const originalExt = path.extname(decodedNameUtf8);
+    const originalName = path.basename(decodedNameUtf8, originalExt);
 
     // 한글 파일명 정규화 처리 (NFC)
     const normalizedName = originalName.normalize("NFC");

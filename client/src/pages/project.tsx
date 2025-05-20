@@ -180,7 +180,7 @@ export default function Project() {
     onError: () => {
       toast({
         title: "notifications.saveFailed",
-        description: "notifications.notesFailedToSave", 
+        description: "notifications.notesFailedToSave",
         variant: "destructive",
       });
     },
@@ -224,15 +224,23 @@ export default function Project() {
 
         // Add each file to FormData
         files.forEach((file) => {
-          console.log(`Adding file to upload: ${file.name} (${file.size} bytes, type: ${file.type})`);
+          console.log(
+            `Adding file to upload: ${file.name} (${file.size} bytes, type: ${file.type})`,
+          );
           formData.append("files", file);
         });
 
-        console.log("Uploading files to:", `/api/projects/${projectId}/references/upload`);
+        console.log(
+          "Uploading files to:",
+          `/api/projects/${projectId}/references/upload`,
+        );
         console.log("Files count:", files.length);
 
         // Debug the token issue
-        console.log("Current auth token:", localStorage.getItem("auth_token") ? "Found token" : "No token found");
+        console.log(
+          "Current auth token:",
+          localStorage.getItem("auth_token") ? "Found token" : "No token found",
+        );
 
         // Create a custom FormData request with the right authentication
         const response = await fetch(
@@ -241,11 +249,13 @@ export default function Project() {
             method: "POST",
             headers: {
               // Use the correct token key from localStorage
-              Authorization: `Bearer ${localStorage.getItem("auth_token") || ""}`
+              Authorization: `Bearer ${
+                localStorage.getItem("auth_token") || ""
+              }`,
             },
-            credentials: 'include', // Include cookies for session auth as fallback
-            body: formData
-          }
+            credentials: "include", // Include cookies for session auth as fallback
+            body: formData,
+          },
         );
 
         if (!response.ok) {
@@ -971,6 +981,7 @@ export default function Project() {
                   </div>
                 </div>
                 {isEditing && (
+```text
                   <div className="pt-4 border-t border-border/50 mt-3">
                     <Button
                       type="button"
@@ -996,7 +1007,8 @@ export default function Project() {
                           tmId: tmInput,
                         });
                       }}
-                      disabled={saveProjectInfo.isPending}>
+                      disabled={saveProjectInfo.isPending}
+                    >
                       <span>
                         {saveProjectInfo.isPending
                           ? t('common.saving')
@@ -1152,7 +1164,7 @@ export default function Project() {
                           <div className="md:col-span-2">
                             <div className="mb-2 flex items-center">
                               <h3 className="font-medium truncate">
-                                {file.name}
+                                {decodeURIComponent(file.name)}
                               </h3>
                               {file.processingStatus && (
                                 <div className="ml-2">
@@ -1165,7 +1177,7 @@ export default function Project() {
                                     </div>
                                   )}
                                   {file.processingStatus === "error" && (
-                                    <span className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded" 
+                                    <span className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded"
                                       title={file.errorMessage || t('projects.processingError')}>
                                       {t('projects.processingError')}
                                     </span>
@@ -1200,7 +1212,7 @@ export default function Project() {
                                 />
                               )}
                               <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                {file.processingStatus === "ready" ? 
+                                {file.processingStatus === "ready" ?
                                   `${getStatusCount(file.id, "Reviewed")}/${getTotalSegments(file.id)} (${Math.round(getStatusPercentage(file.id, "Reviewed"))}%)` :
                                   file.processingStatus === "processing" ? t('projects.preparing') : t('projects.unavailable')
                                 }
@@ -1215,7 +1227,7 @@ export default function Project() {
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                               <TextCursorInput className="h-3.5 w-3.5" />
                               <span>
-                                {file.processingStatus === "ready" ? 
+                                {file.processingStatus === "ready" ?
                                   `${(file as any).wordCount || getFileWordCount(file.id)} ${t('projects.words')}` :
                                   t('projects.calculatingWords')
                                 }
@@ -1250,13 +1262,13 @@ export default function Project() {
                               {file.processingStatus === "processing"
                                 ? t('projects.fileProcessing')
                                 : file.processingStatus === "error"
-                                ? t('projects.fileProcessingError') 
-                                : project.status === "Unclaimed"
-                                ? t('projects.claimProjectFirst')
-                                : project.status === "Claimed" &&
-                                    project.claimedBy !== user?.id
-                                  ? t('projects.claimedByAnotherUser')
-                                  : t('projects.openEditor')}
+                                  ? t('projects.fileProcessingError')
+                                  : project.status === "Unclaimed"
+                                    ? t('projects.claimProjectFirst')
+                                    : project.status === "Claimed" &&
+                                      project.claimedBy !== user?.id
+                                      ? t('projects.claimedByAnotherUser')
+                                      : t('projects.openEditor')}
                             </Button>
                           </div>
                         </div>
@@ -1455,7 +1467,7 @@ export default function Project() {
                             }
                           }}
                         >
-                        <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-3">
+                          <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-3">
                             <Upload className="h-6 w-6 text-muted-foreground" />
                           </div>
                           <h3 className="text-sm font-medium mb-1">
@@ -1549,5 +1561,3 @@ export default function Project() {
     </MainLayout>
   );
 }
-
-// Analysis: The code has been modified to include translations for project page strings and project details using the i18next library.
