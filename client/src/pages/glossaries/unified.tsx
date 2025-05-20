@@ -185,9 +185,8 @@ export default function UnifiedGlossaryPage() {
     },
   });
 
-  // Status variables for loading and error states
-  const isLoadingTerms = isLoading;
-  const termsError = error;
+  const isLoadingTerms = false; // Since we're using the existing glossaryData
+  const termsError = null;
 
   // Get glossary resources
   const { 
