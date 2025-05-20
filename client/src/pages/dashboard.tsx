@@ -59,7 +59,7 @@ export default function Dashboard() {
   });
 
   // 실제 데이터 계산
-  const inProgressProjectCount = projects.filter(p => p.status === "In Progress").length || 0;
+  const inProgressProjectCount = projects.filter(p => p.status === "In Progress" || p.status === "Claimed").length || 0;
   const segmentsAwaitingReview = reviewStats.totalAwaitingReview || 0;
   const availableProjects = reviewStats.availableProjects || 0;
 
