@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -126,6 +127,12 @@ export default function Dashboard() {
       status: "In Progress"
     }
   ];
+
+  // Get project stats
+  const { data: projectStats = {} } = useQuery({
+    queryKey: ['/api/projects/stats'],
+    enabled: !!user && inProgressProjects.length > 0,
+  });
 
   // 진행 중인 프로젝트 목록 (실제 데이터가 없을 경우 샘플 데이터 사용)
   const displayProjects = inProgressProjects.map(project => {
