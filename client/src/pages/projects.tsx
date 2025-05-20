@@ -1435,6 +1435,19 @@ export default function ProjectsPage() {
                         <CardTitle className="truncate group-hover:text-primary transition-colors text-base">
                           {project.id}: {project.name}
                         </CardTitle>
+                        {/* File processing indicators */}
+                        {project.files && project.files.some(file => file.processingStatus === "processing") && (
+                          <div className="flex items-center gap-2 mt-1 text-xs text-blue-600 dark:text-blue-400">
+                            <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full"></div>
+                            <span>{t('projects.filesProcessing')}</span>
+                          </div>
+                        )}
+                        {project.files && project.files.some(file => file.processingStatus === "error") && (
+                          <div className="flex items-center gap-2 mt-1 text-xs text-red-600 dark:text-red-400">
+                            <AlertCircle className="h-3 w-3" />
+                            <span>{t('projects.filesProcessingErrors')}</span>
+                          </div>
+                        )}
                       </CardHeader>
                       <CardContent className="pb-2">
                         <div>

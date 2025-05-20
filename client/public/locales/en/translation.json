@@ -132,6 +132,8 @@
     "preparing": "Preparing...",
     "unavailable": "Unavailable",
     "calculatingWords": "Calculating...",
+    "filesProcessing": "Files being processed...",
+    "filesProcessingErrors": "Some files had processing errors",
     "projectNotes": "Project Notes",
     "notesPlaceholder": "Document translation guidelines, special requirements, terminology instructions...",
     "clickToAddNotes": "Add special requirements, terminology instructions, or other notes. Click to edit.",
