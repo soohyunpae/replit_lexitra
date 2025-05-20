@@ -1150,29 +1150,60 @@ export default function Project() {
                       >
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
                           <div className="md:col-span-2">
-                            <div className="mb-2">
+                            <div className="mb-2 flex items-center">
                               <h3 className="font-medium truncate">
                                 {file.name}
                               </h3>
+                              {file.processingStatus && (
+                                <div className="ml-2">
+                                  {file.processingStatus === "processing" && (
+                                    <div className="flex items-center">
+                                      <div className="animate-spin h-3 w-3 border-2 border-primary border-t-transparent rounded-full mr-1"></div>
+                                      <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded">
+                                        {t('projects.processing')}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {file.processingStatus === "error" && (
+                                    <span className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded" 
+                                      title={file.errorMessage || t('projects.processingError')}>
+                                      {t('projects.processingError')}
+                                    </span>
+                                  )}
+                                  {file.processingStatus === "ready" && (
+                                    <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
+                                      {t('projects.ready')}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <Progress
-                                value={stats.percentage}
-                                className="h-2 flex-1"
-                                style={
-                                  {
-                                    "--reviewed-percent": `${getStatusPercentage(file.id, "Reviewed")}%`,
-                                    "--match-100-percent": `${getStatusPercentage(file.id, "100%")}%`,
-                                    "--fuzzy-percent": `${getStatusPercentage(file.id, "Fuzzy")}%`,
-                                    "--mt-percent": `${getStatusPercentage(file.id, "MT")}%`,
-                                    "--edited-percent": `${getStatusPercentage(file.id, "Edited")}%`,
-                                    "--rejected-percent": `${getStatusPercentage(file.id, "Rejected")}%`,
-                                  } as React.CSSProperties
-                                }
-                              />
+                              {file.processingStatus === "processing" ? (
+                                <Progress value={30} className="h-2 flex-1 animate-pulse" />
+                              ) : file.processingStatus === "error" ? (
+                                <Progress value={100} className="h-2 flex-1 bg-red-200 dark:bg-red-900" />
+                              ) : (
+                                <Progress
+                                  value={stats.percentage}
+                                  className="h-2 flex-1"
+                                  style={
+                                    {
+                                      "--reviewed-percent": `${getStatusPercentage(file.id, "Reviewed")}%`,
+                                      "--match-100-percent": `${getStatusPercentage(file.id, "100%")}%`,
+                                      "--fuzzy-percent": `${getStatusPercentage(file.id, "Fuzzy")}%`,
+                                      "--mt-percent": `${getStatusPercentage(file.id, "MT")}%`,
+                                      "--edited-percent": `${getStatusPercentage(file.id, "Edited")}%`,
+                                      "--rejected-percent": `${getStatusPercentage(file.id, "Rejected")}%`,
+                                    } as React.CSSProperties
+                                  }
+                                />
+                              )}
                               <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                {getStatusCount(file.id, "Reviewed")}/{getTotalSegments(file.id)} (
-                                {Math.round(getStatusPercentage(file.id, "Reviewed"))}%)
+                                {file.processingStatus === "ready" ? 
+                                  `${getStatusCount(file.id, "Reviewed")}/${getTotalSegments(file.id)} (${Math.round(getStatusPercentage(file.id, "Reviewed"))}%)` :
+                                  file.processingStatus === "processing" ? t('projects.preparing') : t('projects.unavailable')
+                                }
                               </span>
                             </div>
                           </div>
@@ -1184,9 +1215,10 @@ export default function Project() {
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                               <TextCursorInput className="h-3.5 w-3.5" />
                               <span>
-                                {(file as any).wordCount ||
-                                  getFileWordCount(file.id)}{" "}
-                                {t('projects.words')}
+                                {file.processingStatus === "ready" ? 
+                                  `${(file as any).wordCount || getFileWordCount(file.id)} ${t('projects.words')}` :
+                                  t('projects.calculatingWords')
+                                }
                               </span>
                             </div>
                           </div>
@@ -1200,18 +1232,26 @@ export default function Project() {
                                 project.status === "Unclaimed" ||
                                 (project.status === "Claimed" &&
                                   project.claimedBy !== user?.id &&
-                                  user?.role !== "admin")
+                                  user?.role !== "admin") ||
+                                file.processingStatus === "processing" ||
+                                file.processingStatus === "error"
                               }
                               variant={
                                 project.status === "Unclaimed" ||
                                 (project.status === "Claimed" &&
                                   project.claimedBy !== user?.id &&
-                                  user?.role !== "admin")
+                                  user?.role !== "admin") ||
+                                file.processingStatus === "processing" ||
+                                file.processingStatus === "error"
                                   ? "outline"
                                   : "default"
                               }
                             >
-                              {project.status === "Unclaimed"
+                              {file.processingStatus === "processing"
+                                ? t('projects.fileProcessing')
+                                : file.processingStatus === "error"
+                                ? t('projects.fileProcessingError') 
+                                : project.status === "Unclaimed"
                                 ? t('projects.claimProjectFirst')
                                 : project.status === "Claimed" &&
                                     project.claimedBy !== user?.id
