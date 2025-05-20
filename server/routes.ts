@@ -903,6 +903,63 @@ function registerAdminRoutes(app: Express) {
     },
   );
 
+  // 한글 파일명 복원 유틸리티 함수
+  function restoreKoreanFilename(filename: string): string {
+    // 원본 파일명 보존
+    let displayName = filename;
+    
+    // 한글 파일명 깨짐 여부 확인 (특정 패턴)
+    const koreanPatterns = [
+      { pattern: '諛붾떎', replace: '바다' },
+      { pattern: '�깦�뵆', replace: '샘플' },
+      { pattern: 'ë°ë¤', replace: '바다' },
+      { pattern: 'ìí', replace: '샘플' },
+      { pattern: 'íê¸', replace: '한글' },
+      { pattern: '삊', replace: '한' },
+      { pattern: '�', replace: '코' },
+      // 추가 패턴은 로그를 분석해서 추가할 수 있음
+    ];
+    
+    // 패턴 기반 복원 시도
+    for (const { pattern, replace } of koreanPatterns) {
+      if (displayName.includes(pattern)) {
+        displayName = displayName.replace(new RegExp(pattern, 'g'), replace);
+        console.log(`파일명 패턴 매칭: ${pattern} => ${replace}`);
+      }
+    }
+    
+    // 인코딩 기반 복원 시도
+    if (!/[\uAC00-\uD7A3]/.test(displayName)) {
+      const encodingsToTry = ['euc-kr', 'cp949', 'utf-8', 'latin1', 'binary'];
+      let bestResult = displayName;
+      let maxKoreanChars = 0;
+      
+      for (const encoding of encodingsToTry) {
+        try {
+          const bytes = Buffer.from(displayName, 'binary' as BufferEncoding);
+          const decoded = iconv.decode(bytes, encoding);
+          const koreanCharCount = (decoded.match(/[\uAC00-\uD7A3]/g) || []).length;
+          
+          if (koreanCharCount > maxKoreanChars) {
+            maxKoreanChars = koreanCharCount;
+            bestResult = decoded;
+          }
+        } catch (err) {
+          // 에러 무시하고 다음 인코딩 시도
+        }
+      }
+      
+      if (maxKoreanChars > 0) {
+        displayName = bestResult;
+      }
+    }
+    
+    // 정규화 처리
+    displayName = displayName.normalize('NFC');
+    
+    return displayName;
+  }
+
   // TM Alignment endpoint
   app.post(
     "/api/admin/tm/alignment",
