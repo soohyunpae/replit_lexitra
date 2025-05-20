@@ -16,7 +16,7 @@ class PDFProcessor:
     - Caching to avoid redundant processing
     """
     
-    def __init__(self, cache_dir: str = None):
+    def __init__(self, cache_dir: Optional[str] = None):
         """
         Initialize the PDF processor
         
@@ -103,7 +103,11 @@ class PDFProcessor:
             
             for page_num in range(start_page, end_page + 1):
                 page = doc[page_num]
-                blocks = page.get_text("dict")["blocks"]
+                # Extract page content in dict format
+                # PyMuPDF's Page class has a get_text method that can output in different formats
+                # "dict" returns a hierarchical structure with blocks, lines, spans
+                page_text = page.get_text("dict")
+                blocks = page_text.get("blocks", [])
                 
                 # Add page information to blocks
                 for block in blocks:
@@ -120,6 +124,8 @@ class PDFProcessor:
             # Save to cache if enabled
             if use_cache and self.cache_dir:
                 try:
+                    file_hash = self.get_file_hash(file_path)
+                    cache_path = os.path.join(self.cache_dir, f"{file_hash}.cached")
                     with open(cache_path, "w", encoding="utf-8") as f:
                         import json
                         json.dump(result, f, ensure_ascii=False, indent=2)

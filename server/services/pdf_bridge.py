@@ -61,7 +61,7 @@ def main():
         
         # Process the PDF
         try:
-            processor = PDFProcessor(cache_dir=None if args.no_cache else args.cache_dir)
+            processor = PDFProcessor(cache_dir=args.cache_dir if not args.no_cache else None)
             
             if args.sentences:
                 # Process with sentence segmentation
