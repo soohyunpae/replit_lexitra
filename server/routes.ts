@@ -531,63 +531,56 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     try {
-      // 파일명 디코딩 (한글 처리)
-      console.log("원본 파일명:", file.originalname);
+      // 원본 파일명 로깅 (디버깅용)
+      console.log("업로드된 원본 파일명:", file.originalname);
       
-      // iconv-lite를 사용하여 한글 파일명 처리
-      let originalName = file.originalname;
+      // 원본 파일명 보존 (표시용/다운로드용)
+      let displayName = file.originalname;
       
-      // 파일명이 이미 UTF-8이 아닌 경우를 처리
-      if (!/^[\x00-\x7F]*$/.test(originalName)) {
+      // 한글이 포함된 경우 최대한 복원 시도
+      if (!/^[\x00-\x7F]*$/.test(displayName)) {
         try {
-          // 여러 인코딩을 시도해 가장 적합한 것을 찾음
           const encodingsToTry = ['euc-kr', 'cp949', 'latin1'];
           
           for (const encoding of encodingsToTry) {
             try {
-              // 원본 데이터를 바이너리로 변환 후 디코딩 시도
-              const bytes = Buffer.from(originalName, 'binary' as BufferEncoding);
+              const bytes = Buffer.from(displayName, 'binary' as BufferEncoding);
               const decoded = iconv.decode(bytes, encoding);
               
-              // 디코딩된 문자열에 한글이 포함되어 있다면 성공으로 판단
               if (/[\uAC00-\uD7A3]/.test(decoded)) {
-                originalName = decoded;
-                console.log(`성공적인 인코딩 변환 (${encoding}):`, originalName);
+                displayName = decoded;
+                console.log(`한글 파일명 복원 (${encoding}):`, displayName);
                 break;
               }
             } catch (err: any) {
-              console.log(`${encoding} 디코딩 실패:`, err.message);
+              console.log(`${encoding} 디코딩 시도 실패:`, err.message);
             }
           }
         } catch (decodeErr: any) {
-          console.log("파일명 디코딩 오류:", decodeErr.message);
+          console.log("파일명 디코딩 시도 중 오류:", decodeErr.message);
         }
       }
       
-      // 이름 정규화 (한글 조합 문자 처리를 위해 필수)
-      originalName = originalName.normalize('NFC');
-      console.log("최종 처리된 파일명:", originalName);
-
-      // 이름과 확장자 분리
-      const ext = path.extname(originalName);
-      const nameWithoutExt = path.basename(originalName, ext);
+      // 디스플레이용 이름 정규화 및 저장
+      displayName = displayName.normalize('NFC');
       
-      // 고유한 파일명 생성 (타임스탬프 + 정규화된 원본명)
+      // 실제 파일 시스템용 안전한 영문 파일명 생성
       const timestamp = Date.now();
-      const randomStr = Math.random().toString(36).substring(2, 8);
-      const safeFileName = `${timestamp}-${randomStr}-${nameWithoutExt}${ext}`;
-
-      // 원본 파일명 매핑 저장
+      const randomString = Math.random().toString(36).substring(2, 8);
+      const ext = path.extname(file.originalname);
+      
+      // 안전한 시스템 파일명 생성 (타임스탬프 + 랜덤 문자열 + 확장자)
+      const safeFileName = `${timestamp}-${randomString}${ext}`;
+      
+      // 원본 파일명 매핑 저장 (화면 표시용)
       if (!req.fileOriginalNames) {
         (req as any).fileOriginalNames = {};
       }
-      (req as any).fileOriginalNames[safeFileName] = originalName;
-
-      console.log("File processing:", {
-        originalName: originalName,
-        storedAs: safeFileName
-      });
-
+      (req as any).fileOriginalNames[safeFileName] = displayName;
+      
+      console.log(`파일 저장: 시스템명 "${safeFileName}", 표시명 "${displayName}"`);
+      
+      // 안전한 파일명으로 저장
       cb(null, safeFileName);
     } catch (error) {
       console.error("Filename processing error:", error);
