@@ -497,36 +497,40 @@ const storage = multer.diskStorage({
       // 파일명을 UTF-8로 적절히 디코딩
       let originalName = file.originalname;
       
-      // binary 인코딩된 경우 UTF-8로 변환
-      if (Buffer.from(originalName).toString('binary') !== originalName) {
-        originalName = Buffer.from(originalName, 'binary').toString('utf8');
+      // 파일명 인코딩 문제 해결을 위한 추가 처리
+      if (Buffer.isBuffer(originalName)) {
+        originalName = originalName.toString('utf8');
+      } else if (typeof originalName === 'string') {
+        // 바이너리 인코딩된 경우 UTF-8로 변환 (일관된 방식)
+        try {
+          originalName = Buffer.from(originalName, 'binary').toString('utf8');
+        } catch (e) {
+          console.log("Failed to decode binary:", e);
+        }
       }
       
-      console.log("Original filename:", originalName);
+      // 이름 정규화 (한글 조합 문자 처리를 위해 필수)
+      originalName = originalName.normalize('NFC');
+      
+      console.log("Original filename after normalization:", originalName);
 
       // 이름과 확장자 분리
       const ext = path.extname(originalName);
       const nameWithoutExt = path.basename(originalName, ext);
-
-      // 한글 파일명 정규화 (NFC)
-      const normalizedName = nameWithoutExt.normalize('NFC');
-      const normalizedExt = ext.normalize('NFC');
       
       // 고유한 파일명 생성 (타임스탬프 + 정규화된 원본명)
       const timestamp = Date.now();
       const randomStr = Math.random().toString(36).substring(2, 8);
-      const safeFileName = `${timestamp}-${randomStr}-${normalizedName}${normalizedExt}`;
+      const safeFileName = `${timestamp}-${randomStr}-${nameWithoutExt}${ext}`;
 
       // 원본 파일명 매핑 저장
       if (!req.fileOriginalNames) {
         (req as any).fileOriginalNames = {};
       }
-      const normalizedFullName = normalizedName + normalizedExt;
-      (req as any).fileOriginalNames[safeFileName] = normalizedFullName;
+      (req as any).fileOriginalNames[safeFileName] = originalName;
 
       console.log("File processing:", {
         originalName: originalName,
-        normalized: normalizedFullName,
         storedAs: safeFileName
       });
 
