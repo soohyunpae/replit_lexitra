@@ -3110,6 +3110,54 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
     }
   });
 
+  // 대시보드를 위한 검토 통계 API
+  app.get(`${apiPrefix}/projects/review-stats`, verifyToken, async (req, res) => {
+    try {
+      // 사용자 정보 확인
+      const userId = req.user!.id;
+      
+      // 1. 모든 프로젝트에서 검토 대기 중인 세그먼트 수 계산
+      // 먼저 모든 프로젝트의 모든 파일 가져오기
+      const projects = await db.query.projects.findMany({
+        with: {
+          files: true,
+        },
+      });
+      
+      // 파일 ID 목록 생성
+      const fileIds = projects.flatMap(project => project.files.map(file => file.id));
+      
+      // 모든 세그먼트 상태별로 쿼리
+      let totalSegments = 0;
+      let totalReviewed = 0;
+      let totalAwaitingReview = 0;
+      
+      if (fileIds.length > 0) {
+        // 모든 세그먼트 수 가져오기
+        const segmentResults = await db.query.translationUnits.findMany({
+          where: inArray(schema.translationUnits.fileId, fileIds),
+        });
+        
+        totalSegments = segmentResults.length;
+        totalReviewed = segmentResults.filter(seg => seg.status === "Reviewed").length;
+        totalAwaitingReview = totalSegments - totalReviewed;
+      }
+      
+      // 2. 사용자가 클레임할 수 있는 프로젝트 수 계산
+      const availableProjects = await db.query.projects.findMany({
+        where: eq(schema.projects.status, "Unclaimed"),
+      });
+      
+      return res.json({
+        totalAwaitingReview,
+        totalCompleted: totalReviewed,
+        availableProjects: availableProjects.length
+      });
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+
   // TM API
   app.post(`${apiPrefix}/search_tm`, verifyToken, async (req, res) => {
     try {
