@@ -124,6 +124,175 @@ const extractTextFromPdf = async (pdfPath: string): Promise<string> => {
   });
 };
 
+// 세그먼트 처리 헬퍼 함수
+async function processFileSegments(fileId: number, fileContent: string, projectId: number) {
+  try {
+    // Parse content into segments by splitting into sentences
+    const segmentText = (text: string): string[] => {
+      // Matches end of sentence: period, question mark, exclamation mark followed by space or end
+      // But doesn't split on common abbreviations, decimal numbers, etc.
+      const sentences = [];
+      const regex = /[.!?]\s+|[.!?]$/g;
+      let match;
+      let lastIndex = 0;
+
+      // Split on sentence endings
+      while ((match = regex.exec(text)) !== null) {
+        const sentence = text
+          .substring(lastIndex, match.index + 1)
+          .trim();
+        if (sentence) sentences.push(sentence);
+        lastIndex = match.index + match[0].length;
+      }
+
+      // Add any remaining text
+      if (lastIndex < text.length) {
+        const remainingText = text.substring(lastIndex).trim();
+        if (remainingText) sentences.push(remainingText);
+      }
+
+      return sentences.length > 0 ? sentences : [text.trim()];
+    };
+
+    // 문장 단위로 세그먼트 분리
+    const segments = segmentText(fileContent);
+    console.log(
+      `[비동기 처리] 파일 ID: ${fileId}에서 ${segments.length}개의 세그먼트 생성`,
+    );
+
+    // 세그먼트 저장
+    if (segments.length > 0) {
+      const segmentInserts = segments.map((segmentText) => ({
+        source: segmentText,
+        target: "",
+        fileId: fileId,
+        status: "Draft",
+        origin: "MT",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }));
+
+      // 세그먼트 데이터베이스 저장
+      const savedSegments = await db
+        .insert(schema.translationUnits)
+        .values(segmentInserts)
+        .returning();
+
+      console.log(`[비동기 처리] ${savedSegments.length}개의 세그먼트 저장 완료`);
+
+      // 만약 OpenAI API가 사용 가능하면 자동 번역 적용
+      const projectInfo = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, projectId),
+      });
+
+      // 프로젝트 소스 언어와 타겟 언어 확인
+      if (
+        projectInfo &&
+        projectInfo.sourceLanguage &&
+        projectInfo.targetLanguage
+      ) {
+        console.log("[비동기 처리] 자동 번역 준비 중...");
+
+        // TM 매칭 준비
+        const tmMatches = await db.query.translationMemory.findMany({
+          where: and(
+            eq(
+              schema.translationMemory.sourceLanguage,
+              projectInfo.sourceLanguage,
+            ),
+            eq(
+              schema.translationMemory.targetLanguage,
+              projectInfo.targetLanguage,
+            ),
+          ),
+          limit: 100,
+        });
+
+        // 용어집 준비
+        const glossaryTerms = await db.query.glossary.findMany({
+          where: and(
+            eq(
+              schema.glossary.sourceLanguage,
+              projectInfo.sourceLanguage,
+            ),
+            eq(
+              schema.glossary.targetLanguage,
+              projectInfo.targetLanguage,
+            ),
+          ),
+          limit: 100,
+        });
+
+        // 각 세그먼트에 대해 자동 번역 실행 및 업데이트
+        for (const segment of savedSegments) {
+          try {
+            // TM 매칭 찾기
+            const relevantTmMatches = tmMatches
+              .filter(
+                (tm) =>
+                  calculateSimilarity(segment.source, tm.source) >
+                  0.7,
+              )
+              .slice(0, 5);
+
+            // 용어집 매칭 찾기
+            const relevantTerms = glossaryTerms.filter((term) =>
+              segment.source
+                .toLowerCase()
+                .includes(term.source.toLowerCase()),
+            );
+
+            // TM 컨텍스트 준비
+            const context = relevantTmMatches.map(
+              (tm) => `${tm.source} => ${tm.target}`,
+            );
+
+            // 용어 컨텍스트 준비
+            const terminology = relevantTerms.map(
+              (term) => `${term.source} => ${term.target}`,
+            );
+
+            // GPT 번역 호출
+            const translationResult = await translateWithGPT(
+              segment.source,
+              projectInfo.sourceLanguage,
+              projectInfo.targetLanguage,
+              context,
+              terminology,
+            );
+
+            if (translationResult) {
+              // 번역 결과 저장
+              await db
+                .update(schema.translationUnits)
+                .set({
+                  target: translationResult,
+                  status: "MT",
+                  updatedAt: new Date(),
+                })
+                .where(eq(schema.translationUnits.id, segment.id));
+
+              console.log(
+                `[비동기 처리] 세그먼트 ID ${segment.id} 번역 완료: "${segment.source.substring(
+                  0,
+                  30,
+                )}..." => "${translationResult.substring(0, 30)}..."`,
+              );
+            }
+          } catch (translationError) {
+            console.error(
+              `[비동기 처리] 세그먼트 ID ${segment.id} 번역 실패:`,
+              translationError,
+            );
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`[비동기 처리] 세그먼트 처리 오류 (파일 ID: ${fileId}):`, error);
+  }
+}
+
 async function processFile(file: Express.Multer.File) {
   const ext = path.extname(file.originalname).toLowerCase();
   let text = "";
@@ -1464,84 +1633,154 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
           .values(projectData)
           .returning();
 
-        // 업로드된 파일 처리
-        const files: (typeof schema.files.$inferInsert)[] = [];
+        // 업로드된 파일 기본 정보만 빠르게 DB에 저장 (파일 처리는 비동기적으로 진행)
+        const fileRecords: (typeof schema.files.$inferInsert)[] = [];
         const uploadedFiles = req.files as {
           [fieldname: string]: Express.Multer.File[];
         };
 
         if (uploadedFiles && uploadedFiles.files) {
-          console.log("프로젝트 파일 처리 시작");
-          // 작업 파일 처리
+          // 작업 파일 정보 저장
           for (const file of uploadedFiles.files) {
-            try {
-              // processFile 함수를 사용하여 파일 형식에 맞게 텍스트 추출
-              const fileContent = await processFile(file);
-
-              // 추출된 텍스트만 저장 (바이너리 데이터 X)
-              files.push({
-                name: file.originalname,
-                content: fileContent, // 추출된 텍스트
-                projectId: project.id,
-                type: "work",
-                createdAt: new Date(),
-                updatedAt: new Date(),
-              });
-            } catch (fileErr) {
-              console.error(
-                `Error processing file ${file.originalname}:`,
-                fileErr,
-              );
-            }
+            // 초기 파일 정보만 저장 (처리 전)
+            fileRecords.push({
+              name: file.originalname,
+              content: `[Processing ${file.originalname}...]`, // 임시 콘텐츠, 나중에 업데이트됨
+              projectId: project.id,
+              type: "work",
+              processingStatus: "processing", // 처리 중 상태로 표시
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
           }
         }
 
         if (uploadedFiles && uploadedFiles.references) {
-          console.log("참조 파일 처리 시작");
-          // 참조 파일 처리
+          // 참조 파일 정보 저장
           for (const file of uploadedFiles.references) {
-            try {
-              // processFile 함수를 사용하여 파일 형식에 맞게 텍스트 추출
-              const fileContent = await processFile(file);
-
-              // 추출된 텍스트만 저장
-              files.push({
-                name: file.originalname,
-                content: fileContent, // 추출된 텍스트
-                projectId: project.id,
-                type: "reference",
-                createdAt: new Date(),
-                updatedAt: new Date(),
-              });
-            } catch (fileErr) {
-              console.error(
-                `Error processing file ${file.originalname}:`,
-                fileErr,
-              );
-            }
+            // 초기 파일 정보만 저장 (처리 전)
+            fileRecords.push({
+              name: file.originalname,
+              content: `[Processing ${file.originalname}...]`, // 임시 콘텐츠, 나중에 업데이트됨
+              projectId: project.id,
+              type: "reference",
+              processingStatus: "processing", // 처리 중 상태로 표시
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
           }
         }
 
-        // 파일들을 데이터베이스에 저장
+        // 파일 레코드를 데이터베이스에 저장
         let savedFiles: (typeof schema.files.$inferSelect)[] = [];
-        if (files.length > 0) {
-          savedFiles = await db.insert(schema.files).values(files).returning();
+        if (fileRecords.length > 0) {
+          savedFiles = await db.insert(schema.files).values(fileRecords).returning();
+        }
 
-          // 분석 완료 후 임시 파일 삭제
-          if (uploadedFiles) {
-            Object.values(uploadedFiles).forEach((fileArray) => {
-              fileArray.forEach((file) => {
-                try {
-                  fs.unlinkSync(file.path);
-                } catch (unlinkErr) {
-                  console.error(
-                    `Failed to unlink file ${file.path}:`,
-                    unlinkErr,
-                  );
+        // 비동기적으로 파일 처리 시작 (응답 반환 후 백그라운드에서 실행)
+        if (uploadedFiles) {
+          // 스레드 차단하지 않고 백그라운드에서 실행
+          setImmediate(async () => {
+            try {
+              // 작업 파일 처리
+              if (uploadedFiles.files) {
+                for (let i = 0; i < uploadedFiles.files.length; i++) {
+                  const file = uploadedFiles.files[i];
+                  const fileRecord = savedFiles.find(f => f.name === file.originalname && f.type === "work");
+                  
+                  if (!fileRecord) continue;
+                  
+                  try {
+                    console.log(`[비동기 처리] 파일 처리 시작: ${file.originalname}`);
+                    
+                    // 파일 처리
+                    const fileContent = await processFile(file);
+                    
+                    // 파일 내용 업데이트
+                    await db
+                      .update(schema.files)
+                      .set({
+                        content: fileContent,
+                        processingStatus: "ready", // 처리 완료 상태로 업데이트
+                        updatedAt: new Date(),
+                      })
+                      .where(eq(schema.files.id, fileRecord.id));
+                    
+                    console.log(`[비동기 처리] 파일 처리 완료: ${file.originalname}`);
+                    
+                    // 세그먼트 생성 및 처리
+                    if (fileRecord.type === "work") {
+                      await processFileSegments(fileRecord.id, fileContent, project.id);
+                    }
+                  } catch (error) {
+                    console.error(`[비동기 처리] 파일 처리 오류: ${file.originalname}`, error);
+                    // 오류 상태로 업데이트
+                    await db
+                      .update(schema.files)
+                      .set({
+                        processingStatus: "error", 
+                        errorMessage: error instanceof Error ? error.message : "Unknown error",
+                        updatedAt: new Date(),
+                      })
+                      .where(eq(schema.files.id, fileRecord.id));
+                  }
                 }
+              }
+              
+              // 참조 파일 처리
+              if (uploadedFiles.references) {
+                for (let i = 0; i < uploadedFiles.references.length; i++) {
+                  const file = uploadedFiles.references[i];
+                  const fileRecord = savedFiles.find(f => f.name === file.originalname && f.type === "reference");
+                  
+                  if (!fileRecord) continue;
+                  
+                  try {
+                    console.log(`[비동기 처리] 참조 파일 처리 시작: ${file.originalname}`);
+                    
+                    // 파일 처리
+                    const fileContent = await processFile(file);
+                    
+                    // 파일 내용 업데이트
+                    await db
+                      .update(schema.files)
+                      .set({
+                        content: fileContent,
+                        processingStatus: "ready", // 처리 완료 상태로 업데이트
+                        updatedAt: new Date(),
+                      })
+                      .where(eq(schema.files.id, fileRecord.id));
+                    
+                    console.log(`[비동기 처리] 참조 파일 처리 완료: ${file.originalname}`);
+                  } catch (error) {
+                    console.error(`[비동기 처리] 참조 파일 처리 오류: ${file.originalname}`, error);
+                    // 오류 상태로 업데이트
+                    await db
+                      .update(schema.files)
+                      .set({
+                        processingStatus: "error", 
+                        errorMessage: error instanceof Error ? error.message : "Unknown error",
+                        updatedAt: new Date(),
+                      })
+                      .where(eq(schema.files.id, fileRecord.id));
+                  }
+                }
+              }
+              
+              // 임시 파일 정리
+              Object.values(uploadedFiles).forEach((fileArray) => {
+                fileArray.forEach((file) => {
+                  try {
+                    fs.unlinkSync(file.path);
+                  } catch (unlinkErr) {
+                    console.error(`Failed to unlink file ${file.path}:`, unlinkErr);
+                  }
+                });
               });
-            });
-          }
+            } catch (error) {
+              console.error("[비동기 처리] 전체 작업 오류:", error);
+            }
+          });
         }
 
         // 각 파일에 대해 세그먼트 생성
