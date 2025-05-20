@@ -1712,13 +1712,13 @@ export default function ProjectsPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-1 bg-accent/50 px-2 py-0.5 rounded-full text-xs">
-                            <span className="font-medium">
-                              {project.sourceLanguage}
+                          <div className="flex items-center gap-1">
+                            <span className="px-2 py-0.5 bg-primary/10 rounded-md text-xs">
+                              {project.sourceLanguage.toUpperCase()}
                             </span>
-                            <ArrowRight className="h-3 w-3" />
-                            <span className="font-medium">
-                              {project.targetLanguage}
+                            <span className="mx-1">→</span>
+                            <span className="px-2 py-0.5 bg-primary/10 rounded-md text-xs">
+                              {project.targetLanguage.toUpperCase()}
                             </span>
                           </div>
                         </TableCell>
