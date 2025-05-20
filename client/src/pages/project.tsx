@@ -1192,32 +1192,44 @@ export default function Project() {
                           </div>
 
                           <div className="flex justify-end">
-                            <Button
-                              onClick={() =>
-                                navigate(`/translation/${file.id}`)
-                              }
-                              disabled={
-                                project.status === "Unclaimed" ||
-                                (project.status === "Claimed" &&
-                                  project.claimedBy !== user?.id &&
-                                  user?.role !== "admin")
-                              }
-                              variant={
-                                project.status === "Unclaimed" ||
-                                (project.status === "Claimed" &&
-                                  project.claimedBy !== user?.id &&
-                                  user?.role !== "admin")
-                                  ? "outline"
-                                  : "default"
-                              }
-                            >
-                              {project.status === "Unclaimed"
-                                ? t('projects.claimProjectFirst')
-                                : project.status === "Claimed" &&
-                                    project.claimedBy !== user?.id
-                                  ? t('projects.claimedByAnotherUser')
-                                  : t('projects.openEditor')}
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              {file.status === 'processing' && (
+                                <div className="flex items-center text-sm text-muted-foreground">
+                                  <RefreshCw className="h-4 w-4 animate-spin mr-1" />
+                                  {t('projects.fileProcessing')}
+                                </div>
+                              )}
+                              <Button
+                                onClick={() =>
+                                  navigate(`/translation/${file.id}`)
+                                }
+                                disabled={
+                                  file.status === 'processing' ||
+                                  project.status === "Unclaimed" ||
+                                  (project.status === "Claimed" &&
+                                    project.claimedBy !== user?.id &&
+                                    user?.role !== "admin")
+                                }
+                                variant={
+                                  file.status === 'processing' ||
+                                  project.status === "Unclaimed" ||
+                                  (project.status === "Claimed" &&
+                                    project.claimedBy !== user?.id &&
+                                    user?.role !== "admin")
+                                    ? "outline"
+                                    : "default"
+                                }
+                              >
+                                {file.status === 'processing'
+                                  ? t('projects.preparingFile')
+                                  : project.status === "Unclaimed"
+                                    ? t('projects.claimProjectFirst')
+                                    : project.status === "Claimed" &&
+                                      project.claimedBy !== user?.id
+                                      ? t('projects.claimedByAnotherUser')
+                                      : t('projects.openEditor')}
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1509,5 +1521,3 @@ export default function Project() {
     </MainLayout>
   );
 }
-
-// Analysis: The code has been modified to include translations for project page strings and project details using the i18next library.
