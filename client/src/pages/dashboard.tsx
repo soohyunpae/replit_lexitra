@@ -243,7 +243,7 @@ export default function Dashboard() {
                     <li key={project.id} className="border rounded-lg px-4 py-3">
                       <div className="font-bold">{project.name}</div>
                       <div className="text-sm text-muted-foreground">
-                        {project.sourceLanguage} → {project.targetLanguage} · {project.progress}% {t('projects.reviewed')}
+                        {project.sourceLanguage} → {project.targetLanguage} · {project.progress}% {t('translation.statusReviewed')}
                       </div>
                       <Link href={`/projects/${project.id}`}>
                         <Button variant="link" className="mt-2 px-0 text-blue-600 hover:underline text-sm">

@@ -141,7 +141,8 @@
     "noNotesAvailable": "No notes available.",
     "downloadFile": "Download file",
     "deleteFile": "Delete file",
-    "savingNotes": "Saving notes..."
+    "savingNotes": "Saving notes...",
+    "reviewed": "Reviewed"
   },
   "translation": {
     "editor": "Translation Editor",
