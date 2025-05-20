@@ -237,10 +237,14 @@ export default function ProjectsPage() {
             // Minimal placeholder, defer population until API response
             let dummyStats = { ...defaultStats };
 
+            // 올바른 인증 토큰 가져오기 (auth_token 사용)
+            const authToken = localStorage.getItem("auth_token");
+            console.log(`Using auth token for project ${project.id} stats: ${authToken ? "Token exists" : "No token found"}`);
+            
             // 서버에 실제 API 요청
             const response = await fetch(`/api/projects/${project.id}/stats`, {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                Authorization: `Bearer ${authToken}`,
               },
             });
 
