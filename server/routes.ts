@@ -1827,12 +1827,10 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
             // 초기 파일 정보만 저장 (처리 전) - 복원된 파일명 사용
             fileRecords.push({
               name: displayName, // 복원된 한글 파일명 사용
-              originalName: displayName, // 원본 파일명도 복원된 한글 파일명 사용
               content: `[Processing ${displayName}...]`, // 임시 콘텐츠, 나중에 업데이트됨
               projectId: project.id,
               type: "work",
               processingStatus: "processing", // 처리 중 상태로 표시
-              path: file.path, // 파일 경로 저장
               createdAt: new Date(),
               updatedAt: new Date(),
             });
@@ -1842,12 +1840,48 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         if (uploadedFiles && uploadedFiles.references) {
           // 참조 파일 정보 저장
           for (const file of uploadedFiles.references) {
-            // 초기 파일 정보만 저장 (처리 전)
+            // 복원된 한글 파일명 가져오기
+            let displayName = file.originalname;
+            
+            if (req.fileOriginalNames && req.fileOriginalNames[file.filename]) {
+              // multer에서 처리된 복원된 한글 파일명 사용
+              displayName = req.fileOriginalNames[file.filename];
+              console.log(`참조 파일 한글명 복원 성공: ${file.originalname} => ${displayName}`);
+            } else {
+              // 추가 복원 시도
+              if (!/^[\x00-\x7F]*$/.test(displayName)) {
+                try {
+                  const encodingsToTry = ['euc-kr', 'cp949', 'latin1'];
+                  
+                  for (const encoding of encodingsToTry) {
+                    try {
+                      const bytes = Buffer.from(displayName, 'binary' as BufferEncoding);
+                      const decoded = iconv.decode(bytes, encoding);
+                      
+                      if (/[\uAC00-\uD7A3]/.test(decoded)) {
+                        displayName = decoded;
+                        console.log(`참조 파일명 복원 성공 (${encoding}):`, displayName);
+                        break;
+                      }
+                    } catch (err: any) {
+                      console.log(`참조 파일 ${encoding} 디코딩 실패:`, err.message);
+                    }
+                  }
+                } catch (decodeErr: any) {
+                  console.log("참조 파일명 디코딩 오류:", decodeErr.message);
+                }
+              }
+              
+              // 정규화
+              displayName = displayName.normalize('NFC');
+            }
+            
+            // 초기 파일 정보만 저장 (처리 전) - 복원된 파일명 사용
             fileRecords.push({
-              name: file.originalname,
-              content: `[Processing ${file.originalname}...]`, // 임시 콘텐츠, 나중에 업데이트됨
+              name: displayName, // 복원된 한글 파일명 사용
+              content: `[Processing ${displayName}...]`, // 임시 콘텐츠, 나중에 업데이트됨
               projectId: project.id,
-              type: "reference",
+              type: "reference", 
               processingStatus: "processing", // 처리 중 상태로 표시
               createdAt: new Date(),
               updatedAt: new Date(),
