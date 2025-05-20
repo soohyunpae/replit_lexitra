@@ -4,7 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["jq", "poppler", "poppler_utils", "lsof"]
+packages = ["freetype", "gumbo", "harfbuzz", "jbig2dec", "jq", "libjpeg_turbo", "lsof", "mupdf", "openjpeg", "poppler", "poppler_utils", "swig", "xcbuild"]
 
 [deployment]
 deploymentTarget = "autoscale"
