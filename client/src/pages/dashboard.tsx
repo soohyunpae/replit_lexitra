@@ -75,12 +75,24 @@ export default function Dashboard() {
       };
     }) || [];
 
-  // 최근 활동 (예시 데이터)
-  const recentActivities = [
-    { user: "Soohyun", action: "added \"센서\" to the Glossary", date: "May 16" },
-    { user: "Minji", action: "saved \"과충전 방지 회로\" to TM", date: "" },
-    { user: "GPT", action: "auto-translated 4 segments in \"디자인 특허\"", date: "" }
-  ];
+  // 최근 활동 데이터를 프로젝트와 리뷰 상태에서 계산
+  const recentActivities = useMemo(() => {
+    if (!projects) return [];
+    
+    // 프로젝트별 최근 업데이트 활동 추출
+    const activities = projects
+      .filter(p => p.updatedAt)
+      .map(project => ({
+        user: project.assignedUser?.username || "",
+        action: `${project.name} 프로젝트 ${project.status === 'Completed' ? '완료' : '업데이트'}`,
+        date: new Date(project.updatedAt),
+        projectId: project.id
+      }))
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .slice(0, 5); // 최근 5개 활동만 표시
+      
+    return activities;
+  }, [projects]);
 
   // 활성 프로젝트 샘플 데이터
   const sampleProjects = [
@@ -187,11 +199,20 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <ul className="text-sm space-y-3 text-gray-700">
-                {recentActivities.map((activity, index) => (
-                  <li key={index}>
-                    📌 <strong>{activity.user}</strong> {activity.action} {activity.date && `(${activity.date})`}
+                {recentActivities.map((activity) => (
+                  <li key={activity.projectId}>
+                    📌 <strong>{activity.user}</strong>{" "}
+                    <Link href={`/projects/${activity.projectId}`}>
+                      <span className="text-blue-600 hover:underline">{activity.action}</span>
+                    </Link>{" "}
+                    ({formatDate(activity.date.toISOString())})
                   </li>
                 ))}
+                {recentActivities.length === 0 && (
+                  <li className="text-center text-muted-foreground">
+                    {t('dashboard.noRecentActivity')}
+                  </li>
+                )}
               </ul>
             </CardContent>
           </Card>
