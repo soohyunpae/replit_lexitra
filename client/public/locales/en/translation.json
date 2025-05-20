@@ -28,7 +28,8 @@
     "confirm": "Confirm",
     "language": "Language",
     "optional": "Optional",
-    "showAll": "Show All"
+    "showAll": "Show All",
+    "complete": "Reviewed"
   },
   "languages": {
     "english": "English",
