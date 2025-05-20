@@ -368,6 +368,10 @@
   },
   "tm": {
     "title": "Translation Memory",
+    "showing": "Showing {{start}} - {{end}} of {{total}}",
+    "previous": "Previous",
+    "next": "Next",
+    "pageInfo": "Page {{current}} of {{total}}",
     "entryDeletedSuccess": "Translation memory entry deleted successfully",
     "failedToDeleteEntry": "Failed to delete entry: {{message}}",
     "uploadTmFile": "Upload TM File",

@@ -782,7 +782,11 @@ export default function UnifiedTranslationMemoryPage() {
           {filteredTM.length > 0 && (
             <div className="flex items-center justify-between px-4 py-4 border-t">
               <div className="text-sm text-muted-foreground">
-                {t('common.showing')} {Math.min((currentPage - 1) * itemsPerPage + 1, filteredTM.length)} - {Math.min(currentPage * itemsPerPage, filteredTM.length)} {t('common.of')} {filteredTM.length}
+                {t('tm.showing', {
+                  start: Math.min((currentPage - 1) * itemsPerPage + 1, filteredTM.length),
+                  end: Math.min(currentPage * itemsPerPage, filteredTM.length),
+                  total: filteredTM.length
+                })}
               </div>
               <div className="flex items-center space-x-2">
                 <Button
@@ -791,10 +795,10 @@ export default function UnifiedTranslationMemoryPage() {
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
                 >
-                  {t('common.previous')}
+                  {t('tm.previous')}
                 </Button>
                 <div className="text-sm mx-4">
-                  {t('common.page')} {currentPage} {t('common.of')} {totalPages}
+                  {t('tm.pageInfo', { current: currentPage, total: totalPages })}
                 </div>
                 <Button
                   variant="outline"
@@ -802,7 +806,7 @@ export default function UnifiedTranslationMemoryPage() {
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
                 >
-                  {t('common.next')}
+                  {t('tm.next')}
                 </Button>
               </div>
             </div>
