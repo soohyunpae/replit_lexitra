@@ -808,10 +808,10 @@ export default function UnifiedGlossaryPage() {
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
                 >
-                  {t('common.previous')}
+                  {t('tm.previous')}
                 </Button>
                 <div className="text-sm mx-4">
-                  {t('common.page', { current: currentPage, total: totalPages })}
+                  {t('tm.pageInfo', { current: currentPage, total: totalPages })}
                 </div>
                 <Button
                   variant="outline"
@@ -819,7 +819,7 @@ export default function UnifiedGlossaryPage() {
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
                 >
-                  {t('common.next')}
+                  {t('tm.next')}
                 </Button>
               </div>
             </div>
