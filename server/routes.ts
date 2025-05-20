@@ -1342,33 +1342,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 프로젝트 검토 통계 API
 app.get(`${apiPrefix}/projects/review-stats`, verifyToken, async (req, res) => {
   try {
-    // 모든 프로젝트의 파일 ID 가져오기
-    const projects = await db.query.projects.findMany({
+    // 진행 중인 프로젝트만 가져오기
+    const inProgressProjects = await db.query.projects.findMany({
+      where: eq(schema.projects.status, "In Progress"),
       with: {
         files: true,
       },
     });
 
-    // 모든 파일 ID 추출
-    const fileIds = projects.flatMap(project => 
+    // 진행 중인 프로젝트의 파일 ID만 추출
+    const fileIds = inProgressProjects.flatMap(project => 
       project.files.map(file => file.id)
     );
 
-    // 검토 대기 중인 세그먼트 수 계산
-    const segments = await db.query.translationUnits.findMany({
-      where: inArray(schema.translationUnits.fileId, fileIds),
-    });
+    let awaitingReview = 0;
+    let totalCompleted = 0;
 
-    // "Edited" 상태인 세그먼트 카운트
-    const awaitingReview = segments.filter(seg => seg.status === "Edited").length;
-    
+    if (fileIds.length > 0) {
+      // 진행 중인 프로젝트의 세그먼트만 가져오기
+      const segments = await db.query.translationUnits.findMany({
+        where: inArray(schema.translationUnits.fileId, fileIds),
+      });
+
+      // "Edited" 상태인 세그먼트 카운트
+      awaitingReview = segments.filter(seg => seg.status === "Edited").length;
+      totalCompleted = segments.filter(seg => seg.status === "Reviewed").length;
+    }
+
     // 참여 가능한 프로젝트 수 계산 (Unclaimed 상태)
-    const availableProjects = projects.filter(p => p.status === "Unclaimed").length;
+    const availableProjects = await db.query.projects.findMany({
+      where: eq(schema.projects.status, "Unclaimed"),
+    });
 
     return res.json({
       totalAwaitingReview: awaitingReview,
-      totalCompleted: segments.filter(seg => seg.status === "Reviewed").length,
-      availableProjects: availableProjects
+      totalCompleted: totalCompleted,
+      availableProjects: availableProjects.length
     });
   } catch (error) {
     return handleApiError(res, error);
