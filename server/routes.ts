@@ -493,38 +493,50 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    // 원본 파일명 디코딩 및 정규화
-    // 파일명 디코딩 및 정규화 처리 개선
-    const decodedName = Buffer.from(file.originalname, 'binary').toString();
-    console.log("원본 파일명 (처리 전):", decodedName);
+    try {
+      // 파일명을 UTF-8로 적절히 디코딩
+      let originalName = file.originalname;
+      
+      // binary 인코딩된 경우 UTF-8로 변환
+      if (Buffer.from(originalName).toString('binary') !== originalName) {
+        originalName = Buffer.from(originalName, 'binary').toString('utf8');
+      }
+      
+      console.log("Original filename:", originalName);
 
-    // 이름과 확장자 분리
-    const originalExt = path.extname(decodedName);
-    const originalName = path.basename(decodedName, originalExt);
+      // 이름과 확장자 분리
+      const ext = path.extname(originalName);
+      const nameWithoutExt = path.basename(originalName, ext);
 
-    // 한글 파일명 정규화 처리 (NFC)
-    const normalizedName = originalName.normalize("NFC");
-    
-    // 저장용 파일명 생성 (타임스탬프 + 랜덤값)
-    const timestamp = Date.now();
-    const randomStr = Math.random().toString(36).substring(2, 10);
-    const filename = `${timestamp}-${randomStr}${originalExt}`;
+      // 한글 파일명 정규화 (NFC)
+      const normalizedName = nameWithoutExt.normalize('NFC');
+      const normalizedExt = ext.normalize('NFC');
+      
+      // 고유한 파일명 생성 (타임스탬프 + 정규화된 원본명)
+      const timestamp = Date.now();
+      const randomStr = Math.random().toString(36).substring(2, 8);
+      const safeFileName = `${timestamp}-${randomStr}-${normalizedName}${normalizedExt}`;
 
-    // 원본 파일명 정보 저장 (정규화된 형태)
-    if (!req.fileOriginalNames) {
-      (req as any).fileOriginalNames = {};
+      // 원본 파일명 매핑 저장
+      if (!req.fileOriginalNames) {
+        (req as any).fileOriginalNames = {};
+      }
+      const normalizedFullName = normalizedName + normalizedExt;
+      (req as any).fileOriginalNames[safeFileName] = normalizedFullName;
+
+      console.log("File processing:", {
+        originalName: originalName,
+        normalized: normalizedFullName,
+        storedAs: safeFileName
+      });
+
+      cb(null, safeFileName);
+    } catch (error) {
+      console.error("Filename processing error:", error);
+      // 오류 발생시 기본 파일명 사용
+      const fallbackName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}${path.extname(file.originalname)}`;
+      cb(null, fallbackName);
     }
-    const normalizedFullName = normalizedName + originalExt;
-    (req as any).fileOriginalNames[filename] = normalizedFullName;
-
-    // 디버깅 로그
-    console.log({
-      original: decodedName,
-      normalized: normalizedFullName,
-      stored: filename
-    });
-
-    cb(null, filename);
   },
 });
 
