@@ -234,34 +234,7 @@ export default function UnifiedGlossaryPage() {
     };
   }, [glossaryData]);
 
-  // Filtered glossary terms
-  const filteredGlossary = React.useMemo(() => {
-    if (!glossaryData) return [];
-
-    return glossaryData.filter((term: any) => {
-      const matchesSearch = searchQuery
-        ? term.source.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          term.target.toLowerCase().includes(searchQuery.toLowerCase())
-        : true;
-
-      const matchesSourceLang =
-        sourceLanguageFilter && sourceLanguageFilter !== "all_source_languages"
-          ? term.sourceLanguage === sourceLanguageFilter
-          : true;
-
-      const matchesTargetLang =
-        targetLanguageFilter && targetLanguageFilter !== "all_target_languages"
-          ? term.targetLanguage === targetLanguageFilter
-          : true;
-
-      const matchesResource = 
-        resourceFilter !== undefined
-          ? term.resourceId === resourceFilter
-          : true;
-
-      return matchesSearch && matchesSourceLang && matchesTargetLang && matchesResource;
-    });
-  }, [glossaryData, searchQuery, sourceLanguageFilter, targetLanguageFilter, resourceFilter]);
+  // The filtered glossary is already declared above
 
   // Add new glossary term
   const addGlossaryMutation = useMutation({
