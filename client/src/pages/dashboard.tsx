@@ -127,23 +127,65 @@ export default function Dashboard() {
     }
   ];
 
-  // Get project stats
-  const { data: projectStats = {} } = useQuery({
-    queryKey: ['/api/projects/stats'],
-    enabled: !!user && inProgressProjects.length > 0,
-  });
+  // 각 프로젝트별 통계 데이터 가져오기
+  const [projectStatsMap, setProjectStatsMap] = useState<{[key: number]: any}>({});
+  
+  // 프로젝트 통계 fetch 함수
+  useEffect(() => {
+    const fetchProjectStats = async () => {
+      if (!user || inProgressProjects.length === 0) return;
+      
+      const stats: {[key: number]: any} = {};
+      
+      // 각 프로젝트의 통계 정보 가져오기
+      for (const project of inProgressProjects) {
+        try {
+          const authToken = localStorage.getItem("auth_token");
+          const response = await fetch(`/api/projects/${project.id}/stats`, {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            stats[project.id] = data;
+          } else {
+            // 실패시 기본 데이터 사용
+            stats[project.id] = {
+              reviewedPercentage: 0,
+              statusCounts: { Reviewed: 0 },
+              totalSegments: 0
+            };
+          }
+        } catch (error) {
+          console.error("Error fetching project stats:", error);
+          stats[project.id] = {
+            reviewedPercentage: 0,
+            statusCounts: { Reviewed: 0 },
+            totalSegments: 0
+          };
+        }
+      }
+      
+      setProjectStatsMap(stats);
+    };
+    
+    fetchProjectStats();
+  }, [user, inProgressProjects]);
 
   // 진행 중인 프로젝트 목록 (실제 데이터가 없을 경우 샘플 데이터 사용)
   const displayProjects = inProgressProjects.map(project => {
-    const stats = projectStats[project.id] || {
+    const stats = projectStatsMap[project.id] || {
       reviewedPercentage: 0,
       statusCounts: { Reviewed: 0 },
       totalSegments: 0
     };
     
-    const progress = stats.totalSegments > 0 
-      ? Math.round((stats.statusCounts.Reviewed / stats.totalSegments) * 100) 
-      : 0;
+    // 나중에 API에서 직접 reviewedPercentage를 제공하면 그걸 사용하도록 함
+    const progress = stats.reviewedPercentage || (stats.totalSegments > 0 
+      ? Math.round((stats.statusCounts?.Reviewed || 0) / stats.totalSegments * 100) 
+      : 0);
     
     return {
       ...project,
@@ -201,7 +243,7 @@ export default function Dashboard() {
                     <li key={project.id} className="border rounded-lg px-4 py-3">
                       <div className="font-bold">{project.name}</div>
                       <div className="text-sm text-muted-foreground">
-                        {project.sourceLanguage} → {project.targetLanguage} · {project.progress}% {t('common.complete')}
+                        {project.sourceLanguage} → {project.targetLanguage} · {project.progress}% {t('projects.reviewed')}
                       </div>
                       <Link href={`/projects/${project.id}`}>
                         <Button variant="link" className="mt-2 px-0 text-blue-600 hover:underline text-sm">
