@@ -39,6 +39,7 @@ import {
   BookMarked,
   Upload,
   ChevronRight,
+  ArrowRight,
   X,
   Loader2,
 } from "lucide-react";
