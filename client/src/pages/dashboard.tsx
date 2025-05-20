@@ -58,8 +58,7 @@ export default function Dashboard() {
 
   // 실제 데이터 계산
   const activeProjects = projects.filter(p => p.status !== "Completed").length || 0;
-  // 검토 대기 중인 세그먼트 수 (Reviewed 상태가 아닌 모든 세그먼트)
-  const segmentsAwaitingReview = segments.filter(seg => seg.status !== "Reviewed").length || 0;
+  const segmentsAwaitingReview = reviewStats.totalAwaitingReview || 0;
   const availableProjects = reviewStats.availableProjects || 0;
   const completedSegments = reviewStats.totalCompleted || 0;
 
@@ -136,7 +135,7 @@ export default function Dashboard() {
               <div className="text-2xl font-bold mb-1">📝 {segmentsAwaitingReview}</div>
               <div className="text-sm text-muted-foreground">{t('dashboard.segmentsAwaitingReview')}</div>
               <div className="text-xs text-muted-foreground mt-1">
-                ({completedSegments} {t('dashboard.reviewed')})
+                ({completedSegments} {t('dashboard.completed')})
               </div>
             </CardContent>
           </Card>
