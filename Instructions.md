@@ -1,52 +1,112 @@
 
-# 대시보드 통계 수치 문제 해결 방안
+# Lexitra Project Creation and File Processing Issues Analysis
 
-## 1. 현재 상황
-- 대시보드의 통계 카드가 모두 0으로 표시되는 문제 발생
-- 영향받는 통계:
-  - 진행 중인 프로젝트 수
-  - 검토 대기 중인 세그먼트 수
-  - 참여 가능한 프로젝트 수
+## 1. Current Issues
 
-## 2. 문제 원인 분석
-### 2.1 API 응답 구조 
-- `/api/projects/review-stats` 엔드포인트의 실제 응답이 예상과 다름
-- 통계 계산 로직이 실제 데이터를 정확하게 반영하지 못함
+### 1.1 Database Schema Issues
+- Error in logs indicates missing "status" column in files table
+- Schema mismatch causing SQL errors: `column "status" of relation "files" does not exist`
 
-### 2.2 데이터 조회 로직 문제
-- 진행 중인 프로젝트 조회 시 "In Progress" 상태 필터링이 잘못됨
-- 검토 대기 중인 세그먼트 계산 시 "Reviewed" 상태가 아닌 세그먼트를 제대로 카운트하지 못함
+### 1.2 File Processing Issues
+- Project creation page remains in "Creating" state during file processing
+- No progress indication for large file uploads
+- PDF processing delays block project creation UI feedback
 
-## 3. 해결 방안
+## 2. Affected Components
 
-### 3.1 프로젝트 통계 엔드포인트 수정
-1. server/routes.ts 파일에서 `/api/projects/review-stats` 엔드포인트 수정
-   - 진행 중인 프로젝트를 "In Progress" 상태로 정확하게 필터링
-   - 프로젝트의 모든 파일과 세그먼트를 효율적으로 조회
+### 2.1 Frontend Components
+- `client/src/pages/projects.tsx`: Project creation form and file upload handling
+- `client/src/components/file-progress-indicator.tsx`: Progress indicator component
 
-2. 통계 계산 로직 수정
-   - "In Progress" 상태의 프로젝트만 포함
-   - "Reviewed" 상태가 아닌 모든 세그먼트를 검토 대기 중으로 계산
-   - "Unclaimed" 상태의 프로젝트를 참여 가능한 프로젝트로 계산
+### 2.2 Backend Components
+- `server/routes.ts`: File processing and project creation logic
+- `shared/schema.ts`: Database schema definitions
+- `db/migrations/`: Database migration files
 
-### 3.2 클라이언트 통계 표시 개선
-1. dashboard.tsx에서 통계 데이터 처리 로직 수정
-   - API 응답 구조에 맞게 데이터 매핑 수정
-   - 기본값 처리 로직 개선
-   - 에러 처리 및 로딩 상태 구현
+## 3. Root Causes
 
-### 3.3 성능 최적화
-- 통계 계산을 위한 데이터베이스 쿼리 최적화
-- 필요한 데이터만 선택적으로 조회하도록 수정
-- 캐싱 전략 구현 검토
+1. Database Schema Mismatch:
+- The code attempts to access a `status` column that doesn't exist in the files table
+- This suggests a missing database migration or incomplete schema update
 
-## 4. 구현 우선순위
-1. API 엔드포인트 수정
-2. 통계 계산 로직 개선
-3. 클라이언트 표시 로직 수정
-4. 성능 최적화
+2. Synchronous File Processing:
+- Large file processing blocks project creation
+- No separate workflow for file processing and project creation
+- Lack of progress feedback to frontend
 
-## 5. 테스트 계획
-1. 각 상태별 프로젝트 생성하여 통계 확인
-2. 세그먼트 상태 변경에 따른 통계 업데이트 확인
-3. 대량의 데이터에서 성능 테스트
+## 4. Solution Plan
+
+### 4.1 Database Schema Updates
+1. Add `status` column to files table
+2. Add `processing_status` column to track file processing state
+3. Create migration to update existing records
+
+### 4.2 File Processing Improvements
+1. Implement asynchronous file processing:
+   - Create project record immediately
+   - Process files in background
+   - Update file status as processing completes
+
+2. Add WebSocket notifications for:
+   - File upload progress
+   - Processing status updates
+   - Project creation completion
+
+### 4.3 UI Enhancements
+1. Add progress indicators for:
+   - File upload
+   - File processing
+   - Project creation
+
+2. Display file status in project list:
+   - Pending
+   - Processing
+   - Ready
+   - Error
+
+## 5. Implementation Steps
+
+1. Database Updates:
+```sql
+ALTER TABLE files
+ADD COLUMN status TEXT DEFAULT 'pending',
+ADD COLUMN processing_status TEXT DEFAULT 'waiting';
+```
+
+2. Backend Changes:
+- Modify file upload handlers for async processing
+- Add WebSocket notifications for progress updates
+- Implement file status tracking
+
+3. Frontend Updates:
+- Add progress indicators
+- Implement WebSocket listeners
+- Update UI to show file/project status
+
+4. Testing:
+- Verify file upload with large files
+- Test project creation workflow
+- Validate progress indicators
+- Check database schema changes
+
+## 6. Success Criteria
+
+1. Project creation completes quickly, independent of file processing
+2. Users see clear progress indicators for:
+   - File upload
+   - File processing
+   - Project creation
+3. File processing status is accurately reflected in UI
+4. Large files don't block or timeout the UI
+
+## 7. Risks and Mitigation
+
+1. Risk: Database migration affecting existing projects
+   Mitigation: Add default values and handle null cases
+
+2. Risk: File processing failures
+   Mitigation: Add robust error handling and status updates
+
+3. Risk: WebSocket connection issues
+   Mitigation: Implement fallback polling mechanism
+
