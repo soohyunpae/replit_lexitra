@@ -289,10 +289,31 @@ async function processFileSegments(fileId: number, fileContent: string, projectI
             );
           }
         }
+        
+        // 모든 세그먼트의 번역이 완료되면 파일 상태를 "ready"로 업데이트
+        await db
+          .update(schema.files)
+          .set({
+            processingStatus: "ready", // 전체 처리 완료 상태로 업데이트
+            updatedAt: new Date(),
+          })
+          .where(eq(schema.files.id, fileId));
+          
+        console.log(`[비동기 처리] 파일 ID ${fileId}의 모든 처리 완료. 상태를 'ready'로 변경함`);
       }
     }
   } catch (error) {
     console.error(`[비동기 처리] 세그먼트 처리 오류 (파일 ID: ${fileId}):`, error);
+    
+    // 오류 발생 시 파일 상태를 "error"로 업데이트
+    await db
+      .update(schema.files)
+      .set({
+        processingStatus: "error",
+        errorMessage: error instanceof Error ? error.message : "Unknown error during segment processing",
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.files.id, fileId));
   }
 }
 
@@ -1699,21 +1720,33 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
                     // 파일 처리
                     const fileContent = await processFile(file);
                     
-                    // 파일 내용 업데이트
+                    // 파일 내용 업데이트 (processingStatus는 아직 "processing"으로 유지)
                     await db
                       .update(schema.files)
                       .set({
                         content: fileContent,
-                        processingStatus: "ready", // 처리 완료 상태로 업데이트
                         updatedAt: new Date(),
                       })
                       .where(eq(schema.files.id, fileRecord.id));
                     
-                    console.log(`[비동기 처리] 파일 처리 완료: ${file.originalname}`);
+                    console.log(`[비동기 처리] 파일 내용 처리 완료: ${file.originalname}`);
                     
                     // 세그먼트 생성 및 처리
                     if (fileRecord.type === "work") {
+                      // GPT 번역 완료 후 processingStatus를 "ready"로 변경하는 기능이 
+                      // processFileSegments 함수 내부에 구현되어 있음
                       await processFileSegments(fileRecord.id, fileContent, project.id);
+                      
+                      console.log(`[비동기 처리] 세그먼트 처리 및 GPT 번역 완료: ${file.originalname}`);
+                    } else {
+                      // 작업 파일이 아닌 경우(참조 파일 등) 바로 ready 상태로 설정
+                      await db
+                        .update(schema.files)
+                        .set({
+                          processingStatus: "ready",
+                          updatedAt: new Date(),
+                        })
+                        .where(eq(schema.files.id, fileRecord.id));
                     }
                   } catch (error) {
                     console.error(`[비동기 처리] 파일 처리 오류: ${file.originalname}`, error);
