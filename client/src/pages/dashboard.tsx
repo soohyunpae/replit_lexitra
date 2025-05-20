@@ -25,6 +25,8 @@ interface Project {
   createdAt: string;
   updatedAt: string;
   progress?: number;
+  userId?: number;
+  claimedBy?: number;
 }
 
 // 리뷰 통계 타입 정의
@@ -45,7 +47,7 @@ export default function Dashboard() {
   });
 
   // 검토 통계 데이터 가져오기
-  const { data: reviewStats = { totalAwaitingReview: 0, availableProjects: 0 } } = useQuery<ReviewStats>({
+  const { data: reviewStats = { totalAwaitingReview: 0, totalCompleted: 0, availableProjects: 0 } } = useQuery<ReviewStats>({
     queryKey: ['/api/projects/review-stats'],
     enabled: !!user,
   });
@@ -77,17 +79,25 @@ export default function Dashboard() {
 
   // 최근 활동 데이터를 프로젝트와 리뷰 상태에서 계산
   const recentActivities = useMemo(() => {
-    if (!projects) return [];
+    if (!projects || projects.length === 0) return [];
     
     // 프로젝트별 최근 업데이트 활동 추출
     const activities = projects
       .filter(p => p.updatedAt)
-      .map(project => ({
-        user: project.assignedUser?.username || "",
-        action: `${project.name} 프로젝트 ${project.status === 'Completed' ? '완료' : '업데이트'}`,
-        date: new Date(project.updatedAt),
-        projectId: project.id
-      }))
+      .map(project => {
+        // 프로젝트 담당자 이름 설정
+        let username = "시스템";
+        if (project.status === 'Claimed' && project.claimedBy) {
+          username = "담당자";
+        }
+        
+        return {
+          user: username,
+          action: `${project.name} 프로젝트 ${project.status === 'Completed' ? '완료' : '업데이트'}`,
+          date: new Date(project.updatedAt),
+          projectId: project.id
+        };
+      })
       .sort((a, b) => b.date.getTime() - a.date.getTime())
       .slice(0, 5); // 최근 5개 활동만 표시
       
