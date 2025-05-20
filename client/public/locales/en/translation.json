@@ -29,6 +29,7 @@
     "language": "Language",
     "optional": "Optional",
     "showAll": "Show All",
+    "actions": "Actions",
     "complete": "Reviewed"
   },
   "languages": {
@@ -216,6 +217,7 @@
     "addNewTermDescription": "Add a new term to your glossary database.",
     "selectSourceLanguage": "Select source language",
     "selectTargetLanguage": "Select target language",
+    "added": "Added",
     "glossaryName": "Glossary Name",
     "glossaryDescription": "Glossary Description",
     "sourceLanguage": "Source Language",
