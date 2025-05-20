@@ -37,15 +37,6 @@ export function CombinedProgress({
     ? calculatedPercentage
     : (typeof reviewedPercentage === 'number' ? Math.round(reviewedPercentage) : 0);
 
-  // For debugging (can be removed after fixing)
-  console.log('Progress calculation:', {
-    reviewedCount,
-    totalSegs,
-    calculatedPercentage,
-    propPercentage: reviewedPercentage,
-    displayPercentage
-  });
-
   return (
     <div className="w-full space-y-1.5">
       <ProgressPrimitive.Root
@@ -70,7 +61,7 @@ export function CombinedProgress({
         <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground my-1">
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-green-200"></div>
-            <span>Reviewed: {reviewedCount} / {totalSegs} ({displayPercentage}%)</span>
+            <span>Reviewed: {displayPercentage}%</span>
           </div>
         </div>
       )}

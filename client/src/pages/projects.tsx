@@ -239,7 +239,6 @@ export default function ProjectsPage() {
 
             // 올바른 인증 토큰 가져오기 (auth_token 사용)
             const authToken = localStorage.getItem("auth_token");
-            console.log(`Using auth token for project ${project.id} stats: ${authToken ? "Token exists" : "No token found"}`);
             
             // 서버에 실제 API 요청
             const response = await fetch(`/api/projects/${project.id}/stats`, {
@@ -251,18 +250,11 @@ export default function ProjectsPage() {
             if (response.ok) {
               // 서버 응답 성공시 실제 데이터 사용하고 비율 계산
               const data = await response.json();
-              console.log(`Raw API response for project ${project.id}:`, data);
-
+              
               const totalSegs = data.totalSegments || 0;
               const reviewedCount = data.statusCounts?.["Reviewed"] || 0;
               const reviewedPercentage =
                 totalSegs > 0 ? (reviewedCount / totalSegs) * 100 : 0;
-
-              console.log(`Project ${project.id} calculation:`, {
-                totalSegs,
-                reviewedCount,
-                reviewedPercentage,
-              });
 
               stats[project.id] = {
                 translatedPercentage:
