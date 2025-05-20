@@ -61,7 +61,13 @@ import {
 import { formatDate } from "@/lib/utils";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 // Form schema for adding/editing glossary terms
 const glossaryFormSchema = z.object({
@@ -76,8 +82,12 @@ const glossaryFormSchema = z.object({
 const glossaryResourceFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   description: z.string().optional(),
-  defaultSourceLanguage: z.string().min(2, { message: "Source language is required" }),
-  defaultTargetLanguage: z.string().min(2, { message: "Target language is required" }),
+  defaultSourceLanguage: z
+    .string()
+    .min(2, { message: "Source language is required" }),
+  defaultTargetLanguage: z
+    .string()
+    .min(2, { message: "Target language is required" }),
   domain: z.string().optional(),
   isActive: z.boolean().default(true),
 });
@@ -94,10 +104,16 @@ export default function UnifiedGlossaryPage() {
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState("");
-  const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>("all_source_languages");
-  const [targetLanguageFilter, setTargetLanguageFilter] = useState<string>("all_target_languages");
-  const [resourceFilter, setResourceFilter] = useState<number | undefined>(undefined);
-  
+  const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>(
+    "all_source_languages",
+  );
+  const [targetLanguageFilter, setTargetLanguageFilter] = useState<string>(
+    "all_target_languages",
+  );
+  const [resourceFilter, setResourceFilter] = useState<number | undefined>(
+    undefined,
+  );
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
@@ -137,14 +153,25 @@ export default function UnifiedGlossaryPage() {
           ? term.targetLanguage === targetLanguageFilter
           : true;
 
-      const matchesResource = 
+      const matchesResource =
         resourceFilter !== undefined
           ? term.resourceId === resourceFilter
           : true;
 
-      return matchesSearch && matchesSourceLang && matchesTargetLang && matchesResource;
+      return (
+        matchesSearch &&
+        matchesSourceLang &&
+        matchesTargetLang &&
+        matchesResource
+      );
     });
-  }, [glossaryData, searchQuery, sourceLanguageFilter, targetLanguageFilter, resourceFilter]);
+  }, [
+    glossaryData,
+    searchQuery,
+    sourceLanguageFilter,
+    targetLanguageFilter,
+    resourceFilter,
+  ]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -189,8 +216,8 @@ export default function UnifiedGlossaryPage() {
   const termsError = null;
 
   // Get glossary resources
-  const { 
-    data: glossaryResources = [], 
+  const {
+    data: glossaryResources = [],
     isLoading: isLoadingResources,
     error: resourcesError,
   } = useQuery({
@@ -267,14 +294,14 @@ export default function UnifiedGlossaryPage() {
       resourceForm.reset();
       setAddResourceDialogOpen(false);
       toast({
-        title: t('glossaries.resourceAdded'),
-        description: t('glossaries.resourceAddedSuccess'),
+        title: t("glossaries.resourceAdded"),
+        description: t("glossaries.resourceAddedSuccess"),
       });
     },
     onError: (error: any) => {
       toast({
-        title: t('common.error'),
-        description: error.message || t('glossaries.failedToAddResource'),
+        title: t("common.error"),
+        description: error.message || t("glossaries.failedToAddResource"),
         variant: "destructive",
       });
     },
@@ -289,14 +316,14 @@ export default function UnifiedGlossaryPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/glossary/all"] });
       toast({
-        title: t('glossaries.termDeleted'),
-        description: t('glossaries.termDeletedSuccess'),
+        title: t("glossaries.termDeleted"),
+        description: t("glossaries.termDeletedSuccess"),
       });
     },
     onError: (error: any) => {
       toast({
-        title: t('common.error'),
-        description: error.message || t('glossaries.failedToDeleteTerm'),
+        title: t("common.error"),
+        description: error.message || t("glossaries.failedToDeleteTerm"),
         variant: "destructive",
       });
     },
@@ -305,20 +332,23 @@ export default function UnifiedGlossaryPage() {
   // Delete glossary resource
   const deleteResourceMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest("DELETE", `/api/glossary/resource/${id}`);
+      const response = await apiRequest(
+        "DELETE",
+        `/api/glossary/resource/${id}`,
+      );
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/glossary/resources"] });
       toast({
-        title: t('glossaries.resourceDeleted'),
-        description: t('glossaries.resourceDeletedSuccess'),
+        title: t("glossaries.resourceDeleted"),
+        description: t("glossaries.resourceDeletedSuccess"),
       });
     },
     onError: (error: any) => {
       toast({
-        title: t('common.error'),
-        description: error.message || t('glossaries.failedToDeleteResource'),
+        title: t("common.error"),
+        description: error.message || t("glossaries.failedToDeleteResource"),
         variant: "destructive",
       });
     },
@@ -334,13 +364,20 @@ export default function UnifiedGlossaryPage() {
   }
 
   function handleDeleteTerm(id: number) {
-    if (window.confirm(t('glossaries.deleteConfirmation'))) {
+    if (window.confirm(t("glossaries.deleteConfirmation"))) {
       deleteGlossaryMutation.mutate(id);
     }
   }
 
   function handleDeleteResource(id: number) {
-    if (window.confirm(t('glossaries.resourceDeleteConfirmation', "Are you sure you want to delete this glossary resource? This will also delete all terms associated with this resource."))) {
+    if (
+      window.confirm(
+        t(
+          "glossaries.resourceDeleteConfirmation",
+          "Are you sure you want to delete this glossary resource? This will also delete all terms associated with this resource.",
+        ),
+      )
+    ) {
       deleteResourceMutation.mutate(id);
     }
   }
@@ -354,22 +391,27 @@ export default function UnifiedGlossaryPage() {
       setIsUploading(true);
       try {
         // Add source and target language to formData if not present
-        if (!formData.has('sourceLanguage')) {
-          formData.append('sourceLanguage', 'ko');
+        if (!formData.has("sourceLanguage")) {
+          formData.append("sourceLanguage", "ko");
         }
-        if (!formData.has('targetLanguage')) {
-          formData.append('targetLanguage', 'en');
+        if (!formData.has("targetLanguage")) {
+          formData.append("targetLanguage", "en");
         }
 
         // Use the admin route for glossary file upload
-        const response = await apiRequest("POST", "/api/admin/tb/upload", formData, {
-          // Let the browser set the content type with proper boundary for FormData
-        });
+        const response = await apiRequest(
+          "POST",
+          "/api/admin/tb/upload",
+          formData,
+          {
+            // Let the browser set the content type with proper boundary for FormData
+          },
+        );
 
         // Handle any errors that might not throw exceptions
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to upload glossary file');
+          throw new Error(errorData.error || "Failed to upload glossary file");
         }
 
         return await response.json();
@@ -383,40 +425,51 @@ export default function UnifiedGlossaryPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/glossary/all"] });
       queryClient.invalidateQueries({ queryKey: ["/api/glossary/resources"] });
       toast({
-        title: t('glossaries.fileUploaded', "File uploaded"),
-        description: t('glossaries.fileUploadedSuccess', "The glossary file has been uploaded and processed successfully.") + ` ${data.message || ''}`,
+        title: t("glossaries.fileUploaded", "File uploaded"),
+        description:
+          t(
+            "glossaries.fileUploadedSuccess",
+            "The glossary file has been uploaded and processed successfully.",
+          ) + ` ${data.message || ""}`,
       });
       setIsUploading(false);
 
       // Reset the file input
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     },
     onError: (error: any) => {
       toast({
-        title: t('glossaries.uploadFailed', "Upload failed"),
-        description: error.message || t('glossaries.failedToUploadFile', "Failed to upload glossary file. Please check the file format."),
+        title: t("glossaries.uploadFailed", "Upload failed"),
+        description:
+          error.message ||
+          t(
+            "glossaries.failedToUploadFile",
+            "Failed to upload glossary file. Please check the file format.",
+          ),
         variant: "destructive",
       });
       setIsUploading(false);
 
       // Reset the file input
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     },
   });
 
   return (
-    <MainLayout title={t('common.glossaries')}>
+    <MainLayout title={t("common.glossaries")}>
       <div className="container max-w-screen-xl mx-auto p-6">
         {/* No breadcrumb - already in header */}
 
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-2">
             <BookMarked className="h-5 w-5" />
-            <h2 className="text-3xl font-bold tracking-tight">{t('common.glossary')}</h2>
+            <h2 className="text-3xl font-bold tracking-tight">
+              {t("common.glossary")}
+            </h2>
           </div>
           {isAdmin && (
             <div className="flex gap-2">
@@ -427,42 +480,54 @@ export default function UnifiedGlossaryPage() {
                   const file = e.target.files?.[0];
                   if (file) {
                     const formData = new FormData();
-                    formData.append('file', file);
+                    formData.append("file", file);
                     uploadFileMutation.mutate(formData);
                   }
                 }}
                 className="hidden"
                 accept=".xlsx,.xls,.csv,.tmx,.tbx"
               />
-              <Dialog open={addTermDialogOpen} onOpenChange={setAddTermDialogOpen}>
+              <Dialog
+                open={addTermDialogOpen}
+                onOpenChange={setAddTermDialogOpen}
+              >
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                    {t('glossaries.addTerm')}
+                    {t("glossaries.addTerm")}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>{t('glossaries.addNewTerm')}</DialogTitle>
+                    <DialogTitle>{t("glossaries.addNewTerm")}</DialogTitle>
                     <DialogDescription>
-                      {t('glossaries.addNewTermDescription')}
+                      {t("glossaries.addNewTermDescription")}
                     </DialogDescription>
                   </DialogHeader>
                   <Form {...termForm}>
-                    <form onSubmit={termForm.handleSubmit(onSubmitTerm)} className="space-y-4">
+                    <form
+                      onSubmit={termForm.handleSubmit(onSubmitTerm)}
+                      className="space-y-4"
+                    >
                       <FormField
                         control={termForm.control}
                         name="sourceLanguage"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t('glossaries.sourceLanguage')}</FormLabel>
+                            <FormLabel>
+                              {t("glossaries.sourceLanguage")}
+                            </FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder={t('glossaries.selectSourceLanguage')} />
+                                  <SelectValue
+                                    placeholder={t(
+                                      "glossaries.selectSourceLanguage",
+                                    )}
+                                  />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
@@ -485,14 +550,20 @@ export default function UnifiedGlossaryPage() {
                         name="targetLanguage"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t('glossaries.targetLanguage')}</FormLabel>
+                            <FormLabel>
+                              {t("glossaries.targetLanguage")}
+                            </FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder={t('glossaries.selectTargetLanguage')} />
+                                  <SelectValue
+                                    placeholder={t(
+                                      "glossaries.selectTargetLanguage",
+                                    )}
+                                  />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
@@ -519,18 +590,27 @@ export default function UnifiedGlossaryPage() {
                             <Select
                               onValueChange={(value) => {
                                 field.onChange(
-                                  value === "none" ? undefined : parseInt(value),
+                                  value === "none"
+                                    ? undefined
+                                    : parseInt(value),
                                 );
                               }}
                               defaultValue={field.value?.toString() || "none"}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder={t('glossaries.selectGlossary', 'Select Glossary')} />
+                                  <SelectValue
+                                    placeholder={t(
+                                      "glossaries.selectGlossary",
+                                      "Select Glossary",
+                                    )}
+                                  />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="none">{t('glossaries.noGlossary', 'No glossary')}</SelectItem>
+                                <SelectItem value="none">
+                                  {t("glossaries.noGlossary", "No glossary")}
+                                </SelectItem>
                                 {glossaryResources.map((resource: any) => (
                                   <SelectItem
                                     key={resource.id}
@@ -551,9 +631,15 @@ export default function UnifiedGlossaryPage() {
                         name="source"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t('glossaries.sourceText')}</FormLabel>
+                            <FormLabel>{t("glossaries.sourceText")}</FormLabel>
                             <FormControl>
-                              <Input placeholder={t('glossaries.enterSourceTerm', 'Enter source term')} {...field} />
+                              <Input
+                                placeholder={t(
+                                  "glossaries.enterSourceTerm",
+                                  "Enter source term",
+                                )}
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -565,9 +651,15 @@ export default function UnifiedGlossaryPage() {
                         name="target"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t('glossaries.targetText')}</FormLabel>
+                            <FormLabel>{t("glossaries.targetText")}</FormLabel>
                             <FormControl>
-                              <Input placeholder={t('glossaries.enterTargetTerm', 'Enter target term')} {...field} />
+                              <Input
+                                placeholder={t(
+                                  "glossaries.enterTargetTerm",
+                                  "Enter target term",
+                                )}
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -579,14 +671,16 @@ export default function UnifiedGlossaryPage() {
                           type="submit"
                           disabled={addGlossaryMutation.isPending}
                         >
-                          {addGlossaryMutation.isPending ? "Adding..." : "Add Term"}
+                          {addGlossaryMutation.isPending
+                            ? "Adding..."
+                            : "Add Term"}
                         </Button>
                       </DialogFooter>
                     </form>
                   </Form>
                 </DialogContent>
               </Dialog>
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
@@ -596,7 +690,7 @@ export default function UnifiedGlossaryPage() {
                 ) : (
                   <>
                     <Upload className="mr-2 h-4 w-4" />
-                    {t('glossaries.importGlossary')}
+                    {t("glossaries.importGlossary")}
                   </>
                 )}
               </Button>
@@ -604,7 +698,10 @@ export default function UnifiedGlossaryPage() {
           )}
         </div>
         <p className="text-muted-foreground mb-6">
-          {t('glossaries.searchAndManage', 'Search and manage glossary terms and resources')}
+          {t(
+            "glossaries.searchAndManage",
+            "Search and manage glossary terms and resources",
+          )}
         </p>
 
         {/* Glossary List Section - Now moved to the top */}
@@ -612,7 +709,7 @@ export default function UnifiedGlossaryPage() {
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-2">
               <BookMarked className="h-5 w-5" />
-              <h3 className="text-xl font-semibold">{t('glossaries.list')}</h3>
+              <h3 className="text-xl font-semibold">{t("glossaries.list")}</h3>
             </div>
           </div>
 
@@ -620,35 +717,49 @@ export default function UnifiedGlossaryPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('glossaries.glossaryName')}</TableHead>
-                  <TableHead>{t('glossaries.glossaryDescription')}</TableHead>
-                  <TableHead>{t('glossaries.defaultLanguages', 'Default Languages')}</TableHead>
-                  <TableHead>{t('glossaries.domain', 'Domain')}</TableHead>
-                  <TableHead>{t('glossaries.terms', 'Terms')}</TableHead>
-                  {isAdmin && <TableHead className="text-right">{t('common.actions')}</TableHead>}
+                  <TableHead>{t("glossaries.glossaryName")}</TableHead>
+                  <TableHead>{t("glossaries.glossaryDescription")}</TableHead>
+                  <TableHead>
+                    {t("glossaries.defaultLanguages", "Default Languages")}
+                  </TableHead>
+                  <TableHead>{t("glossaries.domain", "Domain")}</TableHead>
+                  <TableHead>{t("glossaries.terms", "Terms")}</TableHead>
+                  {isAdmin && (
+                    <TableHead className="text-right">
+                      {t("common.actions")}
+                    </TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoadingResources ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
-                      {t('common.loading')}...
+                    <TableCell
+                      colSpan={isAdmin ? 6 : 5}
+                      className="text-center py-8 text-muted-foreground"
+                    >
+                      {t("common.loading")}...
                     </TableCell>
                   </TableRow>
                 ) : glossaryResources.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
-                      {t('glossaries.noGlossaries')}
+                    <TableCell
+                      colSpan={isAdmin ? 6 : 5}
+                      className="text-center py-8 text-muted-foreground"
+                    >
+                      {t("glossaries.noGlossaries")}
                     </TableCell>
                   </TableRow>
                 ) : (
                   glossaryResources.map((resource: any) => (
-                    <TableRow 
-                      key={resource.id} 
-                      className={`cursor-pointer hover:bg-muted/50 ${resourceFilter === resource.id ? 'bg-muted/70' : ''}`}
+                    <TableRow
+                      key={resource.id}
+                      className={`cursor-pointer hover:bg-muted/50 ${resourceFilter === resource.id ? "bg-muted/70" : ""}`}
                       onClick={() => setResourceFilter(resource.id)}
                     >
-                      <TableCell className="font-medium">{resource.name}</TableCell>
+                      <TableCell className="font-medium">
+                        {resource.name}
+                      </TableCell>
                       <TableCell>{resource.description || "—"}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1 bg-accent/50 px-2 py-0.5 rounded-full text-xs">
@@ -664,7 +775,9 @@ export default function UnifiedGlossaryPage() {
                       <TableCell>{resource.domain || "—"}</TableCell>
                       <TableCell>
                         {glossaryData
-                          ? glossaryData.filter((term: any) => term.resourceId === resource.id).length
+                          ? glossaryData.filter(
+                              (term: any) => term.resourceId === resource.id,
+                            ).length
                           : 0}
                       </TableCell>
                       {isAdmin && (
@@ -694,15 +807,20 @@ export default function UnifiedGlossaryPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Search className="h-5 w-5" />
-              <h3 className="text-xl font-semibold">{t('glossaries.searchTerms')}</h3>
+              <h3 className="text-xl font-semibold">
+                {t("glossaries.searchTerms")}
+              </h3>
 
               {resourceFilter !== undefined && (
-                <Badge 
-                  variant="secondary" 
+                <Badge
+                  variant="secondary"
                   className="ml-3 py-1 px-3 cursor-pointer hover:bg-muted/70 flex items-center gap-1"
                   onClick={() => setResourceFilter(undefined)}
                 >
-                  {glossaryResources.find((r: any) => r.id === resourceFilter)?.name}
+                  {
+                    glossaryResources.find((r: any) => r.id === resourceFilter)
+                      ?.name
+                  }
                   <X className="h-3.5 w-3.5 ml-1" />
                 </Badge>
               )}
@@ -713,7 +831,10 @@ export default function UnifiedGlossaryPage() {
             <div className="relative w-full">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder={t('glossaries.searchTermsPlaceholder', 'Search glossary terms...')}
+                placeholder={t(
+                  "glossaries.searchTermsPlaceholder",
+                  "Search glossary terms...",
+                )}
                 className="pl-8"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -726,31 +847,43 @@ export default function UnifiedGlossaryPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('glossaries.sourceText')}</TableHead>
-                  <TableHead>{t('glossaries.targetText')}</TableHead>
-                  <TableHead>{t('common.language')}</TableHead>
-                  <TableHead>{t('glossaries.glossaryName')}</TableHead>
-                  <TableHead>{t('glossaries.added')}</TableHead>
-                  {isAdmin && <TableHead className="text-right">{t('common.actions')}</TableHead>}
+                  <TableHead>{t("glossaries.sourceText")}</TableHead>
+                  <TableHead>{t("glossaries.targetText")}</TableHead>
+                  <TableHead>{t("common.language")}</TableHead>
+                  <TableHead>{t("glossaries.glossaryName")}</TableHead>
+                  <TableHead>{t("glossaries.added")}</TableHead>
+                  {isAdmin && (
+                    <TableHead className="text-right">
+                      {t("common.actions")}
+                    </TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoadingTerms ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
+                    <TableCell
+                      colSpan={isAdmin ? 6 : 5}
+                      className="text-center py-8 text-muted-foreground"
+                    >
                       Loading glossary terms...
                     </TableCell>
                   </TableRow>
                 ) : filteredGlossary.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
+                    <TableCell
+                      colSpan={isAdmin ? 6 : 5}
+                      className="text-center py-8 text-muted-foreground"
+                    >
                       No glossary terms found
                     </TableCell>
                   </TableRow>
                 ) : (
                   currentItems.map((term: any) => (
                     <TableRow key={term.id}>
-                      <TableCell className="font-medium">{term.source}</TableCell>
+                      <TableCell className="font-medium">
+                        {term.source}
+                      </TableCell>
                       <TableCell>{term.target}</TableCell>
                       <TableCell className="text-center">
                         <div className="inline-flex items-center gap-1 bg-accent/50 px-2 py-0.5 rounded-full text-xs">
@@ -765,7 +898,9 @@ export default function UnifiedGlossaryPage() {
                       </TableCell>
                       <TableCell>
                         {term.resourceId ? (
-                          glossaryResources.find((r: any) => r.id === term.resourceId)?.name || "Unknown"
+                          glossaryResources.find(
+                            (r: any) => r.id === term.resourceId,
+                          )?.name || "Unknown"
                         ) : (
                           <span className="text-muted-foreground">None</span>
                         )}
@@ -795,31 +930,44 @@ export default function UnifiedGlossaryPage() {
           {filteredGlossary.length > 0 && (
             <div className="flex items-center justify-between px-4 py-4 border-t">
               <div className="text-sm text-muted-foreground">
-                {t('common.showing', {
-                  start: Math.min((currentPage - 1) * itemsPerPage + 1, filteredGlossary.length),
-                  end: Math.min(currentPage * itemsPerPage, filteredGlossary.length),
-                  total: filteredGlossary.length
+                {t("common.showing", {
+                  start: Math.min(
+                    (currentPage - 1) * itemsPerPage + 1,
+                    filteredGlossary.length,
+                  ),
+                  end: Math.min(
+                    currentPage * itemsPerPage,
+                    filteredGlossary.length,
+                  ),
+                  total: filteredGlossary.length,
                 })}
               </div>
               <div className="flex items-center space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
                   disabled={currentPage === 1}
                 >
-                  {t('common.previous')}
+                  {t("common.previous")}
                 </Button>
                 <div className="text-sm mx-4">
-                  {t('common.page', { current: currentPage, total: totalPages })}
+                  {t("common.page", {
+                    current: currentPage,
+                    total: totalPages,
+                  })}
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
                   disabled={currentPage === totalPages}
                 >
-                  {t('common.next')}
+                  {t("common.next")}
                 </Button>
               </div>
             </div>
@@ -827,8 +975,6 @@ export default function UnifiedGlossaryPage() {
 
           {/* No admin actions here - already in header */}
         </div>
-
-
       </div>
     </MainLayout>
   );
