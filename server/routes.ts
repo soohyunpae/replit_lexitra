@@ -420,11 +420,11 @@ async function processFile(file: Express.Multer.File) {
             // 한글 파일명 처리 개선
             console.log("PDF 원본 파일명:", file.originalname);
             
-            // iconv-lite를 사용하여 한글 파일명 처리
-            let originalName = file.originalname;
+            // 데이터베이스에 저장할 표시용 파일명 처리
+            let displayName = file.originalname;
             
             // 파일명이 이미 UTF-8이 아닌 경우를 처리
-            if (!/^[\x00-\x7F]*$/.test(originalName)) {
+            if (!/^[\x00-\x7F]*$/.test(displayName)) {
               try {
                 // 여러 인코딩을 시도해 가장 적합한 것을 찾음
                 const encodingsToTry = ['euc-kr', 'cp949', 'latin1'];
@@ -432,13 +432,13 @@ async function processFile(file: Express.Multer.File) {
                 for (const encoding of encodingsToTry) {
                   try {
                     // 원본 데이터를 바이너리로 변환 후 디코딩 시도
-                    const bytes = Buffer.from(originalName, 'binary' as BufferEncoding);
+                    const bytes = Buffer.from(displayName, 'binary' as BufferEncoding);
                     const decoded = iconv.decode(bytes, encoding);
                     
                     // 디코딩된 문자열에 한글이 포함되어 있다면 성공으로 판단
                     if (/[\uAC00-\uD7A3]/.test(decoded)) {
-                      originalName = decoded;
-                      console.log(`성공적인 PDF 파일명 인코딩 변환 (${encoding}):`, originalName);
+                      displayName = decoded;
+                      console.log(`성공적인 PDF 파일명 인코딩 변환 (${encoding}):`, displayName);
                       break;
                     }
                   } catch (err: any) {
@@ -451,11 +451,18 @@ async function processFile(file: Express.Multer.File) {
             }
             
             // 이름 정규화 (한글 조합 문자 처리를 위해 필수)
-            const normalizedFilename = originalName.normalize("NFC");
-            console.log("정규화된 PDF 파일명:", normalizedFilename);
+            displayName = displayName.normalize("NFC");
+            console.log("정규화된 PDF 파일명:", displayName);
             
-            const outputFileName = normalizedFilename.replace(/\.pdf$/i, "-extracted.txt");
-            const outputPath = path.join(outputDir, `${Date.now()}-${outputFileName}`);
+            // 파일 시스템용 안전한 파일명 생성
+            const timestamp = Date.now();
+            const randomString = Math.random().toString(36).substring(2, 8);
+            const ext = path.extname(file.originalname);
+            const safeFileName = `${timestamp}-${randomString}${ext}`;
+            console.log("시스템 저장용 PDF 파일명:", safeFileName);
+            
+            const outputFileName = displayName.replace(/\.pdf$/i, "-extracted.txt");
+            const outputPath = path.join(outputDir, `${safeFileName.replace(/\.pdf$/i, "-extracted.txt")}`);
             
             // 보수적+정확한 처리: 모든 줄바꿈을 공백으로 대체하고 연속 공백 처리
             const flatText = extractedText
@@ -603,53 +610,68 @@ const referenceStorage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    // projectId를 파일명에 포함시켜 저장
-    const projectId = req.params.id;
-    // 원본 파일명을 유지하면서 고유성 보장
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    
-    // 파일명 디코딩 (한글 처리)
-    console.log("원본 참조 파일명:", file.originalname);
-    
-    // iconv-lite를 사용하여 한글 파일명 처리
-    let originalName = file.originalname;
-    
-    // 파일명이 이미 UTF-8이 아닌 경우를 처리
-    if (!/^[\x00-\x7F]*$/.test(originalName)) {
-      try {
-        // 여러 인코딩을 시도해 가장 적합한 것을 찾음
-        const encodingsToTry = ['euc-kr', 'cp949', 'latin1'];
-        
-        for (const encoding of encodingsToTry) {
-          try {
-            // 원본 데이터를 바이너리로 변환 후 디코딩 시도
-            const bytes = Buffer.from(originalName, 'binary' as BufferEncoding);
-            const decoded = iconv.decode(bytes, encoding);
-            
-            // 디코딩된 문자열에 한글이 포함되어 있다면 성공으로 판단
-            if (/[\uAC00-\uD7A3]/.test(decoded)) {
-              originalName = decoded;
-              console.log(`성공적인 참조 파일 인코딩 변환 (${encoding}):`, originalName);
-              break;
+    try {
+      // projectId를 파일명에 포함시켜 저장
+      const projectId = req.params.id;
+      
+      // 원본 파일명 로깅 (디버깅용)
+      console.log("업로드된 참조 파일명:", file.originalname);
+      
+      // 원본 파일명 보존 (표시용/다운로드용)
+      let displayName = file.originalname;
+      
+      // 한글이 포함된 경우 최대한 복원 시도
+      if (!/^[\x00-\x7F]*$/.test(displayName)) {
+        try {
+          const encodingsToTry = ['euc-kr', 'cp949', 'latin1'];
+          
+          for (const encoding of encodingsToTry) {
+            try {
+              const bytes = Buffer.from(displayName, 'binary' as BufferEncoding);
+              const decoded = iconv.decode(bytes, encoding);
+              
+              if (/[\uAC00-\uD7A3]/.test(decoded)) {
+                displayName = decoded;
+                console.log(`참조 파일 한글명 복원 (${encoding}):`, displayName);
+                break;
+              }
+            } catch (err: any) {
+              console.log(`참조 파일 ${encoding} 디코딩 실패:`, err.message);
             }
-          } catch (err: any) {
-            console.log(`참조 파일 ${encoding} 디코딩 실패:`, err.message);
           }
+        } catch (decodeErr: any) {
+          console.log("참조 파일명 디코딩 오류:", decodeErr.message);
         }
-      } catch (decodeErr: any) {
-        console.log("참조 파일명 디코딩 오류:", decodeErr.message);
       }
+      
+      // 디스플레이용 이름 정규화 및 저장
+      displayName = displayName.normalize('NFC');
+      
+      // 실제 파일 시스템용 안전한 영문 파일명 생성
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 8);
+      const ext = path.extname(file.originalname);
+      
+      // 안전한 시스템 파일명 생성 (프로젝트ID + 타임스탬프 + 랜덤 문자열 + 확장자)
+      const safeFileName = `${projectId}_${timestamp}-${randomString}${ext}`;
+      
+      // 원본 파일명 매핑 저장 (화면 표시용)
+      if (!req.fileOriginalNames) {
+        (req as any).fileOriginalNames = {};
+      }
+      (req as any).fileOriginalNames[safeFileName] = displayName;
+      
+      console.log(`참조 파일 저장: 시스템명 "${safeFileName}", 표시명 "${displayName}"`);
+      
+      // 안전한 파일명으로 저장
+      cb(null, safeFileName);
+    } catch (error) {
+      console.error("참조 파일명 처리 오류:", error);
+      // 오류 발생시 기본 파일명 사용
+      const projectId = req.params.id;
+      const fallbackName = `${projectId}_${Date.now()}-${Math.random().toString(36).substring(2, 10)}${path.extname(file.originalname)}`;
+      cb(null, fallbackName);
     }
-    
-    // 이름 정규화 (한글 조합 문자 처리를 위해 필수)
-    originalName = originalName.normalize('NFC');
-    
-    // 파일명에 발생할 수 있는, 운영체제에서 지원하지 않는 문자 처리
-    let safeOriginalName = originalName.replace(/[/\\?%*:|"<>]/g, '-');
-    
-    const filename = `${projectId}_${uniqueSuffix}_${safeOriginalName}`;
-    console.log(`Generated reference filename: ${filename}`);
-    cb(null, filename);
   },
 });
 
