@@ -97,6 +97,20 @@ export default function UnifiedGlossaryPage() {
   const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>("all_source_languages");
   const [targetLanguageFilter, setTargetLanguageFilter] = useState<string>("all_target_languages");
   const [resourceFilter, setResourceFilter] = useState<number | undefined>(undefined);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, sourceLanguageFilter, targetLanguageFilter, resourceFilter]);
+
+  const totalPages = Math.ceil(filteredGlossary.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = filteredGlossary.slice(startIndex, endIndex);
 
   // Dialog states
   const [addTermDialogOpen, setAddTermDialogOpen] = useState(false);
@@ -736,7 +750,7 @@ export default function UnifiedGlossaryPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredGlossary.map((term: any) => (
+                  currentItems.map((term: any) => (
                     <TableRow key={term.id}>
                       <TableCell className="font-medium">{term.source}</TableCell>
                       <TableCell>{term.target}</TableCell>
@@ -778,6 +792,40 @@ export default function UnifiedGlossaryPage() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination Controls */}
+          {filteredGlossary.length > 0 && (
+            <div className="flex items-center justify-between px-4 py-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                {t('common.showing', {
+                  start: Math.min((currentPage - 1) * itemsPerPage + 1, filteredGlossary.length),
+                  end: Math.min(currentPage * itemsPerPage, filteredGlossary.length),
+                  total: filteredGlossary.length
+                })}
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  {t('common.previous')}
+                </Button>
+                <div className="text-sm mx-4">
+                  {t('common.page', { current: currentPage, total: totalPages })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  {t('common.next')}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* No admin actions here - already in header */}
         </div>
