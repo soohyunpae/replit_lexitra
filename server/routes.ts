@@ -78,48 +78,62 @@ ensureDirectories();
 
 // PDF에서 텍스트 추출 함수 - pdftotext 사용
 const extractTextFromPdf = async (pdfPath: string): Promise<string> => {
+  const { spawn } = require('child_process');
+  
   return new Promise((resolve, reject) => {
-    // 임시 출력 파일 경로
-    const tmpOutputPath = path.join(
-      os.tmpdir(),
-      `pdf-extract-${Date.now()}.txt`
-    );
+    // Python 스크립트 실행
+    const pythonProcess = spawn('python', ['-c', `
+import fitz
+import sys
+import json
 
-    console.log(`PDF 추출 시작: ${pdfPath} -> ${tmpOutputPath}`);
+try:
+    doc = fitz.open("${pdfPath}")
+    text_blocks = []
+    
+    for page in doc:
+        # 블록 단위로 텍스트 추출
+        blocks = page.get_text("blocks")
+        for block in blocks:
+            if block[4].strip():  # 공백이 아닌 텍스트만 추가
+                text_blocks.append(block[4])
+    
+    # 블록들을 개행으로 구분하여 결합
+    result = "\\n\\n".join(text_blocks)
+    print(json.dumps({"text": result}))
+    doc.close()
+except Exception as e:
+    print(json.dumps({"error": str(e)}))
+`]);
 
-    // pdftotext 명령어 실행 - layout 옵션 제거하여 문장 분리 개선
-    const pdfProcess = spawn("/nix/store/1f2vbia1rg1rh5cs0ii49v3hln9i36rv-poppler-utils-24.02.0/bin/pdftotext", [
-      // "-layout" 옵션 제거 (줄바꿈이 필요 이상으로 생기는 문제 해결)
-      "-nopgbrk", // 페이지 나누기 없음
-      "-enc", "UTF-8", // UTF-8 인코딩 사용
-      pdfPath, // 입력 PDF 파일
-      tmpOutputPath, // 출력 텍스트 파일
-    ]);
+    let stdoutData = '';
+    let stderrData = '';
 
-    let stderr = "";
-    pdfProcess.stderr.on("data", (data) => {
-      stderr += data.toString();
+    pythonProcess.stdout.on('data', (data) => {
+      stdoutData += data.toString();
     });
 
-    pdfProcess.on("close", (code) => {
+    pythonProcess.stderr.on('data', (data) => {
+      stderrData += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
       if (code !== 0) {
-        console.error(`pdftotext 실행 오류 (코드: ${code}):`, stderr);
-        reject(new Error(`pdftotext 실행 실패: ${stderr}`));
+        console.error(`Python 프로세스 오류:`, stderrData);
+        reject(new Error(`PDF 처리 실패: ${stderrData}`));
         return;
       }
 
-      // 추출된 텍스트 읽기
       try {
-        const extractedText = fs.readFileSync(tmpOutputPath, "utf-8");
-        
-        // 임시 파일 삭제
-        fs.unlinkSync(tmpOutputPath);
-        
-        console.log(`PDF 추출 완료: ${extractedText.length} 바이트 추출됨`);
-        resolve(extractedText);
+        const result = JSON.parse(stdoutData);
+        if (result.error) {
+          reject(new Error(result.error));
+        } else {
+          console.log(`PDF 추출 완료: ${result.text.length} 바이트 추출됨`);
+          resolve(result.text);
+        }
       } catch (err) {
-        console.error("추출된 텍스트 읽기 실패:", err);
-        reject(err);
+        reject(new Error(`JSON 파싱 오류: ${err.message}`));
       }
     });
   });
