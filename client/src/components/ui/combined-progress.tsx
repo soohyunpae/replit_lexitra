@@ -26,10 +26,25 @@ export function CombinedProgress({
   const reviewedCount = counts.Reviewed || 0;
   const totalSegs = totalSegments || 1;
   
-  // Use provided reviewedPercentage if available, otherwise calculate
-  const displayPercentage = typeof reviewedPercentage === 'number' 
-    ? reviewedPercentage 
-    : Math.round((reviewedCount / totalSegs) * 100);
+  // Always calculate the percentage based on the counts to ensure accuracy
+  // This ensures we're using the most accurate data
+  const calculatedPercentage = totalSegs > 0
+    ? Math.round((reviewedCount / totalSegs) * 100)
+    : 0;
+    
+  // Use the calculated percentage, but fall back to the prop if calculation isn't possible
+  const displayPercentage = calculatedPercentage > 0
+    ? calculatedPercentage
+    : (typeof reviewedPercentage === 'number' ? Math.round(reviewedPercentage) : 0);
+
+  // For debugging (can be removed after fixing)
+  console.log('Progress calculation:', {
+    reviewedCount,
+    totalSegs,
+    calculatedPercentage,
+    propPercentage: reviewedPercentage,
+    displayPercentage
+  });
 
   return (
     <div className="w-full space-y-1.5">
