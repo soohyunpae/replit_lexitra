@@ -128,7 +128,7 @@ export function Sidebar() {
     },
     {
       icon: <Book className="h-5 w-5" />,
-      label: t('common.glossary'),
+      label: t('common.glossaries'),
       href: "/glossaries",
     },
     {
@@ -230,7 +230,7 @@ export function Sidebar() {
                               /^\/projects\/\d+$/.test(location) ||
                               /^\/translation\/\d+$/.test(location))) ||
                           // Glossaries: active on glossaries or termbases pages
-                          (item.label === "Glossary" &&
+                          (item.label === "Glossaries" &&
                             (location.startsWith("/glossaries") ||
                               location.startsWith("/termbases"))) ||
                           // Translation Memory: active on any TM page
