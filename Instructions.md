@@ -1,89 +1,101 @@
-# Korean Filename Encoding Issue Analysis and Solution
+
+# Progress Bar and Review Status Display Issue Analysis
 
 ## Problem Description
-- Korean filenames are displaying as garbled text (e.g., `ë°ë¤_ìí_ko.docx`)
-- This occurs in file uploads and file processing operations
-- The issue appears in both storage and display of filenames
+The combined progress bar in `client/src/components/ui/combined-progress.tsx` is showing 0% for Reviewed status despite actual project data existing.
 
 ## Root Cause Analysis
 
-After reviewing the codebase, several encoding-related issues were identified:
+1. Review Status Calculation:
+- The current implementation only uses `reviewedCount` from `statusCounts` but does not properly handle the total counts
+- The progress bar is not reflecting the actual project data because the calculation logic is oversimplified
 
-1. File Upload Handling (server/routes.ts):
-- Current multer configuration doesn't properly handle non-ASCII filenames
-- Binary-to-string conversion issues in the filename normalization process
+2. Data Flow:
+- Project stats are passed through multiple components
+- The reviewedPercentage calculation appears to be done in multiple places leading to inconsistency
 
-2. File Processing (server/routes.ts):
-- PDF text extraction and file path handling lacks proper encoding support
-- File path construction doesn't account for UTF-8 filenames
+## Code Analysis
 
-## Solution Implementation Plan
+Affected files:
+1. `client/src/components/ui/combined-progress.tsx` - Main display component
+2. `client/src/pages/project.tsx` - Parent component providing data
+3. `server/routes.ts` - Backend API providing project statistics
 
-### 1. Update Multer Configuration
+## Solution Implementation
 
-The main issue is in the multer storage configuration where filename processing needs proper UTF-8 handling. Key fixes needed:
+### 1. Fix Combined Progress Component
 
-- Normalize filenames using UTF-8
-- Add proper buffer handling for binary filename data
-- Implement consistent filename encoding across storage and retrieval
+Update `combined-progress.tsx` to properly handle the progress calculation:
+```typescript
+// Only use the provided reviewedPercentage prop
+// Remove redundant percentage calculation
+const reviewedPercentageDisplay = Math.round(reviewedPercentage);
+```
 
-### 2. File Path Handling
+### 2. Ensure Proper Data Flow
 
-Improve file path handling in both storage and processing:
-
-- Use Buffer for binary data handling
-- Implement consistent UTF-8 normalization
-- Add proper encoding checks in file operations
+The parent component should provide:
+- Accurate reviewedPercentage 
+- Complete statusCounts object
+- Valid totalSegments count
 
 ### 3. Code Changes Required
 
-The following files need to be modified:
+The following changes are needed:
 
-1. server/routes.ts:
-- Update multer configuration
-- Improve filename processing
-- Add proper encoding handling for file operations
-
-2. client/src/components/translation/doc-review-editor.tsx:
-- Update filename display handling
-- Add proper decoding for Korean characters
+1. Update combined-progress.tsx to use props directly
+2. Ensure project.tsx provides correct stats
+3. Verify API response data structure
 
 ## Implementation Details
 
-Key changes to implement:
-
-1. Multer Configuration Update:
+1. Combined Progress Component Update:
 ```typescript
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    // ... existing destination code ...
-  },
-  filename: function (req, file, cb) {
-    // Properly decode and normalize the filename
-    const decodedName = Buffer.from(file.originalname, 'binary').toString('utf8');
-    const normalizedName = decodedName.normalize('NFC');
-
-    // Generate unique filename while preserving original name
-    const timestamp = Date.now();
-    const randomStr = Math.random().toString(36).substring(2, 8);
-    const safeFileName = `${timestamp}-${randomStr}-${normalizedName}`;
-
-    cb(null, safeFileName);
-  }
-});
+export function CombinedProgress({
+  reviewedPercentage,
+  statusCounts,
+  totalSegments,
+  ...props
+}: CombinedProgressProps) {
+  return (
+    <div className="w-full space-y-1.5">
+      <ProgressPrimitive.Root>
+        <div className="h-full w-full flex overflow-hidden">
+          <div 
+            className="h-full bg-green-200"
+            style={{ width: `${reviewedPercentage}%` }}
+          />
+        </div>
+      </ProgressPrimitive.Root>
+      {showPercentage && (
+        <div>
+          <span>Reviewed: {Math.round(reviewedPercentage)}%</span>
+        </div>
+      )}
+    </div>
+  );
+}
 ```
 
-2. File Processing Update:
+2. Project Stats API Response Format:
 ```typescript
-function processFile(file: Express.Multer.File) {
-  // Decode and normalize the filename
-  const normalizedFilename = file.originalname.normalize('NFC');
-
-  // Use normalized filename in paths
-  const outputPath = path.join(
-    outputDir,
-    `${Date.now()}-${normalizedFilename}`
-  );
-
-  // ... rest of file processing ...
+interface ProjectStats {
+  totalSegments: number;
+  reviewedPercentage: number;
+  statusCounts: {
+    Reviewed: number;
+    "100%": number;
+    Fuzzy: number;
+    MT: number;
+    Edited: number;
+    Rejected: number;
+  };
 }
+```
+
+## Testing Steps
+
+1. Verify API response contains correct statistics
+2. Check progress bar updates properly with new data
+3. Validate percentage calculations are accurate
+4. Test with various project states (empty, partial, complete)

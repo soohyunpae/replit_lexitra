@@ -22,13 +22,14 @@ export function CombinedProgress({
   totalSegments,
   ...props
 }: CombinedProgressProps) {
-  // Reviewed 수 계산
   const counts = statusCounts || {};
   const reviewedCount = counts.Reviewed || 0;
-  const totalSegs = totalSegments || 1; // 0으로 나누기 방지
-  const reviewedPercentageNew = Math.round(
-    (reviewedCount / totalSegs) * 100,
-  );
+  const totalSegs = totalSegments || 1;
+  
+  // Use provided reviewedPercentage if available, otherwise calculate
+  const displayPercentage = typeof reviewedPercentage === 'number' 
+    ? reviewedPercentage 
+    : Math.round((reviewedCount / totalSegs) * 100);
 
   return (
     <div className="w-full space-y-1.5">
@@ -44,7 +45,7 @@ export function CombinedProgress({
           {/* Reviewed segments (green) */}
           <div
             className="h-full bg-green-200"
-            style={{ width: `${reviewedPercentageNew}%` }}
+            style={{ width: `${displayPercentage}%` }}
           />
           {/* 나머지는 표시하지 않음 (기본 배경색으로 표시) */}
         </div>
@@ -54,7 +55,7 @@ export function CombinedProgress({
         <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground my-1">
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-green-200"></div>
-            <span>Reviewed: {reviewedPercentageNew}%</span>
+            <span>Reviewed: {reviewedCount} / {totalSegs} ({displayPercentage}%)</span>
           </div>
         </div>
       )}
