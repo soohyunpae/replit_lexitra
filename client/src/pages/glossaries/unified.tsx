@@ -86,11 +86,21 @@ type GlossaryFormValues = z.infer<typeof glossaryFormSchema>;
 type GlossaryResourceFormValues = z.infer<typeof glossaryResourceFormSchema>;
 
 export default function UnifiedGlossaryPage() {
+  const [tbSearchQuery, setTbSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
   const { toast } = useToast();
-  const { user } = useAuth();
   const { t } = useTranslation();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const isAdmin = user?.role === "admin";
+
+  // Reset page when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [tbSearchQuery, resourceFilter]);
+
+  const totalPages = Math.ceil(filteredGlossary.length / itemsPerPage);
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -736,7 +746,7 @@ export default function UnifiedGlossaryPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredGlossary.map((term: any) => (
+                  filteredGlossary.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((term: any) => (
                     <TableRow key={term.id}>
                       <TableCell className="font-medium">{term.source}</TableCell>
                       <TableCell>{term.target}</TableCell>
@@ -778,6 +788,31 @@ export default function UnifiedGlossaryPage() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination controls */}
+          {filteredGlossary.length > 0 && (
+            <div className="flex justify-center items-center mt-4">
+              <Button
+                variant="outline"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(currentPage - 1)}
+                className="mr-2"
+              >
+                {t('common.previous')}
+              </Button>
+              <span>
+                {currentPage} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(currentPage + 1)}
+                className="ml-2"
+              >
+                {t('common.next')}
+              </Button>
+            </div>
+          )}
 
           {/* No admin actions here - already in header */}
         </div>
