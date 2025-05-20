@@ -59,7 +59,7 @@ export default function Dashboard() {
   });
 
   // 실제 데이터 계산
-  const inProgressProjects = projects.filter(p => p.status === "In Progress").length || 0;
+  const inProgressProjectCount = projects.filter(p => p.status === "In Progress").length || 0;
   const segmentsAwaitingReview = reviewStats.totalAwaitingReview || 0;
   const availableProjects = reviewStats.availableProjects || 0;
 
@@ -146,7 +146,7 @@ export default function Dashboard() {
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <Card className="bg-white">
             <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold mb-1">📁 {inProgressProjects}</div>
+              <div className="text-2xl font-bold mb-1">📁 {inProgressProjectCount}</div>
               <div className="text-sm text-muted-foreground">{t('dashboard.inProgressProjects')}</div>
             </CardContent>
           </Card>
