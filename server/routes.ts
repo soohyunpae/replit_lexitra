@@ -33,6 +33,9 @@ import { spawn } from "child_process";
 import { promisify } from "util";
 import iconv from 'iconv-lite';
 
+// 개선된 PDF 처리 라우트
+import pdfRoutes from './routes/pdf-routes';
+
 // Request에 커스텀 필드 추가를 위한 타입 확장
 declare global {
   namespace Express {
