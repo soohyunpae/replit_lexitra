@@ -102,6 +102,35 @@ export default function UnifiedGlossaryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
+  // Initialize filteredGlossary
+  const filteredGlossary = React.useMemo(() => {
+    if (!glossaryData) return [];
+
+    return glossaryData.filter((term: any) => {
+      const matchesSearch = searchQuery
+        ? term.source.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          term.target.toLowerCase().includes(searchQuery.toLowerCase())
+        : true;
+
+      const matchesSourceLang =
+        sourceLanguageFilter && sourceLanguageFilter !== "all_source_languages"
+          ? term.sourceLanguage === sourceLanguageFilter
+          : true;
+
+      const matchesTargetLang =
+        targetLanguageFilter && targetLanguageFilter !== "all_target_languages"
+          ? term.targetLanguage === targetLanguageFilter
+          : true;
+
+      const matchesResource = 
+        resourceFilter !== undefined
+          ? term.resourceId === resourceFilter
+          : true;
+
+      return matchesSearch && matchesSourceLang && matchesTargetLang && matchesResource;
+    });
+  }, [glossaryData, searchQuery, sourceLanguageFilter, targetLanguageFilter, resourceFilter]);
+
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
