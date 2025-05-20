@@ -95,6 +95,8 @@ export default function UnifiedGlossaryPage() {
   const queryClient = useQueryClient();
   const isAdmin = user?.role === "admin";
 
+  const [resourceFilter, setResourceFilter] = useState<number | undefined>(undefined);
+
   // Reset page when search or filters change
   useEffect(() => {
     setCurrentPage(1);
