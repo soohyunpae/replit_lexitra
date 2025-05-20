@@ -1,4 +1,3 @@
-
 # Progress Bar and Review Status Display Issue Analysis
 
 ## Problem Description
@@ -7,12 +6,12 @@ The combined progress bar in `client/src/components/ui/combined-progress.tsx` is
 ## Root Cause Analysis
 
 1. Review Status Calculation:
-- The current implementation only uses `reviewedCount` from `statusCounts` but does not properly handle the total counts
-- The progress bar is not reflecting the actual project data because the calculation logic is oversimplified
+   - The current implementation only uses `reviewedCount` from `statusCounts` but does not properly handle the total counts
+   - The progress bar is not reflecting the actual project data because the calculation logic is oversimplified
 
 2. Data Flow:
-- Project stats are passed through multiple components
-- The reviewedPercentage calculation appears to be done in multiple places leading to inconsistency
+   - Project stats are passed through multiple components
+   - The reviewedPercentage calculation appears to be done in multiple places leading to inconsistency
 
 ## Code Analysis
 
@@ -99,3 +98,36 @@ interface ProjectStats {
 2. Check progress bar updates properly with new data
 3. Validate percentage calculations are accurate
 4. Test with various project states (empty, partial, complete)
+
+# Language Pair Display Improvement
+
+## Current State
+The language pair is currently displayed in two separate lines with labels in the glossary unified view:
+```
+Source: KO
+Target: EN
+```
+
+## Goal
+Make the language pair display more concise, similar to the project page format:
+```
+KO → EN
+```
+
+## Implementation
+1. The language pair display needs to be updated in the glossary list table cell.
+2. We'll reuse similar styling from the project display format.
+3. Will update the table cell content to use flexbox layout for horizontal alignment.
+
+## Related Files
+- `client/src/pages/glossaries/unified.tsx` - Main glossary page component
+
+## Changes Required
+1. Update the TableCell component to use inline display with flex layout
+2. Add styling consistent with project language pair display
+3. Simplify the text format to show just language codes with an arrow
+
+## Impact
+- More consistent UI across the application
+- Better space utilization
+- Improved readability

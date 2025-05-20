@@ -638,12 +638,13 @@ export default function UnifiedGlossaryPage() {
                       <TableCell className="font-medium">{resource.name}</TableCell>
                       <TableCell>{resource.description || "—"}</TableCell>
                       <TableCell>
-                        <div className="flex flex-col">
-                          <span className="text-xs text-muted-foreground">
-                            Source: {resource.defaultSourceLanguage.toUpperCase()}
+                        <div className="flex items-center gap-1">
+                          <span className="px-2 py-0.5 bg-primary/10 rounded-md text-xs">
+                            {resource.defaultSourceLanguage.toUpperCase()}
                           </span>
-                          <span className="text-xs text-muted-foreground">
-                            Target: {resource.defaultTargetLanguage.toUpperCase()}
+                          <span className="mx-1">→</span>
+                          <span className="px-2 py-0.5 bg-primary/10 rounded-md text-xs">
+                            {resource.defaultTargetLanguage.toUpperCase()}
                           </span>
                         </div>
                       </TableCell>
