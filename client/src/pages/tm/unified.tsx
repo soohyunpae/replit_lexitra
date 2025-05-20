@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -321,6 +321,14 @@ export default function UnifiedTranslationMemoryPage() {
   function handleResourceClick(resourceId: string) {
     setResourceFilter(resourceId);
   }
+
+  // Pagination states and calculations
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+  const totalPages = Math.ceil(filteredTM.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = useMemo(() => filteredTM.slice(startIndex, endIndex), [filteredTM, startIndex, endIndex]);
 
   return (
     <MainLayout title="Translation Memory">
@@ -711,7 +719,7 @@ export default function UnifiedTranslationMemoryPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredTM.map((entry: any) => (
+                  currentItems.map((entry: any) => (
                     <TableRow key={entry.id}>
                       <TableCell className="font-medium">
                         {entry.source}
@@ -769,6 +777,36 @@ export default function UnifiedTranslationMemoryPage() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination Controls */}
+          {filteredTM.length > 0 && (
+            <div className="flex items-center justify-between px-4 py-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                {t('common.showing')} {Math.min((currentPage - 1) * itemsPerPage + 1, filteredTM.length)} - {Math.min(currentPage * itemsPerPage, filteredTM.length)} {t('common.of')} {filteredTM.length}
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  {t('common.previous')}
+                </Button>
+                <div className="text-sm mx-4">
+                  {t('common.page')} {currentPage} {t('common.of')} {totalPages}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  {t('common.next')}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Admin actions moved to header */}
         </div>

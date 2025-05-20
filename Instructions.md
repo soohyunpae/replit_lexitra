@@ -131,3 +131,50 @@ KO → EN
 - More consistent UI across the application
 - Better space utilization
 - Improved readability
+
+# Translation Memory Pagination Implementation
+
+## Problem
+The Translation Memory (TM) entries table needs pagination to improve performance and user experience when dealing with large datasets.
+
+## Solution
+Implemented pagination with the following features:
+- 20 items per page
+- Previous/Next navigation
+- Page count display
+- Current items range display
+- Automatic reset to first page when filters change
+
+## Implementation Details
+
+1. Added pagination state:
+- `currentPage`: Tracks current page number
+- `itemsPerPage`: Set to 20 items per page
+- `totalPages`: Calculated based on filtered items count
+
+2. Added paginated data calculation:
+- Uses slice to get current page items
+- Maintains existing filtering logic
+- Resets to first page when filters change
+
+3. Added pagination controls:
+- Previous/Next buttons
+- Current page indicator
+- Total pages display
+- Items range display
+
+## Files Modified
+- `client/src/pages/tm/unified.tsx`
+
+## Testing
+Verify the following:
+1. Table shows 20 items per page
+2. Navigation between pages works
+3. Page resets when filters change
+4. Correct item range is displayed
+5. Buttons disable at boundaries (first/last page)
+
+## Future Improvements
+- Consider adding direct page number input
+- Add page size selector
+- Implement server-side pagination for larger datasets
