@@ -31,6 +31,7 @@ import mammoth from "mammoth";
 import { WebSocketServer, WebSocket } from "ws";
 import { spawn } from "child_process"; 
 import { promisify } from "util";
+import iconv from 'iconv-lite';
 
 // Request에 커스텀 필드 추가를 위한 타입 확장
 declare global {
@@ -513,25 +514,44 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     try {
-      // 파일명을 UTF-8로 적절히 디코딩
+      // 인코딩 디버깅을 위한 로그
+      console.log("======= 파일명 인코딩 디버깅 =======");
+      console.log("원본 파일명 타입:", typeof file.originalname);
+      console.log("원본 파일명 Buffer 확인:", Buffer.from(file.originalname).toString('hex'));
+      console.log("원본 파일명:", file.originalname);
+      
+      // 다양한 인코딩 시도
+      const encodings = ['utf8', 'binary', 'latin1', 'ascii', 'utf16le'];
+      for (const sourceEnc of encodings) {
+        for (const targetEnc of encodings) {
+          if (sourceEnc !== targetEnc) {
+            try {
+              const converted = Buffer.from(file.originalname, sourceEnc).toString(targetEnc as BufferEncoding);
+              console.log(`${sourceEnc} -> ${targetEnc}:`, converted);
+            } catch (e) {
+              console.log(`${sourceEnc} -> ${targetEnc} 변환 실패:`, e.message);
+            }
+          }
+        }
+      }
+      
+      // 이중 인코딩/디코딩 시도
+      const isoConverted = Buffer.from(file.originalname, 'binary').toString('utf8');
+      console.log("binary -> utf8 변환:", isoConverted);
+      
+      // 최종 처리 방식 (실험 결과에 따라 조정)
       let originalName = file.originalname;
       
-      // 파일명 인코딩 문제 해결을 위한 추가 처리
-      if (Buffer.isBuffer(originalName)) {
-        originalName = originalName.toString('utf8');
-      } else if (typeof originalName === 'string') {
-        // 바이너리 인코딩된 경우 UTF-8로 변환 (일관된 방식)
-        try {
-          originalName = Buffer.from(originalName, 'binary').toString('utf8');
-        } catch (e) {
-          console.log("Failed to decode binary:", e);
-        }
+      try {
+        originalName = Buffer.from(originalName, 'latin1').toString('utf8');
+      } catch (e) {
+        console.log("latin1 -> utf8 변환 실패:", e);
       }
       
       // 이름 정규화 (한글 조합 문자 처리를 위해 필수)
       originalName = originalName.normalize('NFC');
       
-      console.log("Original filename after normalization:", originalName);
+      console.log("최종 처리된 파일명:", originalName);
 
       // 이름과 확장자 분리
       const ext = path.extname(originalName);
