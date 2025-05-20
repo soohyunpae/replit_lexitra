@@ -1364,9 +1364,9 @@ app.get(`${apiPrefix}/projects/review-stats`, verifyToken, async (req, res) => {
         where: inArray(schema.translationUnits.fileId, fileIds),
       });
 
-      // "Edited" 상태인 세그먼트 카운트
-      awaitingReview = segments.filter(seg => seg.status === "Edited").length;
+      // "Reviewed" 상태가 아닌 모든 세그먼트 카운트
       totalCompleted = segments.filter(seg => seg.status === "Reviewed").length;
+      awaitingReview = segments.length - totalCompleted;
     }
 
     // 참여 가능한 프로젝트 수 계산 (Unclaimed 상태)
