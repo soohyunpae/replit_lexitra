@@ -56,10 +56,11 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
-  // 필요한 데이터 계산
+  // 실제 데이터 계산
   const activeProjects = projects.filter(p => p.status !== "Completed").length || 0;
-  const segmentsAwaitingReview = reviewStats.totalAwaitingReview;
+  const segmentsAwaitingReview = reviewStats.totalAwaitingReview || 0;
   const availableProjects = reviewStats.availableProjects || 0;
+  const completedSegments = reviewStats.totalCompleted || 0;
 
   // 진행 중인 프로젝트 목록 (실제 데이터)
   const inProgressProjects = projects
@@ -133,6 +134,9 @@ export default function Dashboard() {
             <CardContent className="p-6 text-center">
               <div className="text-2xl font-bold mb-1">📝 {segmentsAwaitingReview}</div>
               <div className="text-sm text-muted-foreground">{t('dashboard.segmentsAwaitingReview')}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                ({completedSegments} {t('dashboard.completed')})
+              </div>
             </CardContent>
           </Card>
           
