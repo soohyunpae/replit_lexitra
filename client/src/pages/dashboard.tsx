@@ -157,7 +157,7 @@ export default function Dashboard() {
               <div className="text-2xl font-bold mb-1">📝 {segmentsAwaitingReview}</div>
               <div className="text-sm text-muted-foreground">{t('dashboard.segmentsAwaitingReview')}</div>
               <div className="text-xs text-muted-foreground mt-1">
-                ({completedSegments} {t('dashboard.completed')})
+                ({completedSegments} 완료됨)
               </div>
             </CardContent>
           </Card>
