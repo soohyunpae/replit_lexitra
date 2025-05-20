@@ -416,7 +416,26 @@ async function processFile(file: Express.Multer.File) {
             }
             
             // 디버깅용 출력 파일 생성
-            const normalizedFilename = file.originalname.normalize("NFC");
+            // 한글 파일명 처리 개선
+            let originalName = file.originalname;
+            
+            // 파일명이 이미 버퍼나 이상하게 인코딩된 경우를 처리
+            if (Buffer.isBuffer(originalName)) {
+              originalName = originalName.toString('utf8');
+            } else if (typeof originalName === 'string') {
+              try {
+                // binary에서 utf8로 변환 시도
+                const decodedName = Buffer.from(originalName, 'binary').toString('utf8');
+                originalName = decodedName;
+              } catch (e) {
+                console.log("디코딩 실패, 원본 이름 유지:", e);
+              }
+            }
+            
+            // 한글 파일명 정규화 (NFC 형식으로)
+            const normalizedFilename = originalName.normalize("NFC");
+            console.log("정규화된 PDF 파일명:", normalizedFilename);
+            
             const outputFileName = normalizedFilename.replace(/\.pdf$/i, "-extracted.txt");
             const outputPath = path.join(outputDir, `${Date.now()}-${outputFileName}`);
             
@@ -561,8 +580,25 @@ const referenceStorage = multer.diskStorage({
     // 원본 파일명을 유지하면서 고유성 보장
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     
+    // 파일명 인코딩 문제 해결을 위한 처리
+    let originalName = file.originalname;
+    
+    // 바이너리 인코딩된 경우 UTF-8로 변환 (일관된 방식)
+    if (Buffer.isBuffer(originalName)) {
+      originalName = originalName.toString('utf8');
+    } else if (typeof originalName === 'string') {
+      try {
+        originalName = Buffer.from(originalName, 'binary').toString('utf8');
+      } catch (e) {
+        console.log("Failed to decode binary reference filename:", e);
+      }
+    }
+    
+    // 이름 정규화 (한글 조합 문자 처리를 위해 필수)
+    originalName = originalName.normalize('NFC');
+    
     // 파일명에 발생할 수 있는, 운영체제에서 지원하지 않는 문자 처리
-    let safeOriginalName = file.originalname.replace(/[/\\?%*:|"<>]/g, '-');
+    let safeOriginalName = originalName.replace(/[/\\?%*:|"<>]/g, '-');
     
     const filename = `${projectId}_${uniqueSuffix}_${safeOriginalName}`;
     console.log(`Generated reference filename: ${filename}`);
