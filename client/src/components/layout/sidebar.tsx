@@ -128,7 +128,7 @@ export function Sidebar() {
     },
     {
       icon: <Book className="h-5 w-5" />,
-      label: t('common.glossaries'),
+      label: t('common.glossary'),
       href: "/glossaries",
     },
     {

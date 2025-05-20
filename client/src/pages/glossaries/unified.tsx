@@ -403,7 +403,7 @@ export default function UnifiedGlossaryPage() {
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-2">
             <BookMarked className="h-5 w-5" />
-            <h2 className="text-3xl font-bold tracking-tight">{t('common.glossaries')}</h2>
+            <h2 className="text-3xl font-bold tracking-tight">{t('common.glossary')}</h2>
           </div>
           {isAdmin && (
             <div className="flex gap-2">
