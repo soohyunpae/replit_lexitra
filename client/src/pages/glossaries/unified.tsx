@@ -185,27 +185,9 @@ export default function UnifiedGlossaryPage() {
     },
   });
 
-  // Get all glossary terms
-  const {
-    data: glossaryData,
-    isLoading: isLoadingTerms,
-    error: termsError,
-  } = useQuery({
-    queryKey: ["/api/glossary/all", resourceFilter],
-    queryFn: async () => {
-      try {
-        let url = "/api/glossary/all";
-        if (resourceFilter) {
-          url += `?resourceId=${resourceFilter}`;
-        }
-        const res = await apiRequest("GET", url);
-        return res.json();
-      } catch (error) {
-        console.error("Error fetching glossary terms:", error);
-        return [];
-      }
-    },
-  });
+  // Status variables for loading and error states
+  const isLoadingTerms = isLoading;
+  const termsError = error;
 
   // Get glossary resources
   const { 
