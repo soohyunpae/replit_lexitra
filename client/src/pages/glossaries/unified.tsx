@@ -740,10 +740,15 @@ export default function UnifiedGlossaryPage() {
                     <TableRow key={term.id}>
                       <TableCell className="font-medium">{term.source}</TableCell>
                       <TableCell>{term.target}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="text-xs text-muted-foreground">Source: {term.sourceLanguage}</span>
-                          <span className="text-xs text-muted-foreground">Target: {term.targetLanguage}</span>
+                      <TableCell className="text-center">
+                        <div className="inline-flex items-center gap-1 bg-accent/50 px-2 py-0.5 rounded-full text-xs">
+                          <span className="font-medium">
+                            {term.sourceLanguage.toUpperCase()}
+                          </span>
+                          <ArrowRight className="h-3 w-3" />
+                          <span className="font-medium">
+                            {term.targetLanguage.toUpperCase()}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
