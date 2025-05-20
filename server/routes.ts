@@ -253,20 +253,23 @@ async function processFileSegments(fileId: number, fileContent: string, projectI
             );
 
             // GPT 번역 호출
-            const translationResult = await translateWithGPT(
-              segment.source,
-              projectInfo.sourceLanguage,
-              projectInfo.targetLanguage,
-              context,
-              terminology,
-            );
+            const translationResult = await translateWithGPT({
+              source: segment.source,
+              sourceLanguage: projectInfo.sourceLanguage,
+              targetLanguage: projectInfo.targetLanguage,
+              context: context.length > 0 ? context : undefined,
+              glossaryTerms: relevantTerms.map(term => ({
+                source: term.source,
+                target: term.target
+              }))
+            });
 
             if (translationResult) {
               // 번역 결과 저장
               await db
                 .update(schema.translationUnits)
                 .set({
-                  target: translationResult,
+                  target: translationResult.target,
                   status: "MT",
                   updatedAt: new Date(),
                 })
@@ -276,7 +279,7 @@ async function processFileSegments(fileId: number, fileContent: string, projectI
                 `[비동기 처리] 세그먼트 ID ${segment.id} 번역 완료: "${segment.source.substring(
                   0,
                   30,
-                )}..." => "${translationResult.substring(0, 30)}..."`,
+                )}..." => "${translationResult.target.substring(0, 30)}..."`,
               );
             }
           } catch (translationError) {
