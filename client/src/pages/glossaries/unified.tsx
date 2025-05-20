@@ -103,9 +103,24 @@ export default function UnifiedGlossaryPage() {
   const itemsPerPage = 20;
 
   // Initialize filteredGlossary
-  const filteredGlossary = React.useMemo(() => {
-    if (!glossaryData) return [];
+  const { data: glossaryData = [] } = useQuery({
+    queryKey: ["/api/glossary/all", resourceFilter],
+    queryFn: async () => {
+      try {
+        let url = "/api/glossary/all";
+        if (resourceFilter) {
+          url += `?resourceId=${resourceFilter}`;
+        }
+        const res = await apiRequest("GET", url);
+        return res.json();
+      } catch (error) {
+        console.error("Error fetching glossary terms:", error);
+        return [];
+      }
+    },
+  });
 
+  const filteredGlossary = React.useMemo(() => {
     return glossaryData.filter((term: any) => {
       const matchesSearch = searchQuery
         ? term.source.toLowerCase().includes(searchQuery.toLowerCase()) ||
