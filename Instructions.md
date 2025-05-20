@@ -1,51 +1,57 @@
 
-# 대시보드 통계 카드 실제 데이터 구현 계획
+# 대시보드 개선 계획
 
-## 현재 상황
-현재 dashboard.tsx의 통계 카드는 하드코딩된 값을 사용하고 있습니다:
-- 활성 프로젝트 수: projects.length || 0
-- 검토 대기 중인 세그먼트: 18 (하드코딩)
-- 용어집 사용 현황: glossaryData.length (기본값 4)
+## 1. 통계 카드 구현
 
-## 구현 계획
+### 1.1 활성 프로젝트 수
+- `projects` 배열에서 "Completed" 상태가 아닌 프로젝트 수를 카운트
+- 표시 형식: "📁 {count}"
+- i18n 키: "dashboard.activeProjects"
 
-### 1. 활성 프로젝트 수
-- 이미 projects 배열을 사용하여 구현되어 있음
-- 추가 필터링: "Completed" 상태가 아닌 프로젝트만 카운트하도록 수정
+### 1.2 검토 대기 중인 세그먼트
+- `/api/projects/review-stats` API에서 가져온 데이터 사용
+- "Reviewed" 상태가 아닌 세그먼트 수를 표시
+- 추가 표시: 검토 완료된 세그먼트 수
+- 표시 형식: 
+  - 주요 수치: "📝 {awaitingReview}"
+  - 부가 정보: "({completedCount} reviewed)"
+- i18n 키: 
+  - "dashboard.segmentsAwaitingReview"
+  - "dashboard.reviewed"
 
-### 2. 검토 대기 중인 세그먼트
-- 새로운 API 엔드포인트 필요: `/api/projects/review-stats`
-- 모든 프로젝트의 세그먼트 중 "Reviewed" 상태가 아닌 세그먼트의 개수를 집계
-- React Query를 사용하여 데이터 페칭
+### 1.3 참여 가능한 프로젝트
+- 아직 할당되지 않은(Unclaimed) 프로젝트 수를 표시
+- `/api/projects/review-stats`의 availableProjects 값 사용
+- 표시 형식: "🔍 {count}"
+- i18n 키: "dashboard.projectsAvailableToClaim"
 
-### 3. 용어집 사용 현황
-- 이미 glossaryData를 사용하여 구현되어 있음
-- 실제 용어집 데이터 개수를 표시하도록 수정
+## 2. 최근 활동 표시
 
-## 필요한 변경사항
+### 2.1 데이터 구조
+- 프로젝트 업데이트 기록을 기반으로 표시
+- 최근 5개 활동만 표시
+- 각 활동은 다음 정보 포함:
+  - 사용자 이름
+  - 프로젝트 이름
+  - 작업 종류 (완료/업데이트)
+  - 작업 일시
 
-1. routes.ts에 새로운 API 엔드포인트 추가
-2. dashboard.tsx에서 하드코딩된 값을 실제 데이터로 교체
-3. 필요한 React Query hooks 추가
+### 2.2 표시 형식
+- 각 활동: "📌 {username} {projectName} 프로젝트 {action}"
+- 링크: 프로젝트 이름에 해당 프로젝트로 이동하는 링크 추가
+- 활동이 없는 경우 "dashboard.noRecentActivity" 메시지 표시
 
-## 상세 구현 단계
+## 3. 개선 사항
 
-1. API 엔드포인트 구현
-2. React Query hook 생성
-3. 대시보드 컴포넌트 수정
-4. 에러 처리 및 로딩 상태 추가
+### 3.1 성능
+- useMemo를 사용하여 최근 활동 목록 최적화
+- 프로젝트 데이터 변경 시에만 재계산
 
-## 구현 코드
+### 3.2 오류 처리
+- 데이터 누락 시 기본값 처리
+- 정렬 및 필터링 로직 안정성 확보
 
-아래 파일들을 수정해야 합니다:
-
-1. server/routes.ts:
-- 새로운 엔드포인트 `/api/projects/review-stats` 추가
-- 세그먼트 통계 집계 로직 구현
-
-2. client/src/hooks/queries/useProjectStats.ts:
-- API 호출을 위한 새로운 React Query hook 생성
-
-3. client/src/pages/dashboard.tsx:
-- 하드코딩된 값을 실제 데이터로 교체
-- 새로운 hook 사용
+### 3.3 i18n
+- 누락된 번역 키 추가
+  - dashboard.reviewed
+  - dashboard.noRecentActivity
