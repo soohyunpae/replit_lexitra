@@ -494,28 +494,36 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     try {
-      // 파일명을 UTF-8로 적절히 디코딩
+      // UTF-8로 디코딩 및 정규화
       let originalName = file.originalname;
       
-      // binary 인코딩된 경우 UTF-8로 변환
-      if (Buffer.from(originalName).toString('binary') !== originalName) {
-        originalName = Buffer.from(originalName, 'binary').toString('utf8');
+      try {
+        // 이진 데이터로 처리
+        const buffer = Buffer.from(originalName, 'binary');
+        
+        // UTF-8로 디코딩 시도
+        originalName = buffer.toString('utf8');
+        
+        // 정규화 (NFC)
+        originalName = originalName.normalize('NFC');
+        
+        console.log("Processed filename:", originalName);
+      } catch (err) {
+        console.warn("Filename processing warning:", err);
+        // 오류 시 원본 유지
       }
-      
-      console.log("Original filename:", originalName);
 
       // 이름과 확장자 분리
       const ext = path.extname(originalName);
       const nameWithoutExt = path.basename(originalName, ext);
-
-      // 한글 파일명 정규화 (NFC)
-      const normalizedName = nameWithoutExt.normalize('NFC');
-      const normalizedExt = ext.normalize('NFC');
       
-      // 고유한 파일명 생성 (타임스탬프 + 정규화된 원본명)
+      // 파일명에서 특수문자 제거
+      const sanitizedName = nameWithoutExt.replace(/[^\w\s가-힣ㄱ-ㅎㅏ-ㅣ\.-]/g, '_');
+      
+      // 고유한 파일명 생성
       const timestamp = Date.now();
       const randomStr = Math.random().toString(36).substring(2, 8);
-      const safeFileName = `${timestamp}-${randomStr}-${normalizedName}${normalizedExt}`;
+      const safeFileName = `${timestamp}-${randomStr}-${sanitizedName}${ext}`;
 
       // 원본 파일명 매핑 저장
       if (!req.fileOriginalNames) {
