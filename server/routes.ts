@@ -1705,6 +1705,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication systems
   setupAuth(app);
   setupTokenAuth(app); // Also setup token-based auth
+  
+  // 개선된 PDF 처리 라우트 연결
+  app.use('/api/pdf', pdfRoutes);
 
   // Register admin routes
   registerAdminRoutes(app);
