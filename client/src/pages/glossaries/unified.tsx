@@ -811,7 +811,7 @@ export default function UnifiedGlossaryPage() {
                   {t('common.previous')}
                 </Button>
                 <div className="text-sm mx-4">
-                  {t('common.page', { current: currentPage, total: totalPages })}
+                  {`${currentPage} / ${totalPages}`}
                 </div>
                 <Button
                   variant="outline"
