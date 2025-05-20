@@ -53,15 +53,14 @@ export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type Project = typeof projects.$inferSelect;
 
 // File model
-export const files = pgTable('files', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull(),
-  content: text('content'),
-  projectId: integer('project_id').references(() => projects.id),
-  type: text('type'),
-  status: text('status').default('processing').notNull(), // 'processing' | 'ready'
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
+export const files = pgTable("files", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  content: text("content").notNull(),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  type: text("type").default("work"),  // 'work' 또는 'reference' 값을 가짐
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const filesRelations = relations(files, ({ one, many }) => ({
