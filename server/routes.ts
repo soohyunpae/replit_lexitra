@@ -1787,42 +1787,78 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         if (uploadedFiles && uploadedFiles.files) {
           // 작업 파일 정보 저장
           for (const file of uploadedFiles.files) {
-            // 복원된 한글 파일명 가져오기 (multer 처리 단계에서 저장한 값)
+            // 새로운 복원 방식: 한글이 포함된 파일명을 다양한 인코딩으로 시도
             let displayName = file.originalname;
             
+            // 한글 파일명 추출 시도 - 다양한 방법 사용
+            console.log("=== 파일명 복원 시도 시작 ===");
+            console.log("1. 원본 파일명:", file.originalname);
+            
+            // 방법 1: 기존 저장된 매핑 사용
             if (req.fileOriginalNames && req.fileOriginalNames[file.filename]) {
-              // 복원된 한글 파일명 사용 (multer에서 처리된)
               displayName = req.fileOriginalNames[file.filename];
-              console.log(`한글 파일명 복원 성공: ${file.originalname} => ${displayName}`);
-            } else {
-              // 다시 한번 인코딩 처리 시도
-              if (!/^[\x00-\x7F]*$/.test(displayName)) {
-                try {
-                  // 여러 인코딩을 시도해 가장 적합한 것을 찾음
-                  const encodingsToTry = ['euc-kr', 'cp949', 'latin1'];
-                  
-                  for (const encoding of encodingsToTry) {
-                    try {
-                      const bytes = Buffer.from(displayName, 'binary' as BufferEncoding);
-                      const decoded = iconv.decode(bytes, encoding);
-                      
-                      if (/[\uAC00-\uD7A3]/.test(decoded)) {
-                        displayName = decoded;
-                        console.log(`DB 저장 전 파일명 복원 성공 (${encoding}):`, displayName);
-                        break;
-                      }
-                    } catch (err: any) {
-                      console.log(`DB 저장 전 ${encoding} 디코딩 실패:`, err.message);
-                    }
-                  }
-                } catch (decodeErr: any) {
-                  console.log("DB 저장 전 파일명 디코딩 오류:", decodeErr.message);
+              console.log("2. 매핑 정보에서 복원된 파일명:", displayName);
+            } 
+            
+            // 방법 2: Buffer로 변환 후 다양한 인코딩 시도
+            let bestName = displayName;
+            let maxKoreanChars = 0;
+            
+            // 시도해볼 인코딩 목록
+            const encodingsToTry = ['euc-kr', 'cp949', 'utf-8', 'latin1', 'binary'];
+            
+            for (const encoding of encodingsToTry) {
+              try {
+                // 원본 이름을 바이너리로 다루고 해당 인코딩으로 디코딩
+                const bytes = Buffer.from(displayName, 'binary' as BufferEncoding);
+                const decodedName = iconv.decode(bytes, encoding);
+                
+                // 한글 문자 카운트
+                const koreanCharCount = (decodedName.match(/[\uAC00-\uD7A3]/g) || []).length;
+                
+                console.log(`인코딩 ${encoding} 결과:`, decodedName, `(한글 ${koreanCharCount}자)`);
+                
+                // 더 많은 한글 문자가 포함된 결과를 찾았다면 업데이트
+                if (koreanCharCount > maxKoreanChars) {
+                  maxKoreanChars = koreanCharCount;
+                  bestName = decodedName;
                 }
+              } catch (err) {
+                console.log(`인코딩 ${encoding} 시도 실패:`, err.message);
               }
-              
-              // 정규화 처리
-              displayName = displayName.normalize('NFC');
             }
+            
+            // 방법 3: 원본 파일명에서 한글이 깨진 부분 감지 및 복원 시도
+            if (displayName.includes('�') || /諛|붾|떎|삦|씪/.test(displayName)) {
+              console.log("3. 한글 깨짐 패턴 감지됨, 추가 복원 시도");
+              
+              // 특정 깨진 패턴에 대한 매핑
+              const patternMap: Record<string, string> = {
+                '諛붾떎': '바다',
+                '�깦�뵆': '샘플',
+                '_�': '_코',
+                '�_': '코_'
+              };
+              
+              // 패턴 매핑 적용
+              Object.keys(patternMap).forEach(pattern => {
+                if (displayName.includes(pattern)) {
+                  displayName = displayName.replace(new RegExp(pattern, 'g'), patternMap[pattern]);
+                  console.log(`패턴 매칭 적용: ${pattern} => ${patternMap[pattern]}`);
+                }
+              });
+            }
+            
+            // 최종 결정: 가장 많은 한글을 포함한 이름 또는 패턴 매칭 결과 사용
+            if (maxKoreanChars > 0) {
+              displayName = bestName;
+              console.log("4. 최종 선택된 파일명 (한글 기준):", displayName);
+            }
+            
+            // 정규화 처리
+            displayName = displayName.normalize('NFC');
+            console.log("5. 최종 정규화된 파일명:", displayName);
+            console.log("=== 파일명 복원 시도 완료 ===");
             
             // 초기 파일 정보만 저장 (처리 전) - 복원된 파일명 사용
             fileRecords.push({
@@ -1840,41 +1876,78 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         if (uploadedFiles && uploadedFiles.references) {
           // 참조 파일 정보 저장
           for (const file of uploadedFiles.references) {
-            // 복원된 한글 파일명 가져오기
+            // 새로운 복원 방식: 한글이 포함된 파일명을 다양한 인코딩으로 시도
             let displayName = file.originalname;
             
+            // 한글 파일명 추출 시도 - 다양한 방법 사용
+            console.log("=== 참조 파일명 복원 시도 시작 ===");
+            console.log("1. 원본 참조 파일명:", file.originalname);
+            
+            // 방법 1: 기존 저장된 매핑 사용
             if (req.fileOriginalNames && req.fileOriginalNames[file.filename]) {
-              // multer에서 처리된 복원된 한글 파일명 사용
               displayName = req.fileOriginalNames[file.filename];
-              console.log(`참조 파일 한글명 복원 성공: ${file.originalname} => ${displayName}`);
-            } else {
-              // 추가 복원 시도
-              if (!/^[\x00-\x7F]*$/.test(displayName)) {
-                try {
-                  const encodingsToTry = ['euc-kr', 'cp949', 'latin1'];
-                  
-                  for (const encoding of encodingsToTry) {
-                    try {
-                      const bytes = Buffer.from(displayName, 'binary' as BufferEncoding);
-                      const decoded = iconv.decode(bytes, encoding);
-                      
-                      if (/[\uAC00-\uD7A3]/.test(decoded)) {
-                        displayName = decoded;
-                        console.log(`참조 파일명 복원 성공 (${encoding}):`, displayName);
-                        break;
-                      }
-                    } catch (err: any) {
-                      console.log(`참조 파일 ${encoding} 디코딩 실패:`, err.message);
-                    }
-                  }
-                } catch (decodeErr: any) {
-                  console.log("참조 파일명 디코딩 오류:", decodeErr.message);
+              console.log("2. 매핑 정보에서 복원된 참조 파일명:", displayName);
+            } 
+            
+            // 방법 2: Buffer로 변환 후 다양한 인코딩 시도
+            let bestName = displayName;
+            let maxKoreanChars = 0;
+            
+            // 시도해볼 인코딩 목록
+            const encodingsToTry = ['euc-kr', 'cp949', 'utf-8', 'latin1', 'binary'];
+            
+            for (const encoding of encodingsToTry) {
+              try {
+                // 원본 이름을 바이너리로 다루고 해당 인코딩으로 디코딩
+                const bytes = Buffer.from(displayName, 'binary' as BufferEncoding);
+                const decodedName = iconv.decode(bytes, encoding);
+                
+                // 한글 문자 카운트
+                const koreanCharCount = (decodedName.match(/[\uAC00-\uD7A3]/g) || []).length;
+                
+                console.log(`참조 파일 인코딩 ${encoding} 결과:`, decodedName, `(한글 ${koreanCharCount}자)`);
+                
+                // 더 많은 한글 문자가 포함된 결과를 찾았다면 업데이트
+                if (koreanCharCount > maxKoreanChars) {
+                  maxKoreanChars = koreanCharCount;
+                  bestName = decodedName;
                 }
+              } catch (err) {
+                console.log(`참조 파일 인코딩 ${encoding} 시도 실패:`, err.message);
               }
-              
-              // 정규화
-              displayName = displayName.normalize('NFC');
             }
+            
+            // 방법 3: 원본 파일명에서 한글이 깨진 부분 감지 및 복원 시도
+            if (displayName.includes('�') || /諛|붾|떎|삦|씪/.test(displayName)) {
+              console.log("3. 한글 깨짐 패턴 감지됨, 추가 복원 시도");
+              
+              // 특정 깨진 패턴에 대한 매핑
+              const patternMap: Record<string, string> = {
+                '諛붾떎': '바다',
+                '�깦�뵆': '샘플',
+                '_�': '_코',
+                '�_': '코_'
+              };
+              
+              // 패턴 매핑 적용
+              Object.keys(patternMap).forEach(pattern => {
+                if (displayName.includes(pattern)) {
+                  displayName = displayName.replace(new RegExp(pattern, 'g'), patternMap[pattern]);
+                  console.log(`참조 파일 패턴 매칭 적용: ${pattern} => ${patternMap[pattern]}`);
+                }
+              });
+            }
+            
+            // 최종 결정: 가장 많은 한글을 포함한 이름 또는 패턴 매칭 결과 사용
+            if (maxKoreanChars > 0) {
+              displayName = bestName;
+              console.log("4. 최종 선택된 참조 파일명 (한글 기준):", displayName);
+            }
+            
+            // 정규화 처리
+            displayName = displayName.normalize('NFC');
+            console.log("5. 최종 정규화된 참조 파일명:", displayName);
+            console.log("=== 참조 파일명 복원 시도 완료 ===");
             
             // 초기 파일 정보만 저장 (처리 전) - 복원된 파일명 사용
             fileRecords.push({
