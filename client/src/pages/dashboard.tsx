@@ -128,7 +128,12 @@ export default function Dashboard() {
   ];
 
   // 진행 중인 프로젝트 목록 (실제 데이터가 없을 경우 샘플 데이터 사용)
-  const displayProjects = inProgressProjects.length > 0 ? inProgressProjects : sampleProjects;
+  const displayProjects = inProgressProjects.map(project => ({
+    ...project,
+    progress: project.progress || (project.stats?.completedSegments && project.stats?.totalSegments 
+      ? Math.round((project.stats.completedSegments / project.stats.totalSegments) * 100)
+      : 0)
+  }));
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
@@ -180,7 +185,7 @@ export default function Dashboard() {
                     <li key={project.id} className="border rounded-lg px-4 py-3">
                       <div className="font-bold">{project.name}</div>
                       <div className="text-sm text-muted-foreground">
-                        {project.sourceLanguage} → {project.targetLanguage} · {project.progress}% complete
+                        {project.sourceLanguage} → {project.targetLanguage} · {project.progress || 0}% {t('projects.complete')}
                       </div>
                       <Link href={`/projects/${project.id}`}>
                         <Button variant="link" className="mt-2 px-0 text-blue-600 hover:underline text-sm">
