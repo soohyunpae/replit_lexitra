@@ -418,22 +418,39 @@ async function processFile(file: Express.Multer.File) {
             
             // 디버깅용 출력 파일 생성
             // 한글 파일명 처리 개선
+            console.log("PDF 원본 파일명:", file.originalname);
+            
+            // iconv-lite를 사용하여 한글 파일명 처리
             let originalName = file.originalname;
             
-            // 파일명이 이미 버퍼나 이상하게 인코딩된 경우를 처리
-            if (Buffer.isBuffer(originalName)) {
-              originalName = originalName.toString('utf8');
-            } else if (typeof originalName === 'string') {
+            // 파일명이 이미 UTF-8이 아닌 경우를 처리
+            if (!/^[\x00-\x7F]*$/.test(originalName)) {
               try {
-                // binary에서 utf8로 변환 시도
-                const decodedName = Buffer.from(originalName, 'binary').toString('utf8');
-                originalName = decodedName;
-              } catch (e) {
-                console.log("디코딩 실패, 원본 이름 유지:", e);
+                // 여러 인코딩을 시도해 가장 적합한 것을 찾음
+                const encodingsToTry = ['euc-kr', 'cp949', 'latin1'];
+                
+                for (const encoding of encodingsToTry) {
+                  try {
+                    // 원본 데이터를 바이너리로 변환 후 디코딩 시도
+                    const bytes = Buffer.from(originalName, 'binary' as BufferEncoding);
+                    const decoded = iconv.decode(bytes, encoding);
+                    
+                    // 디코딩된 문자열에 한글이 포함되어 있다면 성공으로 판단
+                    if (/[\uAC00-\uD7A3]/.test(decoded)) {
+                      originalName = decoded;
+                      console.log(`성공적인 PDF 파일명 인코딩 변환 (${encoding}):`, originalName);
+                      break;
+                    }
+                  } catch (err: any) {
+                    console.log(`PDF ${encoding} 디코딩 실패:`, err.message);
+                  }
+                }
+              } catch (decodeErr: any) {
+                console.log("PDF 파일명 디코딩 오류:", decodeErr.message);
               }
             }
             
-            // 한글 파일명 정규화 (NFC 형식으로)
+            // 이름 정규화 (한글 조합 문자 처리를 위해 필수)
             const normalizedFilename = originalName.normalize("NFC");
             console.log("정규화된 PDF 파일명:", normalizedFilename);
             
@@ -514,43 +531,41 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     try {
-      // 인코딩 디버깅을 위한 로그
-      console.log("======= 파일명 인코딩 디버깅 =======");
-      console.log("원본 파일명 타입:", typeof file.originalname);
-      console.log("원본 파일명 Buffer 확인:", Buffer.from(file.originalname).toString('hex'));
+      // 파일명 디코딩 (한글 처리)
       console.log("원본 파일명:", file.originalname);
       
-      // 다양한 인코딩 시도
-      const encodings = ['utf8', 'binary', 'latin1', 'ascii', 'utf16le'];
-      for (const sourceEnc of encodings) {
-        for (const targetEnc of encodings) {
-          if (sourceEnc !== targetEnc) {
-            try {
-              const converted = Buffer.from(file.originalname, sourceEnc).toString(targetEnc as BufferEncoding);
-              console.log(`${sourceEnc} -> ${targetEnc}:`, converted);
-            } catch (e) {
-              console.log(`${sourceEnc} -> ${targetEnc} 변환 실패:`, e.message);
-            }
-          }
-        }
-      }
-      
-      // 이중 인코딩/디코딩 시도
-      const isoConverted = Buffer.from(file.originalname, 'binary').toString('utf8');
-      console.log("binary -> utf8 변환:", isoConverted);
-      
-      // 최종 처리 방식 (실험 결과에 따라 조정)
+      // iconv-lite를 사용하여 한글 파일명 처리
       let originalName = file.originalname;
       
-      try {
-        originalName = Buffer.from(originalName, 'latin1').toString('utf8');
-      } catch (e) {
-        console.log("latin1 -> utf8 변환 실패:", e);
+      // 파일명이 이미 UTF-8이 아닌 경우를 처리
+      if (!/^[\x00-\x7F]*$/.test(originalName)) {
+        try {
+          // 여러 인코딩을 시도해 가장 적합한 것을 찾음
+          const encodingsToTry = ['euc-kr', 'cp949', 'latin1'];
+          
+          for (const encoding of encodingsToTry) {
+            try {
+              // 원본 데이터를 바이너리로 변환 후 디코딩 시도
+              const bytes = Buffer.from(originalName, 'binary' as BufferEncoding);
+              const decoded = iconv.decode(bytes, encoding);
+              
+              // 디코딩된 문자열에 한글이 포함되어 있다면 성공으로 판단
+              if (/[\uAC00-\uD7A3]/.test(decoded)) {
+                originalName = decoded;
+                console.log(`성공적인 인코딩 변환 (${encoding}):`, originalName);
+                break;
+              }
+            } catch (err: any) {
+              console.log(`${encoding} 디코딩 실패:`, err.message);
+            }
+          }
+        } catch (decodeErr: any) {
+          console.log("파일명 디코딩 오류:", decodeErr.message);
+        }
       }
       
       // 이름 정규화 (한글 조합 문자 처리를 위해 필수)
       originalName = originalName.normalize('NFC');
-      
       console.log("최종 처리된 파일명:", originalName);
 
       // 이름과 확장자 분리
@@ -600,17 +615,36 @@ const referenceStorage = multer.diskStorage({
     // 원본 파일명을 유지하면서 고유성 보장
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     
-    // 파일명 인코딩 문제 해결을 위한 처리
+    // 파일명 디코딩 (한글 처리)
+    console.log("원본 참조 파일명:", file.originalname);
+    
+    // iconv-lite를 사용하여 한글 파일명 처리
     let originalName = file.originalname;
     
-    // 바이너리 인코딩된 경우 UTF-8로 변환 (일관된 방식)
-    if (Buffer.isBuffer(originalName)) {
-      originalName = originalName.toString('utf8');
-    } else if (typeof originalName === 'string') {
+    // 파일명이 이미 UTF-8이 아닌 경우를 처리
+    if (!/^[\x00-\x7F]*$/.test(originalName)) {
       try {
-        originalName = Buffer.from(originalName, 'binary').toString('utf8');
-      } catch (e) {
-        console.log("Failed to decode binary reference filename:", e);
+        // 여러 인코딩을 시도해 가장 적합한 것을 찾음
+        const encodingsToTry = ['euc-kr', 'cp949', 'latin1'];
+        
+        for (const encoding of encodingsToTry) {
+          try {
+            // 원본 데이터를 바이너리로 변환 후 디코딩 시도
+            const bytes = Buffer.from(originalName, 'binary' as BufferEncoding);
+            const decoded = iconv.decode(bytes, encoding);
+            
+            // 디코딩된 문자열에 한글이 포함되어 있다면 성공으로 판단
+            if (/[\uAC00-\uD7A3]/.test(decoded)) {
+              originalName = decoded;
+              console.log(`성공적인 참조 파일 인코딩 변환 (${encoding}):`, originalName);
+              break;
+            }
+          } catch (err: any) {
+            console.log(`참조 파일 ${encoding} 디코딩 실패:`, err.message);
+          }
+        }
+      } catch (decodeErr: any) {
+        console.log("참조 파일명 디코딩 오류:", decodeErr.message);
       }
     }
     
