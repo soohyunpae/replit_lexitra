@@ -48,19 +48,28 @@ function levenshteinDistance(str1: string, str2: string): number {
   return matrix[str1.length][str2.length];
 }
 
-// Format date in a readable format
-export function formatDate(date: string | Date): string {
+// Format date in a standardized format (dd/mm/yyyy or dd/mm/yyyy, hh:mm AM/PM)
+export function formatDate(date: string | Date, includeTime: boolean = true): string {
   if (!date) return '';
   
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   
+  const day = dateObj.getDate().toString().padStart(2, '0');
+  const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+  const year = dateObj.getFullYear();
+  
+  if (!includeTime) {
+    return `${day}/${month}/${year}`;
+  }
+  
   return dateObj.toLocaleString('en-US', {
+    day: '2-digit',
+    month: '2-digit',
     year: 'numeric',
-    month: 'short',
-    day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
-  });
+    minute: '2-digit',
+    hour12: true
+  }).replace(',', '');
 }
 
 // Count words in a string
