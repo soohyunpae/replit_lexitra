@@ -30,7 +30,8 @@
     "optional": "Optional",
     "showAll": "Show All",
     "actions": "Actions",
-    "complete": "Reviewed"
+    "complete": "Reviewed",
+    "view": "View"
   },
   "auth": {
     "login": "Login",
@@ -138,6 +139,7 @@
     "words": "Words",
     "segments": "Segments",
     "reviewed": "Reviewed",
+    "reviewedRate": "Reviewed Segments",
     "match100": "100% Match",
     "fuzzyMatch": "Fuzzy Match",
     "mt": "Machine",
@@ -156,12 +158,14 @@
     "claimProjectFirst": "Claim the Project First",
     "claimedByAnotherUser": "Claimed by Another User",
     "openEditor": "Open Editor",
-    "numberOfFiles": "Number of Files",
-    "fileCount": "Files",
+    "numberOfFiles": "# of Files",
+    "fileCountLabel": "{{count}} file",
+    "fileCountLabel_plural": "{{count}} files",
     "noFilesYet": "No files yet",
     "fileManagementPolicy": "Files must be added during project creation. Per the file management policy, projects without files cannot be created, and files cannot be added or modified after creation.",
     "noReferenceFiles": "No Reference Files",
     "noReferenceFilesDesc": "No reference files have been added to this project yet.",
+    "added": "Added {{date}}",
     "dropFilesHere": "Drop files here or click to upload",
     "processing": "Processing",
     "fileProcessing": "Processing File...",
@@ -336,6 +340,7 @@
       "machineTranslated": "Machine translated"
     },
     "comments": {
+      "title": "Comments",
       "user": "User",
       "adding": "Adding...",
       "addComment": "Add Comment",
@@ -345,6 +350,7 @@
       "markdownTip": "You can use simple Markdown in comments: **bold**, *italic*, `code`, and • bullet points."
     },
     "tm": {
+      "title": "TM",
       "searching": "Searching translation memory...",
       "noSearchResults": "No matches found for your search.",
       "noMatches": "No TM matches found for this segment."
@@ -361,11 +367,12 @@
       "termApplyFailedDescription": "There was an error applying the term. Please try again."
     },
     "history": {
-      "title": "Revision History",
+      "title": "History",
       "currentVersion": "Current Version",
       "previousVersion": "Previous Version",
       "lastModified": "Last modified",
-      "noTranslation": "(No translation)"
+      "noTranslation": "(No translation)",
+      "noPreviousVer": "No previous versions available for this segment. Previous versions will appear when you edit and save a segment."
     },
     "status": {
       "draft": "Draft"
@@ -472,7 +479,7 @@
     "notesSavedSuccess": "Project notes have been saved successfully",
     "notesFailedToSave": "Failed to save notes. Please try again",
     "fileDeleted": "File Deleted",
-    "referenceFileRemoved": "The reference file has been removed successfully",
+    "referenceFileRemoved": "The reference file has been removed successfully.",
     "referenceFileDeleteFailed": "Failed to delete reference file. Please try again",
     "deleteSuccess": "Deleted Successfully",
     "deleteFailed": "Delete Failed",

@@ -197,8 +197,8 @@ export default function Project() {
     },
     onSuccess: () => {
       toast({
-        title: "notifications.fileDeleted",
-        description: "notifications.referenceFileRemoved",
+        title: t("notifications.fileDeleted"),
+        description: t("notifications.referenceFileRemoved"),
       });
 
       // 프로젝트 데이터 새로고침
@@ -208,8 +208,8 @@ export default function Project() {
     },
     onError: () => {
       toast({
-        title: "notifications.deleteFailed",
-        description: "notifications.referenceFileDeleteFailed",
+        title: t("notifications.deleteFailed"),
+        description: t("notifications.referenceFileDeleteFailed"),
         variant: "destructive",
       });
     },
@@ -301,8 +301,8 @@ export default function Project() {
     onError: (error) => {
       console.error("File upload error:", error);
       toast({
-        title: "notifications.uploadFailed",
-        description: "notifications.fileUploadError",
+        title: t("notifications.uploadFailed"),
+        description: t("notifications.fileUploadError"),
         variant: "destructive",
       });
     },
@@ -946,7 +946,9 @@ export default function Project() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-1 items-center">
-                    <div className="text-muted-foreground">TB:</div>
+                    <div className="text-muted-foreground">
+                      {t("glossaries.title")}:
+                    </div>
                     {isEditing ? (
                       <div>
                         <select

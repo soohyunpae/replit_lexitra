@@ -32,7 +32,8 @@
     "optional": "선택 사항",
     "showAll": "모두 보기",
     "show": "표시",
-    "complete": "검토됨"
+    "complete": "검토됨",
+    "view": "보기"
   },
   "auth": {
     "login": "로그인",
@@ -138,6 +139,7 @@
     "reopenDescription": "이 완료된 프로젝트를 재개하고 상태를 진행 중으로 변경하시겠습니까?",
     "translationSummary": "번역 상태 요약",
     "words": "단어",
+    "reviewedRate": "검토한 세그먼트",
     "segments": "세그먼트",
     "reviewed": "검토됨",
     "match100": "100% 일치",
@@ -159,12 +161,13 @@
     "claimedByAnotherUser": "다른 사용자가 할당받음",
     "openEditor": "편집기 열기",
     "numberOfFiles": "파일 수",
-    "fileCount": "파일",
+    "fileCountLabel": "{{count}}개",
     "noFilesYet": "아직 파일 없음",
     "fileManagementPolicy": "파일은 프로젝트 생성 중에 추가해야 합니다. 파일 관리 정책에 따라 파일이 없는 프로젝트는 생성할 수 없으며, 생성 후에는 파일을 추가하거나 수정할 수 없습니다.",
     "noReferenceFiles": "참조 파일 없음",
     "noReferenceFilesDesc": "이 프로젝트에 아직 참조 파일이 추가되지 않았습니다.",
-    "dropFilesHere": "파일을 끌어다 놓거나 클릭하여 업로드하세요.",
+    "added": "{{date}}에 추가됨",
+    "dropFilesHere": "여기에 파일을 끌어다 놓거나 클릭하여 업로드하세요",
     "processing": "처리 중",
     "fileProcessing": "파일 처리 중...",
     "fileProcessingError": "처리 오류",
@@ -178,7 +181,7 @@
     "projectNotes": "프로젝트 노트",
     "notesPlaceholder": "번역 지침, 특별 요구 사항, 용어 지침 등을 작성하세요.",
     "clickToAddNotes": "특별 요구 사항, 용어 지침 또는 기타 노트를 추가하세요.",
-    "noNotesAvailable": "이용 가능한 노트가 없습니다.",
+    "noNotesAvailable": "이용 ���능한 노트가 없습니다.",
     "downloadFile": "파일 다운로드",
     "deleteFile": "파일 삭제",
     "savingNotes": "노트 저장 중...",
@@ -329,7 +332,7 @@
     "deleteFailed": "삭제 실패",
     "errorOccurred": "오류가 발생했습니다",
     "referenceFilesAdded": "참조 파일 추가됨",
-    "filesAdded": "{{count}}개의 파일이 성공적으로 추가되었습니다.",
+    "filesAdded": "{{count}}개의 파일이 성공 ��으로 추가되 ��습니다.",
     "projectInfoSaved": "프로젝트 정보 저장됨",
     "projectInfoSavedDesc": "프로젝트 정보가 성공적으로 저장되었습니다.",
     "error": "오류",
@@ -427,7 +430,6 @@
     "failedToAddCommentDesc": "댓글 추가 중 오류가 발생했습니다. 다시 시도해주세요.",
     "addComment": "댓글 추가",
     "comments": "댓글",
-    "commentsTitle": "댓글",
     "glossary": "용어집",
     "statusDescriptions": {
       "reviewed": "최종 승인 버전",
@@ -438,6 +440,7 @@
       "machineTranslated": "기계 번역됨"
     },
     "comments": {
+      "title": "댓글",
       "user": "사용자",
       "adding": "추가 중...",
       "addComment": "댓글 추가",
@@ -447,12 +450,13 @@
       "markdownTip": "댓글에 간단한 마크다운을 사용할 수 있습니다: **굵게**, *기울임체*, `코드`, • 글머리 기호."
     },
     "tm": {
+      "title": "TM",
       "searching": "번역 메모리 검색 중...",
       "noSearchResults": "검색 결과가 없습니다.",
       "noMatches": "이 세그먼트에 대한 TM 일치 항목이 없습니다."
     },
     "glossary": {
-      "title": "용어 데이터베이스",
+      "title": "용어집",
       "searchPlaceholder": "용어 검색...",
       "searching": "용어 검색 중...",
       "noSearchResults": "검색 결과에 해당하는 용어가 없습니다.",
@@ -467,7 +471,8 @@
       "currentVersion": "현재 버전",
       "previousVersion": "이전 버전",
       "lastModified": "마지막 수정일",
-      "noTranslation": "(번역 없음)"
+      "noTranslation": "(번역 없음)",
+      "noPreviousVer": "이 세그먼트에는 이전 버전이 없습니다. 세그먼트를 편집하고 저장하면 이전 버전이 여기에 표시됩니다."
     },
     "status": {
       "draft": "초안"

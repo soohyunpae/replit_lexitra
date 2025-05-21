@@ -5,16 +5,17 @@ import { useTranslation } from "react-i18next";
 import { formatDate } from "@/lib/utils";
 
 import { MainLayout } from "@/components/layout/main-layout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 
-import {
-  FileText,
-  Upload,
-  RefreshCw,
-  TextCursorInput
-} from "lucide-react";
+import { FileText, Upload, RefreshCw, TextCursorInput } from "lucide-react";
 
 // 프로젝트 타입 정의
 interface Project {
@@ -43,101 +44,88 @@ export default function Dashboard() {
 
   // 프로젝트 데이터 가져오기
   const { data: projects = [] } = useQuery<Project[]>({
-    queryKey: ['/api/projects'],
+    queryKey: ["/api/projects"],
     enabled: !!user,
   });
 
   // 검토 통계 데이터 가져오기
-  const { data: reviewStats = { totalAwaitingReview: 0, totalCompleted: 0, availableProjects: 0 } } = useQuery<ReviewStats>({
-    queryKey: ['/api/projects/review-stats'],
+  const {
+    data: reviewStats = {
+      totalAwaitingReview: 0,
+      totalCompleted: 0,
+      availableProjects: 0,
+    },
+  } = useQuery<ReviewStats>({
+    queryKey: ["/api/projects/review-stats"],
     enabled: !!user,
   });
 
   // 용어집 데이터 가져오기
   const { data: glossaryData = [] } = useQuery<any[]>({
-    queryKey: ['/api/glossary/all'],
+    queryKey: ["/api/glossary/all"],
     enabled: !!user,
   });
 
   // 실제 데이터 계산
-  const inProgressProjectCount = projects.filter(p => p.status === "In Progress" || p.status === "Claimed").length || 0;
+  const inProgressProjectCount =
+    projects.filter((p) => p.status === "In Progress" || p.status === "Claimed")
+      .length || 0;
   const segmentsAwaitingReview = reviewStats.totalAwaitingReview || 0;
   const availableProjects = reviewStats.availableProjects || 0;
 
   // 진행 중인 프로젝트 목록 (실제 데이터)
-  const inProgressProjects = projects
-    .filter(p => p.status === "In Progress" || p.status === "Claimed")
-    .slice(0, 3)
-    .map((project: Project) => {
-      // 실제 진행률 계산 로직 (나중에 API에서 제공될 수 있음)
-      // 현재는 기본 진행률은 0으로 설정, 있다면 그대로 사용
-      return {
-        ...project,
-        progress: project.progress || 0
-      };
-    }) || [];
+  const inProgressProjects =
+    projects
+      .filter((p) => p.status === "In Progress" || p.status === "Claimed")
+      .slice(0, 3)
+      .map((project: Project) => {
+        // 실제 진행률 계산 로직 (나중에 API에서 제공될 수 있음)
+        // 현재는 기본 진행률은 0으로 설정, 있다면 그대로 사용
+        return {
+          ...project,
+          progress: project.progress || 0,
+        };
+      }) || [];
 
   // 최근 활동 데이터를 프로젝트와 리뷰 상태에서 계산
   const recentActivities = useMemo(() => {
     if (!projects || projects.length === 0) return [];
-    
+
     // 프로젝트별 최근 업데이트 활동 추출
     const activities = projects
-      .filter(p => p.updatedAt)
-      .map(project => {
+      .filter((p) => p.updatedAt)
+      .map((project) => {
         // 프로젝트 담당자 이름 설정
         let username = "시스템";
-        if (project.status === 'Claimed' && project.claimer) {
+        if (project.status === "Claimed" && project.claimer) {
           username = project.claimer.username;
         }
-        
+
         return {
           user: username,
-          action: `${project.name} 프로젝트 ${project.status === 'Completed' ? '완료' : '업데이트'}`,
+          action: `${project.name} 프로젝트 ${project.status === "Completed" ? "완료" : "업데이트"}`,
           date: new Date(project.updatedAt),
-          projectId: project.id
+          projectId: project.id,
         };
       })
       .sort((a, b) => b.date.getTime() - a.date.getTime())
       .slice(0, 5); // 최근 5개 활동만 표시
-      
+
     return activities;
   }, [projects]);
 
-  // 활성 프로젝트 샘플 데이터
-  const sampleProjects = [
-    {
-      id: 1,
-      name: "디자인 특허 프로젝트",
-      sourceLanguage: "KO",
-      targetLanguage: "EN",
-      progress: 43,
-      createdAt: "2025-05-01T00:00:00Z",
-      updatedAt: "2025-05-15T00:00:00Z",
-      status: "In Progress"
-    },
-    {
-      id: 2, 
-      name: "배터리 설명서",
-      sourceLanguage: "KO",
-      targetLanguage: "EN",
-      progress: 78,
-      createdAt: "2025-05-05T00:00:00Z", 
-      updatedAt: "2025-05-14T00:00:00Z",
-      status: "In Progress"
-    }
-  ];
-
   // 각 프로젝트별 통계 데이터 가져오기
-  const [projectStatsMap, setProjectStatsMap] = useState<{[key: number]: any}>({});
-  
+  const [projectStatsMap, setProjectStatsMap] = useState<{
+    [key: number]: any;
+  }>({});
+
   // 프로젝트 통계 fetch 함수
   useEffect(() => {
     const fetchProjectStats = async () => {
       if (!user || inProgressProjects.length === 0) return;
-      
-      const stats: {[key: number]: any} = {};
-      
+
+      const stats: { [key: number]: any } = {};
+
       // 각 프로젝트의 통계 정보 가져오기
       for (const project of inProgressProjects) {
         try {
@@ -145,9 +133,9 @@ export default function Dashboard() {
           const response = await fetch(`/api/projects/${project.id}/stats`, {
             headers: {
               Authorization: `Bearer ${authToken}`,
-            }
+            },
           });
-          
+
           if (response.ok) {
             const data = await response.json();
             stats[project.id] = data;
@@ -156,7 +144,7 @@ export default function Dashboard() {
             stats[project.id] = {
               reviewedPercentage: 0,
               statusCounts: { Reviewed: 0 },
-              totalSegments: 0
+              totalSegments: 0,
             };
           }
         } catch (error) {
@@ -164,33 +152,37 @@ export default function Dashboard() {
           stats[project.id] = {
             reviewedPercentage: 0,
             statusCounts: { Reviewed: 0 },
-            totalSegments: 0
+            totalSegments: 0,
           };
         }
       }
-      
+
       setProjectStatsMap(stats);
     };
-    
+
     fetchProjectStats();
   }, [user, inProgressProjects]);
 
   // 진행 중인 프로젝트 목록 (실제 데이터가 없을 경우 샘플 데이터 사용)
-  const displayProjects = inProgressProjects.map(project => {
+  const displayProjects = inProgressProjects.map((project) => {
     const stats = projectStatsMap[project.id] || {
       reviewedPercentage: 0,
       statusCounts: { Reviewed: 0 },
-      totalSegments: 0
+      totalSegments: 0,
     };
-    
+
     // 나중에 API에서 직접 reviewedPercentage를 제공하면 그걸 사용하도록 함
-    const progress = stats.reviewedPercentage || (stats.totalSegments > 0 
-      ? Math.round((stats.statusCounts?.Reviewed || 0) / stats.totalSegments * 100) 
-      : 0);
-    
+    const progress =
+      stats.reviewedPercentage ||
+      (stats.totalSegments > 0
+        ? Math.round(
+            ((stats.statusCounts?.Reviewed || 0) / stats.totalSegments) * 100,
+          )
+        : 0);
+
     return {
       ...project,
-      progress
+      progress,
     };
   });
 
@@ -201,22 +193,34 @@ export default function Dashboard() {
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <Card className="bg-white">
             <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold mb-1">📁 {inProgressProjectCount}</div>
-              <div className="text-sm text-muted-foreground">{t('dashboard.inProgressProjects')}</div>
+              <div className="text-2xl font-bold mb-1">
+                📁 {inProgressProjectCount}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {t("dashboard.inProgressProjects")}
+              </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-white">
             <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold mb-1">📝 {segmentsAwaitingReview}</div>
-              <div className="text-sm text-muted-foreground">{t('dashboard.segmentsAwaitingReview')}</div>
+              <div className="text-2xl font-bold mb-1">
+                📝 {segmentsAwaitingReview}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {t("dashboard.segmentsAwaitingReview")}
+              </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-white">
             <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold mb-1">🔍 {availableProjects}</div>
-              <div className="text-sm text-muted-foreground">{t('dashboard.projectsAvailableToClaim')}</div>
+              <div className="text-2xl font-bold mb-1">
+                🔍 {availableProjects}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {t("dashboard.projectsAvailableToClaim")}
+              </div>
             </CardContent>
           </Card>
         </section>
@@ -226,27 +230,36 @@ export default function Dashboard() {
           {/* 진행 중인 리뷰 */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">{t('dashboard.reviewInProgress')}</CardTitle>
+              <CardTitle className="text-lg">
+                {t("dashboard.reviewInProgress")}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="space-y-4">
                 {displayProjects.length > 0 ? (
                   displayProjects.map((project: Project) => (
-                    <li key={project.id} className="border rounded-lg px-4 py-3">
+                    <li
+                      key={project.id}
+                      className="border rounded-lg px-4 py-3"
+                    >
                       <div className="font-bold">{project.name}</div>
                       <div className="text-sm text-muted-foreground">
-                        {project.sourceLanguage} → {project.targetLanguage} · {project.progress}% {t('translation.statusReviewed')}
+                        {project.sourceLanguage} → {project.targetLanguage} ·{" "}
+                        {project.progress}% {t("translation.statusReviewed")}
                       </div>
                       <Link href={`/projects/${project.id}`}>
-                        <Button variant="link" className="mt-2 px-0 text-blue-600 hover:underline text-sm">
-                          {t('dashboard.continueReviewing')} →
+                        <Button
+                          variant="link"
+                          className="mt-2 px-0 text-blue-600 hover:underline text-sm"
+                        >
+                          {t("dashboard.continueReviewing")} →
                         </Button>
                       </Link>
                     </li>
                   ))
                 ) : (
                   <li className="text-center py-4 text-muted-foreground">
-                    {t('dashboard.noReviewsInProgress')}
+                    {t("dashboard.noReviewsInProgress")}
                   </li>
                 )}
               </ul>
@@ -256,7 +269,9 @@ export default function Dashboard() {
           {/* 용어집 + TM 업데이트 */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">{t('dashboard.recentActivity')}</CardTitle>
+              <CardTitle className="text-lg">
+                {t("dashboard.recentActivity")}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="text-sm space-y-3 text-gray-700">
@@ -264,14 +279,16 @@ export default function Dashboard() {
                   <li key={activity.projectId}>
                     📌 <strong>{activity.user}</strong>{" "}
                     <Link href={`/projects/${activity.projectId}`}>
-                      <span className="text-blue-600 hover:underline">{activity.action}</span>
+                      <span className="text-blue-600 hover:underline">
+                        {activity.action}
+                      </span>
                     </Link>{" "}
                     ({formatDate(activity.date, false)})
                   </li>
                 ))}
                 {recentActivities.length === 0 && (
                   <li className="text-center text-muted-foreground">
-                    {t('dashboard.noRecentActivity')}
+                    {t("dashboard.noRecentActivity")}
                   </li>
                 )}
               </ul>
@@ -281,39 +298,62 @@ export default function Dashboard() {
 
         {/* 빠른 액세스 */}
         <section className="mt-12">
-          <h2 className="text-lg font-semibold mb-4">{t('dashboard.quickAccess')}</h2>
+          <h2 className="text-lg font-semibold mb-4">
+            {t("dashboard.quickAccess")}
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
               <CardContent className="p-6">
-                <h3 className="font-bold mb-2">📂 {t('dashboard.viewAllProjects')}</h3>
-                <p className="text-sm text-muted-foreground">{t('dashboard.accessProjectsDescription')}</p>
+                <h3 className="font-bold mb-2">
+                  📂 {t("dashboard.viewAllProjects")}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {t("dashboard.accessProjectsDescription")}
+                </p>
                 <Link href="/projects">
-                  <Button variant="link" className="mt-3 px-0 text-blue-600 text-sm hover:underline">
-                    {t('dashboard.goToProjects')} →
+                  <Button
+                    variant="link"
+                    className="mt-3 px-0 text-blue-600 text-sm hover:underline"
+                  >
+                    {t("dashboard.goToProjects")} →
                   </Button>
                 </Link>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-6">
-                <h3 className="font-bold mb-2">📘 {t('dashboard.manageGlossary')}</h3>
-                <p className="text-sm text-muted-foreground">{t('dashboard.editTermsDescription')}</p>
+                <h3 className="font-bold mb-2">
+                  📘 {t("dashboard.manageGlossary")}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {t("dashboard.editTermsDescription")}
+                </p>
                 <Link href="/glossaries">
-                  <Button variant="link" className="mt-3 px-0 text-blue-600 text-sm hover:underline">
-                    {t('dashboard.openGlossary')} →
+                  <Button
+                    variant="link"
+                    className="mt-3 px-0 text-blue-600 text-sm hover:underline"
+                  >
+                    {t("dashboard.openGlossary")} →
                   </Button>
                 </Link>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-6">
-                <h3 className="font-bold mb-2">🧠 {t('dashboard.translationMemory')}</h3>
-                <p className="text-sm text-muted-foreground">{t('dashboard.tmDescription')}</p>
+                <h3 className="font-bold mb-2">
+                  🧠 {t("dashboard.translationMemory")}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {t("dashboard.tmDescription")}
+                </p>
                 <Link href="/tm">
-                  <Button variant="link" className="mt-3 px-0 text-blue-600 text-sm hover:underline">
-                    {t('dashboard.viewTM')} →
+                  <Button
+                    variant="link"
+                    className="mt-3 px-0 text-blue-600 text-sm hover:underline"
+                  >
+                    {t("dashboard.viewTM")} →
                   </Button>
                 </Link>
               </CardContent>
@@ -324,7 +364,7 @@ export default function Dashboard() {
 
       {/* Footer */}
       <footer className="text-sm text-center py-6 text-muted-foreground">
-        {t('dashboard.footer')}
+        {t("dashboard.footer")}
       </footer>
     </MainLayout>
   );

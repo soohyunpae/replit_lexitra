@@ -159,10 +159,10 @@ function TmMatch({
           {isApplying ? (
             <>
               <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
-              {t('sidePanel.applying')}
+              {t("sidePanel.applying")}
             </>
           ) : (
-            t('sidePanel.useTranslation')
+            t("sidePanel.useTranslation")
           )}
         </Button>
       </div>
@@ -181,9 +181,7 @@ function StatusInfoPanel({
     return (
       <div className="bg-muted/50 rounded-md p-4 text-center text-muted-foreground">
         <Info className="h-5 w-5 mx-auto mb-2 opacity-50" />
-        <p className="text-sm">
-          {t('sidePanel.selectSegmentForInfo')}
-        </p>
+        <p className="text-sm">{t("sidePanel.selectSegmentForInfo")}</p>
       </div>
     );
   }
@@ -230,31 +228,35 @@ function StatusInfoPanel({
   const getStatusDescription = () => {
     switch (segment.status) {
       case "Reviewed":
-        return t('sidePanel.statusDescriptions.reviewed');
+        return t("sidePanel.statusDescriptions.reviewed");
       case "Rejected":
-        return t('sidePanel.statusDescriptions.rejected');
+        return t("sidePanel.statusDescriptions.rejected");
       case "Edited":
-        return t('sidePanel.statusDescriptions.edited');
+        return t("sidePanel.statusDescriptions.edited");
       case "100%":
-        return t('sidePanel.statusDescriptions.exactMatch');
+        return t("sidePanel.statusDescriptions.exactMatch");
       case "Fuzzy":
-        return t('sidePanel.statusDescriptions.fuzzyMatch');
+        return t("sidePanel.statusDescriptions.fuzzyMatch");
       case "MT":
       default:
-        return t('sidePanel.statusDescriptions.machineTranslated');
+        return t("sidePanel.statusDescriptions.machineTranslated");
     }
   };
 
   return (
     <div className="bg-card rounded-md border p-4 mb-4">
-      <h3 className="text-sm font-medium mb-3">{t('sidePanel.segmentInformation')}</h3>
+      <h3 className="text-sm font-medium mb-3">
+        {t("sidePanel.segmentInformation")}
+      </h3>
 
       <div className="space-y-3">
         {/* Status */}
         <div className="flex items-start gap-3">
           <div className="bg-muted/50 rounded-full p-2">{getStatusIcon()}</div>
           <div className="flex-1">
-            <div className="text-xs text-muted-foreground mb-1">{t('sidePanel.status')}</div>
+            <div className="text-xs text-muted-foreground mb-1">
+              {t("sidePanel.status")}
+            </div>
             <div className="flex items-center gap-2">
               <Badge className={cn("font-normal", getStatusColor())}>
                 {segment.status || "MT"}
@@ -273,7 +275,9 @@ function StatusInfoPanel({
               <MessageSquare className="h-4 w-4 text-blue-500" />
             </div>
             <div className="flex-1">
-              <div className="text-xs text-muted-foreground mb-1">{t('sidePanel.comment')}</div>
+              <div className="text-xs text-muted-foreground mb-1">
+                {t("sidePanel.comment")}
+              </div>
               <div className="text-sm bg-muted/30 p-2 rounded">
                 {segment.comment}
               </div>
@@ -286,11 +290,15 @@ function StatusInfoPanel({
           <Separator className="mb-3" />
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div>
-              <div className="text-muted-foreground mb-1">{t('sidePanel.created')}</div>
+              <div className="text-muted-foreground mb-1">
+                {t("sidePanel.created")}
+              </div>
               <div>{new Date(segment.createdAt).toLocaleDateString()}</div>
             </div>
             <div>
-              <div className="text-muted-foreground mb-1">{t('sidePanel.updated')}</div>
+              <div className="text-muted-foreground mb-1">
+                {t("sidePanel.updated")}
+              </div>
               <div>{new Date(segment.updatedAt).toLocaleDateString()}</div>
             </div>
           </div>
@@ -321,15 +329,15 @@ function GlossaryTerm({
 
       // 성공 토스트 메시지 표시
       toast({
-        title: t('sidePanel.glossary.termApplied'),
-        description: t('sidePanel.glossary.termAppliedDescription'),
+        title: t("sidePanel.glossary.termApplied"),
+        description: t("sidePanel.glossary.termAppliedDescription"),
         variant: "default",
       });
     } catch (error) {
       // 오류 발생시 토스트 메시지 표시
       toast({
-        title: t('sidePanel.glossary.termApplyFailed'),
-        description: t('sidePanel.glossary.termApplyFailedDescription'),
+        title: t("sidePanel.glossary.termApplyFailed"),
+        description: t("sidePanel.glossary.termApplyFailedDescription"),
         variant: "destructive",
       });
       console.error("용어 적용 중 오류:", error);
@@ -346,7 +354,7 @@ function GlossaryTerm({
       <div className="flex justify-between items-center mb-1">
         <div className="font-mono text-sm">{term.source}</div>
         <div className="text-xs text-muted-foreground">
-          <span className="font-semibold">{t('sidePanel.glossary.title')}</span>
+          <span className="font-semibold">{t("sidePanel.glossary.title")}</span>
         </div>
       </div>
       <div className="font-mono text-xs text-muted-foreground mb-2">
@@ -366,10 +374,10 @@ function GlossaryTerm({
           {isApplying ? (
             <>
               <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
-              {t('sidePanel.applying')}
+              {t("sidePanel.applying")}
             </>
           ) : (
-            t('sidePanel.glossary.useTerm')
+            t("sidePanel.glossary.useTerm")
           )}
         </Button>
       </div>
@@ -498,17 +506,21 @@ export function SidePanel({
     setIsAddingComment(true);
 
     try {
-      const response = await apiRequest("POST", `/api/segments/${selectedSegment.id}/comments`, {
-        text: commentText,
-        segmentId: selectedSegment.id
-      });
+      const response = await apiRequest(
+        "POST",
+        `/api/segments/${selectedSegment.id}/comments`,
+        {
+          text: commentText,
+          segmentId: selectedSegment.id,
+        },
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to add comment: ${response.status}`);
       }
 
       const result = await response.json();
-      
+
       if (!selectedSegment) return;
 
       // 새로운 댓글 객체 생성
@@ -516,13 +528,13 @@ export function SidePanel({
         id: result.id,
         text: commentText,
         author: "User",
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       // selectedSegment를 완전히 새로운 객체로 복사
       const updatedSegment = {
         ...selectedSegment,
-        comment: newComment.text // TranslationUnit에는 comment 필드만 있음 (comments 배열 없음)
+        comment: newComment.text, // TranslationUnit에는 comment 필드만 있음 (comments 배열 없음)
       };
 
       // 상태 업데이트
@@ -530,7 +542,7 @@ export function SidePanel({
 
       // 부모 컴포넌트에 변경 알림
       if (onSegmentUpdated) {
-        onSegmentUpdated(updatedSegment.id, updatedSegment.target || '');
+        onSegmentUpdated(updatedSegment.id, updatedSegment.target || "");
       }
 
       // 입력란 초기화
@@ -543,7 +555,6 @@ export function SidePanel({
         description: "댓글이 성공적으로 추가되었습니다.",
         variant: "default",
       });
-
     } catch (error) {
       console.error("댓글 추가 중 오류:", error);
       toast({
@@ -580,7 +591,9 @@ export function SidePanel({
               className="flex items-center justify-center"
             >
               <Database className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">{t('common.tm')}</span>
+              <span className="hidden sm:inline">
+                {t("sidePanel.tm.title")}
+              </span>
             </TabsTrigger>
 
             <TabsTrigger
@@ -588,7 +601,9 @@ export function SidePanel({
               className="flex items-center justify-center"
             >
               <Lightbulb className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">{t('common.glossaries')}</span>
+              <span className="hidden sm:inline">
+                {t("sidePanel.glossary.title")}
+              </span>
             </TabsTrigger>
 
             <TabsTrigger
@@ -596,7 +611,9 @@ export function SidePanel({
               className="flex items-center justify-center"
             >
               <MessageSquare className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">{t('sidePanel.commentsTitle')}</span>
+              <span className="hidden sm:inline">
+                {t("sidePanel.comments.title")}
+              </span>
             </TabsTrigger>
 
             <TabsTrigger
@@ -604,7 +621,9 @@ export function SidePanel({
               className="flex items-center justify-center"
             >
               <History className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">{t('sidePanel.history.title')}</span>
+              <span className="hidden sm:inline">
+                {t("sidePanel.history.title")}
+              </span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -616,7 +635,7 @@ export function SidePanel({
               <StatusInfoPanel segment={selectedSegment} />
             )}
 
-            <div className="text-sm font-medium mb-2">Translation Memory</div>
+            <div className="text-sm font-medium mb-2">{t("common.tm")}</div>
 
             <div className="mb-4">
               <div className="relative">
@@ -641,7 +660,7 @@ export function SidePanel({
               </div>
               {tmSearchQuery.length > 0 && tmSearchQuery.length < 2 && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  {t('sidePanel.search.minCharacters')}
+                  {t("sidePanel.search.minCharacters")}
                 </p>
               )}
             </div>
@@ -666,10 +685,10 @@ export function SidePanel({
             ) : (
               <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground">
                 {isSearching
-                  ? t('sidePanel.tm.searching')
+                  ? t("sidePanel.tm.searching")
                   : tmSearchQuery
-                    ? t('sidePanel.tm.noSearchResults')
-                    : t('sidePanel.tm.noMatches')}
+                    ? t("sidePanel.tm.noSearchResults")
+                    : t("sidePanel.tm.noMatches")}
               </div>
             )}
           </div>
@@ -677,12 +696,14 @@ export function SidePanel({
 
         <TabsContent value="tb" className="flex-1 overflow-y-auto">
           <div className="p-4 pt-2">
-            <div className="text-sm font-medium mb-2">{t('sidePanel.glossary.title')}</div>
+            <div className="text-sm font-medium mb-2">
+              {t("sidePanel.glossary.title")}
+            </div>
 
             <div className="mb-4">
               <div className="relative">
                 <Input
-                  placeholder={t('sidePanel.glossary.searchPlaceholder')}
+                  placeholder={t("sidePanel.glossary.searchPlaceholder")}
                   className="pr-10"
                   value={tbSearchQuery}
                   onChange={(e) => setTbSearchQuery(e.target.value)}
@@ -702,7 +723,7 @@ export function SidePanel({
               </div>
               {tbSearchQuery.length > 0 && tbSearchQuery.length < 2 && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  {t('sidePanel.search.minCharacters')}
+                  {t("sidePanel.search.minCharacters")}
                 </p>
               )}
             </div>
@@ -723,8 +744,8 @@ export function SidePanel({
               ) : (
                 <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground">
                   {isSearching
-                    ? t('sidePanel.glossary.searching')
-                    : t('sidePanel.glossary.noSearchResults')}
+                    ? t("sidePanel.glossary.searching")
+                    : t("sidePanel.glossary.noSearchResults")}
                 </div>
               )
             ) : glossaryTerms.length > 0 ? (
@@ -739,7 +760,7 @@ export function SidePanel({
               </div>
             ) : (
               <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground">
-                {t('sidePanel.glossary.noMatchingTerms')}
+                {t("sidePanel.glossary.noMatchingTerms")}
               </div>
             )}
           </div>
@@ -747,7 +768,9 @@ export function SidePanel({
 
         <TabsContent value="comments" className="flex-1 overflow-y-auto">
           <div className="p-4 pt-2">
-            <div className="text-sm font-medium mb-2">{t('sidePanel.commentsTitle')}</div>
+            <div className="text-sm font-medium mb-2">
+              {t("sidePanel.commentsTitle")}
+            </div>
 
             {/* Removed Active Segment section as requested */}
 
@@ -759,7 +782,9 @@ export function SidePanel({
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs font-medium">{t('sidePanel.comments.user')}</span>
+                        <span className="text-xs font-medium">
+                          {t("sidePanel.comments.user")}
+                        </span>
                       </div>
                       <span className="text-xs text-muted-foreground">
                         {new Date().toLocaleString()}
@@ -770,13 +795,13 @@ export function SidePanel({
                 </div>
               ) : (
                 <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center mb-4">
-                  {t('sidePanel.comments.noComments')}
+                  {t("sidePanel.comments.noComments")}
                 </div>
               )}
 
               <div className="space-y-2">
                 <Textarea
-                  placeholder={t('sidePanel.comments.addCommentPlaceholder')}
+                  placeholder={t("sidePanel.comments.addCommentPlaceholder")}
                   className="min-h-[100px] text-sm"
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
@@ -794,12 +819,12 @@ export function SidePanel({
                     {isAddingComment ? (
                       <>
                         <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                        {t('sidePanel.comments.adding')}
+                        {t("sidePanel.comments.adding")}
                       </>
                     ) : (
                       <>
                         <MessageSquarePlus className="h-3.5 w-3.5 mr-1.5" />
-                        {t('sidePanel.comments.addComment')}
+                        {t("sidePanel.comments.addComment")}
                       </>
                     )}
                   </Button>
@@ -807,7 +832,10 @@ export function SidePanel({
               </div>
 
               <div className="text-xs text-muted-foreground mt-2">
-                <span className="font-medium">{t('sidePanel.comments.tip')}:</span> {t('sidePanel.comments.markdownTip')}
+                <span className="font-medium">
+                  {t("sidePanel.comments.tip")}:
+                </span>{" "}
+                {t("sidePanel.comments.markdownTip")}
               </div>
             </div>
           </div>
@@ -815,7 +843,9 @@ export function SidePanel({
 
         <TabsContent value="history" className="flex-1 overflow-y-auto">
           <div className="p-4 pt-2">
-            <div className="text-sm font-medium mb-2">{t('sidePanel.history.title')}</div>
+            <div className="text-sm font-medium mb-2">
+              {t("sidePanel.history.title")}
+            </div>
 
             {/* Removed Active Segment section as requested */}
 
@@ -824,7 +854,9 @@ export function SidePanel({
                 <>
                   <div className="border border-border rounded-md overflow-hidden">
                     <div className="bg-accent/30 px-3 py-2 border-b border-border flex justify-between items-center">
-                      <div className="text-xs font-medium">{t('sidePanel.history.currentVersion')}</div>
+                      <div className="text-xs font-medium">
+                        {t("sidePanel.history.currentVersion")}
+                      </div>
                       <div className="text-xs text-muted-foreground">
                         <span className="font-semibold">
                           {selectedSegment.status}
@@ -837,10 +869,11 @@ export function SidePanel({
                     </div>
                     <div className="p-3">
                       <div className="font-mono text-xs">
-                        {selectedSegment.target || t('sidePanel.history.noTranslation')}
+                        {selectedSegment.target ||
+                          t("sidePanel.history.noTranslation")}
                       </div>
                       <div className="text-xs text-muted-foreground mt-2">
-                        {t('sidePanel.history.lastModified')}: {" "}
+                        {t("sidePanel.history.lastModified")}:{" "}
                         {new Date(selectedSegment.updatedAt).toLocaleString()}
                       </div>
                     </div>
@@ -854,12 +887,12 @@ export function SidePanel({
                     <div className="border border-muted rounded-md overflow-hidden opacity-80">
                       <div className="bg-muted/30 px-3 py-2 border-b border-border flex justify-between items-center">
                         <div className="text-xs font-medium">
-                          {t('sidePanel.history.previousVersion')}
+                          {t("sidePanel.history.previousVersion")}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           <span className="font-semibold">
                             {selectedSegment.status === "Reviewed"
-                              ? t('sidePanel.status.draft')
+                              ? t("sidePanel.status.draft")
                               : selectedSegment.status}
                           </span>
                           {selectedSegment.origin && (
@@ -886,8 +919,7 @@ export function SidePanel({
                     </div>
                   ) : (
                     <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center">
-                      No previous versions available for this segment. Previous
-                      versions will appear when you edit and save a segment.
+                      {t("sidePanel.history.noPreviousVer")}
                     </div>
                   )}
                 </>

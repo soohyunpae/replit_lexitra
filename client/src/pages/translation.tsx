@@ -123,8 +123,8 @@ export default function Translation() {
     },
     onSuccess: () => {
       toast({
-        title: t('translation.projectSaved'),
-        description: t('translation.allTranslationsSaved'),
+        title: t("translation.projectSaved"),
+        description: t("translation.allTranslationsSaved"),
       });
     },
   });
@@ -138,8 +138,8 @@ export default function Translation() {
     },
     onSuccess: () => {
       toast({
-        title: t('translation.exportComplete'),
-        description: t('translation.projectExportedSuccess'),
+        title: t("translation.exportComplete"),
+        description: t("translation.projectExportedSuccess"),
       });
     },
   });
@@ -190,8 +190,10 @@ export default function Translation() {
       }
 
       toast({
-        title: t('translation.autoTranslation'),
-        description: t('translation.applyingTMMatches', { count: untranslatedSegments.length }),
+        title: t("translation.autoTranslation"),
+        description: t("translation.applyingTMMatches", {
+          count: untranslatedSegments.length,
+        }),
       });
 
       // Create a copy of all segments
@@ -279,8 +281,10 @@ export default function Translation() {
 
       setAutoTranslationDone(true);
       toast({
-        title: t('translation.autoTranslationComplete'),
-        description: t('translation.translationsApplied', { count: untranslatedSegments.length }),
+        title: t("translation.autoTranslationComplete"),
+        description: t("translation.translationsApplied", {
+          count: untranslatedSegments.length,
+        }),
       });
     };
 
@@ -305,16 +309,14 @@ export default function Translation() {
   // Check editor access permissions
   useEffect(() => {
     if (!user) {
-      setAccessError(t('translation.mustBeLoggedIn'));
+      setAccessError(t("translation.mustBeLoggedIn"));
       return;
     }
 
     if (project && project.id > 0) {
       // Check project status and claimedBy property
       if (project.status === "Unclaimed") {
-        setAccessError(
-          t('translation.projectMustBeClaimed'),
-        );
+        setAccessError(t("translation.projectMustBeClaimed"));
         return;
       }
 
@@ -325,7 +327,8 @@ export default function Translation() {
         user.role !== "admin"
       ) {
         setAccessError(
-          t('translation.projectClaimedByOther') + ` (${project.claimer?.username || "User #" + project.claimedBy})`,
+          t("translation.projectClaimedByOther") +
+            ` (${project.claimer?.username || "User #" + project.claimedBy})`,
         );
         return;
       }
@@ -365,7 +368,7 @@ export default function Translation() {
   // 로딩 상태
   if (isFileLoading || isProjectLoading) {
     return (
-      <MainLayout title={t('translation.loading')}>
+      <MainLayout title={t("translation.loading")}>
         <div className="flex-1 flex items-center justify-center">
           <div className="animate-pulse text-center">
             <div className="h-8 w-40 bg-accent rounded-full mx-auto mb-4"></div>
@@ -379,12 +382,14 @@ export default function Translation() {
   // 파일이나 프로젝트가 없는 경우
   if (!file || !project) {
     return (
-      <MainLayout title={t('translation.fileNotFound')}>
+      <MainLayout title={t("translation.fileNotFound")}>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-xl font-medium mb-2">{t('translation.fileNotFound')}</h2>
+            <h2 className="text-xl font-medium mb-2">
+              {t("translation.fileNotFound")}
+            </h2>
             <p className="text-muted-foreground">
-              {t('translation.fileNotFoundDesc')}
+              {t("translation.fileNotFoundDesc")}
             </p>
           </div>
         </div>
@@ -395,14 +400,16 @@ export default function Translation() {
   // 접근 권한 오류
   if (accessError) {
     return (
-      <MainLayout title={t('translation.accessDenied')}>
+      <MainLayout title={t("translation.accessDenied")}>
         <div className="flex-1 flex items-center justify-center p-6">
           <Card className="max-w-md w-full">
             <CardHeader>
               <div className="mx-auto h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
                 <AlertTriangle className="h-6 w-6 text-destructive" />
               </div>
-              <CardTitle className="text-center">{t('translation.accessDenied')}</CardTitle>
+              <CardTitle className="text-center">
+                {t("translation.accessDenied")}
+              </CardTitle>
               <CardDescription className="text-center">
                 {accessError}
               </CardDescription>
@@ -410,13 +417,13 @@ export default function Translation() {
             <CardContent>
               <div className="flex flex-col space-y-4">
                 <p className="text-muted-foreground text-center text-sm">
-                  {t('translation.accessDeniedDesc')}
+                  {t("translation.accessDeniedDesc")}
                 </p>
                 <Button
                   onClick={() => setLocation(`/project/${project.id}`)}
                   className="w-full"
                 >
-                  {t('translation.goBackToProject')}
+                  {t("translation.goBackToProject")}
                 </Button>
               </div>
             </CardContent>
@@ -428,13 +435,13 @@ export default function Translation() {
 
   // 메인 UI 렌더링
   return (
-    <MainLayout title={`${t('translation.editor')}: ${file.name}`}>
+    <MainLayout title={`${t("translation.editor")}: ${file.name}`}>
       <div className="flex flex-col h-full">
         <div className="border-b bg-card px-6 py-4 flex-shrink-0">
           {/* Breadcrumb Navigation and Save Button */}
           <div className="mb-4">
             <h1 className="text-lg font-semibold">
-              {t('projects.title')} {project.id}: {project.name} / {file.name}
+              {t("projects.title")} {project.id}: {project.name} / {file.name}
             </h1>
           </div>
 
@@ -453,11 +460,11 @@ export default function Translation() {
                   className="flex items-center gap-2"
                 >
                   <Blocks className="h-4 w-4" />
-                  <span>{t('translation.segmentEditor')}</span>
+                  <span>{t("translation.segmentEditor")}</span>
                 </TabsTrigger>
                 <TabsTrigger value="doc" className="flex items-center gap-2">
                   <LayoutTemplate className="h-4 w-4" />
-                  <span>{t('translation.documentView')}</span>
+                  <span>{t("translation.documentView")}</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -467,37 +474,39 @@ export default function Translation() {
                   <div
                     className="h-full bg-green-300"
                     style={{
-                      width: `${((file?.segments?.filter(s => s.status === "Reviewed").length || 0) / (file?.segments?.length || 1)) * 100}%`,
+                      width: `${((file?.segments?.filter((s) => s.status === "Reviewed").length || 0) / (file?.segments?.length || 1)) * 100}%`,
                     }}
                   />
                   <div
                     className="h-full bg-blue-300"
                     style={{
-                      width: `${((file?.segments?.filter(s => s.status === "100%").length || 0) / (file?.segments?.length || 1)) * 100}%`,
+                      width: `${((file?.segments?.filter((s) => s.status === "100%").length || 0) / (file?.segments?.length || 1)) * 100}%`,
                     }}
                   />
                   <div
                     className="h-full bg-yellow-300"
                     style={{
-                      width: `${((file?.segments?.filter(s => s.status === "Fuzzy").length || 0) / (file?.segments?.length || 1)) * 100}%`,
+                      width: `${((file?.segments?.filter((s) => s.status === "Fuzzy").length || 0) / (file?.segments?.length || 1)) * 100}%`,
                     }}
                   />
                   <div
                     className="h-full bg-purple-300"
                     style={{
-                      width: `${((file?.segments?.filter(s => s.status === "Edited").length || 0) / (file?.segments?.length || 1)) * 100}%`,
+                      width: `${((file?.segments?.filter((s) => s.status === "Edited").length || 0) / (file?.segments?.length || 1)) * 100}%`,
                     }}
                   />
                   <div
                     className="h-full bg-gray-300"
                     style={{
-                      width: `${((file?.segments?.filter(s => s.status === "MT").length || 0) / (file?.segments?.length || 1)) * 100}%`,
+                      width: `${((file?.segments?.filter((s) => s.status === "MT").length || 0) / (file?.segments?.length || 1)) * 100}%`,
                     }}
                   />
                 </div>
               </div>
               <div className="text-xs font-medium text-muted-foreground whitespace-nowrap">
-                {file?.segments?.filter(s => s.status === "Reviewed").length || 0}/{file?.segments?.length || 0} Reviewed
+                {file?.segments?.filter((s) => s.status === "Reviewed")
+                  .length || 0}
+                /{file?.segments?.length || 0} {t("projects.segments")}
               </div>
             </div>
           </div>

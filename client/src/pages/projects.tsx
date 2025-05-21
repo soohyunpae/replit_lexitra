@@ -1503,28 +1503,27 @@ export default function ProjectsPage() {
                               <>
                                 <div className="flex justify-between items-center mb-1">
                                   <div className="text-muted-foreground text-xs">
-                                    Word Count:
+                                    {t("projects.wordCount")}:
                                   </div>
                                   <div className="text-xs font-medium">
                                     {stats.wordCount || project.wordCount || 0}{" "}
-                                    words
                                   </div>
                                 </div>
                                 <div className="flex justify-between items-center mb-1">
                                   <div className="text-muted-foreground text-xs">
-                                    Num of Files:
+                                    {t("projects.numberOfFiles")}:
                                   </div>
                                   <div className="text-xs font-medium">
-                                    {project.files?.length || 0} files
+                                    {project.files?.length || 0}
                                   </div>
                                 </div>
                                 <div className="flex justify-between items-center mb-1">
                                   <div className="text-muted-foreground text-xs">
-                                    Reviewed:
+                                    {t("projects.reviewedRate")}:
                                   </div>
                                   <div className="text-xs font-medium">
                                     {stats.statusCounts.Reviewed} /{" "}
-                                    {stats.totalSegments} segments
+                                    {stats.totalSegments}{" "}
                                     <span className="ml-1 text-primary">
                                       ({Math.round(stats.reviewedPercentage)}%)
                                     </span>
@@ -1572,7 +1571,7 @@ export default function ProjectsPage() {
                           }}
                         >
                           <ExternalLink className="h-4 w-4 mr-1" />
-                          View
+                          {t("common.view")}
                         </Button>
                       </div>
                     </CardFooter>
@@ -1620,7 +1619,7 @@ export default function ProjectsPage() {
                       {t("languages.languagePair")}
                     </TableHead>
                     <TableHead className="w-[80px]">
-                      {t("projects.files")}
+                      {t("projects.numberOfFiles")}
                     </TableHead>
                     <TableHead className="w-[100px]">
                       {t("projects.wordCount")}
