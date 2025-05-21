@@ -283,7 +283,7 @@ export default function Dashboard() {
                         {activity.action}
                       </span>
                     </Link>{" "}
-                    ({formatDate(activity.date, false)})
+                    ({new Date(activity.date).toLocaleDateString('en-US')})
                   </li>
                 ))}
                 {recentActivities.length === 0 && (
