@@ -78,6 +78,12 @@
     "tmDescription": "프로젝트 간 저장된 번역을 검토하고 업데이트합니다.",
     "viewTM": "TM 보기"
   },
+  "status": {
+    "unclaimed": "미할당",
+    "inProgress": "진행 중",
+    "claimed": "할당됨",
+    "completed": "완료됨"
+  },
   "projects": {
     "title": "프로젝트",
     "createProject": "프로젝트 생성",
@@ -106,12 +112,6 @@
     "statusInProgress": "진행 중",
     "statusClaimed": "할당됨",
     "statusCompleted": "완료됨",
-    "status": {
-      "Unclaimed": "미할당",
-      "In Progress": "진행 중",
-      "Claimed": "할당됨",
-      "Completed": "완료됨"
-    },
     "bulkActions": "일괄 작업",
     "claimProjects": "할당",
     "releaseProjects": "해제",

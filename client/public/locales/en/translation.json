@@ -74,6 +74,12 @@
     "tmDescription": "Review and update saved translations across projects.",
     "viewTM": "View TM"
   },
+  "status": {
+    "unclaimed": "Unclaimed",
+    "inProgress": "In Progress",
+    "claimed": "Claimed",
+    "completed": "Completed"
+  },
   "projects": {
     "title": "Projects",
     "createProject": "Create Project",
