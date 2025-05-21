@@ -574,7 +574,7 @@ export default function ProjectsPage() {
     // 확인 대화상자
     if (
       !window.confirm(
-        `Are you sure you want to delete ${selectedProjects.length} project(s)?`,
+        t("projects.bulkConfirmDelete", { count: selectedProjects.length }),
       )
     ) {
       return;
@@ -605,7 +605,7 @@ export default function ProjectsPage() {
     // 확인 대화상자
     if (
       !window.confirm(
-        `Are you sure you want to claim ${selectedProjects.length} project(s)?`,
+        t("projects.bulkConfirmClaim", { count: selectedProjects.length }),
       )
     ) {
       return;
@@ -636,7 +636,7 @@ export default function ProjectsPage() {
     // 확인 대화상자
     if (
       !window.confirm(
-        `Are you sure you want to mark ${selectedProjects.length} project(s) as completed?`,
+        t("projects.confirmComplete", { count: selectedProjects.length }),
       )
     ) {
       return;
@@ -647,14 +647,18 @@ export default function ProjectsPage() {
         await completeProject.mutateAsync(projectId);
       }
       toast({
-        title: "Success",
-        description: `${selectedProjects.length} project(s) marked as completed.`,
+        title: t("common.success"),
+        description: t("projects.bulkCompleteSuccess", {
+          count: selectedProjects.length,
+        }),
       });
       setSelectedProjects([]);
     } catch (error) {
       toast({
-        title: "Error",
-        description: `Failed to complete projects: ${error instanceof Error ? error.message : "Unknown error"}`,
+        title: t("common.error"),
+        description: `${t("projects.bulkCompleteError")}: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
         variant: "destructive",
       });
     }
@@ -667,7 +671,7 @@ export default function ProjectsPage() {
     // 확인 대화상자
     if (
       !window.confirm(
-        `Are you sure you want to archive ${selectedProjects.length} project(s)?`,
+        t("projects.bulkConfirmArchive", { count: selectedProjects.length }),
       )
     ) {
       return;
@@ -698,7 +702,7 @@ export default function ProjectsPage() {
     // 확인 대화상자
     if (
       !window.confirm(
-        `Are you sure you want to release ${selectedProjects.length} project(s)?`,
+        t("projects.bulkConfirmRelease", { count: selectedProjects.length }),
       )
     ) {
       return;
@@ -729,7 +733,7 @@ export default function ProjectsPage() {
     // 확인 대화상자
     if (
       !window.confirm(
-        `Are you sure you want to reopen ${selectedProjects.length} project(s)?`,
+        t("projects.bulkConfirmReopen", { count: selectedProjects.length }),
       )
     ) {
       return;
@@ -788,10 +792,11 @@ export default function ProjectsPage() {
       <div className="rounded-full bg-accent p-6 mb-4">
         <FileText className="h-10 w-10 text-primary" />
       </div>
-      <h3 className="text-xl font-medium mb-2">No projects yet</h3>
+      <h3 className="text-xl font-medium mb-2">
+        {t("projects.noProjectsYet")}
+      </h3>
       <p className="text-muted-foreground text-center max-w-md mb-6">
-        Create your first translation project to get started. You can upload
-        patent documents and translate them with GPT and Translation Memory.
+        {t("projects.noProjectsDescription")}
       </p>
       <Button
         onClick={() => setIsDialogOpen(true)}
@@ -966,10 +971,10 @@ export default function ProjectsPage() {
                             <div className="text-center py-4">
                               <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
                               <p className="text-sm font-medium mb-1">
-                                Drag & drop or click to upload
+                                {t("projects.dropFilesHere")}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                PDF, DOCX, TXT or paste text directly
+                                {t("projects.dropFilesDescription")}
                               </p>
                             </div>
                             <input
@@ -1068,8 +1073,7 @@ export default function ProjectsPage() {
                                 Click to upload reference files
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                PDF, DOCX, Excel,```text or any reference
-                                documents
+                                {t("projects.uploadReferenceDesc")}
                               </p>
                             </div>
                             <input
@@ -1154,10 +1158,12 @@ export default function ProjectsPage() {
                     name="notes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Notes (Optional)</FormLabel>
+                        <FormLabel>
+                          {t("projects.projectNotes")} ({t("common.optional")}
+                        </FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Additional notes or instructions for translators"
+                            placeholder={t("projects.notesPlaceholder")}
                             className="resize-none min-h-24"
                             {...field}
                           />
@@ -1173,11 +1179,11 @@ export default function ProjectsPage() {
                       <div className="flex items-center gap-2 mb-2">
                         <RefreshCw className="h-4 w-4 animate-spin text-primary" />
                         <p className="text-sm font-medium">
-                          Uploading and processing the file…
+                          {t("projects.uploadingFiles")}
                         </p>
                       </div>
                       <p className="text-xs text-muted-foreground mb-2">
-                        This may take a few minutes depending on the file size.
+                        {t("projects.uploadingFilesDesc")}
                       </p>
                     </div>
                   )}
@@ -1185,8 +1191,8 @@ export default function ProjectsPage() {
                   <DialogFooter>
                     <Button type="submit" disabled={createProject.isPending}>
                       {createProject.isPending
-                        ? "Creating..."
-                        : "Create Project"}
+                        ? t("common.creating")
+                        : t("common.create")}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -1202,7 +1208,9 @@ export default function ProjectsPage() {
           <div className="mb-4 p-3 border rounded-md bg-muted/30 flex items-center justify-between">
             <div className="flex items-center">
               <span className="font-medium mr-2">
-                {selectedProjects.length} project(s) selected
+                {t("projects.selectedCount", {
+                  count: selectedProjects.length,
+                })}
               </span>
               <Button
                 variant="ghost"
@@ -1211,7 +1219,7 @@ export default function ProjectsPage() {
                 className="text-muted-foreground h-7 px-2"
               >
                 <X className="h-4 w-4 mr-1" />
-                Clear
+                {t("common.clear")}
               </Button>
             </div>
           </div>
@@ -1550,8 +1558,10 @@ export default function ProjectsPage() {
                       <div className="text-xs text-muted-foreground flex items-center">
                         <Clock className="h-3.5 w-3.5 mr-1" />
                         {project.deadline
-                            ? new Date(project.deadline).toLocaleDateString('en-US')
-                            : "No due date"}
+                          ? new Date(project.deadline).toLocaleDateString(
+                              "en-US",
+                            )
+                          : t("projects.noDueDate")}
                       </div>
                       <div className="flex gap-2">
                         {/* 프로젝트 상세 페이지 뷰 버튼만 제공 */}
@@ -1786,7 +1796,9 @@ export default function ProjectsPage() {
                         </TableCell>
                         <TableCell>
                           {project.deadline
-                            ? new Date(project.deadline).toLocaleDateString('en-US')
+                            ? new Date(project.deadline).toLocaleDateString(
+                                "en-US",
+                              )
                             : "-"}
                         </TableCell>
                       </TableRow>

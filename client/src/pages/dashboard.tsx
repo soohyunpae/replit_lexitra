@@ -283,7 +283,7 @@ export default function Dashboard() {
                         {activity.action}
                       </span>
                     </Link>{" "}
-                    ({new Date(activity.date).toLocaleDateString('en-US')})
+                    ({new Date(activity.date).toLocaleDateString("en-US")})
                   </li>
                 ))}
                 {recentActivities.length === 0 && (
@@ -364,7 +364,7 @@ export default function Dashboard() {
 
       {/* Footer */}
       <footer className="text-sm text-center py-6 text-muted-foreground">
-        {t("dashboard.footer")}
+        "© 2025 Lexitra. Built for the new era of translation."
       </footer>
     </MainLayout>
   );
