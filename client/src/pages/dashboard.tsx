@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { formatDate } from "@/lib/utils";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -192,9 +193,6 @@ export default function Dashboard() {
       progress
     };
   });
-
-  // formatDate 함수는 utils.ts에서 import해서 사용
-  import { formatDate } from "@/lib/utils";
 
   return (
     <MainLayout>
