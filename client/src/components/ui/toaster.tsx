@@ -21,9 +21,17 @@ export function Toaster() {
           ? t(title) 
           : title;
           
-        const translatedDescription = typeof description === 'string' && description.startsWith('notifications.') 
-          ? t(description) 
-          : description;
+        let translatedDescription = description;
+          if (typeof description === 'string') {
+            if (description.startsWith('notifications.')) {
+              translatedDescription = t(description);
+            } else if (description.includes(':')) {
+              // Remove status code and format error message
+              const errorMsg = description.split(':').pop()?.trim() || '';
+              const jsonMsg = JSON.parse(errorMsg)?.message || errorMsg;
+              translatedDescription = t(`notifications.${jsonMsg}`, { defaultValue: jsonMsg });
+            }
+          }
 
         return (
           <Toast key={id} {...props}>

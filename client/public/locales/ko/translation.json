@@ -474,6 +474,9 @@
     "comments": "댓글",
     "glossary": "용어집",
     "statusDescriptions": {
+
+    "Project is not in claimed status": "프로젝트가 할당된 상태가 아닙니다"
+
       "reviewed": "최종 승인 버전",
       "rejected": "부적절 표시됨",
       "edited": "사람이 수정함",

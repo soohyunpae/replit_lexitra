@@ -474,6 +474,9 @@
     "sourceText": "Source Text",
     "targetText": "Target Text",
     "similarity": "Similarity",
+
+    "Project is not in claimed status": "Project is not in claimed status"
+
     "dateAdded": "Date Added",
     "addedBy": "Added By",
     "noEntries": "No entries found",
