@@ -268,7 +268,7 @@ export default function ProjectsPage() {
               };
               return true; // 성공
             } else if (response.status === 404 && retryCount < maxRetries) {
-              // 서버 엔드포인트가 아직 로드되지 않았거io� 존재하지 않을 수 있으므로   �시도
+              // 서버 엔드포인트가 아직 로드되지 않았거io 존재하지 않을 수 있으므로   시도
               await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 대기
               return fetchStatsFromServer(project, retryCount + 1); // 재귀적으로 재시도
             } else {
@@ -1550,15 +1550,8 @@ export default function ProjectsPage() {
                       <div className="text-xs text-muted-foreground flex items-center">
                         <Clock className="h-3.5 w-3.5 mr-1" />
                         {project.deadline
-                          ? new Date(project.deadline).toLocaleDateString(
-                              undefined,
-                              {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                              },
-                            )
-                          : "No due date"}
+                            ? new Date(project.deadline).toLocaleDateString('en-US')
+                            : "No due date"}
                       </div>
                       <div className="flex gap-2">
                         {/* 프로젝트 상세 페이지 뷰 버튼만 제공 */}
@@ -1793,7 +1786,7 @@ export default function ProjectsPage() {
                         </TableCell>
                         <TableCell>
                           {project.deadline
-                            ? new Date(project.deadline).toLocaleDateString()
+                            ? new Date(project.deadline).toLocaleDateString('en-US')
                             : "-"}
                         </TableCell>
                       </TableRow>
