@@ -86,8 +86,8 @@ export default function Dashboard() {
       .map(project => {
         // 프로젝트 담당자 이름 설정
         let username = "시스템";
-        if (project.status === 'Claimed' && project.claimedBy) {
-          username = "담당자";
+        if (project.status === 'Claimed' && project.claimer) {
+          username = project.claimer.username;
         }
         
         return {
@@ -193,14 +193,8 @@ export default function Dashboard() {
     };
   });
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric"
-    }).format(date);
-  };
+  // formatDate 함수는 utils.ts에서 import해서 사용
+  import { formatDate } from "@/lib/utils";
 
   return (
     <MainLayout>
@@ -274,7 +268,7 @@ export default function Dashboard() {
                     <Link href={`/projects/${activity.projectId}`}>
                       <span className="text-blue-600 hover:underline">{activity.action}</span>
                     </Link>{" "}
-                    ({formatDate(activity.date.toISOString())})
+                    ({formatDate(activity.date, false)})
                   </li>
                 ))}
                 {recentActivities.length === 0 && (
