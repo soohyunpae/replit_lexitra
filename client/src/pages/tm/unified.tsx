@@ -57,7 +57,13 @@ import {
 } from "@/components/ui/form";
 import { formatDate } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { ArrowRight } from "lucide-react";
 
 // Form schema for adding TM entries
@@ -74,8 +80,12 @@ const tmEntryFormSchema = z.object({
 const tmResourceFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   description: z.string().optional(),
-  defaultSourceLanguage: z.string().min(2, { message: "Source language is required" }),
-  defaultTargetLanguage: z.string().min(2, { message: "Target language is required" }),
+  defaultSourceLanguage: z
+    .string()
+    .min(2, { message: "Source language is required" }),
+  defaultTargetLanguage: z
+    .string()
+    .min(2, { message: "Target language is required" }),
   isActive: z.boolean().default(true),
 });
 
@@ -91,8 +101,12 @@ export default function UnifiedTranslationMemoryPage() {
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState("");
-  const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>("all_source_languages");
-  const [targetLanguageFilter, setTargetLanguageFilter] = useState<string>("all_target_languages");
+  const [sourceLanguageFilter, setSourceLanguageFilter] = useState<string>(
+    "all_source_languages",
+  );
+  const [targetLanguageFilter, setTargetLanguageFilter] = useState<string>(
+    "all_target_languages",
+  );
   const [statusFilter, setStatusFilter] = useState<string>("all_statuses");
   const [resourceFilter, setResourceFilter] = useState<string>("all_resources");
 
@@ -133,25 +147,22 @@ export default function UnifiedTranslationMemoryPage() {
     },
     onSuccess: () => {
       toast({
-        title: t('common.success'),
-        description: t('tm.entryDeletedSuccess'),
+        title: t("common.success"),
+        description: t("tm.entryDeletedSuccess"),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/tm/all"] });
     },
     onError: (error: any) => {
       toast({
-        title: t('common.error'),
-        description: t('tm.failedToDeleteEntry', { message: error.message }),
+        title: t("common.error"),
+        description: t("tm.failedToDeleteEntry", { message: error.message }),
         variant: "destructive",
       });
     },
   });
 
   // Get all TM resources
-  const { 
-    data: tmResources = [], 
-    isLoading: isLoadingResources 
-  } = useQuery({
+  const { data: tmResources = [], isLoading: isLoadingResources } = useQuery({
     queryKey: ["/api/tm/resources"],
     queryFn: async () => {
       try {
@@ -165,10 +176,7 @@ export default function UnifiedTranslationMemoryPage() {
   });
 
   // Get all TM entries
-  const { 
-    data: tmData = [], 
-    isLoading: isLoadingEntries 
-  } = useQuery({
+  const { data: tmData = [], isLoading: isLoadingEntries } = useQuery({
     queryKey: ["/api/tm/all", resourceFilter],
     queryFn: async () => {
       try {
@@ -240,7 +248,13 @@ export default function UnifiedTranslationMemoryPage() {
         matchesSearch && matchesSourceLang && matchesTargetLang && matchesStatus
       );
     });
-  }, [tmData, searchQuery, sourceLanguageFilter, targetLanguageFilter, statusFilter]);
+  }, [
+    tmData,
+    searchQuery,
+    sourceLanguageFilter,
+    targetLanguageFilter,
+    statusFilter,
+  ]);
 
   // Add new TM entry
   const addEntryMutation = useMutation({
@@ -299,7 +313,11 @@ export default function UnifiedTranslationMemoryPage() {
 
   // Delete TM resource (placeholder - implement in future)
   function handleDeleteResource(id: number) {
-    if (window.confirm("Are you sure you want to delete this TM resource? This will also delete all entries associated with this resource.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this TM resource? This will also delete all entries associated with this resource.",
+      )
+    ) {
       toast({
         title: "Feature not implemented",
         description: "The delete TM resource feature is not yet implemented.",
@@ -328,7 +346,10 @@ export default function UnifiedTranslationMemoryPage() {
   const totalPages = Math.ceil(filteredTM.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentItems = useMemo(() => filteredTM.slice(startIndex, endIndex), [filteredTM, startIndex, endIndex]);
+  const currentItems = useMemo(
+    () => filteredTM.slice(startIndex, endIndex),
+    [filteredTM, startIndex, endIndex],
+  );
 
   return (
     <MainLayout title="Translation Memory">
@@ -338,15 +359,20 @@ export default function UnifiedTranslationMemoryPage() {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Database className="h-5 w-5" />
-            <h2 className="text-3xl font-bold tracking-tight">{t('tm.title')}</h2>
+            <h2 className="text-3xl font-bold tracking-tight">
+              {t("tm.title")}
+            </h2>
           </div>
           {isAdmin && (
             <div className="flex gap-2">
-              <Dialog open={addEntryDialogOpen} onOpenChange={setAddEntryDialogOpen}>
+              <Dialog
+                open={addEntryDialogOpen}
+                onOpenChange={setAddEntryDialogOpen}
+              >
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                    {t('tm.addEntry')}
+                    {t("tm.addEntry")}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -357,20 +383,25 @@ export default function UnifiedTranslationMemoryPage() {
                     </DialogDescription>
                   </DialogHeader>
                   <Form {...entryForm}>
-                    <form onSubmit={entryForm.handleSubmit(onSubmitEntry)} className="space-y-4">
+                    <form
+                      onSubmit={entryForm.handleSubmit(onSubmitEntry)}
+                      className="space-y-4"
+                    >
                       <FormField
                         control={entryForm.control}
                         name="sourceLanguage"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t('tm.sourceLanguage')}</FormLabel>
+                            <FormLabel>{t("tm.sourceLanguage")}</FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder={t('tm.selectSourceLanguage')} />
+                                  <SelectValue
+                                    placeholder={t("tm.selectSourceLanguage")}
+                                  />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
@@ -425,7 +456,10 @@ export default function UnifiedTranslationMemoryPage() {
                           <FormItem>
                             <FormLabel>Source Text</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter source text" {...field} />
+                              <Input
+                                placeholder="Enter source text"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -439,7 +473,10 @@ export default function UnifiedTranslationMemoryPage() {
                           <FormItem>
                             <FormLabel>Target Text</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter target text" {...field} />
+                              <Input
+                                placeholder="Enter target text"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -453,7 +490,9 @@ export default function UnifiedTranslationMemoryPage() {
                           <FormItem>
                             <FormLabel>TM Resource</FormLabel>
                             <Select
-                              onValueChange={(value) => field.onChange(Number(value))}
+                              onValueChange={(value) =>
+                                field.onChange(Number(value))
+                              }
                               defaultValue={field.value?.toString()}
                             >
                               <FormControl>
@@ -463,7 +502,10 @@ export default function UnifiedTranslationMemoryPage() {
                               </FormControl>
                               <SelectContent>
                                 {tmResources.map((resource: any) => (
-                                  <SelectItem key={resource.id} value={resource.id.toString()}>
+                                  <SelectItem
+                                    key={resource.id}
+                                    value={resource.id.toString()}
+                                  >
                                     {resource.name}
                                   </SelectItem>
                                 ))}
@@ -493,7 +535,9 @@ export default function UnifiedTranslationMemoryPage() {
                                 <SelectItem value="100%">100%</SelectItem>
                                 <SelectItem value="Fuzzy">Fuzzy</SelectItem>
                                 <SelectItem value="MT">MT</SelectItem>
-                                <SelectItem value="Reviewed">Reviewed</SelectItem>
+                                <SelectItem value="Reviewed">
+                                  Reviewed
+                                </SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -506,7 +550,9 @@ export default function UnifiedTranslationMemoryPage() {
                           type="submit"
                           disabled={addEntryMutation.isPending}
                         >
-                          {addEntryMutation.isPending ? t('tm.adding') : t('tm.addEntry')}
+                          {addEntryMutation.isPending
+                            ? t("tm.adding")
+                            : t("tm.addEntry")}
                         </Button>
                       </DialogFooter>
                     </form>
@@ -518,35 +564,45 @@ export default function UnifiedTranslationMemoryPage() {
                 <DialogTrigger asChild>
                   <Button variant="outline">
                     <Upload className="mr-2 h-4 w-4" />
-                    {t('tm.uploadTmFile')}
+                    {t("tm.uploadTmFile")}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>{t('tm.uploadTmFile')}</DialogTitle>
+                    <DialogTitle>{t("tm.uploadTmFile")}</DialogTitle>
                     <DialogDescription>
-                      {t('tm.uploadTmFileDescription')}
+                      {t("tm.uploadTmFileDescription")}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="tmFile" className="text-right">
-                        {t('tm.file')}
+                        {t("tm.file")}
                       </Label>
-                      <Input id="tmFile" type="file" className="col-span-3" accept=".tmx,.xlsx,.csv" />
+                      <Input
+                        id="tmFile"
+                        type="file"
+                        className="col-span-3"
+                        accept=".tmx,.xlsx,.csv"
+                      />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="tmResource" className="text-right">
-                        {t('tm.tmResource')}
+                        {t("tm.tmResource")}
                       </Label>
                       <Select defaultValue="none">
                         <SelectTrigger className="col-span-3" id="tmResource">
-                          <SelectValue placeholder={t('tm.selectTmResource')} />
+                          <SelectValue placeholder={t("tm.selectTmResource")} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">{t('tm.noneCreateNew')}</SelectItem>
+                          <SelectItem value="none">
+                            {t("tm.noneCreateNew")}
+                          </SelectItem>
                           {tmResources.map((resource: any) => (
-                            <SelectItem key={resource.id} value={resource.id.toString()}>
+                            <SelectItem
+                              key={resource.id}
+                              value={resource.id.toString()}
+                            >
                               {resource.name}
                             </SelectItem>
                           ))}
@@ -555,7 +611,7 @@ export default function UnifiedTranslationMemoryPage() {
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button type="submit">{t('tm.upload')}</Button>
+                    <Button type="submit">{t("tm.upload")}</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -563,7 +619,7 @@ export default function UnifiedTranslationMemoryPage() {
           )}
         </div>
         <p className="text-muted-foreground mb-6">
-          {t('tm.uploadTmFileDescription')}
+          {t("tm.uploadTmFileDescription")}
         </p>
 
         {/* TM Resources Section */}
@@ -571,7 +627,7 @@ export default function UnifiedTranslationMemoryPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Database className="h-5 w-5" />
-              <h3 className="text-xl font-semibold">{t('tm.tmResources')}</h3>
+              <h3 className="text-xl font-semibold">{t("tm.tmResources")}</h3>
             </div>
           </div>
 
@@ -580,34 +636,46 @@ export default function UnifiedTranslationMemoryPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('tm.resourceName')}</TableHead>
-                  <TableHead>{t('tm.description')}</TableHead>
-                  <TableHead>{t('common.language')}</TableHead>
-                  <TableHead>{t('tm.entries')}</TableHead>
-                  <TableHead>{t('tm.created')}</TableHead>
-                  {isAdmin && <TableHead className="text-right">{t('tm.actions')}</TableHead>}
+                  <TableHead>{t("tm.resourceName")}</TableHead>
+                  <TableHead>{t("tm.description")}</TableHead>
+                  <TableHead>{t("common.language")}</TableHead>
+                  <TableHead>{t("tm.entries")}</TableHead>
+                  <TableHead>{t("tm.created")}</TableHead>
+                  {isAdmin && (
+                    <TableHead className="text-right">
+                      {t("tm.actions")}
+                    </TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoadingResources ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
-                      {t('common.loading')}
+                    <TableCell
+                      colSpan={isAdmin ? 6 : 5}
+                      className="text-center py-8 text-muted-foreground"
+                    >
+                      {t("common.loading")}
                     </TableCell>
                   </TableRow>
                 ) : tmResources.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">
-                      {t('tm.noTMs')}
+                    <TableCell
+                      colSpan={isAdmin ? 6 : 5}
+                      className="text-center py-8 text-muted-foreground"
+                    >
+                      {t("tm.noEntries")}
                     </TableCell>
                   </TableRow>
                 ) : (
                   tmResources.map((resource: any) => (
                     <TableRow key={resource.id}>
                       <TableCell className="font-medium">
-                        <button 
+                        <button
                           className="text-left hover:underline cursor-pointer"
-                          onClick={() => handleResourceClick(String(resource.id))}
+                          onClick={() =>
+                            handleResourceClick(String(resource.id))
+                          }
                         >
                           {resource.name}
                         </button>
@@ -626,7 +694,9 @@ export default function UnifiedTranslationMemoryPage() {
                       </TableCell>
                       <TableCell>
                         {tmData
-                          ? tmData.filter((entry: any) => entry.resourceId === resource.id).length
+                          ? tmData.filter(
+                              (entry: any) => entry.resourceId === resource.id,
+                            ).length
                           : 0}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
@@ -656,15 +726,21 @@ export default function UnifiedTranslationMemoryPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Search className="h-5 w-5" />
-              <h3 className="text-xl font-semibold">{t('tm.searchTmEntries')}</h3>
+              <h3 className="text-xl font-semibold">
+                {t("tm.searchTmEntries")}
+              </h3>
 
               {resourceFilter !== "all_resources" && (
-                <Badge 
-                  variant="secondary" 
+                <Badge
+                  variant="secondary"
                   className="ml-3 py-1 px-3 cursor-pointer hover:bg-muted/70 flex items-center gap-1"
                   onClick={() => setResourceFilter("all_resources")}
                 >
-                  {tmResources.find((r: any) => String(r.id) === resourceFilter)?.name}
+                  {
+                    tmResources.find(
+                      (r: any) => String(r.id) === resourceFilter,
+                    )?.name
+                  }
                   <X className="h-3.5 w-3.5 ml-1" />
                 </Badge>
               )}
@@ -678,14 +754,12 @@ export default function UnifiedTranslationMemoryPage() {
               <div className="relative flex-grow">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder={t('tm.searchEntries')}
+                  placeholder={t("tm.searchEntries")}
                   className="pl-8"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-
-
             </div>
           </div>
 
@@ -696,26 +770,36 @@ export default function UnifiedTranslationMemoryPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('tm.source')}</TableHead>
-                  <TableHead>{t('tm.target')}</TableHead>
-                  <TableHead>{t('common.projects')}</TableHead>
-                  <TableHead>{t('tm.status')}</TableHead>
-                  <TableHead>{t('tm.added')}</TableHead>
-                  <TableHead>{t('tm.modifiedBy')}</TableHead>
-                  {isAdmin && <TableHead className="text-right">{t('tm.actions')}</TableHead>}
+                  <TableHead>{t("tm.source")}</TableHead>
+                  <TableHead>{t("tm.target")}</TableHead>
+                  <TableHead>{t("common.projects")}</TableHead>
+                  <TableHead>{t("tm.status")}</TableHead>
+                  <TableHead>{t("tm.added")}</TableHead>
+                  <TableHead>{t("tm.modifiedBy")}</TableHead>
+                  {isAdmin && (
+                    <TableHead className="text-right">
+                      {t("tm.actions")}
+                    </TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoadingEntries ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-8 text-muted-foreground">
-                      {t('common.loading')}
+                    <TableCell
+                      colSpan={isAdmin ? 7 : 6}
+                      className="text-center py-8 text-muted-foreground"
+                    >
+                      {t("common.loading")}
                     </TableCell>
                   </TableRow>
                 ) : filteredTM.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-8 text-muted-foreground">
-                      {t('tm.noTMs')}
+                    <TableCell
+                      colSpan={isAdmin ? 7 : 6}
+                      className="text-center py-8 text-muted-foreground"
+                    >
+                      {t("tm.noEntries")}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -724,12 +808,8 @@ export default function UnifiedTranslationMemoryPage() {
                       <TableCell className="font-medium">
                         {entry.source}
                       </TableCell>
-                      <TableCell>
-                        {entry.target}
-                      </TableCell>
-                      <TableCell>
-                        {entry.projectName || "—"}
-                      </TableCell>
+                      <TableCell>{entry.target}</TableCell>
+                      <TableCell>{entry.projectName || "—"}</TableCell>
                       <TableCell>
                         <div className="inline-flex px-2 py-1 rounded-full text-xs font-medium">
                           {entry.origin === "MT" && (
@@ -782,31 +862,41 @@ export default function UnifiedTranslationMemoryPage() {
           {filteredTM.length > 0 && (
             <div className="flex items-center justify-between px-4 py-4 border-t">
               <div className="text-sm text-muted-foreground">
-                {t('tm.showing', {
-                  start: Math.min((currentPage - 1) * itemsPerPage + 1, filteredTM.length),
+                {t("tm.showing", {
+                  start: Math.min(
+                    (currentPage - 1) * itemsPerPage + 1,
+                    filteredTM.length,
+                  ),
                   end: Math.min(currentPage * itemsPerPage, filteredTM.length),
-                  total: filteredTM.length
+                  total: filteredTM.length,
                 })}
               </div>
               <div className="flex items-center space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
                   disabled={currentPage === 1}
                 >
-                  {t('tm.previous')}
+                  {t("tm.previous")}
                 </Button>
                 <div className="text-sm mx-4">
-                  {t('tm.pageInfo', { current: currentPage, total: totalPages })}
+                  {t("tm.pageInfo", {
+                    current: currentPage,
+                    total: totalPages,
+                  })}
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
                   disabled={currentPage === totalPages}
                 >
-                  {t('tm.next')}
+                  {t("tm.next")}
                 </Button>
               </div>
             </div>

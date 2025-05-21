@@ -239,7 +239,7 @@ export default function ProjectsPage() {
 
             // 올바른 인증 토큰 가져오기 (auth_token 사용)
             const authToken = localStorage.getItem("auth_token");
-            
+
             // 서버에 실제 API 요청
             const response = await fetch(`/api/projects/${project.id}/stats`, {
               headers: {
@@ -250,7 +250,7 @@ export default function ProjectsPage() {
             if (response.ok) {
               // 서버 응답 성공시 실제 데이터 사용하고 비율 계산
               const data = await response.json();
-              
+
               const totalSegs = data.totalSegments || 0;
               const reviewedCount = data.statusCounts?.["Reviewed"] || 0;
               const reviewedPercentage =
@@ -268,7 +268,7 @@ export default function ProjectsPage() {
               };
               return true; // 성공
             } else if (response.status === 404 && retryCount < maxRetries) {
-              // 서버 엔드포인트가 아직 로드되지 않았거io� 존재하지 않을 수 있으므로 재시도
+              // 서버 엔드포인트가 아직 로드되지 않았거io� 존재하지 않을 수 있으므로   �시도
               await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 대기
               return fetchStatsFromServer(project, retryCount + 1); // 재귀적으로 재시도
             } else {
@@ -798,7 +798,7 @@ export default function ProjectsPage() {
         className="flex items-center"
       >
         <Plus className="mr-1 h-4 w-4" />
-        {t('projects.createProject')}
+        {t("projects.createProject")}
       </Button>
     </div>
   );
@@ -810,21 +810,23 @@ export default function ProjectsPage() {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2 mb-2">
             <FolderClosed className="h-5 w-5" />
-            <h2 className="text-3xl font-bold tracking-tight">{t('projects.title')}</h2>
+            <h2 className="text-3xl font-bold tracking-tight">
+              {t("projects.title")}
+            </h2>
           </div>
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-1 h-4 w-4" />
-                {t('projects.createProject')}
+                {t("projects.createProject")}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{t('projects.createProject')}</DialogTitle>
+                <DialogTitle>{t("projects.createProject")}</DialogTitle>
                 <DialogDescription>
-                  {t('projects.newProjectDescription')}
+                  {t("projects.newProjectDescription")}
                 </DialogDescription>
               </DialogHeader>
 
@@ -839,10 +841,10 @@ export default function ProjectsPage() {
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t('projects.projectName')}</FormLabel>
+                          <FormLabel>{t("projects.projectName")}</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder={t('projects.projectName')}
+                              placeholder={t("projects.projectName")}
                               {...field}
                             />
                           </FormControl>
@@ -857,14 +859,18 @@ export default function ProjectsPage() {
                         name="sourceLanguage"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t('projects.sourceLanguage')}</FormLabel>
+                            <FormLabel>
+                              {t("projects.sourceLanguage")}
+                            </FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder={t('projects.sourceLanguage')} />
+                                  <SelectValue
+                                    placeholder={t("projects.sourceLanguage")}
+                                  />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
@@ -886,14 +892,18 @@ export default function ProjectsPage() {
                         name="targetLanguage"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t('projects.targetLanguage')}</FormLabel>
+                            <FormLabel>
+                              {t("projects.targetLanguage")}
+                            </FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder={t('projects.targetLanguage')} />
+                                  <SelectValue
+                                    placeholder={t("projects.targetLanguage")}
+                                  />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
@@ -918,12 +928,14 @@ export default function ProjectsPage() {
                     name="deadline"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t('projects.deadline')} ({t('common.optional')})</FormLabel>
+                        <FormLabel>
+                          {t("projects.deadline")} ({t("common.optional")})
+                        </FormLabel>
                         <FormControl>
                           <Input type="date" {...field} />
                         </FormControl>
                         <FormDescription>
-                          {t('projects.deadlineDescription')}
+                          {t("projects.deadlineDescription")}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -937,11 +949,11 @@ export default function ProjectsPage() {
                     render={({ field }) => (
                       <FormItem className="space-y-2">
                         <FormLabel className="block">
-                          {t('projects.uploadFiles')}{" "}
+                          {t("projects.uploadFiles")}{" "}
                           <span className="text-destructive">*</span>
                         </FormLabel>
                         <FormDescription>
-                          {t('projects.fileUploadDescription')}
+                          {t("projects.fileUploadDescription")}
                         </FormDescription>
 
                         <FormControl>
@@ -1034,10 +1046,11 @@ export default function ProjectsPage() {
                     render={({ field }) => (
                       <FormItem className="space-y-2">
                         <FormLabel className="block">
-                          {t('projects.referenceFiles')} ({t('common.optional')})
+                          {t("projects.referenceFiles")} ({t("common.optional")}
+                          )
                         </FormLabel>
                         <FormDescription>
-                          {t('projects.referenceFilesDescription')}
+                          {t("projects.referenceFilesDescription")}
                         </FormDescription>
 
                         <FormControl>
@@ -1209,7 +1222,7 @@ export default function ProjectsPage() {
           <div className="relative w-full max-w-md">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search projects..."
+              placeholder={t("projects.searchProjects")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 w-full"
@@ -1218,7 +1231,6 @@ export default function ProjectsPage() {
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
-              <span className="text-sm text-muted-foreground">{t('projects.view')}:</span>
               <div className="border rounded-md overflow-hidden flex">
                 <Button
                   variant={viewMode === "list" ? "default" : "ghost"}
@@ -1244,11 +1256,19 @@ export default function ProjectsPage() {
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t('projects.allProjects')}</SelectItem>
-                <SelectItem value="Unclaimed">{t('projects.statusUnclaimed')}</SelectItem>
-                <SelectItem value="In Progress">{t('projects.statusInProgress')}</SelectItem>
-                <SelectItem value="Claimed">{t('projects.statusClaimed')}</SelectItem>
-                <SelectItem value="Completed">{t('projects.statusCompleted')}</SelectItem>
+                <SelectItem value="all">{t("projects.allProjects")}</SelectItem>
+                <SelectItem value="Unclaimed">
+                  {t("projects.statusUnclaimed")}
+                </SelectItem>
+                <SelectItem value="In Progress">
+                  {t("projects.statusInProgress")}
+                </SelectItem>
+                <SelectItem value="Claimed">
+                  {t("projects.statusClaimed")}
+                </SelectItem>
+                <SelectItem value="Completed">
+                  {t("projects.statusCompleted")}
+                </SelectItem>
               </SelectContent>
             </Select>
 
@@ -1279,43 +1299,43 @@ export default function ProjectsPage() {
                 }}
               >
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder={t('projects.bulkActions')} />
+                  <SelectValue placeholder={t("projects.bulkActions")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="claim">
                     <div className="flex items-center">
                       <CheckSquare className="h-4 w-4 mr-2" />
-                      <span>{t('projects.claimProjects')}</span>
+                      <span>{t("projects.claimProjects")}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="release">
                     <div className="flex items-center">
                       <Unlock className="h-4 w-4 mr-2" />
-                      <span>{t('projects.releaseProjects')}</span>
+                      <span>{t("projects.releaseProjects")}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="complete">
                     <div className="flex items-center">
                       <CheckCircle className="h-4 w-4 mr-2" />
-                      <span>{t('projects.completeProjects')}</span>
+                      <span>{t("projects.completeProjects")}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="reopen">
                     <div className="flex items-center">
                       <RefreshCw className="h-4 w-4 mr-2" />
-                      <span>{t('projects.reopenProjects')}</span>
+                      <span>{t("projects.reopenProjects")}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="archive">
                     <div className="flex items-center">
                       <Archive className="h-4 w-4 mr-2" />
-                      <span>{t('projects.archiveProjects')}</span>
+                      <span>{t("projects.archiveProjects")}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="delete" className="text-destructive">
                     <div className="flex items-center">
                       <Trash2 className="h-4 w-4 mr-2" />
-                      <span>{t('projects.deleteProjects')}</span>
+                      <span>{t("projects.deleteProjects")}</span>
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -1433,18 +1453,24 @@ export default function ProjectsPage() {
                           {project.id}: {project.name}
                         </CardTitle>
                         {/* File processing indicators */}
-                        {project.files && project.files.some(file => file.processingStatus === "processing") && (
-                          <div className="flex items-center gap-2 mt-1 text-xs text-blue-600 dark:text-blue-400">
-                            <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full"></div>
-                            <span>{t('projects.filesProcessing')}</span>
-                          </div>
-                        )}
-                        {project.files && project.files.some(file => file.processingStatus === "error") && (
-                          <div className="flex items-center gap-2 mt-1 text-xs text-red-600 dark:text-red-400">
-                            <AlertCircle className="h-3 w-3" />
-                            <span>{t('projects.filesProcessingErrors')}</span>
-                          </div>
-                        )}
+                        {project.files &&
+                          project.files.some(
+                            (file) => file.processingStatus === "processing",
+                          ) && (
+                            <div className="flex items-center gap-2 mt-1 text-xs text-blue-600 dark:text-blue-400">
+                              <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full"></div>
+                              <span>{t("projects.filesProcessing")}</span>
+                            </div>
+                          )}
+                        {project.files &&
+                          project.files.some(
+                            (file) => file.processingStatus === "error",
+                          ) && (
+                            <div className="flex items-center gap-2 mt-1 text-xs text-red-600 dark:text-red-400">
+                              <AlertCircle className="h-3 w-3" />
+                              <span>{t("projects.filesProcessingErrors")}</span>
+                            </div>
+                          )}
                       </CardHeader>
                       <CardContent className="pb-2">
                         <div>
@@ -1585,28 +1611,34 @@ export default function ProjectsPage() {
                       </TableHead>
                     )}
                     <TableHead className="w-[80px]">
-                      {renderSortButton("id", t('projects.projectId'))}
+                      {renderSortButton("id", t("projects.projectId"))}
                     </TableHead>
                     <TableHead className="w-[220px]">
-                      {renderSortButton("name", t('projects.projectName'))}
+                      {renderSortButton("name", t("projects.projectName"))}
                     </TableHead>
-                    <TableHead className="w-[120px]">{t('languages.languagePair')}</TableHead>
-                    <TableHead className="w-[80px]">{t('projects.files')}</TableHead>
-                    <TableHead className="w-[100px]">{t('projects.wordCount')}</TableHead>
                     <TableHead className="w-[120px]">
-                      {renderSortButton("status", t('projects.status'))}
+                      {t("languages.languagePair")}
+                    </TableHead>
+                    <TableHead className="w-[80px]">
+                      {t("projects.files")}
+                    </TableHead>
+                    <TableHead className="w-[100px]">
+                      {t("projects.wordCount")}
+                    </TableHead>
+                    <TableHead className="w-[120px]">
+                      {renderSortButton("status", t("projects.status"))}
                     </TableHead>
                     <TableHead className="w-[220px]">
-                      {renderSortButton("progress", t('projects.progress'))}
+                      {renderSortButton("progress", t("projects.progress"))}
                     </TableHead>
                     <TableHead className="w-[120px]">
-                      {renderSortButton("createdAt", t('projects.created'))}
+                      {renderSortButton("createdAt", t("projects.created"))}
                     </TableHead>
                     <TableHead className="w-[120px]">
-                      {renderSortButton("updatedAt", t('projects.lastUpdated'))}
+                      {renderSortButton("updatedAt", t("projects.lastUpdated"))}
                     </TableHead>
                     <TableHead className="w-[120px]">
-                      {renderSortButton("deadline", t('projects.deadline'))}
+                      {renderSortButton("deadline", t("projects.deadline"))}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1697,18 +1729,27 @@ export default function ProjectsPage() {
                               {project.name}
                             </Link>
                             {/* File processing indicators */}
-                            {project.files && project.files.some(file => file.processingStatus === "processing") && (
-                              <div className="flex items-center gap-2 mt-1 text-xs text-blue-600 dark:text-blue-400">
-                                <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full"></div>
-                                <span>{t('projects.filesProcessing')}</span>
-                              </div>
-                            )}
-                            {project.files && project.files.some(file => file.processingStatus === "error") && (
-                              <div className="flex items-center gap-2 mt-1 text-xs text-red-600 dark:text-red-400">
-                                <AlertCircle className="h-3 w-3" />
-                                <span>{t('projects.filesProcessingErrors')}</span>
-                              </div>
-                            )}
+                            {project.files &&
+                              project.files.some(
+                                (file) =>
+                                  file.processingStatus === "processing",
+                              ) && (
+                                <div className="flex items-center gap-2 mt-1 text-xs text-blue-600 dark:text-blue-400">
+                                  <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full"></div>
+                                  <span>{t("projects.filesProcessing")}</span>
+                                </div>
+                              )}
+                            {project.files &&
+                              project.files.some(
+                                (file) => file.processingStatus === "error",
+                              ) && (
+                                <div className="flex items-center gap-2 mt-1 text-xs text-red-600 dark:text-red-400">
+                                  <AlertCircle className="h-3 w-3" />
+                                  <span>
+                                    {t("projects.filesProcessingErrors")}
+                                  </span>
+                                </div>
+                              )}
                           </div>
                         </TableCell>
                         <TableCell>

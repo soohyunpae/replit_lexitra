@@ -180,7 +180,7 @@ export default function Project() {
     onError: () => {
       toast({
         title: "notifications.saveFailed",
-        description: "notifications.notesFailedToSave", 
+        description: "notifications.notesFailedToSave",
         variant: "destructive",
       });
     },
@@ -224,15 +224,23 @@ export default function Project() {
 
         // Add each file to FormData
         files.forEach((file) => {
-          console.log(`Adding file to upload: ${file.name} (${file.size} bytes, type: ${file.type})`);
+          console.log(
+            `Adding file to upload: ${file.name} (${file.size} bytes, type: ${file.type})`,
+          );
           formData.append("files", file);
         });
 
-        console.log("Uploading files to:", `/api/projects/${projectId}/references/upload`);
+        console.log(
+          "Uploading files to:",
+          `/api/projects/${projectId}/references/upload`,
+        );
         console.log("Files count:", files.length);
 
         // Debug the token issue
-        console.log("Current auth token:", localStorage.getItem("auth_token") ? "Found token" : "No token found");
+        console.log(
+          "Current auth token:",
+          localStorage.getItem("auth_token") ? "Found token" : "No token found",
+        );
 
         // Create a custom FormData request with the right authentication
         const response = await fetch(
@@ -241,17 +249,19 @@ export default function Project() {
             method: "POST",
             headers: {
               // Use the correct token key from localStorage
-              Authorization: `Bearer ${localStorage.getItem("auth_token") || ""}`
+              Authorization: `Bearer ${localStorage.getItem("auth_token") || ""}`,
             },
-            credentials: 'include', // Include cookies for session auth as fallback
-            body: formData
-          }
+            credentials: "include", // Include cookies for session auth as fallback
+            body: formData,
+          },
         );
 
         if (!response.ok) {
           const errorText = await response.text();
           console.error("Upload error response:", errorText);
-          throw new Error(`Failed to upload files: ${response.status} ${errorText}`);
+          throw new Error(
+            `Failed to upload files: ${response.status} ${errorText}`,
+          );
         }
 
         return response.json();
@@ -263,8 +273,10 @@ export default function Project() {
     onSuccess: (data) => {
       console.log("File upload successful, received data:", data);
       toast({
-        title: "Reference files added",
-        description: `${references.length} file(s) added successfully.`,
+        title: t("notifications.referenceFilesAdded"),
+        description: t("notifications.filesAdded", {
+          count: references.length,
+        }),
       });
       // 업로드 후 references 상태 초기화 (DB에서 관리하므로)
       setReferences([]);
@@ -590,8 +602,8 @@ export default function Project() {
     },
     onSuccess: () => {
       toast({
-        title: "Project info saved",
-        description: "Project information has been updated successfully.",
+        title: t("notifications.projectInfoSaved"),
+        description: t("notifications.projectInfoSavedDesc"),
       });
       setIsEditing(false);
       queryClient.invalidateQueries({
@@ -600,8 +612,8 @@ export default function Project() {
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to update project information. Please try again.",
+        title: t("notifications.error"),
+        description: t("notifications.updateFailed"),
         variant: "destructive",
       });
     },
@@ -650,7 +662,7 @@ export default function Project() {
   }
 
   return (
-    <MainLayout title={t('projects.projectDetail')}>
+    <MainLayout title={t("projects.projectDetail")}>
       <main className="flex-1 p-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -684,7 +696,9 @@ export default function Project() {
                   onClick={() => claimProject.mutate()}
                   disabled={claimProject.isPending}
                 >
-                  {claimProject.isPending ? t('projects.claiming') : t('projects.claim')}
+                  {claimProject.isPending
+                    ? t("projects.claiming")
+                    : t("projects.claim")}
                 </Button>
               )}
 
@@ -697,7 +711,9 @@ export default function Project() {
                       onClick={() => setShowReleaseDialog(true)}
                       disabled={releaseProject.isPending}
                     >
-                      {releaseProject.isPending ? t('projects.releasing') : t('projects.release')}
+                      {releaseProject.isPending
+                        ? t("projects.releasing")
+                        : t("projects.release")}
                     </Button>
                     <Button
                       variant="default"
@@ -705,7 +721,9 @@ export default function Project() {
                       onClick={() => setShowCompleteDialog(true)}
                       disabled={completeProject.isPending}
                     >
-                      {completeProject.isPending ? t('projects.completing') : t('projects.complete')}
+                      {completeProject.isPending
+                        ? t("projects.completing")
+                        : t("projects.complete")}
                     </Button>
                   </>
                 )}
@@ -718,7 +736,9 @@ export default function Project() {
                     onClick={() => setShowReopenDialog(true)}
                     disabled={reopenProject.isPending}
                   >
-                    {reopenProject.isPending ? t('projects.reopening') : t('projects.reopen')}
+                    {reopenProject.isPending
+                      ? t("projects.reopening")
+                      : t("projects.reopen")}
                   </Button>
                 )}
 
@@ -729,9 +749,9 @@ export default function Project() {
               >
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>{t('projects.confirmRelease')}</DialogTitle>
+                    <DialogTitle>{t("projects.confirmRelease")}</DialogTitle>
                     <DialogDescription>
-                      {t('projects.releaseDescription')}
+                      {t("projects.releaseDescription")}
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
@@ -739,7 +759,7 @@ export default function Project() {
                       variant="outline"
                       onClick={() => setShowReleaseDialog(false)}
                     >
-                      {t('common.cancel')}
+                      {t("common.cancel")}
                     </Button>
                     <Button
                       variant="default"
@@ -749,7 +769,7 @@ export default function Project() {
                         releaseProject.mutate();
                       }}
                     >
-                      {t('projects.release')}
+                      {t("projects.release")}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -762,9 +782,9 @@ export default function Project() {
               >
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>{t('projects.confirmComplete')}</DialogTitle>
+                    <DialogTitle>{t("projects.confirmComplete")}</DialogTitle>
                     <DialogDescription>
-                      {t('projects.completeDescription')}
+                      {t("projects.completeDescription")}
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
@@ -772,7 +792,7 @@ export default function Project() {
                       variant="outline"
                       onClick={() => setShowCompleteDialog(false)}
                     >
-                      {t('common.cancel')}
+                      {t("common.cancel")}
                     </Button>
                     <Button
                       variant="default"
@@ -782,7 +802,7 @@ export default function Project() {
                         completeProject.mutate();
                       }}
                     >
-                      {t('projects.complete')}
+                      {t("projects.complete")}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -795,9 +815,9 @@ export default function Project() {
               >
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>{t('projects.confirmReopen')}</DialogTitle>
+                    <DialogTitle>{t("projects.confirmReopen")}</DialogTitle>
                     <DialogDescription>
-                      {t('projects.reopenDescription')}
+                      {t("projects.reopenDescription")}
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
@@ -805,7 +825,7 @@ export default function Project() {
                       variant="outline"
                       onClick={() => setShowReopenDialog(false)}
                     >
-                      {t('common.cancel')}
+                      {t("common.cancel")}
                     </Button>
                     <Button
                       variant="default"
@@ -815,7 +835,7 @@ export default function Project() {
                         reopenProject.mutate();
                       }}
                     >
-                      {t('projects.reopen')}
+                      {t("projects.reopen")}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -828,7 +848,9 @@ export default function Project() {
                   onClick={() => deleteProject.mutate()}
                   disabled={deleteProject.isPending}
                 >
-                  {deleteProject.isPending ? t('projects.deleting') : t('common.delete')}
+                  {deleteProject.isPending
+                    ? t("projects.deleting")
+                    : t("common.delete")}
                 </Button>
               )}
             </div>
@@ -843,7 +865,7 @@ export default function Project() {
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-lg flex items-center">
-                    <span>📋 {t('projects.projectInfo')}</span>
+                    <span>📋 {t("projects.projectInfo")}</span>
                   </CardTitle>
                   {isAdmin && (
                     <Button
@@ -852,7 +874,7 @@ export default function Project() {
                       className="h-8 px-2 text-xs"
                       onClick={() => setIsEditing(!isEditing)}
                     >
-                      {isEditing ? t('common.cancel') : t('common.edit')}
+                      {isEditing ? t("common.cancel") : t("common.edit")}
                     </Button>
                   )}
                 </div>
@@ -860,12 +882,16 @@ export default function Project() {
               <CardContent className="text-sm space-y-3">
                 <div className="flex flex-col space-y-3">
                   <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">{t('projects.projectName')}:</div>
+                    <div className="text-muted-foreground">
+                      {t("projects.projectName")}:
+                    </div>
                     <div className="font-medium">{project.name}</div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">{t('projects.languagePair')}:</div>
+                    <div className="text-muted-foreground">
+                      {t("projects.languagePair")}:
+                    </div>
                     <div className="font-medium flex items-center">
                       <span className="px-2 py-0.5 bg-primary/10 rounded-md text-xs">
                         {project.sourceLanguage}
@@ -878,14 +904,18 @@ export default function Project() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">{t('projects.created')}:</div>
+                    <div className="text-muted-foreground">
+                      {t("projects.created")}:
+                    </div>
                     <div className="font-medium">
                       <span>{formatDate(project.createdAt)}</span>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">{t('projects.lastUpdated')}:</div>
+                    <div className="text-muted-foreground">
+                      {t("projects.lastUpdated")}:
+                    </div>
                     <div className="font-medium">
                       <span>
                         {formatDate(project.updatedAt || project.createdAt)}
@@ -894,7 +924,9 @@ export default function Project() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-1 items-center">
-                    <div className="text-muted-foreground">{t('projects.deadline')}:</div>
+                    <div className="text-muted-foreground">
+                      {t("projects.deadline")}:
+                    </div>
                     {isEditing ? (
                       <div>
                         <Input
@@ -908,7 +940,7 @@ export default function Project() {
                       <div className="font-medium">
                         {project.deadline
                           ? formatDate(project.deadline)
-                          : "Not set"}
+                          : t("projects.notSet")}
                       </div>
                     )}
                   </div>
@@ -922,18 +954,24 @@ export default function Project() {
                           value={glossaryInput}
                           onChange={(e) => setGlossaryInput(e.target.value)}
                         >
-                          <option value="default">{t('projects.defaultGlossary')}</option>
-                          <option value="patents">{t('projects.patentsGlossary')}</option>
-                          <option value="technical">{t('projects.technicalGlossary')}</option>
+                          <option value="default">
+                            {t("projects.defaultGlossary")}
+                          </option>
+                          <option value="patents">
+                            {t("projects.patentsGlossary")}
+                          </option>
+                          <option value="technical">
+                            {t("projects.technicalGlossary")}
+                          </option>
                         </select>
                       </div>
                     ) : (
                       <div className="font-medium">
                         {project.glossaryId === "patents"
-                          ? t('projects.patentsGlossary')
+                          ? t("projects.patentsGlossary")
                           : project.glossaryId === "technical"
-                            ? t('projects.technicalGlossary')
-                            : t('projects.defaultGlossary')}
+                            ? t("projects.technicalGlossary")
+                            : t("projects.defaultGlossary")}
                       </div>
                     )}
                   </div>
@@ -947,26 +985,36 @@ export default function Project() {
                           value={tmInput}
                           onChange={(e) => setTmInput(e.target.value)}
                         >
-                          <option value="default">{t('projects.defaultTM')}</option>
-                          <option value="patents">{t('projects.patentsTM')}</option>
-                          <option value="technical">{t('projects.technicalTM')}</option>
+                          <option value="default">
+                            {t("projects.defaultTM")}
+                          </option>
+                          <option value="patents">
+                            {t("projects.patentsTM")}
+                          </option>
+                          <option value="technical">
+                            {t("projects.technicalTM")}
+                          </option>
                         </select>
                       </div>
                     ) : (
                       <div className="font-medium">
                         {project.tmId === "patents"
-                          ? t('projects.patentsTM')
+                          ? t("projects.patentsTM")
                           : project.tmId === "technical"
-                            ? t('projects.technicalTM')
-                            : t('projects.defaultTM')}
+                            ? t("projects.technicalTM")
+                            : t("projects.defaultTM")}
                       </div>
                     )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">{t('projects.numberOfFiles')}:</div>
+                    <div className="text-muted-foreground">
+                      {t("projects.numberOfFiles")}:
+                    </div>
                     <div className="font-medium">
-                      <span>{workFiles?.length || 0} {t('projects.fileCount')}</span>
+                      <span>
+                        {workFiles?.length || 0} {t("projects.fileCount")}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -996,11 +1044,12 @@ export default function Project() {
                           tmId: tmInput,
                         });
                       }}
-                      disabled={saveProjectInfo.isPending}>
+                      disabled={saveProjectInfo.isPending}
+                    >
                       <span>
                         {saveProjectInfo.isPending
-                          ? t('common.saving')
-                          : t('projects.saveProjectInfo')}
+                          ? t("common.saving")
+                          : t("projects.saveProjectInfo")}
                       </span>
                     </Button>
                   </div>
@@ -1012,7 +1061,7 @@ export default function Project() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
-                  <span>📊 {t('projects.translationSummary')}</span>
+                  <span>📊 {t("projects.translationSummary")}</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-sm space-y-4">
@@ -1023,20 +1072,29 @@ export default function Project() {
                         <div className="flex justify-between items-center mb-1">
                           <div className="text-muted-foreground flex items-center gap-1.5">
                             <TextCursorInput className="h-35 w-3.5" />
-                            <span>{t('projects.wordCount')}:</span>
+                            <span>{t("projects.wordCount")}:</span>
                           </div>
                           <div className="font-medium">
                             {project.wordCount || calculateTotalWordCount()}{" "}
-                            {t('projects.words')}
+                            {t("projects.words")}
                           </div>
                         </div>
                         <div className="flex justify-between items-center mb-1">
-                          <div className="text-muted-foreground">{t('projects.reviewed')}:</div>
+                          <div className="text-muted-foreground">
+                            {t("projects.reviewed")}:
+                          </div>
                           <div className="font-medium">
                             {projectStats.completedSegments} /{" "}
-                            {projectStats.totalSegments} {t('projects.segments')}
+                            {projectStats.totalSegments}{" "}
+                            {t("projects.segments")}
                             <span className="ml-1 text-primary">
-                              ({Math.round((projectStats.statusCounts.Reviewed / projectStats.totalSegments) * 100)}%)
+                              (
+                              {Math.round(
+                                (projectStats.statusCounts.Reviewed /
+                                  projectStats.totalSegments) *
+                                  100,
+                              )}
+                              %)
                             </span>
                           </div>
                         </div>
@@ -1059,47 +1117,47 @@ export default function Project() {
 
                     <div className="grid grid-cols-2 gap-2 mt-4">
                       <div className="text-muted-foreground">
-                        {t('projects.tmMatchBreakdown')}:
+                        {t("projects.tmMatchBreakdown")}:
                       </div>
                       <div>
                         <div className="flex items-center gap-1 mb-1">
                           <div className="w-2 h-2 rounded-full bg-green-300"></div>
-                          <span>{t('projects.reviewed')}:</span>
+                          <span>{t("projects.reviewed")}:</span>
                           <span className="font-medium ml-auto">
                             {projectStats.statusCounts["Reviewed"]}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 mb-1">
                           <div className="w-2 h-2 rounded-full bg-blue-300"></div>
-                          <span>{t('projects.match100')}:</span>
+                          <span>{t("projects.match100")}:</span>
                           <span className="font-medium ml-auto">
                             {projectStats.statusCounts["100%"]}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 mb-1">
                           <div className="w-2 h-2 rounded-full bg-yellow-300"></div>
-                          <span>{t('projects.fuzzyMatch')}:</span>
+                          <span>{t("projects.fuzzyMatch")}:</span>
                           <span className="font-medium ml-auto">
                             {projectStats.statusCounts["Fuzzy"]}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 mb-1">
                           <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                          <span>{t('projects.mt')}:</span>
+                          <span>{t("projects.mt")}:</span>
                           <span className="font-medium ml-auto">
                             {projectStats.statusCounts["MT"]}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 mb-1">
                           <div className="w-2 h-2 rounded-full bg-purple-300"></div>
-                          <span>{t('projects.edited')}:</span>
+                          <span>{t("projects.edited")}:</span>
                           <span className="font-medium ml-auto">
                             {projectStats.statusCounts.Edited || 0}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
                           <div className="w-2 h-2 rounded-full bg-red-300"></div>
-                          <span>{t('projects.rejected')}:</span>
+                          <span>{t("projects.rejected")}:</span>
                           <span className="font-medium ml-auto">
                             {projectStats.statusCounts.Rejected || 0}
                           </span>
@@ -1109,10 +1167,11 @@ export default function Project() {
 
                     <div className="grid grid-cols-2 gap-1 mt-2">
                       <div className="text-muted-foreground">
-                        {t('projects.glossaryUsage')}:
+                        {t("projects.glossaryUsage")}:
                       </div>
                       <div className="font-medium">
-                        {projectStats.glossaryMatchCount} {t('projects.termMatches')}
+                        {projectStats.glossaryMatchCount}{" "}
+                        {t("projects.termMatches")}
                       </div>
                     </div>
                   </>
@@ -1131,7 +1190,7 @@ export default function Project() {
           {/* File list */}
           <Card className="mb-6">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">{t('projects.files')}</CardTitle>
+              <CardTitle className="text-lg">{t("projects.files")}</CardTitle>
               <CardDescription />
             </CardHeader>
             <CardContent>
@@ -1160,19 +1219,24 @@ export default function Project() {
                                     <div className="flex items-center">
                                       <div className="animate-spin h-3 w-3 border-2 border-primary border-t-transparent rounded-full mr-1"></div>
                                       <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded">
-                                        {t('projects.processing')}
+                                        {t("projects.processing")}
                                       </span>
                                     </div>
                                   )}
                                   {file.processingStatus === "error" && (
-                                    <span className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded" 
-                                      title={file.errorMessage || t('projects.processingError')}>
-                                      {t('projects.processingError')}
+                                    <span
+                                      className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded"
+                                      title={
+                                        file.errorMessage ||
+                                        t("projects.processingError")
+                                      }
+                                    >
+                                      {t("projects.processingError")}
                                     </span>
                                   )}
                                   {file.processingStatus === "ready" && (
                                     <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
-                                      {t('projects.ready')}
+                                      {t("projects.ready")}
                                     </span>
                                   )}
                                 </div>
@@ -1180,9 +1244,15 @@ export default function Project() {
                             </div>
                             <div className="flex items-center gap-2">
                               {file.processingStatus === "processing" ? (
-                                <Progress value={30} className="h-2 flex-1 animate-pulse" />
+                                <Progress
+                                  value={30}
+                                  className="h-2 flex-1 animate-pulse"
+                                />
                               ) : file.processingStatus === "error" ? (
-                                <Progress value={100} className="h-2 flex-1 bg-red-200 dark:bg-red-900" />
+                                <Progress
+                                  value={100}
+                                  className="h-2 flex-1 bg-red-200 dark:bg-red-900"
+                                />
                               ) : (
                                 <Progress
                                   value={stats.percentage}
@@ -1200,10 +1270,11 @@ export default function Project() {
                                 />
                               )}
                               <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                {file.processingStatus === "ready" ? 
-                                  `${getStatusCount(file.id, "Reviewed")}/${getTotalSegments(file.id)} (${Math.round(getStatusPercentage(file.id, "Reviewed"))}%)` :
-                                  file.processingStatus === "processing" ? t('projects.preparing') : t('projects.unavailable')
-                                }
+                                {file.processingStatus === "ready"
+                                  ? `${getStatusCount(file.id, "Reviewed")}/${getTotalSegments(file.id)} (${Math.round(getStatusPercentage(file.id, "Reviewed"))}%)`
+                                  : file.processingStatus === "processing"
+                                    ? t("projects.preparing")
+                                    : t("projects.unavailable")}
                               </span>
                             </div>
                           </div>
@@ -1215,10 +1286,9 @@ export default function Project() {
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                               <TextCursorInput className="h-3.5 w-3.5" />
                               <span>
-                                {file.processingStatus === "ready" ? 
-                                  `${(file as any).wordCount || getFileWordCount(file.id)} ${t('projects.words')}` :
-                                  t('projects.calculatingWords')
-                                }
+                                {file.processingStatus === "ready"
+                                  ? `${(file as any).wordCount || getFileWordCount(file.id)} ${t("projects.words")}`
+                                  : t("projects.calculatingWords")}
                               </span>
                             </div>
                           </div>
@@ -1248,15 +1318,15 @@ export default function Project() {
                               }
                             >
                               {file.processingStatus === "processing"
-                                ? t('projects.fileProcessing')
+                                ? t("projects.fileProcessing")
                                 : file.processingStatus === "error"
-                                ? t('projects.fileProcessingError') 
-                                : project.status === "Unclaimed"
-                                ? t('projects.claimProjectFirst')
-                                : project.status === "Claimed" &&
-                                    project.claimedBy !== user?.id
-                                  ? t('projects.claimedByAnotherUser')
-                                  : t('projects.openEditor')}
+                                  ? t("projects.fileProcessingError")
+                                  : project.status === "Unclaimed"
+                                    ? t("projects.claimProjectFirst")
+                                    : project.status === "Claimed" &&
+                                        project.claimedBy !== user?.id
+                                      ? t("projects.claimedByAnotherUser")
+                                      : t("projects.openEditor")}
                             </Button>
                           </div>
                         </div>
@@ -1269,9 +1339,11 @@ export default function Project() {
                   <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-4">
                     <Upload className="h-6 w-6 text-muted-foreground" />
                   </div>
-                  <h3 className="text-lg font-medium mb-2">{t('projects.noFilesYet')}</h3>
+                  <h3 className="text-lg font-medium mb-2">
+                    {t("projects.noFilesYet")}
+                  </h3>
                   <p className="text-muted-foreground max-w-md mx-auto mb-6">
-                    {t('projects.fileManagementPolicy')}
+                    {t("projects.fileManagementPolicy")}
                   </p>
                 </div>
               )}
@@ -1283,7 +1355,7 @@ export default function Project() {
             <Card className="md:col-span-2">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
-                  <span>📂 {t('projects.referenceFiles')}</span>
+                  <span>📂 {t("projects.referenceFiles")}</span>
                 </CardTitle>
                 <CardDescription />
               </CardHeader>
@@ -1321,13 +1393,15 @@ export default function Project() {
                               ).catch((err) => {
                                 console.error("Download error:", err);
                                 toast({
-                                  title: t('notifications.downloadFailed'),
-                                  description: t('notifications.fileDownloadError'),
+                                  title: t("notifications.downloadFailed"),
+                                  description: t(
+                                    "notifications.fileDownloadError",
+                                  ),
                                   variant: "destructive",
                                 });
                               });
                             }}
-                            title={t('projects.downloadFile')}
+                            title={t("projects.downloadFile")}
                           >
                             <FileDownIcon className="h-3 w-3" />
                           </Button>
@@ -1339,7 +1413,7 @@ export default function Project() {
                               className="h-7 w-7"
                               onClick={() => deleteReferenceFile.mutate(index)}
                               disabled={deleteReferenceFile.isPending}
-                              title={t('projects.deleteFile')}
+                              title={t("projects.deleteFile")}
                             >
                               <X className="h-3 w-3" />
                             </Button>
@@ -1381,7 +1455,7 @@ export default function Project() {
                       >
                         <Upload className="h-6 w-6 text-muted-foreground mb-2" />
                         <p className="text-xs text-muted-foreground">
-                          {t('projects.dropFilesHere')}
+                          {t("projects.dropFilesHere")}
                         </p>
                       </div>
                     )}
@@ -1399,23 +1473,30 @@ export default function Project() {
                           onChange={(e) => {
                             console.log("File input change event triggered");
                             if (e.target.files && e.target.files.length > 0) {
-                              console.log(`Files selected: ${e.target.files.length}`);
+                              console.log(
+                                `Files selected: ${e.target.files.length}`,
+                              );
                               const newFiles = Array.from(e.target.files);
-                              console.log("Files selected via dialog:", newFiles.map(f => f.name));
-                              setReferences(prev => [...prev, ...newFiles]);
+                              console.log(
+                                "Files selected via dialog:",
+                                newFiles.map((f) => f.name),
+                              );
+                              setReferences((prev) => [...prev, ...newFiles]);
 
                               // Create a new FormData directly here
                               const formData = new FormData();
-                              newFiles.forEach(file => {
+                              newFiles.forEach((file) => {
                                 formData.append("files", file);
-                                console.log(`Added file to FormData: ${file.name}`);
+                                console.log(
+                                  `Added file to FormData: ${file.name}`,
+                                );
                               });
 
                               // Use the mutation
                               uploadReferences.mutate(newFiles);
 
                               // Reset the input value to allow selecting the same file again
-                              e.target.value = '';
+                              e.target.value = "";
                             } else {
                               console.log("No files selected in file dialog");
                             }
@@ -1424,7 +1505,9 @@ export default function Project() {
                         <div
                           className="text-center py-8 border-2 border-dashed border-border/50 rounded-lg mb-4 hover:border-primary/50 transition-colors cursor-pointer"
                           onClick={() => {
-                            console.log("Reference area clicked, opening file dialog");
+                            console.log(
+                              "Reference area clicked, opening file dialog",
+                            );
                             fileInputRef.current?.click();
                           }}
                           onDragOver={(e) => {
@@ -1448,21 +1531,24 @@ export default function Project() {
                               e.dataTransfer.files.length > 0
                             ) {
                               const newFiles = Array.from(e.dataTransfer.files);
-                              console.log("Files dropped:", newFiles.map(f => f.name));
+                              console.log(
+                                "Files dropped:",
+                                newFiles.map((f) => f.name),
+                              );
                               setReferences([...references, ...newFiles]);
                               // Upload the files
                               uploadReferences.mutate(newFiles);
                             }
                           }}
                         >
-                        <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-3">
+                          <div className="mx-auto h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-3">
                             <Upload className="h-6 w-6 text-muted-foreground" />
                           </div>
                           <h3 className="text-sm font-medium mb-1">
-                            {t('projects.noReferenceFiles')}
+                            {t("projects.noReferenceFiles")}
                           </h3>
                           <p className="text-xs text-primary">
-                            {t('projects.dropFilesHere')}
+                            {t("projects.dropFilesHere")}
                           </p>
                         </div>
                       </>
@@ -1472,10 +1558,10 @@ export default function Project() {
                           <File className="h-6 w-6 text-muted-foreground" />
                         </div>
                         <h3 className="text-sm font-medium mb-1">
-                          {t('projects.noReferenceFiles')}
+                          {t("projects.noReferenceFiles")}
                         </h3>
                         <p className="text-muted-foreground text-xs max-w-md mx-auto">
-                          {t('projects.noReferenceFilesDesc')}
+                          {t("projects.noReferenceFilesDesc")}
                         </p>
                       </div>
                     )}
@@ -1490,7 +1576,7 @@ export default function Project() {
             <Card className="md:col-span-2">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center justify-between">
-                  <span>📝 {t('projects.projectNotes')}</span>
+                  <span>📝 {t("projects.projectNotes")}</span>
                   {!isNotesEditing && note && isAdmin && (
                     <Button
                       variant="ghost"
@@ -1499,7 +1585,7 @@ export default function Project() {
                       className="text-xs"
                     >
                       <Pencil className="h-3.5 w-3.5 mr-1" />
-                      {t('common.edit')}
+                      {t("common.edit")}
                     </Button>
                   )}
                 </CardTitle>
@@ -1508,7 +1594,7 @@ export default function Project() {
               <CardContent>
                 {isNotesEditing ? (
                   <Textarea
-                    placeholder={t('projects.notesPlaceholder')}
+                    placeholder={t("projects.notesPlaceholder")}
                     className="min-h-24"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
@@ -1528,17 +1614,17 @@ export default function Project() {
                       note
                     ) : isAdmin ? (
                       <span className="text-muted-foreground">
-                        {t('projects.clickToAddNotes')}
+                        {t("projects.clickToAddNotes")}
                       </span>
                     ) : (
-                      t('projects.noNotesAvailable')
+                      t("projects.noNotesAvailable")
                     )}
                   </div>
                 )}
                 {saveNotes.isPending && (
                   <div className="mt-2 text-xs text-muted-foreground flex items-center">
                     <div className="animate-spin mr-1 h-3 w-3 border-t-2 border-primary rounded-full"></div>
-                    {t('projects.savingNotes')}
+                    {t("projects.savingNotes")}
                   </div>
                 )}
               </CardContent>
