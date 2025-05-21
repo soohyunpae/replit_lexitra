@@ -1449,7 +1449,7 @@ export default function ProjectsPage() {
                       <span
                         className={`rounded-full px-2 py-1 text-xs font-medium ${statusColor}`}
                       >
-                        {displayStatus}
+                        {t(`projects.status${displayStatus.replace(" ", "")}`)}
                       </span>
                     </div>
                     <div
