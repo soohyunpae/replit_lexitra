@@ -636,7 +636,7 @@ export default function ProjectsPage() {
     // 확인 대화상자
     if (
       !window.confirm(
-        t("projects.confirmComplete", { count: selectedProjects.length }),
+        t("projects.bulkConfirmComplete", { count: selectedProjects.length }),
       )
     ) {
       return;
@@ -1771,7 +1771,9 @@ export default function ProjectsPage() {
                           <div
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}`}
                           >
-                            {t(`projects.status${displayStatus}`)}
+                            {t(
+                              `projects.status${displayStatus.replace(" ", "")}`,
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
