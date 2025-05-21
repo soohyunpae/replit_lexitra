@@ -585,14 +585,18 @@ export default function ProjectsPage() {
         await deleteProject.mutateAsync(projectId);
       }
       toast({
-        title: "Success",
-        description: `${selectedProjects.length} project(s) deleted successfully.`,
+        title: t("common.success"),
+        description: t("projects.bulkDeleteSuccess", {
+          count: selectedProjects.length,
+        }),
       });
       setSelectedProjects([]);
     } catch (error) {
       toast({
-        title: "Error",
-        description: `Failed to delete projects: ${error instanceof Error ? error.message : "Unknown error"}`,
+        title: t("common.error"),
+        description: `${t("projects.bulkDeleteError")}: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
         variant: "destructive",
       });
     }
@@ -616,14 +620,18 @@ export default function ProjectsPage() {
         await claimProject.mutateAsync(projectId);
       }
       toast({
-        title: "Success",
-        description: `${selectedProjects.length} project(s) claimed successfully.`,
+        title: t("common.success"),
+        description: t("projects.bulkClaimSuccess", {
+          count: selectedProjects.length,
+        }),
       });
       setSelectedProjects([]);
     } catch (error) {
       toast({
-        title: "Error",
-        description: `Failed to claim projects: ${error instanceof Error ? error.message : "Unknown error"}`,
+        title: t("common.error"),
+        description: `${t("projects.bulkClaimError")}: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
         variant: "destructive",
       });
     }
@@ -682,14 +690,18 @@ export default function ProjectsPage() {
         await archiveProject.mutateAsync(projectId);
       }
       toast({
-        title: "Success",
-        description: `${selectedProjects.length} project(s) archived successfully.`,
+        title: t("common.success"),
+        description: t("projects.bulkArchiveSuccess", {
+          count: selectedProjects.length,
+        }),
       });
       setSelectedProjects([]);
     } catch (error) {
       toast({
-        title: "Error",
-        description: `Failed to archive projects: ${error instanceof Error ? error.message : "Unknown error"}`,
+        title: t("common.error"),
+        description: `${t("projects.bulkArchiveError")}: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
         variant: "destructive",
       });
     }
@@ -713,14 +725,18 @@ export default function ProjectsPage() {
         await releaseProject.mutateAsync(projectId);
       }
       toast({
-        title: "Success",
-        description: `${selectedProjects.length} project(s) released successfully.`,
+        title: t("common.success"),
+        description: t("projects.bulkReleaseSuccess", {
+          count: selectedProjects.length,
+        }),
       });
       setSelectedProjects([]);
     } catch (error) {
       toast({
-        title: "Error",
-        description: `Failed to release projects: ${error instanceof Error ? error.message : "Unknown error"}`,
+        title: t("common.error"),
+        description: `${t("projects.bulkReleaseError")}: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
         variant: "destructive",
       });
     }
@@ -744,14 +760,18 @@ export default function ProjectsPage() {
         await reopenProject.mutateAsync(projectId);
       }
       toast({
-        title: "Success",
-        description: `${selectedProjects.length} project(s) reopened successfully.`,
+        title: t("common.success"),
+        description: t("projects.bulkReopenSuccess", {
+          count: selectedProjects.length,
+        }),
       });
       setSelectedProjects([]);
     } catch (error) {
       toast({
-        title: "Error",
-        description: `Failed to reopen projects: ${error instanceof Error ? error.message : "Unknown error"}`,
+        title: t("common.error"),
+        description: `${t("projects.bulkReopenError")}: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
         variant: "destructive",
       });
     }
@@ -1070,7 +1090,7 @@ export default function ProjectsPage() {
                             <div className="text-center py-4">
                               <Paperclip className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
                               <p className="text-sm font-medium mb-1">
-                                Click to upload reference files
+                                {t("projects.uploadReference")}
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 {t("projects.uploadReferenceDesc")}
