@@ -131,6 +131,174 @@ export default function AdminConsole() {
   useEffect(() => {
     setActiveSubSection(activeTabLabel);
   }, [activeTabLabel, setActiveSubSection]);
+  
+  // 템플릿 목록 불러오기
+  const fetchTemplates = async () => {
+    try {
+      setIsLoadingTemplates(true);
+      setTemplateError("");
+      
+      const response = await fetch('/api/admin/templates', {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch templates: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setTemplates(data.templates || []);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      setTemplateError("템플릿 목록을 불러오는 중 오류가 발생했습니다.");
+    } finally {
+      setIsLoadingTemplates(false);
+    }
+  };
+  
+  // 템플릿 상세 정보 불러오기
+  const fetchTemplateDetails = async (templateId: number) => {
+    try {
+      setIsLoadingTemplates(true);
+      setTemplateError("");
+      
+      const response = await fetch(`/api/admin/templates/${templateId}`, {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch template details: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setSelectedTemplate(data.template || null);
+      setTemplateStructures(data.structures || []);
+    } catch (error) {
+      console.error("Error fetching template details:", error);
+      setTemplateError("템플릿 상세 정보를 불러오는 중 오류가 발생했습니다.");
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "템플릿 상세 정보를 불러오는 중 오류가 발생했습니다."
+      });
+    } finally {
+      setIsLoadingTemplates(false);
+    }
+  };
+  
+  // 템플릿 삭제
+  const handleDeleteTemplate = async (templateId: number) => {
+    if (!confirm(t('admin.confirmDeleteTemplate', '이 템플릿을 삭제하시겠습니까?'))) {
+      return;
+    }
+    
+    try {
+      setIsLoadingTemplates(true);
+      setTemplateError("");
+      
+      const response = await fetch(`/api/admin/templates/${templateId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to delete template: ${response.status}`);
+      }
+      
+      toast({
+        title: "성공",
+        description: "템플릿이 성공적으로 삭제되었습니다.",
+      });
+      
+      // 템플릿 목록 다시 불러오기
+      fetchTemplates();
+      
+      // 삭제한 템플릿이 현재 선택된 템플릿이라면 선택 해제
+      if (selectedTemplate && selectedTemplate.id === templateId) {
+        setSelectedTemplate(null);
+        setTemplateStructures([]);
+      }
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      setTemplateError("템플릿 삭제 중 오류가 발생했습니다.");
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "템플릿 삭제 중 오류가 발생했습니다.",
+      });
+    } finally {
+      setIsLoadingTemplates(false);
+    }
+  };
+  
+  // 파일 선택 핸들러
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setTemplateFile(event.target.files[0]);
+    }
+  };
+  
+  // 템플릿 업로드
+  const handleTemplateUpload = async () => {
+    if (!templateFile || !newTemplateName) {
+      setTemplateError("템플릿 이름과 파일은 필수입니다.");
+      return;
+    }
+    
+    try {
+      setIsUploading(true);
+      setTemplateError("");
+      
+      const formData = new FormData();
+      formData.append('template', templateFile);
+      formData.append('name', newTemplateName);
+      if (newTemplateDescription) {
+        formData.append('description', newTemplateDescription);
+      }
+      
+      const response = await fetch('/api/admin/templates', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Upload failed: ${response.status}`);
+      }
+      
+      // 성공 시 상태 초기화
+      setTemplateFile(null);
+      setNewTemplateName("");
+      setNewTemplateDescription("");
+      setShowAddTemplateDialog(false);
+      
+      toast({
+        title: "성공",
+        description: "템플릿이 성공적으로 업로드되었습니다.",
+      });
+      
+      // 템플릿 목록 새로고침
+      fetchTemplates();
+    } catch (error) {
+      console.error("Error uploading template:", error);
+      setTemplateError(error instanceof Error ? error.message : "템플릿 업로드 중 오류가 발생했습니다.");
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "템플릿 업로드 중 오류가 발생했습니다.",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  // templates 탭이 활성화될 때 자동으로 템플릿 목록 불러오기
+  useEffect(() => {
+    if (activeTab === "templates") {
+      fetchTemplates();
+    }
+  }, [activeTab]);
 
   // Handle API key save
   const handleSaveApiKey = () => {
@@ -151,151 +319,6 @@ export default function AdminConsole() {
       user.id === userId ? { ...user, role: newRole } : user
     ));
   };
-  
-  // 템플릿 목록 조회
-  const fetchTemplates = async () => {
-    setIsLoadingTemplates(true);
-    setTemplateError("");
-    
-    try {
-      const response = await fetch("/api/admin/templates");
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch templates: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setTemplates(data);
-    } catch (error) {
-      console.error("Error fetching templates:", error);
-      setTemplateError("템플릿 목록을 불러오는 중 오류가 발생했습니다.");
-    } finally {
-      setIsLoadingTemplates(false);
-    }
-  };
-  
-  // 템플릿 상세 정보 조회
-  const fetchTemplateDetails = async (templateId: number) => {
-    try {
-      const response = await fetch(`/api/admin/templates/${templateId}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch template details: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setSelectedTemplate(data.template);
-      setTemplateStructures(data.structures);
-    } catch (error) {
-      console.error("Error fetching template details:", error);
-      toast({
-        title: "오류",
-        description: "템플릿 상세 정보를 불러오는 중 오류가 발생했습니다.",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  // 템플릿 삭제 처리
-  const handleDeleteTemplate = async (templateId: number) => {
-    if (!confirm(t('admin.confirmDeleteTemplate', '이 템플릿을 삭제하시겠습니까?'))) {
-      return;
-    }
-    
-    try {
-      const response = await fetch(`/api/admin/templates/${templateId}`, {
-        method: "DELETE"
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to delete template: ${response.status}`);
-      }
-      
-      toast({
-        title: "성공",
-        description: "템플릿이 성공적으로 삭제되었습니다.",
-      });
-      
-      // 템플릿 목록 새로고침
-      fetchTemplates();
-      
-      // 선택된 템플릿이 삭제되었다면 선택 해제
-      if (selectedTemplate && selectedTemplate.id === templateId) {
-        setSelectedTemplate(null);
-        setTemplateStructures([]);
-      }
-    } catch (error) {
-      console.error("Error deleting template:", error);
-      toast({
-        title: "오류",
-        description: "템플릿 삭제 중 오류가 발생했습니다.",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  // 새 템플릿 업로드 처리
-  const handleTemplateUpload = async () => {
-    if (!templateFile || !newTemplateName) {
-      setTemplateError("템플릿 이름과 파일을 선택해주세요.");
-      return;
-    }
-    
-    setIsUploading(true);
-    setUploadProgress(0);
-    setTemplateError("");
-    
-    const formData = new FormData();
-    formData.append("name", newTemplateName);
-    formData.append("description", newTemplateDescription);
-    formData.append("file", templateFile);
-    
-    try {
-      const response = await fetch("/api/admin/templates", {
-        method: "POST",
-        body: formData
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to upload template: ${response.status}`);
-      }
-      
-      // 업로드 성공
-      toast({
-        title: "성공",
-        description: "템플릿이 성공적으로 업로드되었습니다.",
-      });
-      
-      // 상태 초기화
-      setNewTemplateName("");
-      setNewTemplateDescription("");
-      setTemplateFile(null);
-      setShowAddTemplateDialog(false);
-      
-      // 템플릿 목록 갱신
-      fetchTemplates();
-    } catch (error) {
-      console.error("Error uploading template:", error);
-      setTemplateError("템플릿 업로드 중 오류가 발생했습니다.");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-  
-  // 파일 선택 핸들러
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files && files.length > 0) {
-      setTemplateFile(files[0]);
-    }
-  };
-  
-  // 탭이 templates로 변경될 때 템플릿 목록 로드
-  useEffect(() => {
-    if (activeTab === "templates") {
-      fetchTemplates();
-    }
-  }, [activeTab]);
 
   // Show loading state
   if (isLoading) {
@@ -758,13 +781,6 @@ export default function AdminConsole() {
                     <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
                       {t('admin.noTemplatesDesc') || "Start by uploading your first document template to streamline your translation process"}
                     </p>
-                    <Button 
-                      onClick={() => setShowAddTemplateDialog(true)}
-                      className="flex items-center gap-2 mx-auto"
-                    >
-                      <Plus className="h-4 w-4" />
-                      {t('admin.uploadFirstTemplate') || "Upload First Template"}
-                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -875,45 +891,7 @@ export default function AdminConsole() {
                   </div>
                 )}
                 
-                <Separator />
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">
-                        {t('admin.applyTemplates') || "Apply Templates"}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {t('admin.applyTemplatesDesc') || "Apply templates to ongoing translation projects"}
-                      </p>
-                    </CardContent>
-                    <CardFooter>
-                      <Button variant="outline" className="w-full" onClick={() => navigate("/projects")}>
-                        {t('admin.goToProjects') || "Go to Projects"}
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">
-                        {t('admin.templateDocumentation') || "Documentation"}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {t('admin.templateDocumentationDesc') || "Learn how to create and apply document templates effectively"}
-                      </p>
-                    </CardContent>
-                    <CardFooter>
-                      <Button variant="outline" className="w-full" onClick={() => window.open("https://docs.lexitra.io/templates", "_blank")}>
-                        {t('admin.viewDocs') || "View Documentation"}
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
