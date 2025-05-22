@@ -532,18 +532,24 @@ export function SidePanel({
       };
 
       // selectedSegment를 완전히 새로운 객체로 복사
-      const updatedSegment = {
-        ...selectedSegment,
-        comment: newComment.text, // TranslationUnit에는 comment 필드만 있음 (comments 배열 없음)
-      };
+      // const updatedSegment = {
+      //   ...selectedSegment,
+      //   comment: newComment.text, // TranslationUnit에는 comment 필드만 있음 (comments 배열 없음)
+      // };
 
       // 상태 업데이트
       // selectedSegment 상태는 부모 컴포넌트에서 관리됨
 
       // 부모 컴포넌트에 변경 알림
-      if (onSegmentUpdated) {
-        onSegmentUpdated(updatedSegment.id, updatedSegment.target || "");
+      if (onSegmentUpdated && selectedSegment) {
+        onSegmentUpdated(selectedSegment.id, selectedSegment.target || "");
       }
+
+      // 성공 메시지 표시
+      toast({
+        title: t("sidePanel.comments.commentAdded"),
+        description: t("sidePanel.comments.commentAddedDesc"),
+      });
 
       // 입력란 초기화
       setCommentText("");
@@ -566,7 +572,7 @@ export function SidePanel({
     } finally {
       setIsAddingComment(false);
     }
-  }, [commentText, selectedSegment, onSegmentUpdated]);
+  }, [commentText, selectedSegment, onSegmentUpdated, t]);
 
   // Determine which TM matches to display
   const displayedTmMatches =
