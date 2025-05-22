@@ -44,7 +44,7 @@ async function analyzeHtmlStructure(html: string): Promise<DocxStructureElement[
   
   // 임시 DOM 생성을 위한 JSDOM 대신 간단한 파싱 방식 사용
   // 단락 검색
-  const paragraphs = html.match(/<p[^>]*>.*?<\/p>/gs) || [];
+  const paragraphs = html.match(/<p[^>]*>.*?<\/p>/g) || [];
   paragraphs.forEach((p, index) => {
     // 스타일 클래스 추출 (mammoth는 스타일을 클래스로 변환)
     const styleMatch = p.match(/class="([^"]+)"/);
@@ -59,14 +59,14 @@ async function analyzeHtmlStructure(html: string): Promise<DocxStructureElement[
   });
   
   // 테이블 검색
-  const tables = html.match(/<table[^>]*>.*?<\/table>/gs) || [];
+  const tables = html.match(/<table[^>]*>.*?<\/table>/g) || [];
   tables.forEach((table, tableIndex) => {
     // 행 검색
-    const rows = table.match(/<tr[^>]*>.*?<\/tr>/gs) || [];
+    const rows = table.match(/<tr[^>]*>.*?<\/tr>/g) || [];
     
     rows.forEach((row, rowIndex) => {
       // 셀 검색
-      const cells = row.match(/<t[dh][^>]*>.*?<\/t[dh]>/gs) || [];
+      const cells = row.match(/<t[dh][^>]*>.*?<\/t[dh]>/g) || [];
       
       cells.forEach((cell, cellIndex) => {
         structure.push({
