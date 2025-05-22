@@ -37,7 +37,11 @@
     "previous": "Previous",
     "page": "Page",
     "showing": "Showing",
-    "adding": "Adding..."
+    "adding": "Adding...",
+    "upload": "Upload",
+    "uploading": "Uploading...",
+    "pageInfo": "Page {current} of {total}",
+    "glossaries": "Glossaries"
   },
   "auth": {
     "login": "Login",
@@ -559,6 +563,14 @@
     "templateDocumentation": "Template Documentation",
     "templateDocumentationDesc": "Learn how to create and apply document templates effectively",
     "viewDocs": "View Documentation",
+    "templateName": "Template Name",
+    "templateNamePlaceholder": "Enter template name",
+    "templateDescription": "Template Description",
+    "templateDescriptionPlaceholder": "Enter template description",
+    "templateFile": "Template File",
+    "selectFile": "Select File",
+    "noTemplatesYet": "No Templates Yet",
+    "noTemplatesDesc": "Upload your first template to get started",
     "notImplementedYet": "This feature is not implemented yet",
     "roles": "Roles",
     "permissions": "Permissions",

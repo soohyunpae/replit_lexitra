@@ -40,7 +40,7 @@ const upload = multer({
 const router = express.Router();
 
 // 관리자 전용 템플릿 API 라우트
-router.get('/templates', isAuthenticated, async (req, res) => {
+router.get('/templates', async (req, res) => {
   try {
     const templates = await templateService.getTemplates();
     res.json({ templates });
@@ -50,7 +50,7 @@ router.get('/templates', isAuthenticated, async (req, res) => {
   }
 });
 
-router.get('/templates/:id', isAuthenticated, async (req, res) => {
+router.get('/templates/:id', async (req, res) => {
   try {
     const templateId = parseInt(req.params.id);
     if (isNaN(templateId)) {
@@ -69,7 +69,7 @@ router.get('/templates/:id', isAuthenticated, async (req, res) => {
   }
 });
 
-router.post('/templates', isAuthenticated, upload.single('template'), async (req, res) => {
+router.post('/templates', upload.single('template'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: '템플릿 파일이 제공되지 않았습니다.' });
@@ -130,7 +130,7 @@ router.put('/templates/:id/structures/:structureId', isAdmin, async (req, res) =
   }
 });
 
-router.delete('/templates/:id', isAuthenticated, async (req, res) => {
+router.delete('/templates/:id', async (req, res) => {
   try {
     const templateId = parseInt(req.params.id);
     if (isNaN(templateId)) {
