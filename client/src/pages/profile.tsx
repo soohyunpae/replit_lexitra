@@ -88,7 +88,7 @@ export default function ProfilePage() {
                     <h3 className="text-sm font-medium text-muted-foreground">
                       {t('profile.role')}
                     </h3>
-                    <p className="font-medium">{user.role}</p>
+                    <p className="font-medium">{t(`admin.${user.role}Role`)}</p>
                   </div>
                 </div>
               </CardContent>
