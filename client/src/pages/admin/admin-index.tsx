@@ -104,6 +104,7 @@ export default function AdminConsole() {
   const [newTemplateName, setNewTemplateName] = useState<string>("");
   const [newTemplateDescription, setNewTemplateDescription] = useState<string>("");
   const [templateFile, setTemplateFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showAddTemplateDialog, setShowAddTemplateDialog] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -235,12 +236,13 @@ export default function AdminConsole() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       setTemplateFile(event.target.files[0]);
+      setSelectedFile(event.target.files[0]);
     }
   };
   
   // 템플릿 업로드
   const handleTemplateUpload = async () => {
-    if (!templateFile || !newTemplateName) {
+    if (!selectedFile || !newTemplateName) {
       setTemplateError("템플릿 이름과 파일은 필수입니다.");
       return;
     }
@@ -250,7 +252,7 @@ export default function AdminConsole() {
       setTemplateError("");
       
       const formData = new FormData();
-      formData.append('template', templateFile);
+      formData.append('template', selectedFile);
       formData.append('name', newTemplateName);
       if (newTemplateDescription) {
         formData.append('description', newTemplateDescription);
@@ -269,6 +271,7 @@ export default function AdminConsole() {
       
       // 성공 시 상태 초기화
       setTemplateFile(null);
+      setSelectedFile(null);
       setNewTemplateName("");
       setNewTemplateDescription("");
       setShowAddTemplateDialog(false);
@@ -697,16 +700,19 @@ export default function AdminConsole() {
                               onClick={() => fileInputRef.current?.click()}
                             >
                               <Upload className="h-4 w-4" />
-                              {templateFile 
-                                ? templateFile.name 
+                              {selectedFile 
+                                ? selectedFile.name 
                                 : t('admin.selectFile') || "Select DOCX File"}
                             </Button>
-                            {templateFile && (
+                            {selectedFile && (
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setTemplateFile(null)}
+                                onClick={() => {
+                                  setTemplateFile(null);
+                                  setSelectedFile(null);
+                                }}
                               >
                                 <X className="h-4 w-4" />
                               </Button>
