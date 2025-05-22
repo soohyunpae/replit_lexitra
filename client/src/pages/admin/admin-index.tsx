@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import { useLocation, Link, Redirect } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/use-auth";
@@ -20,6 +20,10 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Settings,
   Key,
@@ -36,7 +40,37 @@ import {
   UserPlus,
   FileText,
   ExternalLink,
+  Upload,
+  Download,
+  Trash2,
+  Eye,
+  Plus,
+  X,
+  Check,
+  AlertCircle,
 } from "lucide-react";
+
+// Template 관련 타입 정의
+interface Template {
+  id: number;
+  name: string;
+  description: string;
+  docxFilePath: string;
+  useCount: number;
+  createdAt: string;
+  createdBy: number;
+}
+
+interface TemplateStructure {
+  id: number;
+  templateId: number;
+  segmentType: string;
+  tableIndex?: number;
+  rowIndex?: number;
+  cellIndex?: number;
+  styleName?: string;
+  isTranslationTarget: boolean;
+}
 
 export default function AdminConsole() {
   const { t } = useTranslation();
@@ -425,9 +459,8 @@ export default function AdminConsole() {
                   </div>
                   <Button 
                     className="flex items-center gap-2"
-                    onClick={() => alert(t('admin.notImplementedYet') || "This feature is not implemented yet")}
                   >
-                    <ExternalLink className="h-4 w-4" />
+                    <FileText className="h-4 w-4" />
                     {t('admin.manageTemplates') || "Manage Templates"}
                   </Button>
                 </div>
