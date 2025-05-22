@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, serial, integer, timestamp, boolean, jsonb } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { relations } from 'drizzle-orm';
 import { z } from 'zod';
@@ -194,6 +194,54 @@ export const insertGlossarySchema = createInsertSchema(glossary, {
 
 export type InsertGlossary = z.infer<typeof insertGlossarySchema>;
 export type Glossary = typeof glossary.$inferSelect;
+
+// Document Template model
+export const docTemplates = pgTable("doc_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  docxFilePath: text("docx_file_path").notNull(),
+  useCount: integer("use_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+});
+
+export const docTemplatesRelations = relations(docTemplates, ({ one, many }) => ({
+  creator: one(users, { fields: [docTemplates.createdBy], references: [users.id] }),
+  structures: many(templateStructures),
+}));
+
+export const insertDocTemplateSchema = createInsertSchema(docTemplates, {
+  name: (schema) => schema.min(3, "Template name must be at least 3 characters"),
+});
+
+export type InsertDocTemplate = z.infer<typeof insertDocTemplateSchema>;
+export type DocTemplate = typeof docTemplates.$inferSelect;
+
+// Template Structure model
+export const templateStructures = pgTable("template_structures", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").references(() => docTemplates.id).notNull(),
+  segmentType: text("segment_type").notNull(), // 'table', 'paragraph', 'heading'
+  tableIndex: integer("table_index"), // 테이블 기반 세그먼트인 경우 인덱스 
+  rowIndex: integer("row_index"), // 테이블 기반 세그먼트인 경우 행 인덱스
+  cellIndex: integer("cell_index"), // 테이블 기반 세그먼트인 경우 셀 인덱스
+  styleName: text("style_name"), // 'Heading 1', 'BodyText' 등 스타일 이름
+  isTranslationTarget: boolean("is_translation_target").notNull().default(true),
+  pathSelector: text("path_selector"), // DOCX 구조의 XPath 또는 선택자
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const templateStructuresRelations = relations(templateStructures, ({ one }) => ({
+  template: one(docTemplates, { fields: [templateStructures.templateId], references: [docTemplates.id] }),
+}));
+
+export const insertTemplateStructureSchema = createInsertSchema(templateStructures);
+
+export type InsertTemplateStructure = z.infer<typeof insertTemplateStructureSchema>;
+export type TemplateStructure = typeof templateStructures.$inferSelect;
 
 // Status Types Enum - For Translation Memory entries
 export const StatusTypes = z.enum(['MT', '100%', 'Fuzzy', 'Edited', 'Reviewed', 'Rejected']);
