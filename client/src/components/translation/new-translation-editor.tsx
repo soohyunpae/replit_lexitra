@@ -714,7 +714,7 @@ export function NewTranslationEditor({
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search in segments..."
+                placeholder={t("translation.searchInFile")}
                 className="pl-9"
                 onChange={(e) => {
                   const searchText = e.target.value.toLowerCase();
@@ -748,21 +748,23 @@ export function NewTranslationEditor({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("translation.allStatus")}</SelectItem>
-              <SelectItem value="MT">MT ({statusCounts["MT"] || 0})</SelectItem>
+              <SelectItem value="MT">
+                {t("projects.mt")} ({statusCounts["MT"] || 0})
+              </SelectItem>
               <SelectItem value="100%">
-                100% Match ({statusCounts["100%"] || 0})
+                {t("projects.match100")} ({statusCounts["100%"] || 0})
               </SelectItem>
               <SelectItem value="Fuzzy">
-                Fuzzy Match ({statusCounts["Fuzzy"] || 0})
+                {t("projects.fuzzyMatch")} ({statusCounts["Fuzzy"] || 0})
               </SelectItem>
               <SelectItem value="Edited">
-                Edited ({statusCounts["Edited"] || 0})
+                {t("projects.edited")} ({statusCounts["Edited"] || 0})
               </SelectItem>
               <SelectItem value="Reviewed">
-                Reviewed ({statusCounts["Reviewed"] || 0})
+                {t("projects.reviewed")} ({statusCounts["Reviewed"] || 0})
               </SelectItem>
               <SelectItem value="Rejected">
-                Rejected ({statusCounts["Rejected"] || 0})
+                {t("projects.rejected")} ({statusCounts["Rejected"] || 0})
               </SelectItem>
             </SelectContent>
           </Select>
@@ -778,9 +780,9 @@ export function NewTranslationEditor({
               <SelectValue placeholder={t("translation.bulkActions")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Edited">Edited</SelectItem>
-              <SelectItem value="Reviewed">Reviewed</SelectItem>
-              <SelectItem value="Rejected">Rejected</SelectItem>
+              <SelectItem value="Edited">{t("projects.edited")}</SelectItem>
+              <SelectItem value="Reviewed">{t("projects.reviewed")}</SelectItem>
+              <SelectItem value="Rejected">{t("projects.rejected")}</SelectItem>
             </SelectContent>
           </Select>
 

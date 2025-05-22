@@ -640,7 +640,7 @@ export function SidePanel({
             <div className="mb-4">
               <div className="relative">
                 <Input
-                  placeholder="Search translation memory..."
+                  placeholder={t("sidePanel.searchInTm")}
                   className="pr-10"
                   value={tmSearchQuery}
                   onChange={(e) => setTmSearchQuery(e.target.value)}
@@ -769,10 +769,8 @@ export function SidePanel({
         <TabsContent value="comments" className="flex-1 overflow-y-auto">
           <div className="p-4 pt-2">
             <div className="text-sm font-medium mb-2">
-              {t("sidePanel.commentsTitle")}
+              {t("sidePanel.comment")}
             </div>
-
-            {/* Removed Active Segment section as requested */}
 
             <div className="space-y-4">
               {/* 댓글 표시 */}
@@ -846,8 +844,6 @@ export function SidePanel({
             <div className="text-sm font-medium mb-2">
               {t("sidePanel.history.title")}
             </div>
-
-            {/* Removed Active Segment section as requested */}
 
             <div className="space-y-3">
               {selectedSegment ? (
@@ -925,7 +921,7 @@ export function SidePanel({
                 </>
               ) : (
                 <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center">
-                  Select a segment to view its revision history.
+                  {t("sidePanel.selectSegmentForHistory")}
                 </div>
               )}
             </div>

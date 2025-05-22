@@ -254,6 +254,7 @@
     "next": "Next Segment",
     "segment": "Segment",
     "searchInProject": "Search in Project",
+    "searchInFile": "Search in file...",
     "findAndReplace": "Find and Replace",
     "allStatus": "All Status",
     "bulkActions": "Bulk Actions",
@@ -365,6 +366,7 @@
     "searchTermsPlaceholder": "Search glossary terms..."
   },
   "sidePanel": {
+    "searchInTm": "Search in TMs...",
     "useTranslation": "Use Translation",
     "useTerm": "Use Term",
     "applying": "Applying...",
