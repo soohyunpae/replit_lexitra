@@ -111,7 +111,9 @@ export default function AdminConsole() {
   const [defaultTargetLang, setDefaultTargetLang] = useState<string>("EN");
 
   // User management states
-  const [users, setUsers] = useState<Array<{id: number, username: string, role: string}>>([]);
+  const [users, setUsers] = useState<
+    Array<{ id: number; username: string; role: string }>
+  >([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [hasUserChanges, setHasUserChanges] = useState(false);
   const [roleChanges, setRoleChanges] = useState<Record<number, string>>({});
@@ -120,66 +122,74 @@ export default function AdminConsole() {
   const fetchUsers = async () => {
     try {
       setIsLoadingUsers(true);
-      
+
       // API 호출 방식으로 변경
       // apiRequest 함수를 이용하면 인증 토큰이 자동으로 헤더에 포함됨
       // queryClient의 apiRequest 함수 활용
-      import("@/lib/queryClient").then(async ({ apiRequest }) => {
-        try {
-          const response = await apiRequest("GET", "/api/admin/users");
-          const data = await response.json();
-          
-          if (data && data.users) {
-            setUsers(data.users);
-            console.log("API를 통해 사용자 데이터를 가져왔습니다:", data.users);
-          } else {
-            // 데이터가 없는 경우, 이전에 SQL에서 확인한 실제 사용자 목록으로 대체
-            console.warn("API에서 사용자 데이터를 받지 못했습니다. 기본 데이터를 사용합니다.");
+      import("@/lib/queryClient")
+        .then(async ({ apiRequest }) => {
+          try {
+            const response = await apiRequest("GET", "/api/admin/users");
+            const data = await response.json();
+
+            if (data && data.users) {
+              setUsers(data.users);
+              console.log(
+                "API를 통해 사용자 데이터를 가져왔습니다:",
+                data.users,
+              );
+            } else {
+              // 데이터가 없는 경우, 이전에 SQL에서 확인한 실제 사용자 목록으로 대체
+              console.warn(
+                "API에서 사용자 데이터를 받지 못했습니다. 기본 데이터를 사용합니다.",
+              );
+              setUsers([
+                { id: 1, username: "demo", role: "user" },
+                { id: 2, username: "soohyun", role: "user" },
+                { id: 3, username: "admin", role: "admin" },
+                { id: 4, username: "test", role: "user" },
+                { id: 7, username: "testuser", role: "user" },
+              ]);
+            }
+          } catch (apiError) {
+            console.error("API 호출 오류:", apiError);
+            // 대체 데이터 설정
             setUsers([
               { id: 1, username: "demo", role: "user" },
               { id: 2, username: "soohyun", role: "user" },
               { id: 3, username: "admin", role: "admin" },
               { id: 4, username: "test", role: "user" },
-              { id: 7, username: "testuser", role: "user" }
+              { id: 7, username: "testuser", role: "user" },
             ]);
           }
-        } catch (apiError) {
-          console.error('API 호출 오류:', apiError);
+        })
+        .catch((importError) => {
+          console.error("모듈 임포트 오류:", importError);
           // 대체 데이터 설정
           setUsers([
             { id: 1, username: "demo", role: "user" },
             { id: 2, username: "soohyun", role: "user" },
             { id: 3, username: "admin", role: "admin" },
             { id: 4, username: "test", role: "user" },
-            { id: 7, username: "testuser", role: "user" }
+            { id: 7, username: "testuser", role: "user" },
           ]);
-        }
-      }).catch(importError => {
-        console.error('모듈 임포트 오류:', importError);
-        // 대체 데이터 설정
-        setUsers([
-          { id: 1, username: "demo", role: "user" },
-          { id: 2, username: "soohyun", role: "user" },
-          { id: 3, username: "admin", role: "admin" },
-          { id: 4, username: "test", role: "user" },
-          { id: 7, username: "testuser", role: "user" }
-        ]);
-      }).finally(() => {
-        setIsLoadingUsers(false);
-      });
+        })
+        .finally(() => {
+          setIsLoadingUsers(false);
+        });
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error("Error fetching users:", error);
       toast({
         variant: "destructive",
         title: t("common.error"),
-        description: t("admin.userManagement.fetchError")
+        description: t("admin.userManagement.fetchError"),
       });
       setIsLoadingUsers(false);
     }
   };
 
   useEffect(() => {
-    if (activeTab === 'user-management') {
+    if (activeTab === "user-management") {
       fetchUsers();
     }
   }, [activeTab]);
@@ -218,7 +228,7 @@ export default function AdminConsole() {
     } else if (value === "language") {
       setActiveTabLabel(t("admin.languageSettings"));
     } else if (value === "user-management") {
-      setActiveTabLabel(t("admin.userManagement"));
+      setActiveTabLabel(t("admin.userManagement.title"));
     } else if (value === "templates") {
       setActiveTabLabel(t("admin.templates.title"));
     }
@@ -421,9 +431,9 @@ export default function AdminConsole() {
 
   // Handle role change
   const handleRoleChange = (userId: number, newRole: string) => {
-    setRoleChanges(prev => ({
+    setRoleChanges((prev) => ({
       ...prev,
-      [userId]: newRole
+      [userId]: newRole,
     }));
     setHasUserChanges(true);
   };
@@ -432,86 +442,101 @@ export default function AdminConsole() {
   const handleSaveUserChanges = async () => {
     try {
       // API를 통해 실제 역할 변경 시도
-      import("@/lib/queryClient").then(async ({ apiRequest }) => {
-        try {
-          // 서버에 역할 변경 요청 전송
-          await apiRequest("PUT", "/api/admin/users/roles", { changes: roleChanges });
-          
-          // 변경 성공 시 UI 업데이트
-          setUsers(prevUsers => prevUsers.map(user => {
-            if (roleChanges[user.id]) {
-              return { ...user, role: roleChanges[user.id] };
-            }
-            return user;
-          }));
-          
-          // 성공 메시지 표시
+      import("@/lib/queryClient")
+        .then(async ({ apiRequest }) => {
+          try {
+            // 서버에 역할 변경 요청 전송
+            await apiRequest("PUT", "/api/admin/users/roles", {
+              changes: roleChanges,
+            });
+
+            // 변경 성공 시 UI 업데이트
+            setUsers((prevUsers) =>
+              prevUsers.map((user) => {
+                if (roleChanges[user.id]) {
+                  return { ...user, role: roleChanges[user.id] };
+                }
+                return user;
+              }),
+            );
+
+            // 성공 메시지 표시
+            toast({
+              title: t("common.success"),
+              description: t("admin.userManagement.roleUpdateSuccess"),
+            });
+
+            console.log(
+              "API를 통해 사용자 권한이 성공적으로 업데이트되었습니다:",
+              roleChanges,
+            );
+
+            // 변경 추적 상태 초기화
+            setRoleChanges({});
+            setHasUserChanges(false);
+          } catch (apiError) {
+            console.error("API 호출 오류:", apiError);
+
+            // API 오류 시에도 UI 업데이트 (데모 목적)
+            setUsers((prevUsers) =>
+              prevUsers.map((user) => {
+                if (roleChanges[user.id]) {
+                  return { ...user, role: roleChanges[user.id] };
+                }
+                return user;
+              }),
+            );
+
+            // 성공 메시지 표시 (데모 목적)
+            toast({
+              title: t("common.success"),
+              description: t("admin.userManagement.roleUpdateSuccess"),
+            });
+
+            // 변경 추적 상태 초기화
+            setRoleChanges({});
+            setHasUserChanges(false);
+          }
+        })
+        .catch((importError) => {
+          console.error("모듈 임포트 오류:", importError);
+
+          // 오류 시에도 UI 업데이트 (데모 목적)
+          setUsers((prevUsers) =>
+            prevUsers.map((user) => {
+              if (roleChanges[user.id]) {
+                return { ...user, role: roleChanges[user.id] };
+              }
+              return user;
+            }),
+          );
+
           toast({
             title: t("common.success"),
-            description: t("admin.userManagement.roleUpdateSuccess")
+            description: t("admin.userManagement.roleUpdateSuccess"),
           });
-          
-          console.log("API를 통해 사용자 권한이 성공적으로 업데이트되었습니다:", roleChanges);
-          
-          // 변경 추적 상태 초기화
+
           setRoleChanges({});
           setHasUserChanges(false);
-        } catch (apiError) {
-          console.error('API 호출 오류:', apiError);
-          
-          // API 오류 시에도 UI 업데이트 (데모 목적)
-          setUsers(prevUsers => prevUsers.map(user => {
-            if (roleChanges[user.id]) {
-              return { ...user, role: roleChanges[user.id] };
-            }
-            return user;
-          }));
-          
-          // 성공 메시지 표시 (데모 목적)
-          toast({
-            title: t("common.success"),
-            description: t("admin.userManagement.roleUpdateSuccess")
-          });
-          
-          // 변경 추적 상태 초기화
-          setRoleChanges({});
-          setHasUserChanges(false);
-        }
-      }).catch(importError => {
-        console.error('모듈 임포트 오류:', importError);
-        
-        // 오류 시에도 UI 업데이트 (데모 목적)
-        setUsers(prevUsers => prevUsers.map(user => {
+        });
+    } catch (error) {
+      console.error("Error updating user roles:", error);
+
+      // 일반 오류 시에도 UI 업데이트 (데모 목적)
+      setUsers((prevUsers) =>
+        prevUsers.map((user) => {
           if (roleChanges[user.id]) {
             return { ...user, role: roleChanges[user.id] };
           }
           return user;
-        }));
-        
-        toast({
-          title: t("common.success"),
-          description: t("admin.userManagement.roleUpdateSuccess")
-        });
-        
-        setRoleChanges({});
-        setHasUserChanges(false);
-      });
-    } catch (error) {
-      console.error('Error updating user roles:', error);
-      
-      // 일반 오류 시에도 UI 업데이트 (데모 목적)
-      setUsers(prevUsers => prevUsers.map(user => {
-        if (roleChanges[user.id]) {
-          return { ...user, role: roleChanges[user.id] };
-        }
-        return user;
-      }));
-      
+        }),
+      );
+
       toast({
         title: t("common.success"),
-        description: t("admin.userManagement.roleUpdateSuccess")
+        description: t("admin.userManagement.roleUpdateSuccess"),
       });
-      
+
       setRoleChanges({});
       setHasUserChanges(false);
     }
@@ -586,7 +611,7 @@ export default function AdminConsole() {
               className="flex items-center gap-2"
             >
               <Users className="h-4 w-4" />
-              <span>{t("admin.userManagement")}</span>
+              <span>{t("admin.userManagement.title")}</span>
             </TabsTrigger>
             <TabsTrigger value="templates" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -744,7 +769,7 @@ export default function AdminConsole() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <UserCog className="h-5 w-5 mr-2" />
-                  {t("admin.userManagement")}
+                  {t("admin.userManagement.title")}
                 </CardTitle>
                 <CardDescription>
                   {t("admin.userManagementDesc")}
@@ -825,7 +850,8 @@ export default function AdminConsole() {
                       <strong>{t("admin.administratorRole")}:</strong>{" "}
                       {t("admin.administratorDesc")}
                       <br />
-                      <strong>{t("admin.userRole")}:</strong> {t("admin.userDesc")}
+                      <strong>{t("admin.userRole")}:</strong>{" "}
+                      {t("admin.userDesc")}
                     </p>
                   </>
                 )}

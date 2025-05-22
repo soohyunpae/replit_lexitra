@@ -80,7 +80,12 @@
     "openGlossary": "Open Glossary",
     "translationMemory": "Translation Memory",
     "tmDescription": "Review and update saved translations across projects.",
-    "viewTM": "View TM"
+    "viewTM": "View TM",
+    "system": "System",
+    "activity": {
+      "completed": "{{project}} has been completed",
+      "updated": "{{project}} has been updated"
+    }
   },
   "projects": {
     "title": "Projects",
@@ -542,9 +547,9 @@
     "createUser": "Create User",
     "editUser": "Edit User",
     "deleteUser": "Delete User",
-    "userManagement": "User Management",
     "userManagementDesc": "Manage user roles and permissions",
     "userManagement": {
+      "title": "User Management",
       "fetchError": "Failed to fetch users list",
       "roleUpdateSuccess": "User roles updated successfully",
       "roleUpdateError": "Failed to update user roles"
@@ -553,7 +558,7 @@
     "role": "Role",
     "actions": "Actions",
     "administratorRole": "Administrator",
-    "administratorDesc": "Full access to all features and settings",
+    "administratorDesc": "Can manage all settings, users, TMs, and glossaries.",
     "userRole": "User",
     "userDesc": "Can translate projects and use basic features",
     "selectRole": "Select role",
@@ -593,9 +598,6 @@
     "languageSettings": "Language Settings",
     "defaultSourceLanguage": "Default Source Language",
     "defaultTargetLanguage": "Default Target Language",
-    "username": "Username",
-    "role": "Role",
-    "actions": "Actions",
     "copy": "Copy",
     "copied": "Copied!",
     "apiKeyWarning": "Copy this key now. You won't be able to see it again!",
@@ -610,12 +612,7 @@
     "hide": "Hide",
     "show": "Show",
     "defaultLanguages": "Default Languages",
-    "userManagementDesc": "Manage user roles and permissions.",
     "addUser": "Add User",
-    "administratorRole": "Administrator",
-    "administratorDesc": "Can manage all settings, users, TMs, and glossaries.",
-    "userRole": "User",
-    "selectRole": "Select role",
     "settingsAffectAll": "These settings affect the entire application and all users",
     "selectTargetLanguage": "Select target language",
     "failedToConvert": "Failed to convert file",
@@ -631,7 +628,6 @@
     "apiKeySaved": "API key saved successfully!",
     "languagePreferencesSaved": "Language preferences saved successfully!",
     "manageUserAccess": "Manage user access to the system.",
-    "userDesc": "Has access to translation tasks and assigned projects.",
     "userFunctionalityNotImplemented": "Add user functionality not implemented yet",
     "templates": {
       "title": "Templates",

@@ -78,7 +78,12 @@
     "openGlossary": "용어집 열기",
     "translationMemory": "번역 메모리",
     "tmDescription": "프로젝트 간 저장된 번역을 검토하고 업데이트합니다.",
-    "viewTM": "TM 보기"
+    "viewTM": "TM 보기",
+    "system": "시스템",
+    "activity": {
+      "completed": "{{project}} 프로젝트가 완료되었습니다",
+      "updated": "{{project}} 프로젝트가 업데이트되었습니다"
+    }
   },
   "projects": {
     "title": "프로젝트",
@@ -168,7 +173,7 @@
     "confirmComplete": "완료 확인",
     "completeDescription": "이 프로젝트를 완료로 표시하시겠습니까? 완료된 프로젝트는 더 이상 편집할 수 없습니다.",
     "confirmReopen": "재개 확인",
-    "reopenDescription": "이 완료된 \"프로젝트를 재개하고 상태를 진행 중으로 변경하시겠습니까?",
+    "reopenDescription": "이 완료된 \"프로젝트를 재개하고 상태m�� 진행 중으로 변경하시겠습니까?",
     "translationSummary": "번역 상태 요약",
     "words": "단어",
     "reviewedRate": "검토한 세그먼트",
@@ -387,7 +392,6 @@
     "createUser": "사용자 생성",
     "editUser": "사용자 편집",
     "deleteUser": "사용자 삭제",
-    "userManagement": "사용자 관리",
     "projectManagement": "프로젝트 관리",
     "systemSettings": "시스템 설정",
     "roles": "역할",
@@ -439,6 +443,12 @@
     "noPermission": "관리자 대시보드에 접근할 권한이 없습니다.",
     "goToHome": "홈으로 이동",
     "userManagementDesc": "사용자 계정과 권한을 관리합니다.",
+    "userManagement": {
+      "title": "사용자 관리",
+      "fetchError": "사용자 목록을 불러오는 중 오류가 발생했습니다.",
+      "roleUpdateSuccess": "사용자 역할이 성공적으로 업데이트되었습니다.",
+      "roleUpdateError": "사용자 역할 업데이트에 실패했습니다."
+    },
     "addUser": "사용자 추가",
     "manageUserAccess": "시스템에 대한 사용자 접근 권한을 관리합니다.",
     "username": "사용자 이름",
@@ -460,10 +470,10 @@
       "templatesExplanation": "템플릿은 반복되는 레이아웃을 가진 문서의 번역 과정을 간소화하는 데 도움이 됩니다.",
       "manageTemplates": "템플릿 관리",
       "uploadTemplates": "템플릿 업로드",
-      "uploadTemplatesDesc": "DOCX 템플릿을 업로드하고 번역할 요소를 정의합니다.",
+      "uploadTemplatesDesc": "DOCX 템플릿u�� 업로드하고 번역할 요소를 정의합니다.",
       "goToTemplates": "템플릿으로 이동",
       "applyTemplates": "템플릿 적용",
-      "applyTemplatesDesc": "진행 중인 번역 프로젝트에 템플릿을 적용합니다.",
+      "applyTemplatesDesc": "진행 중인 번��� 프로젝트에 템플릿을 적용합니다.",
       "goToProjects": "프로젝트로 이동",
       "templateDocumentation": "템플릿 문서",
       "templateDocumentationDesc": "문서 템플릿을 효과적으로 생성하고 적용하는 방법을 학습합니다.",
@@ -628,8 +638,6 @@
     "username": "사용자 이름",
     "email": "이메일",
     "role": "역할",
-    "adminRole": "관리자",
-    "userRole": "사용자",
     "updateProfile": "프로필 업데이트",
     "changePassword": "비밀번호 변경",
     "currentPassword": "현재 비밀번호",

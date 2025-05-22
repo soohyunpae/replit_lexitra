@@ -96,14 +96,20 @@ export default function Dashboard() {
       .filter((p) => p.updatedAt)
       .map((project) => {
         // 프로젝트 담당자 이름 설정
-        let username = "시스템";
+        let username = t("dashboard.system");
         if (project.status === "Claimed" && project.claimer) {
           username = project.claimer.username;
         }
 
+        // 상태별 번역 키 결정
+        const statusKey =
+          project.status === "Completed"
+            ? "dashboard.activity.completed"
+            : "dashboard.activity.updated";
+
         return {
           user: username,
-          action: `${project.name} 프로젝트 ${project.status === "Completed" ? "완료" : "업데이트"}`,
+          action: t(statusKey, { project: project.name }),
           date: new Date(project.updatedAt),
           projectId: project.id,
         };
