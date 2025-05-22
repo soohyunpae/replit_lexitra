@@ -185,7 +185,7 @@
     "reviewedRate": "Reviewed Segments",
     "match100": "100% Match",
     "fuzzyMatch": "Fuzzy Match",
-    "mt": "Machine",
+    "mt": "MT",
     "edited": "Edited",
     "rejected": "Rejected",
     "statusBreakdown": "Status Breakdown",
@@ -281,6 +281,7 @@
     "autoTranslationComplete": "Auto-translation complete",
     "translationsApplied": "Applied translations to {{count}} segments",
     "toggleStatus": "Click to toggle status ({{status}})",
+    "hasComments": "Comments",
     "statusReviewed": "Reviewed",
     "statusEdited": "Edited",
     "docReview": {

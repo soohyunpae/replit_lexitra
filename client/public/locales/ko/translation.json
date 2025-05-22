@@ -275,6 +275,7 @@
     "autoTranslationComplete": "자동 번역 완료",
     "translationsApplied": "{{count}}개의 세그먼트에 번역이 적용되었습니다.",
     "toggleStatus": "클릭하여 상태 전환 ({{status}})",
+    "hasComments": "메모 있음",
     "statusReviewed": "검토됨",
     "statusEdited": "편집됨",
     "docReview": {

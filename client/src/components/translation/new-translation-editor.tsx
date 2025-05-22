@@ -123,7 +123,7 @@ export function NewTranslationEditor({
     const filtered = segments.filter((segment) => {
       // 일반 상태 필터 처리 (MT, 100%, Fuzzy 등) 및 댓글 필터링
       let statusMatch = true;
-      
+
       if (statusFilter === "hasComment") {
         // 댓글 있음 필터링
         statusMatch = !!segment.comment && segment.comment.trim() !== "";
@@ -131,10 +131,10 @@ export function NewTranslationEditor({
         // 일반 상태 필터링
         statusMatch = statusFilter === "all" || segment.status === statusFilter;
       }
-      
+
       const originMatch =
         originFilter === "all" || segment.origin === originFilter;
-      
+
       return statusMatch && originMatch;
     });
 
@@ -776,8 +776,9 @@ export function NewTranslationEditor({
               <SelectItem value="Rejected">
                 {t("projects.rejected")} ({statusCounts["Rejected"] || 0})
               </SelectItem>
-              <Separator className="my-1" />
-              <SelectItem value="hasComment">댓글 있음</SelectItem>
+              <SelectItem value="hasComment">
+                댓글 있음 ({segments?.filter(s => !!s.comment && s.comment.trim() !== "").length || 0})
+              </SelectItem>
             </SelectContent>
           </Select>
 
