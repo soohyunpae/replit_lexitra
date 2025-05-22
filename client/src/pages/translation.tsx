@@ -506,7 +506,7 @@ export default function Translation() {
               <div className="text-xs font-medium text-muted-foreground whitespace-nowrap">
                 {file?.segments?.filter((s) => s.status === "Reviewed")
                   .length || 0}
-                /{file?.segments?.length || 0} {t("projects.segments")}
+                /{file?.segments?.length || 0} {t("translation.statusReviewed")}
               </div>
             </div>
           </div>

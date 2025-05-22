@@ -1014,9 +1014,7 @@ export default function Project() {
                       {t("projects.numberOfFiles")}:
                     </div>
                     <div className="font-medium">
-                      <span>
-                        {workFiles?.length || 0} {t("projects.fileCount")}
-                      </span>
+                      <span>{workFiles?.length || 0}</span>
                     </div>
                   </div>
                 </div>
@@ -1119,7 +1117,7 @@ export default function Project() {
 
                     <div className="grid grid-cols-2 gap-2 mt-4">
                       <div className="text-muted-foreground">
-                        {t("projects.tmMatchBreakdown")}:
+                        {t("projects.statusBreakdown")}:
                       </div>
                       <div>
                         <div className="flex items-center gap-1 mb-1">
@@ -1172,8 +1170,9 @@ export default function Project() {
                         {t("projects.glossaryUsage")}:
                       </div>
                       <div className="font-medium">
-                        {projectStats.glossaryMatchCount}{" "}
-                        {t("projects.termMatches")}
+                        {t("projects.termMatches", {
+                          count: projectStats.glossaryMatchCount,
+                        })}
                       </div>
                     </div>
                   </>

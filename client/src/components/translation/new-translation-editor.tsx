@@ -69,7 +69,7 @@ export function NewTranslationEditor({
     segments = [],
     isLoading,
     isError,
-    updateSegment: updateSegmentFromHook
+    updateSegment: updateSegmentFromHook,
   } = useSegments(fileId);
 
   // Segment mutation 훅 사용
@@ -118,14 +118,16 @@ export function NewTranslationEditor({
   useEffect(() => {
     if (!segments) return;
 
-    const filtered = segments.filter(segment => {
-      const statusMatch = statusFilter === "all" || segment.status === statusFilter;
-      const originMatch = originFilter === "all" || segment.origin === originFilter;
+    const filtered = segments.filter((segment) => {
+      const statusMatch =
+        statusFilter === "all" || segment.status === statusFilter;
+      const originMatch =
+        originFilter === "all" || segment.origin === originFilter;
       return statusMatch && originMatch;
     });
 
     // 이전 필터링된 세그먼트와 비교하여 변경이 있을 때만 상태 업데이트
-    setFilteredSegments(prevFiltered => {
+    setFilteredSegments((prevFiltered) => {
       if (JSON.stringify(prevFiltered) === JSON.stringify(filtered)) {
         return prevFiltered;
       }
@@ -317,10 +319,15 @@ export function NewTranslationEditor({
       if (!currentSegment) return;
 
       const wasModified = currentSegment.target !== target;
-      const updatedStatus = status || (wasModified ? "Edited" : currentSegment.status);
-      const updatedOrigin = origin || 
-        (wasModified && (currentSegment.origin === "MT" || currentSegment.origin === "100%" || currentSegment.origin === "Fuzzy") 
-          ? "HT" 
+      const updatedStatus =
+        status || (wasModified ? "Edited" : currentSegment.status);
+      const updatedOrigin =
+        origin ||
+        (wasModified &&
+        (currentSegment.origin === "MT" ||
+          currentSegment.origin === "100%" ||
+          currentSegment.origin === "Fuzzy")
+          ? "HT"
           : currentSegment.origin);
 
       // React Query mutation 직접 사용
@@ -335,7 +342,11 @@ export function NewTranslationEditor({
         {
           onSuccess: () => {
             // 히스토리 트래킹
-            if (selectedSegmentId === id && currentSegment.target && currentSegment.target !== target) {
+            if (
+              selectedSegmentId === id &&
+              currentSegment.target &&
+              currentSegment.target !== target
+            ) {
               if (!previousVersions[id]) {
                 setPreviousVersions((prev) => ({
                   ...prev,
@@ -352,7 +363,7 @@ export function NewTranslationEditor({
               variant: "destructive",
             });
           },
-        }
+        },
       );
     } catch (error) {
       console.error("Error updating segment:", error);
@@ -652,7 +663,9 @@ export function NewTranslationEditor({
   );
 
   // Helper function to count segment statuses
-  const countSegmentStatuses = (segments: TranslationUnit[]): Record<string, number> => {
+  const countSegmentStatuses = (
+    segments: TranslationUnit[],
+  ): Record<string, number> => {
     const counts: Record<string, number> = {};
     segments.forEach((segment) => {
       const status = segment.status || "MT";
@@ -709,10 +722,16 @@ export function NewTranslationEditor({
                     const segment = segments[i];
                     if (
                       segment.source.toLowerCase().includes(searchText) ||
-                      (segment.target && segment.target.toLowerCase().includes(searchText))
+                      (segment.target &&
+                        segment.target.toLowerCase().includes(searchText))
                     ) {
-                      const element = document.getElementById(`segment-${segment.id}`);
-                      element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      const element = document.getElementById(
+                        `segment-${segment.id}`,
+                      );
+                      element?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                      });
                       break;
                     }
                   }
@@ -723,13 +742,11 @@ export function NewTranslationEditor({
 
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="h-7 w-[90px] text-xs">
-              <SelectValue placeholder="Filter by" />
+              <SelectValue placeholder={t("translation.allStatus")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Filter by</SelectItem>
-              <SelectItem value="MT">
-                MT ({statusCounts["MT"] || 0})
-              </SelectItem>
+              <SelectItem value="all">{t("translation.allStatus")}</SelectItem>
+              <SelectItem value="MT">MT ({statusCounts["MT"] || 0})</SelectItem>
               <SelectItem value="100%">
                 100% Match ({statusCounts["100%"] || 0})
               </SelectItem>
@@ -756,12 +773,9 @@ export function NewTranslationEditor({
             }}
           >
             <SelectTrigger className="h-7 w-[90px] text-xs">
-              <SelectValue placeholder="Set as..." />
+              <SelectValue placeholder={t("translation.bulkActions")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="MT">MT</SelectItem>
-              <SelectItem value="100%">100% Match</SelectItem>
-              <SelectItem value="Fuzzy">Fuzzy Match</SelectItem>
               <SelectItem value="Edited">Edited</SelectItem>
               <SelectItem value="Reviewed">Reviewed</SelectItem>
               <SelectItem value="Rejected">Rejected</SelectItem>
@@ -885,16 +899,20 @@ export function NewTranslationEditor({
                                 segment.id,
                                 target || "",
                                 status,
-                                origin
+                                origin,
                               );
                             }
                           } catch (err) {
                             console.error("Error in onUpdate callback:", err);
                           }
                         }}
-                        onTranslateWithGPT={() => handleTranslateWithGPT(segment.id)}
+                        onTranslateWithGPT={() =>
+                          handleTranslateWithGPT(segment.id)
+                        }
                         isChecked={!!checkedSegments[segment.id]}
-                        onCheckChange={(checked) => handleCheckboxChange(segment.id, checked)}
+                        onCheckChange={(checked) =>
+                          handleCheckboxChange(segment.id, checked)
+                        }
                         segmentId={`segment-${segment.id}`}
                       />
                     </div>
@@ -997,23 +1015,28 @@ export function NewTranslationEditor({
         {showSidePanel && (
           <div className="flex flex-col h-full sticky top-[56px] h-fit">
             <SidePanel
-            tmMatches={tmMatches}
-            glossaryTerms={glossaryTerms}
-            selectedSegment={selectedSegment}
-            sourceLanguage={sourceLanguage}
-            targetLanguage={targetLanguage}
-            previousVersions={previousVersions}
-            onUseTranslation={(translation: string) => {
-              if (selectedSegmentId) {
-                handleSegmentUpdate(selectedSegmentId, translation, "MT", "MT");
-              }
-            }}
-            onSegmentUpdated={(id: number, newTarget: string) => {
-              // This callback is triggered when a segment is updated
-              // We're using a different approach with previousVersions state instead
-              console.log("Segment updated with new target", id, newTarget);
-            }}
-          />
+              tmMatches={tmMatches}
+              glossaryTerms={glossaryTerms}
+              selectedSegment={selectedSegment}
+              sourceLanguage={sourceLanguage}
+              targetLanguage={targetLanguage}
+              previousVersions={previousVersions}
+              onUseTranslation={(translation: string) => {
+                if (selectedSegmentId) {
+                  handleSegmentUpdate(
+                    selectedSegmentId,
+                    translation,
+                    "MT",
+                    "MT",
+                  );
+                }
+              }}
+              onSegmentUpdated={(id: number, newTarget: string) => {
+                // This callback is triggered when a segment is updated
+                // We're using a different approach with previousVersions state instead
+                console.log("Segment updated with new target", id, newTarget);
+              }}
+            />
           </div>
         )}
       </div>
