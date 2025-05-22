@@ -421,8 +421,10 @@ export function SidePanel({
 
   // Function to search TM globally
   const searchGlobalTM = async (query: string) => {
+    // If query is empty, show original TM matches
     if (!query.trim()) {
-      setGlobalTmResults([]);
+      setGlobalTmResults(tmMatches);
+      setIsSearching(false);
       return;
     }
 
@@ -436,10 +438,19 @@ export function SidePanel({
         fuzzy: true,
       });
 
+      if (!response.ok) {
+        throw new Error(`Search failed: ${response.status}`);
+      }
+
       const data = await response.json();
       setGlobalTmResults(data);
     } catch (error) {
       console.error("Error searching TM globally:", error);
+      toast({
+        title: t("common.error"),
+        description: t("sidePanel.tm.searchError"),
+        variant: "destructive",
+      });
       setGlobalTmResults([]);
     } finally {
       setIsSearching(false);
@@ -448,14 +459,15 @@ export function SidePanel({
 
   // Function to search glossary globally
   const searchGlobalGlossary = async (query: string) => {
+    // If query is empty, show original glossary terms
     if (!query.trim()) {
-      setGlobalGlossaryResults([]);
+      setGlobalGlossaryResults(glossaryTerms);
+      setIsSearching(false);
       return;
     }
 
     setIsSearching(true);
     try {
-      // Use the dedicated API function instead of making the request directly
       const results = await searchGlossaryTerms(
         query,
         sourceLanguage,
@@ -464,6 +476,11 @@ export function SidePanel({
       setGlobalGlossaryResults(results);
     } catch (error) {
       console.error("Error searching glossary globally:", error);
+      toast({
+        title: t("common.error"),
+        description: t("sidePanel.glossary.searchError"),
+        variant: "destructive",
+      });
       setGlobalGlossaryResults([]);
     } finally {
       setIsSearching(false);
@@ -473,7 +490,7 @@ export function SidePanel({
   // Debounced global search when query changes
   useEffect(() => {
     const delaySearch = setTimeout(() => {
-      if (activeTab === "tm" && tmSearchQuery.length >= 2) {
+      if (activeTab === "tm") {
         searchGlobalTM(tmSearchQuery);
       }
     }, 500);
@@ -484,7 +501,7 @@ export function SidePanel({
   // Debounced global glossary search
   useEffect(() => {
     const delaySearch = setTimeout(() => {
-      if (activeTab === "tb" && tbSearchQuery.length >= 2) {
+      if (activeTab === "tb") {
         searchGlobalGlossary(tbSearchQuery);
       }
     }, 500);
@@ -492,11 +509,16 @@ export function SidePanel({
     return () => clearTimeout(delaySearch);
   }, [tbSearchQuery, activeTab, sourceLanguage, targetLanguage]);
 
-  // Clear search results when switching tabs
+  // Reset search results when switching tabs
   useEffect(() => {
-    setGlobalTmResults([]);
-    setGlobalGlossaryResults([]);
-  }, [activeTab]);
+    if (activeTab === "tm") {
+      setGlobalTmResults(tmMatches);
+      setTmSearchQuery("");
+    } else if (activeTab === "tb") {
+      setGlobalGlossaryResults(glossaryTerms);
+      setTbSearchQuery("");
+    }
+  }, [activeTab, tmMatches, glossaryTerms]);
 
   // Initialize local previous versions state from props
   useEffect(() => {
