@@ -3,7 +3,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useSegmentMutation } from "@/hooks/mutations/useSegmentMutation";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Languages } from "lucide-react";
+import { Languages, MessageSquare } from "lucide-react";
 import { TranslationUnit } from "@/types";
 import { cn } from "@/lib/utils";
 import { useDebouncedCallback } from "use-debounce";
@@ -477,33 +477,46 @@ export function EditableSegment(props: EditableSegmentProps) {
 
             {/* 상태 뱃지와 번역 버튼 */}
             <div className="absolute bottom-1 right-1 z-[5]">
-              <button
-                type="button"
-                className={`cursor-pointer rounded-full px-2 py-0.5 text-xs font-medium transition ${getStatusColor(liveSegment.status)}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (liveSegment.status === "Rejected") return;
-                  toggleStatus();
-                }}
-                title={t('translation.toggleStatus', { status: liveSegment.status === "Reviewed" ? t('translation.statusEdited') : t('translation.statusReviewed') })}
-              >
-                {liveSegment.status}
-              </button>
-
-              {/* 기계 번역 버튼 */}
-              {!liveSegment.target && onTranslateWithGPT && (
-                <Button
-                  variant="ghost"
-                  size="sm"
+              <div className="flex items-center gap-x-1">
+                {/* 댓글 아이콘 - 세그먼트에 댓글이 있는 경우만 표시 */}
+                {liveSegment.comment && (
+                  <div 
+                    className="cursor-pointer text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300" 
+                    title={liveSegment.comment}
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" />
+                  </div>
+                )}
+                
+                {/* 상태 뱃지 */}
+                <button
+                  type="button"
+                  className={`cursor-pointer rounded-full px-2 py-0.5 text-xs font-medium transition ${getStatusColor(liveSegment.status)}`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onTranslateWithGPT();
+                    if (liveSegment.status === "Rejected") return;
+                    toggleStatus();
                   }}
-                  className="ml-1 h-7 w-7 p-0"
+                  title={t('translation.toggleStatus', { status: liveSegment.status === "Reviewed" ? t('translation.statusEdited') : t('translation.statusReviewed') })}
                 >
-                  <Languages className="h-4 w-4" />
-                </Button>
-              )}
+                  {liveSegment.status}
+                </button>
+
+                {/* 기계 번역 버튼 */}
+                {!liveSegment.target && onTranslateWithGPT && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTranslateWithGPT();
+                    }}
+                    className="ml-1 h-7 w-7 p-0"
+                  >
+                    <Languages className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
