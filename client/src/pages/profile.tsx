@@ -88,7 +88,7 @@ export default function ProfilePage() {
                     <h3 className="text-sm font-medium text-muted-foreground">
                       {t('profile.role')}
                     </h3>
-                    <p className="font-medium">{user.id}</p>
+                    <p className="font-medium">{user.role}</p>
                   </div>
                 </div>
               </CardContent>
