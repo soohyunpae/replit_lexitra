@@ -91,25 +91,18 @@ export default function Dashboard() {
   const recentActivities = useMemo(() => {
     if (!projects || projects.length === 0) return [];
 
-    // 프로젝트별 최근 업데이트 활동 추출
+    // 사용자 활동만 추출
     const activities = projects
-      .filter((p) => p.updatedAt)
+      .filter((p) => p.updatedAt && p.status === "Claimed" && p.claimer)
       .map((project) => {
-        // 프로젝트 담당자 이름 설정
-        let username = t("dashboard.system");
-        if (project.status === "Claimed" && project.claimer) {
-          username = project.claimer.username;
-        }
-
-        // 상태별 번역 키 결정
-        const statusKey =
-          project.status === "Completed"
-            ? "dashboard.activity.completed"
-            : "dashboard.activity.updated";
-
         return {
-          user: username,
-          action: t(statusKey, { project: project.name }),
+          user: project.claimer.username,
+          action: t(
+            project.status === "Completed"
+              ? "dashboard.activity.completed"
+              : "dashboard.activity.updated",
+            { project: project.name }
+          ),
           date: new Date(project.updatedAt),
           projectId: project.id,
         };
@@ -118,7 +111,7 @@ export default function Dashboard() {
       .slice(0, 5); // 최근 5개 활동만 표시
 
     return activities;
-  }, [projects]);
+  }, [projects, t]);
 
   // 각 프로젝트별 통계 데이터 가져오기
   const [projectStatsMap, setProjectStatsMap] = useState<{
