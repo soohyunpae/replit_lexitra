@@ -50,10 +50,17 @@ async function analyzeHtmlStructure(html: string): Promise<DocxStructureElement[
     const styleMatch = p.match(/class="([^"]+)"/);
     const styleName = styleMatch ? styleMatch[1] : 'normal';
     
+    // 단락 내용 텍스트 추출 (HTML 태그 제거)
+    const paragraphContent = p.replace(/<[^>]*>/g, '').trim();
+    const contentPreview = paragraphContent.length > 30 ? 
+      paragraphContent.substring(0, 30) + '...' : 
+      paragraphContent || '(빈 단락)';
+    
     structure.push({
       elementType: 'paragraph',
       index,
       styleName,
+      content: contentPreview,
       isTranslationTarget: true
     });
   });
@@ -69,11 +76,18 @@ async function analyzeHtmlStructure(html: string): Promise<DocxStructureElement[
       const cells = row.match(/<t[dh][^>]*>.*?<\/t[dh]>/g) || [];
       
       cells.forEach((cell, cellIndex) => {
+        // 셀 내용 텍스트 추출 (HTML 태그 제거)
+        const cellContent = cell.replace(/<[^>]*>/g, '').trim();
+        const contentPreview = cellContent.length > 30 ? 
+          cellContent.substring(0, 30) + '...' : 
+          cellContent || '(빈 셀)';
+        
         structure.push({
           elementType: 'table',
           tableIndex,
           rowIndex,
           cellIndex,
+          content: contentPreview,
           isTranslationTarget: true
         });
       });
