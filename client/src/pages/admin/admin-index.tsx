@@ -78,6 +78,8 @@ export default function AdminConsole() {
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("api-keys");
   const { setActiveSubSection } = useContext(SidebarContext);
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // API Key states
   const [apiKey, setApiKey] = useState<string>("");
@@ -93,6 +95,19 @@ export default function AdminConsole() {
     { id: 2, username: "translator1", role: "user" },
     { id: 3, username: "reviewer1", role: "user" },
   ]);
+  
+  // Template management states
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState<boolean>(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [templateStructures, setTemplateStructures] = useState<TemplateStructure[]>([]);
+  const [newTemplateName, setNewTemplateName] = useState<string>("");
+  const [newTemplateDescription, setNewTemplateDescription] = useState<string>("");
+  const [templateFile, setTemplateFile] = useState<File | null>(null);
+  const [showAddTemplateDialog, setShowAddTemplateDialog] = useState<boolean>(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [templateError, setTemplateError] = useState<string>("");
   
   // 활성 탭 변경 시 SidebarContext 업데이트
   const [activeTabLabel, setActiveTabLabel] = useState<string>(t('admin.apiKeys'));
@@ -136,6 +151,151 @@ export default function AdminConsole() {
       user.id === userId ? { ...user, role: newRole } : user
     ));
   };
+  
+  // 템플릿 목록 조회
+  const fetchTemplates = async () => {
+    setIsLoadingTemplates(true);
+    setTemplateError("");
+    
+    try {
+      const response = await fetch("/api/admin/templates");
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch templates: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setTemplates(data);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      setTemplateError("템플릿 목록을 불러오는 중 오류가 발생했습니다.");
+    } finally {
+      setIsLoadingTemplates(false);
+    }
+  };
+  
+  // 템플릿 상세 정보 조회
+  const fetchTemplateDetails = async (templateId: number) => {
+    try {
+      const response = await fetch(`/api/admin/templates/${templateId}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch template details: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setSelectedTemplate(data.template);
+      setTemplateStructures(data.structures);
+    } catch (error) {
+      console.error("Error fetching template details:", error);
+      toast({
+        title: "오류",
+        description: "템플릿 상세 정보를 불러오는 중 오류가 발생했습니다.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // 템플릿 삭제 처리
+  const handleDeleteTemplate = async (templateId: number) => {
+    if (!confirm(t('admin.confirmDeleteTemplate', '이 템플릿을 삭제하시겠습니까?'))) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/admin/templates/${templateId}`, {
+        method: "DELETE"
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to delete template: ${response.status}`);
+      }
+      
+      toast({
+        title: "성공",
+        description: "템플릿이 성공적으로 삭제되었습니다.",
+      });
+      
+      // 템플릿 목록 새로고침
+      fetchTemplates();
+      
+      // 선택된 템플릿이 삭제되었다면 선택 해제
+      if (selectedTemplate && selectedTemplate.id === templateId) {
+        setSelectedTemplate(null);
+        setTemplateStructures([]);
+      }
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      toast({
+        title: "오류",
+        description: "템플릿 삭제 중 오류가 발생했습니다.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // 새 템플릿 업로드 처리
+  const handleTemplateUpload = async () => {
+    if (!templateFile || !newTemplateName) {
+      setTemplateError("템플릿 이름과 파일을 선택해주세요.");
+      return;
+    }
+    
+    setIsUploading(true);
+    setUploadProgress(0);
+    setTemplateError("");
+    
+    const formData = new FormData();
+    formData.append("name", newTemplateName);
+    formData.append("description", newTemplateDescription);
+    formData.append("file", templateFile);
+    
+    try {
+      const response = await fetch("/api/admin/templates", {
+        method: "POST",
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to upload template: ${response.status}`);
+      }
+      
+      // 업로드 성공
+      toast({
+        title: "성공",
+        description: "템플릿이 성공적으로 업로드되었습니다.",
+      });
+      
+      // 상태 초기화
+      setNewTemplateName("");
+      setNewTemplateDescription("");
+      setTemplateFile(null);
+      setShowAddTemplateDialog(false);
+      
+      // 템플릿 목록 갱신
+      fetchTemplates();
+    } catch (error) {
+      console.error("Error uploading template:", error);
+      setTemplateError("템플릿 업로드 중 오류가 발생했습니다.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  // 파일 선택 핸들러
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      setTemplateFile(files[0]);
+    }
+  };
+  
+  // 탭이 templates로 변경될 때 템플릿 목록 로드
+  useEffect(() => {
+    if (activeTab === "templates") {
+      fetchTemplates();
+    }
+  }, [activeTab]);
 
   // Show loading state
   if (isLoading) {
@@ -457,35 +617,267 @@ export default function AdminConsole() {
                       {t('admin.templatesExplanation') || "Templates help streamline the translation process for documents with repeating layouts"}
                     </p>
                   </div>
-                  <Button 
-                    className="flex items-center gap-2"
-                  >
-                    <FileText className="h-4 w-4" />
-                    {t('admin.manageTemplates') || "Manage Templates"}
-                  </Button>
+                  <Dialog open={showAddTemplateDialog} onOpenChange={setShowAddTemplateDialog}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        className="flex items-center gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        {t('admin.uploadTemplates') || "Upload Template"}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>{t('admin.uploadTemplates') || "Upload Template"}</DialogTitle>
+                        <DialogDescription>
+                          {t('admin.uploadTemplatesDesc') || "Upload DOCX templates and define which elements should be translated"}
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="templateName">{t('admin.templateName') || "Template Name"}</Label>
+                          <Input
+                            id="templateName"
+                            placeholder={t('admin.templateNamePlaceholder') || "Enter template name"}
+                            value={newTemplateName}
+                            onChange={(e) => setNewTemplateName(e.target.value)}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="templateDescription">{t('admin.templateDescription') || "Description (Optional)"}</Label>
+                          <Textarea
+                            id="templateDescription"
+                            placeholder={t('admin.templateDescriptionPlaceholder') || "Enter template description"}
+                            value={newTemplateDescription}
+                            onChange={(e) => setNewTemplateDescription(e.target.value)}
+                            rows={3}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="templateFile">{t('admin.templateFile') || "Template File (.docx)"}</Label>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              id="templateFile"
+                              type="file"
+                              accept=".docx"
+                              ref={fileInputRef}
+                              onChange={handleFileChange}
+                              className="hidden"
+                            />
+                            <Button 
+                              type="button" 
+                              variant="outline"
+                              className="w-full flex items-center gap-2 justify-center"
+                              onClick={() => fileInputRef.current?.click()}
+                            >
+                              <Upload className="h-4 w-4" />
+                              {templateFile 
+                                ? templateFile.name 
+                                : t('admin.selectFile') || "Select DOCX File"}
+                            </Button>
+                            {templateFile && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setTemplateFile(null)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {templateError && (
+                          <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle>Error</AlertTitle>
+                            <AlertDescription>
+                              {templateError}
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                      </div>
+                      
+                      <DialogFooter>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setShowAddTemplateDialog(false)}
+                          disabled={isUploading}
+                        >
+                          {t('common.cancel') || "Cancel"}
+                        </Button>
+                        <Button 
+                          onClick={handleTemplateUpload}
+                          disabled={isUploading || !templateFile || !newTemplateName}
+                        >
+                          {isUploading ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              {t('common.uploading') || "Uploading..."}
+                            </>
+                          ) : (
+                            <>
+                              <Check className="mr-2 h-4 w-4" />
+                              {t('common.upload') || "Upload"}
+                            </>
+                          )}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
                 
                 <Separator />
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">
-                        {t('admin.uploadTemplates') || "Upload Templates"}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {t('admin.uploadTemplatesDesc') || "Upload DOCX templates and define which elements should be translated"}
-                      </p>
-                    </CardContent>
-                    <CardFooter>
-                      <Button variant="outline" className="w-full" onClick={() => alert(t('admin.notImplementedYet') || "This feature is not implemented yet")}>
-                        {t('admin.goToTemplates') || "Go to Templates"}
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                  
+                {templateError && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>
+                      {templateError}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                {isLoadingTemplates ? (
+                  <div className="flex justify-center items-center py-10">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : templates.length === 0 ? (
+                  <div className="text-center py-10">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4">
+                      <FileText className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-medium mb-2">
+                      {t('admin.noTemplatesYet') || "No Templates Yet"}
+                    </h3>
+                    <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+                      {t('admin.noTemplatesDesc') || "Start by uploading your first document template to streamline your translation process"}
+                    </p>
+                    <Button 
+                      onClick={() => setShowAddTemplateDialog(true)}
+                      className="flex items-center gap-2 mx-auto"
+                    >
+                      <Plus className="h-4 w-4" />
+                      {t('admin.uploadFirstTemplate') || "Upload First Template"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{t('admin.templateName') || "Template Name"}</TableHead>
+                          <TableHead>{t('admin.description') || "Description"}</TableHead>
+                          <TableHead>{t('admin.useCount') || "Use Count"}</TableHead>
+                          <TableHead>{t('admin.createdAt') || "Created"}</TableHead>
+                          <TableHead>{t('admin.actions') || "Actions"}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {templates.map((template) => (
+                          <TableRow key={template.id}>
+                            <TableCell className="font-medium">{template.name}</TableCell>
+                            <TableCell>{template.description || "-"}</TableCell>
+                            <TableCell>{template.useCount}</TableCell>
+                            <TableCell>
+                              {new Date(template.createdAt).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => fetchTemplateDetails(template.id)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteTemplate(template.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    
+                    {selectedTemplate && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>
+                            {selectedTemplate.name}
+                          </CardTitle>
+                          <CardDescription>
+                            {selectedTemplate.description || t('admin.noDescription') || "No description provided"}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            <div>
+                              <h4 className="text-sm font-medium mb-2">
+                                {t('admin.templateStructure') || "Template Structure"}
+                              </h4>
+                              
+                              {templateStructures.length > 0 ? (
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead>{t('admin.type') || "Type"}</TableHead>
+                                      <TableHead>{t('admin.location') || "Location"}</TableHead>
+                                      <TableHead>{t('admin.isTranslationTarget') || "Translation Target"}</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {templateStructures.map((structure) => (
+                                      <TableRow key={structure.id}>
+                                        <TableCell>{structure.segmentType}</TableCell>
+                                        <TableCell>
+                                          {structure.tableIndex !== undefined
+                                            ? `Table ${structure.tableIndex} ${structure.rowIndex !== undefined
+                                                ? `Row ${structure.rowIndex} ${structure.cellIndex !== undefined
+                                                  ? `Cell ${structure.cellIndex}`
+                                                  : ''
+                                                }`
+                                                : ''
+                                              }`
+                                            : structure.styleName || '-'
+                                          }
+                                        </TableCell>
+                                        <TableCell>
+                                          {structure.isTranslationTarget
+                                            ? <Check className="h-4 w-4 text-green-500" />
+                                            : <X className="h-4 w-4 text-red-500" />
+                                          }
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              ) : (
+                                <p className="text-sm text-muted-foreground">
+                                  {t('admin.noStructureElements') || "No structure elements defined for this template."}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                )}
+                
+                <Separator />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-lg">
@@ -494,7 +886,7 @@ export default function AdminConsole() {
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-muted-foreground mb-4">
-                        {t('admin.applyTemplatesDesc') || "Apply templates to uploaded documents to streamline translation"}
+                        {t('admin.applyTemplatesDesc') || "Apply templates to ongoing translation projects"}
                       </p>
                     </CardContent>
                     <CardFooter>
@@ -516,7 +908,7 @@ export default function AdminConsole() {
                       </p>
                     </CardContent>
                     <CardFooter>
-                      <Button variant="outline" className="w-full" onClick={() => alert(t('admin.notImplementedYet') || "This feature is not implemented yet")}>
+                      <Button variant="outline" className="w-full" onClick={() => window.open("https://docs.lexitra.io/templates", "_blank")}>
                         {t('admin.viewDocs') || "View Documentation"}
                       </Button>
                     </CardFooter>
