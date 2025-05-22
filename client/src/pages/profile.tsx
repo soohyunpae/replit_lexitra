@@ -57,9 +57,7 @@ export default function ProfilePage() {
       <div className="max-w-3xl mx-auto py-10">
         <Tabs defaultValue="general" className="space-y-6">
           <TabsList>
-            <TabsTrigger value="general">
-              {t("profile.personalInfo")}
-            </TabsTrigger>
+            <TabsTrigger value="general">{t("profile.title")}</TabsTrigger>
             <TabsTrigger value="preferences">
               {t("profile.preferences")}
             </TabsTrigger>

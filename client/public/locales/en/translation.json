@@ -81,10 +81,9 @@
     "translationMemory": "Translation Memory",
     "tmDescription": "Review and update saved translations across projects.",
     "viewTM": "View TM",
-    "system": "System",
     "activity": {
-      "completed": "{{project}} has been completed",
-      "updated": "{{project}} has been updated"
+      "completed": "{{user}} completed {{project}}.",
+      "updated": "{{user}} updated {{project}}."
     }
   },
   "projects": {

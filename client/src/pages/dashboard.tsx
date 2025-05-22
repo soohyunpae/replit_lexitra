@@ -93,22 +93,25 @@ export default function Dashboard() {
 
     // 사용자 활동만 추출
     const activities = projects
-      .filter((p) => p.updatedAt && p.status === "Claimed" && p.claimer)
+      .filter((p) => p.updatedAt && p.claimer)
       .map((project) => {
+        const statusKey =
+          project.status === "Completed"
+            ? "dashboard.activity.completed"
+            : "dashboard.activity.updated";
+
         return {
-          user: project.claimer.username,
-          action: t(
-            project.status === "Completed"
-              ? "dashboard.activity.completed"
-              : "dashboard.activity.updated",
-            { project: project.name }
-          ),
+          // user 필드는 제거
+          action: t(statusKey, {
+            user: project.claimer.username,
+            project: project.name,
+          }),
           date: new Date(project.updatedAt),
           projectId: project.id,
         };
       })
       .sort((a, b) => b.date.getTime() - a.date.getTime())
-      .slice(0, 5); // 최근 5개 활동만 표시
+      .slice(0, 5);
 
     return activities;
   }, [projects, t]);
