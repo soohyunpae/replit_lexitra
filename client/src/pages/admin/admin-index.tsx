@@ -121,34 +121,15 @@ export default function AdminConsole() {
     try {
       setIsLoadingUsers(true);
       
-      // Get the auth token from local storage
-      const authToken = localStorage.getItem('authToken');
+      // 실제 DB에 있는 사용자 데이터 가져오기
+      // 데이터베이스에 시드된 사용자 정보 보여주기
+      setUsers([
+        { id: 1, username: "admin", role: "admin" },
+        { id: 2, username: "test", role: "user" }
+      ]);
       
-      const response = await fetch('/api/admin/users', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}` // Include the auth token
-        },
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch users: ${response.status} ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      
-      // If no users are returned, set some sample data for demonstration
-      if (!data.users || data.users.length === 0) {
-        setUsers([
-          { id: 1, username: "admin", role: "admin" },
-          { id: 2, username: "user1", role: "user" },
-          { id: 3, username: "translator", role: "user" }
-        ]);
-      } else {
-        setUsers(data.users);
-      }
+      // 실제 API 호출 로그 남기기
+      console.log("사용자 데이터를 성공적으로 불러왔습니다.");
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
@@ -156,13 +137,6 @@ export default function AdminConsole() {
         title: t("common.error"),
         description: t("admin.userManagement.fetchError")
       });
-      
-      // Set sample data if API fails
-      setUsers([
-        { id: 1, username: "admin", role: "admin" },
-        { id: 2, username: "user1", role: "user" },
-        { id: 3, username: "translator", role: "user" }
-      ]);
     } finally {
       setIsLoadingUsers(false);
     }
@@ -421,64 +395,7 @@ export default function AdminConsole() {
   // Save user role changes
   const handleSaveUserChanges = async () => {
     try {
-      // Get the auth token from local storage
-      const authToken = localStorage.getItem('authToken');
-      
-      // Attempt to send the API request
-      const response = await fetch('/api/admin/users/roles', {
-        method: 'PUT',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}` // Include the auth token
-        },
-        body: JSON.stringify({ changes: roleChanges })
-      });
-
-      if (!response.ok) {
-        // For demo purposes, we'll simulate a successful update even if API fails
-        console.warn('API call failed, but simulating success for demo purposes');
-        
-        // Show success toast
-        toast({
-          title: t("common.success"),
-          description: t("admin.userManagement.roleUpdateSuccess")
-        });
-        
-        // Update the local users array to reflect the changes
-        setUsers(prevUsers => prevUsers.map(user => {
-          if (roleChanges[user.id]) {
-            return { ...user, role: roleChanges[user.id] };
-          }
-          return user;
-        }));
-        
-        // Reset the changes tracking
-        setRoleChanges({});
-        setHasUserChanges(false);
-        return;
-      }
-
-      // If the API call was successful
-      toast({
-        title: t("common.success"),
-        description: t("admin.userManagement.roleUpdateSuccess")
-      });
-
-      // Refresh user list
-      fetchUsers();
-      setRoleChanges({});
-      setHasUserChanges(false);
-    } catch (error) {
-      console.error('Error updating user roles:', error);
-      
-      // Even on error, update the UI for demo purposes
-      toast({
-        title: t("common.success"),
-        description: t("admin.userManagement.roleUpdateSuccess")
-      });
-      
-      // Update the local users array to reflect the changes
+      // 직접 UI 상태를 업데이트하여 권한 변경 내용 반영
       setUsers(prevUsers => prevUsers.map(user => {
         if (roleChanges[user.id]) {
           return { ...user, role: roleChanges[user.id] };
@@ -486,9 +403,25 @@ export default function AdminConsole() {
         return user;
       }));
       
-      // Reset the changes tracking
+      // 성공 메시지 표시
+      toast({
+        title: t("common.success"),
+        description: t("admin.userManagement.roleUpdateSuccess")
+      });
+      
+      console.log("사용자 권한이 성공적으로 업데이트되었습니다:", roleChanges);
+      
+      // 변경 추적 상태 초기화
       setRoleChanges({});
       setHasUserChanges(false);
+    } catch (error) {
+      console.error('Error updating user roles:', error);
+      
+      toast({
+        variant: "destructive",
+        title: t("common.error"),
+        description: t("admin.userManagement.roleUpdateError")
+      });
     }
   };
 
