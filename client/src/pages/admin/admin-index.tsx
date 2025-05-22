@@ -737,6 +737,7 @@ export default function AdminConsole() {
                   <br />
                   <strong>{t("admin.userRole")}:</strong> {t("admin.userDesc")}
                 </p>
+                </>
               </CardContent>
             </Card>
           </TabsContent>
