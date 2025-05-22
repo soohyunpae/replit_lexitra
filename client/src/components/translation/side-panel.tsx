@@ -508,7 +508,7 @@ export function SidePanel({
     try {
       // 현재 댓글 확인 - 있으면 수정, 없으면 새로 추가
       const existingComment = selectedSegment.comment;
-      
+
       // 세그먼트 업데이트 API를 사용하여 댓글 저장
       const response = await apiRequest(
         "PATCH",
@@ -517,7 +517,7 @@ export function SidePanel({
           target: selectedSegment.target || "",
           status: selectedSegment.status || "MT",
           // 기존 댓글이 있으면 새 댓글과 이전 댓글을 함께 저장
-          comment: existingComment 
+          comment: existingComment
             ? `${existingComment}\n\n${new Date().toLocaleString()}: ${commentText}`
             : commentText,
         },
@@ -537,7 +537,7 @@ export function SidePanel({
         Object.assign(selectedSegment, updatedSegment);
       } else {
         // 최악의 경우 수동으로 comment 필드 업데이트
-        const newComment = existingComment 
+        const newComment = existingComment
           ? `${existingComment}\n\n${new Date().toLocaleString()}: ${commentText}`
           : commentText;
         Object.assign(selectedSegment, { comment: newComment });
@@ -545,10 +545,7 @@ export function SidePanel({
 
       // 부모 컴포넌트에 변경 알림 및 캐시 무효화 요청
       if (onSegmentUpdated) {
-        onSegmentUpdated(
-          selectedSegment.id,
-          selectedSegment.target || "",
-        );
+        onSegmentUpdated(selectedSegment.id, selectedSegment.target || "");
       }
 
       // 성공 메시지 표시
@@ -835,13 +832,6 @@ export function SidePanel({
                     )}
                   </Button>
                 </div>
-              </div>
-
-              <div className="text-xs text-muted-foreground mt-2">
-                <span className="font-medium">
-                  {t("sidePanel.comments.tip")}:
-                </span>{" "}
-                {t("sidePanel.comments.markdownTip")}
               </div>
             </div>
           </div>
