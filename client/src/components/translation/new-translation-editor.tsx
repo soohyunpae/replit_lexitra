@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -59,6 +60,7 @@ export function NewTranslationEditor({
   onSave,
   onExport,
 }: TranslationEditorProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
 
   // Side panel toggle state
