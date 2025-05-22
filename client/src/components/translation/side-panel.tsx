@@ -525,7 +525,11 @@ export function SidePanel({
 
       // 부모 컴포넌트에 변경 알림 - comment가 포함된 새로운 target 전달
       if (onSegmentUpdated) {
-        onSegmentUpdated(selectedSegment.id, selectedSegment.target || "", commentText);
+        onSegmentUpdated(
+          selectedSegment.id,
+          selectedSegment.target || "",
+          commentText,
+        );
       }
 
       // 성공 메시지 표시
