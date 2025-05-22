@@ -1179,7 +1179,7 @@ export default function ProjectsPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          {t("projects.projectNotes")} ({t("common.optional")}
+                          {t("projects.projectNotes")} ({t("common.optional")})
                         </FormLabel>
                         <FormControl>
                           <Textarea
