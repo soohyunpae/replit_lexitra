@@ -91,7 +91,7 @@ export default function ProfilePage() {
                       {t("profile.role")}
                     </h3>
                     <p className="font-medium">
-                      {t("profile.${user.role}Role")}
+                      {t(`admin.${user.role}Role`)}
                     </p>
                   </div>
                 </div>
