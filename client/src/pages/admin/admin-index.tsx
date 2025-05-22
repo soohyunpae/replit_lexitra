@@ -34,6 +34,8 @@ import {
   Edit,
   User,
   UserPlus,
+  FileText,
+  ExternalLink,
 } from "lucide-react";
 
 export default function AdminConsole() {
@@ -71,6 +73,8 @@ export default function AdminConsole() {
       setActiveTabLabel(t('admin.languageSettings'));
     } else if (value === "user-management") {
       setActiveTabLabel(t('admin.userManagement'));
+    } else if (value === "templates") {
+      setActiveTabLabel(t('admin.templates') || "Templates");
     }
   };
   
@@ -395,6 +399,96 @@ export default function AdminConsole() {
                   <strong>{t('admin.administratorRole')}:</strong> {t('admin.administratorDesc')}<br />
                   <strong>{t('admin.userRole')}:</strong> {t('admin.userDesc')}
                 </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Templates Tab Content */}
+          <TabsContent value="templates" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="h-5 w-5 mr-2" />
+                  {t('admin.templates') || "Template Management"}
+                </CardTitle>
+                <CardDescription>
+                  {t('admin.templatesDesc') || "Manage document templates for translation projects"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-medium">{t('admin.documentTemplates') || "Document Templates"}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {t('admin.templatesExplanation') || "Templates help streamline the translation process for documents with repeating layouts"}
+                    </p>
+                  </div>
+                  <Button 
+                    className="flex items-center gap-2"
+                    onClick={() => navigate("/admin/templates")}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    {t('admin.manageTemplates') || "Manage Templates"}
+                  </Button>
+                </div>
+                
+                <Separator />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">
+                        {t('admin.uploadTemplates') || "Upload Templates"}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {t('admin.uploadTemplatesDesc') || "Upload DOCX templates and define which elements should be translated"}
+                      </p>
+                    </CardContent>
+                    <CardFooter>
+                      <Button variant="outline" className="w-full" onClick={() => navigate("/admin/templates")}>
+                        {t('admin.goToTemplates') || "Go to Templates"}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">
+                        {t('admin.applyTemplates') || "Apply Templates"}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {t('admin.applyTemplatesDesc') || "Apply templates to uploaded documents to streamline translation"}
+                      </p>
+                    </CardContent>
+                    <CardFooter>
+                      <Button variant="outline" className="w-full" onClick={() => navigate("/projects")}>
+                        {t('admin.goToProjects') || "Go to Projects"}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">
+                        {t('admin.templateDocumentation') || "Documentation"}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {t('admin.templateDocumentationDesc') || "Learn how to create and apply document templates effectively"}
+                      </p>
+                    </CardContent>
+                    <CardFooter>
+                      <Button variant="outline" className="w-full" onClick={() => navigate("/admin/templates")}>
+                        {t('admin.viewDocs') || "View Documentation"}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
