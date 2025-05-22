@@ -28,7 +28,6 @@ import AdminConsole from "@/pages/admin/admin-index";
 import TMUpload from "@/pages/admin/tm/upload";
 import TMAlignment from "@/pages/admin/tm/alignment";
 import TMCleanup from "@/pages/admin/tm/cleanup";
-import TemplateManager from "@/pages/TemplateManager";
 
 
 // Admin role protected route component
@@ -85,10 +84,6 @@ function Router() {
       </Route>
       <Route path="/admin/tm/cleanup">
         <AdminRoute component={TMCleanup} />
-      </Route>
-      
-      <Route path="/admin/templates">
-        <AdminRoute component={TemplateManager} />
       </Route>
       
       <Route path="/auth" component={AuthPage} />

@@ -425,7 +425,7 @@ export default function AdminConsole() {
                   </div>
                   <Button 
                     className="flex items-center gap-2"
-                    onClick={() => navigate("/admin/templates")}
+                    onClick={() => alert(t('admin.notImplementedYet') || "This feature is not implemented yet")}
                   >
                     <ExternalLink className="h-4 w-4" />
                     {t('admin.manageTemplates') || "Manage Templates"}
@@ -447,7 +447,7 @@ export default function AdminConsole() {
                       </p>
                     </CardContent>
                     <CardFooter>
-                      <Button variant="outline" className="w-full" onClick={() => navigate("/admin/templates")}>
+                      <Button variant="outline" className="w-full" onClick={() => alert(t('admin.notImplementedYet') || "This feature is not implemented yet")}>
                         {t('admin.goToTemplates') || "Go to Templates"}
                       </Button>
                     </CardFooter>
@@ -483,7 +483,7 @@ export default function AdminConsole() {
                       </p>
                     </CardContent>
                     <CardFooter>
-                      <Button variant="outline" className="w-full" onClick={() => navigate("/admin/templates")}>
+                      <Button variant="outline" className="w-full" onClick={() => alert(t('admin.notImplementedYet') || "This feature is not implemented yet")}>
                         {t('admin.viewDocs') || "View Documentation"}
                       </Button>
                     </CardFooter>
