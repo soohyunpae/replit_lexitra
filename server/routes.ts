@@ -4253,10 +4253,10 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
   
   // Admin User Management API
   // GET: 모든 사용자 목록 가져오기
-  app.get(`${apiPrefix}/admin/users`, verifyToken, async (req, res) => {
+  app.get(`${apiPrefix}/admin/users`, async (req, res) => {
     try {
-      // Check if the user has admin privileges
-      if (req.user?.role !== "admin") {
+      // 세션 기반 인증 확인
+      if (!req.isAuthenticated() || !req.user || req.user.role !== "admin") {
         return res.status(403).json({ message: "Admin privileges required" });
       }
       
@@ -4269,15 +4269,16 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       const safeUsers = allUsers.map(({ password, ...user }) => user);
       return res.json({ users: safeUsers });
     } catch (error) {
+      console.error("Error fetching users:", error);
       return handleApiError(res, error);
     }
   });
   
   // PUT: 사용자 권한 업데이트
-  app.put(`${apiPrefix}/admin/users/roles`, verifyToken, async (req, res) => {
+  app.put(`${apiPrefix}/admin/users/roles`, async (req, res) => {
     try {
-      // Check if the user has admin privileges
-      if (req.user?.role !== "admin") {
+      // 세션 기반 인증 확인
+      if (!req.isAuthenticated() || !req.user || req.user.role !== "admin") {
         return res.status(403).json({ message: "Admin privileges required" });
       }
       
@@ -4286,6 +4287,8 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       if (!changes || Object.keys(changes).length === 0) {
         return res.status(400).json({ message: "No changes provided" });
       }
+      
+      console.log("Receiving role changes:", changes);
       
       // For each user ID in the changes object, update their role
       const updatePromises = Object.entries(changes).map(async ([userId, newRole]) => {

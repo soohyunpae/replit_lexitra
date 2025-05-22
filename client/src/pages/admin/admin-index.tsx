@@ -116,20 +116,43 @@ export default function AdminConsole() {
   const [hasUserChanges, setHasUserChanges] = useState(false);
   const [roleChanges, setRoleChanges] = useState<Record<number, string>>({});
 
-  // Fetch users data
+  // API를 통해 실제 사용자 데이터 가져오기
   const fetchUsers = async () => {
     try {
       setIsLoadingUsers(true);
       
-      // 실제 DB에 있는 사용자 데이터 가져오기
-      // 데이터베이스에 시드된 사용자 정보 보여주기
-      setUsers([
-        { id: 1, username: "admin", role: "admin" },
-        { id: 2, username: "test", role: "user" }
-      ]);
+      // 사용자가 로그인 상태인지 확인
+      const user = await fetch('/api/user', {
+        credentials: 'include'
+      }).then(res => res.json());
       
-      // 실제 API 호출 로그 남기기
-      console.log("사용자 데이터를 성공적으로 불러왔습니다.");
+      if (user && user.role === 'admin') {
+        // API를 통해 전체 사용자 목록 가져오기
+        const response = await fetch('/api/admin/users', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch users: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data && data.users) {
+          setUsers(data.users);
+          console.log("API에서 실제 사용자 데이터를 가져왔습니다:", data.users);
+        } else {
+          throw new Error("No users data received from API");
+        }
+      } else {
+        // API 요청 없이 현재 로그인된 사용자만 보여줌 (안전장치)
+        console.warn("Non-admin user trying to access user management");
+        setUsers([{ id: user.id, username: user.username, role: user.role }]);
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
