@@ -154,7 +154,7 @@ export default function AdminConsole() {
           onValueChange={handleTabChange}
           className="space-y-6"
         >
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger
               value="api-keys"
               className="flex items-center gap-2"
@@ -175,6 +175,13 @@ export default function AdminConsole() {
             >
               <Users className="h-4 w-4" />
               <span>{t('admin.userManagement')}</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="templates"
+              className="flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4" />
+              <span>{t('admin.templates') || "Templates"}</span>
             </TabsTrigger>
           </TabsList>
 

@@ -145,8 +145,17 @@ export function Sidebar() {
       label: t('common.admin'),
       href: "/admin",
     },
-    // Removed standalone items per UI review feedback
-    // These features are accessible through the Admin Dashboard
+    {
+      icon: <FileText className="h-5 w-5" />,
+      label: t('admin.templates') || "Templates",
+      href: "/admin/templates",
+    },
+    // TM admin items
+    {
+      icon: <Database className="h-5 w-5" />,
+      label: t('admin.tmManagement') || "TM Management",
+      href: "/admin/tm/upload",
+    },
   ];
 
   // Toggle sidebar collapse state
