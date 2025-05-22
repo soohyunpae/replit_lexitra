@@ -777,7 +777,10 @@ export function NewTranslationEditor({
                 {t("projects.rejected")} ({statusCounts["Rejected"] || 0})
               </SelectItem>
               <SelectItem value="hasComment">
-                댓글 있음 ({segments?.filter(s => !!s.comment && s.comment.trim() !== "").length || 0})
+                {t("translation.hasComments")}(
+                {segments?.filter((s) => !!s.comment && s.comment.trim() !== "")
+                  .length || 0}
+                ){" "}
               </SelectItem>
             </SelectContent>
           </Select>
