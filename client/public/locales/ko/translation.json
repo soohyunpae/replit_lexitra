@@ -82,12 +82,6 @@
     "tmDescription": "프로젝트 간 저장된 번역을 검토하고 업데이트합니다.",
     "viewTM": "TM 보기"
   },
-  "status": {
-    "unclaimed": "미할당",
-    "inProgress": "진행 중",
-    "claimed": "할당됨",
-    "completed": "완료됨"
-  },
   "projects": {
     "title": "프로젝트",
     "createProject": "프로젝트 생성",
@@ -401,6 +395,21 @@
     "userManagement": "사용자 관리",
     "projectManagement": "프로젝트 관리",
     "systemSettings": "시스템 설정",
+    "templates": "템플릿",
+    "templatesDesc": "문서 템플릿 관리",
+    "documentTemplates": "문서 템플릿",
+    "templatesExplanation": "템플릿은 반복되는 레이아웃을 가진 문서의 번역 과정을 간소화합니다",
+    "manageTemplates": "템플릿 관리",
+    "uploadTemplates": "템플릿 업로드",
+    "uploadTemplatesDesc": "DOCX 템플릿을 업로드하고 번역할 요소를 정의합니다",
+    "goToTemplates": "템플릿으로 이동",
+    "applyTemplates": "템플릿 적용",
+    "applyTemplatesDesc": "진행 중인 번역 프로젝트에 템플릿 적용",
+    "goToProjects": "프로젝트로 이동",
+    "templateDocumentation": "템플릿 문서",
+    "templateDocumentationDesc": "문서 템플릿을 효과적으로 생성하고 적용하는 방법 학습",
+    "viewDocs": "문서 보기",
+    "notImplementedYet": "이 기능은 아직 구현되지 않았습니다",
     "roles": "역할",
     "permissions": "권한",
     "activityLogs": "활동 로그",
@@ -462,6 +471,7 @@
     "userRole": "사용자",
     "administratorDesc": "모든 시스템 기능에 대한 전체 접근 권한을 가집니다.",
     "userDesc": "번역 작업과 할당된 프로젝트에 대한 접근 권한을 가집니다."
+    
   },
   "sidePanel": {
     "useTranslation": "번역 사용",

@@ -37,7 +37,7 @@
     "previous": "Previous",
     "page": "Page",
     "showing": "Showing",
-    "adding": "Adding...",
+    "adding": "Adding..."
   },
   "auth": {
     "login": "Login",
@@ -77,12 +77,6 @@
     "translationMemory": "Translation Memory",
     "tmDescription": "Review and update saved translations across projects.",
     "viewTM": "View TM"
-  },
-  "status": {
-    "unclaimed": "Unclaimed",
-    "inProgress": "In Progress",
-    "claimed": "Claimed",
-    "completed": "Completed"
   },
   "projects": {
     "title": "Projects",
@@ -147,7 +141,7 @@
     "bulkConfirmReopen_plural": "Are you sure you want to reopen {{count}} projects?",
     "bulkCompleteSuccess": "{{count}} project(s) marked as completed.",
     "bulkCompleteError": "Failed to complete projects",
-    "bulkActionErrorDesc": "Project is not in claimed status", 
+    "bulkActionErrorDesc": "Project is not in claimed status",
     "details": "Project Details",
     "files": "Files",
     "addFile": "Add File",
@@ -480,9 +474,6 @@
     "sourceText": "Source Text",
     "targetText": "Target Text",
     "similarity": "Similarity",
-
-    "Project is not in claimed status": "Project is not in claimed status"
-
     "dateAdded": "Date Added",
     "addedBy": "Added By",
     "noEntries": "No entries found",
@@ -554,6 +545,21 @@
     "userManagement": "User Management",
     "projectManagement": "Project Management",
     "systemSettings": "System Settings",
+    "templates": "Templates",
+    "templatesDesc": "Manage document templates",
+    "documentTemplates": "Document Templates",
+    "templatesExplanation": "Templates help streamline the translation process for documents with repeating layouts",
+    "manageTemplates": "Manage Templates",
+    "uploadTemplates": "Upload Templates",
+    "uploadTemplatesDesc": "Upload DOCX templates and define which elements should be translated",
+    "goToTemplates": "Go to Templates",
+    "applyTemplates": "Apply Templates",
+    "applyTemplatesDesc": "Apply templates to ongoing translation projects",
+    "goToProjects": "Go to Projects",
+    "templateDocumentation": "Template Documentation",
+    "templateDocumentationDesc": "Learn how to create and apply document templates effectively",
+    "viewDocs": "View Documentation",
+    "notImplementedYet": "This feature is not implemented yet",
     "roles": "Roles",
     "permissions": "Permissions",
     "activityLogs": "Activity Logs",
