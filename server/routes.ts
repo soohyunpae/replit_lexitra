@@ -1709,6 +1709,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // 개선된 PDF 처리 라우트 연결
   app.use('/api/pdf', pdfRoutes);
+  
+  // 템플릿 관리 라우트 연결
+  app.use(templateRoutes);
 
   // Register admin routes
   registerAdminRoutes(app);

@@ -40,7 +40,7 @@ const upload = multer({
 const router = express.Router();
 
 // 관리자 전용 템플릿 API 라우트
-router.get('/admin/templates', isAdmin, async (req, res) => {
+router.get('/templates', isAdmin, async (req, res) => {
   try {
     const templates = await templateService.getTemplates();
     res.json({ templates });
@@ -50,7 +50,7 @@ router.get('/admin/templates', isAdmin, async (req, res) => {
   }
 });
 
-router.get('/admin/templates/:id', isAdmin, async (req, res) => {
+router.get('/templates/:id', isAdmin, async (req, res) => {
   try {
     const templateId = parseInt(req.params.id);
     if (isNaN(templateId)) {
