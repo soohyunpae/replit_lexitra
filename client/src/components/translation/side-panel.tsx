@@ -22,6 +22,9 @@ import {
   Circle,
   Info,
   Loader2,
+  Trash2,
+  Edit,
+  Save,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -412,6 +415,9 @@ export function SidePanel({
   >({});
   const [commentText, setCommentText] = useState("");
   const [isAddingComment, setIsAddingComment] = useState(false);
+  const [isEditingComment, setIsEditingComment] = useState(false);
+  const [isRemovingComment, setIsRemovingComment] = useState(false);
+  const [editedCommentText, setEditedCommentText] = useState("");
 
   // Function to search TM globally
   const searchGlobalTM = async (query: string) => {
@@ -567,6 +573,129 @@ export function SidePanel({
       setIsAddingComment(false);
     }
   }, [commentText, selectedSegment, onSegmentUpdated, t]);
+
+  // 댓글 편집 시작 함수
+  const startEditingComment = useCallback(() => {
+    if (!selectedSegment || !selectedSegment.comment) return;
+    
+    setEditedCommentText(selectedSegment.comment);
+    setIsEditingComment(true);
+  }, [selectedSegment]);
+
+  // 댓글 편집 저장 함수
+  const saveEditedComment = useCallback(async () => {
+    if (!editedCommentText.trim() || !selectedSegment) return;
+
+    setIsEditingComment(true);
+
+    try {
+      // 세그먼트 업데이트 API를 사용하여 댓글 업데이트
+      const response = await apiRequest(
+        "PATCH",
+        `/api/segments/${selectedSegment.id}`,
+        {
+          target: selectedSegment.target || "",
+          status: selectedSegment.status || "MT",
+          comment: editedCommentText,
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to update comment: ${response.status}`);
+      }
+
+      const updatedSegment = await response.json();
+
+      if (!selectedSegment) return;
+
+      // 서버에서 받은 응답 데이터로 UI 갱신
+      if (updatedSegment && updatedSegment.comment) {
+        // 전체 세그먼트 데이터 갱신
+        Object.assign(selectedSegment, updatedSegment);
+      } else {
+        // 최악의 경우 수동으로 comment 필드 업데이트
+        Object.assign(selectedSegment, { comment: editedCommentText });
+      }
+
+      // 부모 컴포넌트에 변경 알림 및 캐시 무효화 요청
+      if (onSegmentUpdated) {
+        onSegmentUpdated(selectedSegment.id, selectedSegment.target || "");
+      }
+
+      // 성공 메시지 표시
+      toast({
+        title: "댓글이 수정되었습니다",
+        description: "댓글이 성공적으로 수정되었습니다.",
+      });
+
+      // 편집 모드 종료
+      setIsEditingComment(false);
+    } catch (error) {
+      console.error("댓글 수정 중 오류:", error);
+      toast({
+        title: "댓글 수정 실패",
+        description: "댓글을 수정하는 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
+  }, [editedCommentText, selectedSegment, onSegmentUpdated, t]);
+
+  // 댓글 삭제 함수
+  const removeComment = useCallback(async () => {
+    if (!selectedSegment) return;
+
+    setIsRemovingComment(true);
+
+    try {
+      // 세그먼트 업데이트 API를 사용하여 댓글 삭제
+      const response = await apiRequest(
+        "PATCH",
+        `/api/segments/${selectedSegment.id}`,
+        {
+          target: selectedSegment.target || "",
+          status: selectedSegment.status || "MT",
+          comment: "", // 빈 문자열로 댓글 삭제
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to remove comment: ${response.status}`);
+      }
+
+      const updatedSegment = await response.json();
+
+      if (!selectedSegment) return;
+
+      // 서버에서 받은 응답 데이터로 UI 갱신
+      if (updatedSegment) {
+        // 전체 세그먼트 데이터 갱신
+        Object.assign(selectedSegment, updatedSegment);
+      } else {
+        // 최악의 경우 수동으로 comment 필드 업데이트
+        Object.assign(selectedSegment, { comment: "" });
+      }
+
+      // 부모 컴포넌트에 변경 알림 및 캐시 무효화 요청
+      if (onSegmentUpdated) {
+        onSegmentUpdated(selectedSegment.id, selectedSegment.target || "");
+      }
+
+      // 성공 메시지 표시
+      toast({
+        title: "댓글이 삭제되었습니다",
+        description: "댓글이 성공적으로 삭제되었습니다.",
+      });
+    } catch (error) {
+      console.error("댓글 삭제 중 오류:", error);
+      toast({
+        title: "댓글 삭제 실패",
+        description: "댓글을 삭제하는 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRemovingComment(false);
+    }
+  }, [selectedSegment, onSegmentUpdated, t]);
 
   // Determine which TM matches to display
   const displayedTmMatches =
@@ -776,20 +905,81 @@ export function SidePanel({
               {/* 댓글 표시 - 개선된 버전 */}
               {selectedSegment?.comment ? (
                 <div className="space-y-3">
-                  <div className="bg-accent/50 rounded-md p-3">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs font-medium">
-                          {t("sidePanel.comments.user")}
-                        </span>
+                  {isEditingComment ? (
+                    <div className="bg-accent/50 rounded-md p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-xs font-medium">
+                            {t("sidePanel.comments.user")}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0" 
+                            onClick={() => setIsEditingComment(false)}
+                            title="편집 취소"
+                          >
+                            <X className="h-3.5 w-3.5 text-muted-foreground" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0 text-blue-500"
+                            onClick={saveEditedComment}
+                            title="저장"
+                          >
+                            <Save className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      {/* 댓글 편집 영역 */}
+                      <Textarea
+                        value={editedCommentText}
+                        onChange={(e) => setEditedCommentText(e.target.value)}
+                        className="min-h-[80px] text-sm"
+                      />
+                    </div>
+                  ) : (
+                    <div className="bg-accent/50 rounded-md p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-xs font-medium">
+                            {t("sidePanel.comments.user")}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0" 
+                            onClick={startEditingComment}
+                            title="댓글 편집"
+                            disabled={isRemovingComment}
+                          >
+                            <Edit className="h-3.5 w-3.5 text-muted-foreground hover:text-blue-500" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0" 
+                            onClick={removeComment}
+                            title="댓글 삭제"
+                            disabled={isRemovingComment}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-red-500" />
+                          </Button>
+                        </div>
+                      </div>
+                      {/* 댓글에 줄바꿈이 있으면 여러 줄로 표시 */}
+                      <div className="text-sm whitespace-pre-line">
+                        {selectedSegment.comment}
                       </div>
                     </div>
-                    {/* 댓글에 줄바꿈이 있으면 여러 줄로 표시 */}
-                    <div className="text-sm whitespace-pre-line">
-                      {selectedSegment.comment}
-                    </div>
-                  </div>
+                  )}
                 </div>
               ) : (
                 <div className="bg-accent/50 rounded-md p-3 text-sm text-muted-foreground text-center mb-4">
