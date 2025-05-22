@@ -666,19 +666,36 @@ export function SidePanel({
 
       if (!selectedSegment) return;
 
-      // 서버에서 받은 응답 데이터로 UI 갱신
+      // 즉시 UI 업데이트를 위해 세그먼트 객체 직접 수정
+      // 중요: 이렇게 직접 수정하면 참조를 통해 부모 컴포넌트의 상태도 업데이트됨
+      selectedSegment.comment = "";
+      
+      // 강제 리렌더링을 위해 새 객체 생성과 함께 전체 세그먼트 데이터 갱신
       if (updatedSegment) {
-        // 전체 세그먼트 데이터 갱신
-        Object.assign(selectedSegment, updatedSegment);
-      } else {
-        // 최악의 경우 수동으로 comment 필드 업데이트
-        Object.assign(selectedSegment, { comment: "" });
+        // 응답 데이터의 모든 필드 복사 (comment가 비어있는지 확인)
+        Object.keys(updatedSegment).forEach(key => {
+          selectedSegment[key] = updatedSegment[key];
+        });
       }
 
       // 부모 컴포넌트에 변경 알림 및 캐시 무효화 요청
       if (onSegmentUpdated) {
         onSegmentUpdated(selectedSegment.id, selectedSegment.target || "");
       }
+
+      // 강제 리렌더링 - activeTab을 잠시 변경했다가 다시 원래대로
+      setActiveTab(prev => {
+        // 현재 탭이 comments가 아닌 경우는 처리 안 함
+        if (prev !== "comments") return prev;
+        
+        // 비동기로 탭을 잠시 변경했다가 원래대로
+        setTimeout(() => {
+          setActiveTab("comments");
+        }, 10);
+        
+        // 의도적으로 다른 값 반환해 상태 변경 트리거
+        return "comments_refresh";
+      });
 
       // 성공 메시지 표시
       toast({
@@ -695,7 +712,7 @@ export function SidePanel({
     } finally {
       setIsRemovingComment(false);
     }
-  }, [selectedSegment, onSegmentUpdated, t]);
+  }, [selectedSegment, onSegmentUpdated, t, setActiveTab]);
 
   // Determine which TM matches to display
   const displayedTmMatches =
