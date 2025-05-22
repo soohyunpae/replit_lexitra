@@ -628,6 +628,8 @@
     "username": "사용자 이름",
     "email": "이메일",
     "role": "역할",
+    "adminRole": "관리자",
+    "userRole": "사용자",
     "updateProfile": "프로필 업데이트",
     "changePassword": "비밀번호 변경",
     "currentPassword": "현재 비밀번호",
