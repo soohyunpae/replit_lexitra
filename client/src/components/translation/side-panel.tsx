@@ -499,13 +499,16 @@ export function SidePanel({
     }
   }, [propPreviousVersions]);
 
-  // 댓글 추가 기능 구현
+  // 댓글 추가/편집 기능 구현
   const handleAddComment = useCallback(async () => {
     if (!commentText.trim() || !selectedSegment) return;
 
     setIsAddingComment(true);
 
     try {
+      // 현재 댓글 확인 - 있으면 수정, 없으면 새로 추가
+      const existingComment = selectedSegment.comment;
+      
       // 세그먼트 업데이트 API를 사용하여 댓글 저장
       const response = await apiRequest(
         "PATCH",
@@ -513,7 +516,10 @@ export function SidePanel({
         {
           target: selectedSegment.target || "",
           status: selectedSegment.status || "MT",
-          comment: commentText, // 댓글 필드 업데이트
+          // 기존 댓글이 있으면 새 댓글과 이전 댓글을 함께 저장
+          comment: existingComment 
+            ? `${existingComment}\n\n${new Date().toLocaleString()}: ${commentText}`
+            : commentText,
         },
       );
 
@@ -525,11 +531,19 @@ export function SidePanel({
 
       if (!selectedSegment) return;
 
-      // UI 업데이트를 위해 selectedSegment를 업데이트된 데이터로 갱신
-      // 이렇게 하면 서버에서 받은 comment가 UI에 즉시 반영됨
-      Object.assign(selectedSegment, { comment: commentText });
+      // 서버에서 받은 응답 데이터로 UI 갱신
+      if (updatedSegment && updatedSegment.comment) {
+        // 전체 세그먼트 데이터 갱신
+        Object.assign(selectedSegment, updatedSegment);
+      } else {
+        // 최악의 경우 수동으로 comment 필드 업데이트
+        const newComment = existingComment 
+          ? `${existingComment}\n\n${new Date().toLocaleString()}: ${commentText}`
+          : commentText;
+        Object.assign(selectedSegment, { comment: newComment });
+      }
 
-      // 부모 컴포넌트에 변경 알림 - comment가 포함된 새로운 target 전달
+      // 부모 컴포넌트에 변경 알림 및 캐시 무효화 요청
       if (onSegmentUpdated) {
         onSegmentUpdated(
           selectedSegment.id,
@@ -762,22 +776,22 @@ export function SidePanel({
             </div>
 
             <div className="space-y-4">
-              {/* 댓글 표시 */}
+              {/* 댓글 표시 - 개선된 버전 */}
               {selectedSegment?.comment ? (
                 <div className="space-y-3">
                   <div className="bg-accent/50 rounded-md p-3">
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-muted-foreground" />
                         <span className="text-xs font-medium">
                           {t("sidePanel.comments.user")}
                         </span>
                       </div>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date().toLocaleString()}
-                      </span>
                     </div>
-                    <p className="text-sm mt-2">{selectedSegment.comment}</p>
+                    {/* 댓글에 줄바꿈이 있으면 여러 줄로 표시 */}
+                    <div className="text-sm whitespace-pre-line">
+                      {selectedSegment.comment}
+                    </div>
                   </div>
                 </div>
               ) : (
