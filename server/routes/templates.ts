@@ -2,20 +2,19 @@ import express from 'express';
 import multer from 'multer';
 import * as path from 'path';
 import * as fs from 'fs';
-import { REPO_ROOT } from '../constants';
-import { isAdmin, isAuthenticated } from '../middlewares/auth';
+import { REPO_ROOT, TEMP_UPLOAD_DIR } from '../constants';
+import { isAdmin, isAuthenticated } from '../auth-middleware';
 import * as templateService from '../services/docx_template_service';
 
 // 업로드 디렉토리 설정
-const UPLOAD_DIR = path.join(REPO_ROOT, 'uploads', 'tmp');
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+if (!fs.existsSync(TEMP_UPLOAD_DIR)) {
+  fs.mkdirSync(TEMP_UPLOAD_DIR, { recursive: true });
 }
 
 // Multer 설정
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, UPLOAD_DIR);
+    cb(null, TEMP_UPLOAD_DIR);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
