@@ -111,11 +111,42 @@ export default function AdminConsole() {
   const [defaultTargetLang, setDefaultTargetLang] = useState<string>("EN");
 
   // User management states
-  const [users, setUsers] = useState([
-    { id: 1, username: "admin", role: "admin" },
-    { id: 2, username: "translator1", role: "user" },
-    { id: 3, username: "reviewer1", role: "user" },
-  ]);
+  const [users, setUsers] = useState<Array<{id: number, username: string, role: string}>>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [hasUserChanges, setHasUserChanges] = useState(false);
+  const [roleChanges, setRoleChanges] = useState<Record<number, string>>({});
+
+  // Fetch users data
+  const fetchUsers = async () => {
+    try {
+      setIsLoadingUsers(true);
+      const response = await fetch('/api/admin/users', {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+      
+      const data = await response.json();
+      setUsers(data.users);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast({
+        variant: "destructive",
+        title: t("common.error"),
+        description: t("admin.userManagement.fetchError")
+      });
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'user-management') {
+      fetchUsers();
+    }
+  }, [activeTab]);
 
   // Template management states
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -354,11 +385,46 @@ export default function AdminConsole() {
 
   // Handle role change
   const handleRoleChange = (userId: number, newRole: string) => {
-    setUsers(
-      users.map((user) =>
-        user.id === userId ? { ...user, role: newRole } : user,
-      ),
-    );
+    setRoleChanges(prev => ({
+      ...prev,
+      [userId]: newRole
+    }));
+    setHasUserChanges(true);
+  };
+
+  // Save user role changes
+  const handleSaveUserChanges = async () => {
+    try {
+      const response = await fetch('/api/admin/users/roles', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ changes: roleChanges })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update user roles');
+      }
+
+      toast({
+        title: t("common.success"),
+        description: t("admin.userManagement.roleUpdateSuccess")
+      });
+
+      // Refresh user list
+      fetchUsers();
+      setRoleChanges({});
+      setHasUserChanges(false);
+    } catch (error) {
+      console.error('Error updating user roles:', error);
+      toast({
+        variant: "destructive",
+        title: t("common.error"),
+        description: t("admin.userManagement.roleUpdateError")
+      });
+    }
   };
 
   // Show loading state
@@ -595,17 +661,23 @@ export default function AdminConsole() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t("admin.username")}</TableHead>
-                        <TableHead>{t("admin.role")}</TableHead>
-                        <TableHead>{t("admin.actions")}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.map((user) => (
+                {isLoadingUsers ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>{t("admin.username")}</TableHead>
+                            <TableHead>{t("admin.role")}</TableHead>
+                            <TableHead>{t("admin.actions")}</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {users.map((user) => (
                         <TableRow key={user.id}>
                           <TableCell className="font-medium flex items-center gap-2">
                             <User className="h-4 w-4 text-muted-foreground" />
@@ -648,6 +720,15 @@ export default function AdminConsole() {
                       ))}
                     </TableBody>
                   </Table>
+                </div>
+
+                <div className="flex justify-end mt-4">
+                  <Button
+                    onClick={handleSaveUserChanges}
+                    disabled={!hasUserChanges}
+                  >
+                    {t("common.save")}
+                  </Button>
                 </div>
 
                 <p className="text-xs text-muted-foreground mt-4">
