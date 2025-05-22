@@ -69,7 +69,7 @@ router.get('/templates/:id', isAdmin, async (req, res) => {
   }
 });
 
-router.post('/admin/templates', isAdmin, upload.single('template'), async (req, res) => {
+router.post('/templates', isAdmin, upload.single('template'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: '템플릿 파일이 제공되지 않았습니다.' });
@@ -104,7 +104,7 @@ router.post('/admin/templates', isAdmin, upload.single('template'), async (req, 
   }
 });
 
-router.put('/admin/templates/:id/structures/:structureId', isAdmin, async (req, res) => {
+router.put('/templates/:id/structures/:structureId', isAdmin, async (req, res) => {
   try {
     const templateId = parseInt(req.params.id);
     const structureId = parseInt(req.params.structureId);
@@ -130,7 +130,7 @@ router.put('/admin/templates/:id/structures/:structureId', isAdmin, async (req, 
   }
 });
 
-router.delete('/admin/templates/:id', isAdmin, async (req, res) => {
+router.delete('/templates/:id', isAdmin, async (req, res) => {
   try {
     const templateId = parseInt(req.params.id);
     if (isNaN(templateId)) {
@@ -153,7 +153,7 @@ router.delete('/admin/templates/:id', isAdmin, async (req, res) => {
 });
 
 // 일반 사용자용 템플릿 매칭 API
-router.post('/match-template', isAuthenticated, async (req, res) => {
+router.post('/templates/match', isAuthenticated, async (req, res) => {
   try {
     const { docxPath } = req.body;
     if (!docxPath) {
