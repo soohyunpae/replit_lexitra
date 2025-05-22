@@ -4,6 +4,7 @@ import { Languages } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type TranslationUnit } from "@/types";
 import { useTranslation } from "react-i18next";
+import { MessageSquare } from "lucide-react";
 
 interface SegmentItemProps {
   segment: TranslationUnit;
@@ -51,7 +52,12 @@ export function SegmentItem({
         onClick={onClick}
       >
         <div className="flex items-center justify-between mb-1">
-          <div className="text-xs text-muted-foreground">Segment {index}</div>
+          <div className="flex items-center gap-1">
+            <div className="text-xs text-muted-foreground">Segment {index}</div>
+            {segment.comment && (
+              <MessageSquare className="h-3 w-3 text-blue-500" />
+            )}
+          </div>
           {/* 원문에는 상태 표시를 하지 않음 */}
         </div>
         <div className="font-mono text-sm leading-relaxed flex-1">
@@ -68,7 +74,12 @@ export function SegmentItem({
       onClick={onClick}
     >
       <div className="flex items-center justify-between mb-1">
-        <div className="text-xs text-muted-foreground">Target {index}</div>
+        <div className="flex items-center gap-1">
+          <div className="text-xs text-muted-foreground">Target {index}</div>
+          {segment.comment && (
+            <MessageSquare className="h-3 w-3 text-blue-500" />
+          )}
+        </div>
         <div className="flex items-center space-x-1">
           {status && (
             <div className={cn(
