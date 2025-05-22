@@ -506,12 +506,14 @@ export function SidePanel({
     setIsAddingComment(true);
 
     try {
+      // 세그먼트 업데이트 API를 사용하여 댓글 저장
       const response = await apiRequest(
-        "POST",
-        `/api/segments/${selectedSegment.id}/comments`,
+        "PATCH",
+        `/api/segments/${selectedSegment.id}`,
         {
-          text: commentText,
-          segmentId: selectedSegment.id,
+          target: selectedSegment.target || "",
+          status: selectedSegment.status || "MT",
+          comment: commentText, // 댓글 필드 업데이트
         },
       );
 
@@ -528,7 +530,6 @@ export function SidePanel({
         onSegmentUpdated(
           selectedSegment.id,
           selectedSegment.target || "",
-          commentText,
         );
       }
 
