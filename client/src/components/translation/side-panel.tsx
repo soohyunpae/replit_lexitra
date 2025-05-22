@@ -523,26 +523,9 @@ export function SidePanel({
 
       if (!selectedSegment) return;
 
-      // 새로운 댓글 객체 생성
-      const newComment = {
-        id: result.id,
-        text: commentText,
-        author: "User",
-        createdAt: new Date().toISOString(),
-      };
-
-      // selectedSegment를 완전히 새로운 객체로 복사
-      // const updatedSegment = {
-      //   ...selectedSegment,
-      //   comment: newComment.text, // TranslationUnit에는 comment 필드만 있음 (comments 배열 없음)
-      // };
-
-      // 상태 업데이트
-      // selectedSegment 상태는 부모 컴포넌트에서 관리됨
-
-      // 부모 컴포넌트에 변경 알림
-      if (onSegmentUpdated && selectedSegment) {
-        onSegmentUpdated(selectedSegment.id, selectedSegment.target || "");
+      // 부모 컴포넌트에 변경 알림 - comment가 포함된 새로운 target 전달
+      if (onSegmentUpdated) {
+        onSegmentUpdated(selectedSegment.id, selectedSegment.target || "", commentText);
       }
 
       // 성공 메시지 표시
@@ -553,22 +536,13 @@ export function SidePanel({
 
       // 입력란 초기화
       setCommentText("");
-      setIsAddingComment(false);
-
-      // 성공 메시지 표시
-      toast({
-        title: "댓글 추가됨",
-        description: "댓글이 성공적으로 추가되었습니다.",
-        variant: "default",
-      });
     } catch (error) {
       console.error("댓글 추가 중 오류:", error);
       toast({
-        title: "댓글 추가 실패",
-        description: "댓글 추가 중 오류가 발생했습니다. 다시 시도해주세요.",
+        title: t("sidePanel.comments.failedToAddComment"),
+        description: t("sidePanel.comments.failedToAddCommentDesc"),
         variant: "destructive",
       });
-      console.error("댓글 추가 중 오류:", error);
     } finally {
       setIsAddingComment(false);
     }
