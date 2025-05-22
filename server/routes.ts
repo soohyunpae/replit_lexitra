@@ -4250,6 +4250,12 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       return handleApiError(res, error);
     }
   });
+  
+  // Register template routes with API prefix
+  app.use(`${apiPrefix}/admin`, templateRoutes);
+  
+  // Log registered routes for debugging
+  console.log('Template routes registered with prefix:', `${apiPrefix}/admin`);
 
   const httpServer = createServer(app);
 
