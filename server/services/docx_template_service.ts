@@ -347,6 +347,7 @@ export interface DocxStructureElement {
   tableIndex?: number;
   rowIndex?: number;
   cellIndex?: number;
+  content?: string; // 요소의 텍스트 내용 미리보기
   isTranslationTarget: boolean;
 }
 
