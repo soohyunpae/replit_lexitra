@@ -364,7 +364,7 @@ export default function Dashboard() {
 
       {/* Footer */}
       <footer className="text-sm text-center py-6 text-muted-foreground">
-        "© 2025 Lexitra. Built for the new era of translation."
+        © 2025 Lexitra. Built for the new era of translation.
       </footer>
     </MainLayout>
   );

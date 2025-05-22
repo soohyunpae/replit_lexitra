@@ -862,7 +862,7 @@ export default function UnifiedTranslationMemoryPage() {
           {filteredTM.length > 0 && (
             <div className="flex items-center justify-between px-4 py-4 border-t">
               <div className="text-sm text-muted-foreground">
-                {t("tm.showing", {
+                {t("common.showing", {
                   start: Math.min(
                     (currentPage - 1) * itemsPerPage + 1,
                     filteredTM.length,
@@ -880,10 +880,10 @@ export default function UnifiedTranslationMemoryPage() {
                   }
                   disabled={currentPage === 1}
                 >
-                  {t("tm.previous")}
+                  {t("common.previous")}
                 </Button>
                 <div className="text-sm mx-4">
-                  {t("tm.pageInfo", {
+                  {t("common.pageInfo", {
                     current: currentPage,
                     total: totalPages,
                   })}
@@ -896,7 +896,7 @@ export default function UnifiedTranslationMemoryPage() {
                   }
                   disabled={currentPage === totalPages}
                 >
-                  {t("tm.next")}
+                  {t("common.next")}
                 </Button>
               </div>
             </div>

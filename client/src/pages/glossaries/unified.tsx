@@ -270,8 +270,8 @@ export default function UnifiedGlossaryPage() {
       termForm.reset();
       setAddTermDialogOpen(false);
       toast({
-        title: "Term added",
-        description: "The term has been added successfully.",
+        title: t("glossaries.termAdded"),
+        description: t("glossaries.termAddedDescr"),
       });
     },
     onError: (error: any) => {
@@ -672,8 +672,8 @@ export default function UnifiedGlossaryPage() {
                           disabled={addGlossaryMutation.isPending}
                         >
                           {addGlossaryMutation.isPending
-                            ? "Adding..."
-                            : "Add Term"}
+                            ? t("common.adding")
+                            : t("glossaries.addTerm")}
                         </Button>
                       </DialogFooter>
                     </form>
@@ -954,7 +954,7 @@ export default function UnifiedGlossaryPage() {
                   {t("common.previous")}
                 </Button>
                 <div className="text-sm mx-4">
-                  {t("common.page", {
+                  {t("common.pageInfo", {
                     current: currentPage,
                     total: totalPages,
                   })}

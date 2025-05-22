@@ -37,7 +37,11 @@
     "view": "보기",
     "clear": "선택 취소",
     "success": "성공",
-    "error": "오류"
+    "error": "오류",
+    "showing": "{{start}} - {{end}} / {{total}}개 표시",
+    "previous": "이전",
+    "pageInfo": "{{current}} / {{total}} 페이지",
+    "adding": "추가 중..."
   },
   "auth": {
     "login": "로그인",
@@ -144,6 +148,7 @@
     "bulkConfirmReopen": "{{count}}개의 프로젝트를 재개하시겠습니까?",
     "bulkCompleteSuccess": "{{count}}개의 프로젝트가 완료 처리되었습니다.",
     "bulkCompleteError": "프로젝트 완료 처리에 실패했습니다",
+    "bulkActionErrorDesc": "프로젝트가 할당된 상태가 아닙니다",
     "details": "프로젝트 세부 정보",
     "files": "파일",
     "addFile": "파일 추가",
@@ -171,9 +176,9 @@
     "confirmRelease": "해제 확인",
     "releaseDescription": "프로젝트를 해제하면 다른 사용자가 할당받을 수 있게 됩니다. 이 프로젝트를 해제하시겠습니까?",
     "confirmComplete": "완료 확인",
-    "completeDescription": "이 프로젝트를 완료로 표시하시겠습니까? 완료된 프로젝트는 더 이상 편집할 수 없습니다.",
+    "completeDescription": "이 프로젝트를 완료로 표시하시겠습니까? 완료된 프로젝트는 쿽���� 이상 편집할 수 없습���다.",
     "confirmReopen": "재개 확인",
-    "reopenDescription": "이 완료된 프로젝트를 재개하고 상태를 진행 중으로 변경하시겠습니까?",
+    "reopenDescription": "이 완료된 ���로젝트를 재개하고 상태를 진행 중으로 변경하시겠습니까?",
     "translationSummary": "번역 상태 요약",
     "words": "단어",
     "reviewedRate": "검토한 세그먼트",
@@ -305,6 +310,9 @@
     "addNewTermDescription": "용어집 데이터베이스에 새 용어를 추가합니다.",
     "selectSourceLanguage": "원본 언어 선택",
     "selectTargetLanguage": "대상 언어 선택",
+    "added": "추가됨",
+    "termAdded": "용어 추가됨",
+    "termAddedDescr": "용어가 성공적으로 추가되었습니다.",
     "glossaryName": "용어집 이름",
     "glossaryDescription": "용어집 설명",
     "sourceLanguage": "원본 언어",
@@ -324,11 +332,11 @@
     "sourceText": "원본 텍스트",
     "targetText": "대상 텍스트",
     "context": "컨텍스트",
-    "entryAdded": "항목이 성공적으로 추가되었습니다",
+    "entryAdded": "항목이 넱공적으로 추가되었습니다",
     "entryUpdated": "항목이 성공적으로 업데이트되었습니다",
-    "entryDeleted": "항목이 성공적으로 삭제되었습니다",
+    "entryDeleted": "항목이 ed�공적으로 ���제되었습ec�다",
     "importGlossary": "용어집 가져오기",
-    "exportGlossary": "용어집 내보내기",
+    "exportGlossary": "용어집 내보내���",
     "manageGlossaryDesc": "용어집 항목 및 목록 관리",
     "manageEntries": "용어집 항목, 원본 및 대상 용  � 관리",
     "manageList": "용어집 목록, 도메인 및 언어 쌍 관리",
@@ -474,9 +482,6 @@
     "comments": "댓글",
     "glossary": "용어집",
     "statusDescriptions": {
-
-    "Project is not in claimed status": "프로젝트가 할당된 상태가 아닙니다"
-
       "reviewed": "최종 승인 버전",
       "rejected": "부적절 표시됨",
       "edited": "사람이 수정함",
@@ -525,10 +530,6 @@
   },
   "tm": {
     "title": "번역 메모리",
-    "showing": "{{start}} - {{end}} / {{total}}개 표시",
-    "previous": "이전",
-    "next": "다음",
-    "pageInfo": "{{current}} / {{total}} 페이지",
     "entryDeletedSuccess": "번역 메모리 항목이 성공적으로 삭제되었습니다.",
     "failedToDeleteEntry": "항목 삭제 실패: {{message}}",
     "added": "추가됨",
