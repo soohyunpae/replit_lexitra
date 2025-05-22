@@ -521,9 +521,13 @@ export function SidePanel({
         throw new Error(`Failed to add comment: ${response.status}`);
       }
 
-      const result = await response.json();
+      const updatedSegment = await response.json();
 
       if (!selectedSegment) return;
+
+      // UI 업데이트를 위해 selectedSegment를 업데이트된 데이터로 갱신
+      // 이렇게 하면 서버에서 받은 comment가 UI에 즉시 반영됨
+      Object.assign(selectedSegment, { comment: commentText });
 
       // 부모 컴포넌트에 변경 알림 - comment가 포함된 새로운 target 전달
       if (onSegmentUpdated) {
@@ -796,7 +800,12 @@ export function SidePanel({
                       "text-xs transition-all duration-200",
                       isAddingComment && "bg-primary/10",
                     )}
-                    onClick={handleAddComment}
+                    onClick={(e) => {
+                      e.preventDefault(); // 이벤트 기본 동작 방지
+                      if (!isAddingComment && commentText.trim()) {
+                        handleAddComment();
+                      }
+                    }}
                     disabled={isAddingComment || !commentText.trim()}
                   >
                     {isAddingComment ? (
