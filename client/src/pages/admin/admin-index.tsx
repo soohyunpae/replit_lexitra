@@ -678,65 +678,67 @@ export default function AdminConsole() {
                         </TableHeader>
                         <TableBody>
                           {users.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium flex items-center gap-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            {user.username}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Shield
-                                className={`h-4 w-4 ${user.role === "admin" ? "text-primary" : "text-muted-foreground"}`}
-                              />
-                              {user.role === "admin"
-                                ? t("admin.administratorRole")
-                                : t("admin.userRole")}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Select
-                              value={user.role}
-                              onValueChange={(value) =>
-                                handleRoleChange(user.id, value)
-                              }
-                              disabled={user.username === "admin"} // Don't allow changing the main admin
-                            >
-                              <SelectTrigger className="w-32">
-                                <SelectValue
-                                  placeholder={t("admin.selectRole")}
-                                />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="admin">
-                                  {t("admin.administratorRole")}
-                                </SelectItem>
-                                <SelectItem value="user">
-                                  {t("admin.userRole")}
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                            <TableRow key={user.id}>
+                              <TableCell className="font-medium flex items-center gap-2">
+                                <User className="h-4 w-4 text-muted-foreground" />
+                                {user.username}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Shield
+                                    className={`h-4 w-4 ${user.role === "admin" ? "text-primary" : "text-muted-foreground"}`}
+                                  />
+                                  {user.role === "admin"
+                                    ? t("admin.administratorRole")
+                                    : t("admin.userRole")}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Select
+                                  value={user.role}
+                                  onValueChange={(value) =>
+                                    handleRoleChange(user.id, value)
+                                  }
+                                  disabled={user.username === "admin"} // Don't allow changing the main admin
+                                >
+                                  <SelectTrigger className="w-32">
+                                    <SelectValue
+                                      placeholder={t("admin.selectRole")}
+                                    />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="admin">
+                                      {t("admin.administratorRole")}
+                                    </SelectItem>
+                                    <SelectItem value="user">
+                                      {t("admin.userRole")}
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
 
-                <div className="flex justify-end mt-4">
-                  <Button
-                    onClick={handleSaveUserChanges}
-                    disabled={!hasUserChanges}
-                  >
-                    {t("common.save")}
-                  </Button>
-                </div>
+                    <div className="flex justify-end mt-4">
+                      <Button
+                        onClick={handleSaveUserChanges}
+                        disabled={!hasUserChanges}
+                      >
+                        {t("common.save")}
+                      </Button>
+                    </div>
 
-                <p className="text-xs text-muted-foreground mt-4">
-                  <strong>{t("admin.administratorRole")}:</strong>{" "}
-                  {t("admin.administratorDesc")}
-                  <br />
-                  <strong>{t("admin.userRole")}:</strong> {t("admin.userDesc")}
-                </p>
+                    <p className="text-xs text-muted-foreground mt-4">
+                      <strong>{t("admin.administratorRole")}:</strong>{" "}
+                      {t("admin.administratorDesc")}
+                      <br />
+                      <strong>{t("admin.userRole")}:</strong> {t("admin.userDesc")}
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

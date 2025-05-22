@@ -4251,6 +4251,79 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
     }
   });
   
+  // Admin User Management API
+  // GET: 모든 사용자 목록 가져오기
+  app.get(`${apiPrefix}/admin/users`, verifyToken, async (req, res) => {
+    try {
+      // Check if the user has admin privileges
+      if (req.user?.role !== "admin") {
+        return res.status(403).json({ message: "Admin privileges required" });
+      }
+      
+      // Fetch all users from the database
+      const allUsers = await db.query.users.findMany({
+        orderBy: (users, { desc }) => [desc(users.role)]
+      });
+      
+      // Return the users (excluding passwords for security)
+      const safeUsers = allUsers.map(({ password, ...user }) => user);
+      return res.json({ users: safeUsers });
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+  
+  // PUT: 사용자 권한 업데이트
+  app.put(`${apiPrefix}/admin/users/roles`, verifyToken, async (req, res) => {
+    try {
+      // Check if the user has admin privileges
+      if (req.user?.role !== "admin") {
+        return res.status(403).json({ message: "Admin privileges required" });
+      }
+      
+      // Validate request body
+      const changes = req.body.changes as Record<number, string>;
+      if (!changes || Object.keys(changes).length === 0) {
+        return res.status(400).json({ message: "No changes provided" });
+      }
+      
+      // For each user ID in the changes object, update their role
+      const updatePromises = Object.entries(changes).map(async ([userId, newRole]) => {
+        const id = parseInt(userId);
+        
+        // Don't allow changing the main admin account
+        const userToUpdate = await db.query.users.findFirst({
+          where: eq(schema.users.id, id)
+        });
+        
+        if (userToUpdate?.username === "admin") {
+          return { success: false, id, message: "Cannot change main admin role" };
+        }
+        
+        // Validate role
+        if (newRole !== "admin" && newRole !== "user") {
+          return { success: false, id, message: "Invalid role" };
+        }
+        
+        // Update the user's role
+        await db.update(schema.users)
+          .set({ role: newRole })
+          .where(eq(schema.users.id, id));
+          
+        return { success: true, id, newRole };
+      });
+      
+      const results = await Promise.all(updatePromises);
+      
+      return res.json({ 
+        message: "User roles updated successfully",
+        results
+      });
+    } catch (error) {
+      return handleApiError(res, error);
+    }
+  });
+
   // Register template routes with API prefix
   app.use(`${apiPrefix}/admin`, templateRoutes);
   
