@@ -488,7 +488,7 @@
       "templatesExplanation": "템플릿은 반복되는 레이아웃을 가진 문서의 번역 과정을 간소화하는 데 도움이 됩니다.",
       "manageTemplates": "템플릿 관리",
       "uploadTemplates": "템플릿 업로드",
-      "uploadTemplatesDesc": "DOCX 템플릿을 업로드하고 번역��� 요소를 얕의합���다.",
+      "uploadTemplatesDesc": "DOCX 템플릿을 업로드하고 번역할 요소를 정의합니다.",
       "goToTemplates": "템플릿으로 이동",
       "applyTemplates": "템플릿 적용",
       "applyTemplatesDesc": "진행 중인 번역 프로젝트에 템플릿을 적용합니다.",
@@ -520,7 +520,13 @@
       "confirmDelete": "이 템플릿을 삭제하시겠습니까?",
       "error": "템플릿 상세 정보를 불러오는 중 오류가 발생했습니다.",
       "deleteSuccess": "템플릿이 성공적으로 삭제되었습니다.",
-      "errorUploading": "템플릿을 업로드하는 중 오류가 발생했습니다."
+      "errorUploading": "템플릿을 업로드하는 중 오류가 발생했습니다.",
+      "manager": "템플릿 관리자",
+      "uploadNew": "새 템플릿 업로드",
+      "list": "템플릿 목록",
+      "listDescription": "등록된 템플릿을 확인하고 관리할 수 있습니다.",
+      "noDescription": "설명 없음",
+      "uploadButton": "템플릿 업로드"
     }
   },
   "sidePanel": {

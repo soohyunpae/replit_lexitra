@@ -538,7 +538,60 @@ export default function AdminConsole() {
 
           {/* Templates Tab Content */}
           <TabsContent value="templates" className="space-y-4">
-            <TemplateManager />
+            <Card>
+                <CardHeader>
+                  <CardTitle>{t("admin.templates.manager")}</CardTitle>
+                  <CardDescription>{t("admin.templates.uploadNew")}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <TemplateManager />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t("admin.templates.list")}</CardTitle>
+                  <CardDescription>
+                    {t("admin.templates.listDescription")}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t("admin.templates.name")}</TableHead>
+                        <TableHead>{t("admin.templates.templateDescription")}</TableHead>
+                        <TableHead>{t("admin.templates.useCount")}</TableHead>
+                        <TableHead>{t("admin.templates.createdOn")}</TableHead>
+                        <TableHead>{t("common.actions")}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {templates?.map((template) => (
+                        <TableRow key={template.id}>
+                          <TableCell>{template.name}</TableCell>
+                          <TableCell>
+                            {template.description || t("admin.templates.noDescription")}
+                          </TableCell>
+                          <TableCell>{template.useCount}</TableCell>
+                          <TableCell>
+                            {new Date(template.createdAt).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleViewTemplate(template.id)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
           </TabsContent>
 
           <div className="text-sm text-muted-foreground mt-6 pt-4 border-t">
