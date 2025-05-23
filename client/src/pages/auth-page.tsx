@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/form";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
-import { useTranslation } from "@/i18n";
+import { useTranslation } from "react-i18next";
 
 const loginSchema = z.object({
   username: z.string().min(1, { message: "Please enter your username." }),
@@ -101,9 +101,11 @@ export default function AuthPage() {
       <div className="flex flex-col justify-center w-full lg:w-1/2 px-4 sm:px-6 lg:px-8 py-12">
         <div className="mx-auto w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold tracking-tight mb-2">{t('common.appName')}</h1>
+            <h1 className="text-3xl font-bold tracking-tight mb-2">
+              {t("common.appName")}
+            </h1>
             <p className="text-muted-foreground">
-              {t('auth.platformDescription')}
+              {t("auth.platformDescription")}
             </p>
           </div>
 
@@ -113,16 +115,16 @@ export default function AuthPage() {
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
-              <TabsTrigger value="register">{t('auth.register')}</TabsTrigger>
+              <TabsTrigger value="login">{t("auth.login")}</TabsTrigger>
+              <TabsTrigger value="register">{t("auth.register")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('auth.login')}</CardTitle>
+                  <CardTitle>{t("auth.login")}</CardTitle>
                   <CardDescription>
-                    {t('auth.loginDescription')}
+                    {t("auth.loginDescription")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -136,10 +138,10 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t('auth.username')}</FormLabel>
+                            <FormLabel>{t("auth.username")}</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder={t('auth.enterUsername')}
+                                placeholder={t("auth.enterUsername")}
                                 {...field}
                               />
                             </FormControl>
@@ -187,8 +189,10 @@ export default function AuthPage() {
             <TabsContent value="register">
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('auth.register')}</CardTitle>
-                  <CardDescription>{t('auth.registerDescription')}</CardDescription>
+                  <CardTitle>{t("auth.register")}</CardTitle>
+                  <CardDescription>
+                    {t("auth.registerDescription")}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Form {...registerForm}>
@@ -201,10 +205,10 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t('auth.username')}</FormLabel>
+                            <FormLabel>{t("auth.username")}</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder={t('auth.enterUsername')}
+                                placeholder={t("auth.enterUsername")}
                                 {...field}
                               />
                             </FormControl>
