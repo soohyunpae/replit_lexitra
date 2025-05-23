@@ -380,7 +380,7 @@ function GlossaryTerm({
               {t("sidePanel.applying")}
             </>
           ) : (
-            t("sidePanel.glossary.useTerm")
+            t("sidePanel.useTerm")
           )}
         </Button>
       </div>
@@ -695,7 +695,7 @@ export function SidePanel({
       // 강제 리렌더링을 위해 새 객체 생성과 함께 전체 세그먼트 데이터 갱신
       if (updatedSegment) {
         // 응답 데이터의 모든 필드 복사 (comment가 비어있는지 확인)
-        Object.keys(updatedSegment).forEach(key => {
+        Object.keys(updatedSegment).forEach((key) => {
           selectedSegment[key] = updatedSegment[key];
         });
       }
@@ -706,7 +706,7 @@ export function SidePanel({
       }
 
       // 강제 리렌더링 - activeTab을 잠시 변경했다가 다시 원래대로
-      setActiveTab(prev => {
+      setActiveTab((prev) => {
         // 현재 탭이 comments가 아닌 경우는 처리 안 함
         if (prev !== "comments") return prev;
 
@@ -737,18 +737,15 @@ export function SidePanel({
   }, [selectedSegment, onSegmentUpdated, t, setActiveTab]);
 
   // Determine which TM matches to display
-  const displayedTmMatches = useMemo(
-    () => {
-      if (tmSearchQuery.length >= 2) {
-        return globalTmResults;
-      }
-      if (tmSearchQuery.length > 0 && tmSearchQuery.length < 2) {
-        return [];
-      }
-      return tmMatches;
-    },
-    [tmSearchQuery, globalTmResults, tmMatches],
-  );
+  const displayedTmMatches = useMemo(() => {
+    if (tmSearchQuery.length >= 2) {
+      return globalTmResults;
+    }
+    if (tmSearchQuery.length > 0 && tmSearchQuery.length < 2) {
+      return [];
+    }
+    return tmMatches;
+  }, [tmSearchQuery, globalTmResults, tmMatches]);
 
   // Get glossary terms for highlighting in TM matches
   const glossarySourceTerms = glossaryTerms.map((term) => term.source);
@@ -964,18 +961,18 @@ export function SidePanel({
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-6 w-6 p-0" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
                             onClick={() => setIsEditingComment(false)}
                             title="편집 취소"
                           >
                             <X className="h-3.5 w-3.5 text-muted-foreground" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             className="h-6 w-6 p-0 text-blue-500"
                             onClick={saveEditedComment}
                             title="저장"
@@ -1001,20 +998,20 @@ export function SidePanel({
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-6 w-6 p-0" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
                             onClick={startEditingComment}
                             title="댓글 편집"
                             disabled={isRemovingComment}
                           >
                             <Edit className="h-3.5 w-3.5 text-muted-foreground hover:text-blue-500" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-6 w-6 p-0" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
                             onClick={removeComment}
                             title="댓글 삭제"
                             disabled={isRemovingComment}

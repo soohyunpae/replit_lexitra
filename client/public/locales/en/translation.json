@@ -53,7 +53,14 @@
     "resetPassword": "Reset Password",
     "loginError": "Invalid username or password",
     "logoutSuccess": "You have been logged out successfully",
-    "loggingOut": "Logging out..."
+    "loggingOut": "Logging out...",
+    "loginSuccess": "Login Successful",
+    "welcomeUser": "Welcome, {{username}}!",
+    "loginFailed": "Login Failed",
+    "registerSuccess": "Registration Successful",
+    "registerFailed": "Registration Failed",
+    "logoutError": "Logout Error",
+    "logoutErrorDesc": "There was an issue logging you out, but it has been handled. Please log in again."
   },
   "dashboard": {
     "title": "Dashboard",
