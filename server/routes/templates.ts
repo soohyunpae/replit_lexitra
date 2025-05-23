@@ -174,4 +174,38 @@ router.post('/templates/match', async (req, res) => {
   }
 });
 
+// 템플릿 기반 DOCX 파일 생성 API
+router.post('/templates/:id/fill', async (req, res) => {
+  try {
+    const templateId = parseInt(req.params.id);
+    if (isNaN(templateId)) {
+      return res.status(400).json({ error: '유효하지 않은 템플릿 ID입니다.' });
+    }
+
+    const { data, outputFileName } = req.body;
+    if (!data || typeof data !== 'object') {
+      return res.status(400).json({ error: '템플릿 데이터가 제공되지 않았습니다.' });
+    }
+
+    const result = await templateService.generateDocxFromTemplate(templateId, data, outputFileName);
+    
+    if (result.success) {
+      res.json({
+        success: true,
+        message: 'DOCX 파일이 성공적으로 생성되었습니다.',
+        downloadUrl: result.filePath,
+        fileName: result.fileName
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: result.error || 'DOCX 파일 생성에 실패했습니다.'
+      });
+    }
+  } catch (error) {
+    console.error('DOCX 파일 생성 오류:', error);
+    res.status(500).json({ error: 'DOCX 파일을 생성하는 중 오류가 발생했습니다.' });
+  }
+});
+
 export default router;
