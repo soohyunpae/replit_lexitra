@@ -1,5 +1,5 @@
 /**
- * DOCX Template Service
+ * DOCX Template Service - docx-templater 기반으로 리팩토링
  * 관리자용 DOCX 템플릿 관리 및 사용자용 템플릿 적용 기능을 제공하는 서비스
  */
 
@@ -10,6 +10,7 @@ import { REPO_ROOT } from '../constants';
 import { db } from "@db";
 import * as schema from "@shared/schema";
 import { eq, and } from "drizzle-orm";
+import { validateTemplate, extractPlaceholders, fillDocxTemplate, type TemplateData } from '../utils/docx_fill';
 
 // 템플릿 파일 업로드 및 저장 경로
 const TEMPLATE_DIR = path.join(REPO_ROOT, 'uploads', 'templates');
@@ -20,85 +21,45 @@ if (!fs.existsSync(TEMPLATE_DIR)) {
 }
 
 /**
- * DOCX 문서 구조 분석 및 템플릿 정의
+ * DOCX 템플릿 분석 - docx-templater placeholder 추출
  */
-export async function analyzeDocxStructure(filePath: string): Promise<DocxStructureElement[]> {
+export async function analyzeDocxTemplate(filePath: string): Promise<{
+  placeholders: string[];
+  isValid: boolean;
+  errors: string[];
+  htmlPreview: string;
+}> {
   try {
-    const result = await mammoth.convertToHtml({ path: filePath });
-    const html = result.value;
+    // docx-templater를 사용해 placeholder 추출
+    const validation = await validateTemplate(filePath);
     
-    // 문서 구조 분석
-    const structure = await analyzeHtmlStructure(html);
-    return structure;
+    if (!validation.isValid) {
+      throw new Error(`템플릿 유효성 검사 실패: ${validation.errors.join(', ')}`);
+    }
+    
+    // mammoth로 추가 구조 정보 추출 (참고용)
+    let htmlPreview = '';
+    try {
+      const result = await mammoth.convertToHtml({ path: filePath });
+      htmlPreview = result.value.substring(0, 1000); // 처음 1000자만 미리보기
+    } catch (error) {
+      console.warn('Mammoth HTML 변환 실패:', error);
+    }
+    
+    return {
+      placeholders: validation.placeholders,
+      isValid: validation.isValid,
+      errors: validation.errors,
+      htmlPreview,
+    };
   } catch (error) {
-    console.error("DOCX 문서 구조 분석 오류:", error);
+    console.error("DOCX 템플릿 분석 오류:", error);
     throw error;
   }
 }
 
 /**
- * HTML로 변환된 DOCX 문서 구조 분석
- */
-async function analyzeHtmlStructure(html: string): Promise<DocxStructureElement[]> {
-  const structure: DocxStructureElement[] = [];
-  
-  // 임시 DOM 생성을 위한 JSDOM 대신 간단한 파싱 방식 사용
-  // 단락 검색
-  const paragraphs = html.match(/<p[^>]*>.*?<\/p>/g) || [];
-  paragraphs.forEach((p, index) => {
-    // 스타일 클래스 추출 (mammoth는 스타일을 클래스로 변환)
-    const styleMatch = p.match(/class="([^"]+)"/);
-    const styleName = styleMatch ? styleMatch[1] : 'normal';
-    
-    // 단락 내용 텍스트 추출 (HTML 태그 제거)
-    const paragraphContent = p.replace(/<[^>]*>/g, '').trim();
-    const contentPreview = paragraphContent.length > 30 ? 
-      paragraphContent.substring(0, 30) + '...' : 
-      paragraphContent || '(빈 단락)';
-    
-    structure.push({
-      elementType: 'paragraph',
-      index,
-      styleName,
-      content: contentPreview,
-      isTranslationTarget: true
-    });
-  });
-  
-  // 테이블 검색
-  const tables = html.match(/<table[^>]*>.*?<\/table>/g) || [];
-  tables.forEach((table, tableIndex) => {
-    // 행 검색
-    const rows = table.match(/<tr[^>]*>.*?<\/tr>/g) || [];
-    
-    rows.forEach((row, rowIndex) => {
-      // 셀 검색
-      const cells = row.match(/<t[dh][^>]*>.*?<\/t[dh]>/g) || [];
-      
-      cells.forEach((cell, cellIndex) => {
-        // 셀 내용 텍스트 추출 (HTML 태그 제거)
-        const cellContent = cell.replace(/<[^>]*>/g, '').trim();
-        const contentPreview = cellContent.length > 30 ? 
-          cellContent.substring(0, 30) + '...' : 
-          cellContent || '(빈 셀)';
-        
-        structure.push({
-          elementType: 'table',
-          tableIndex,
-          rowIndex,
-          cellIndex,
-          content: contentPreview,
-          isTranslationTarget: true
-        });
-      });
-    });
-  });
-  
-  return structure;
-}
-
-/**
- * 관리자가 업로드한 템플릿 파일 저장 및 처리
+ * 관리자가 업로드한 템플릿 파일 저장 및 처리 - docx-templater 기반
  */
 export async function saveTemplate(
   file: Express.Multer.File,
@@ -114,32 +75,38 @@ export async function saveTemplate(
     // 파일 복사
     fs.copyFileSync(file.path, templatePath);
     
+    // 템플릿 분석
+    const analysis = await analyzeDocxTemplate(templatePath);
+    
     // DB에 템플릿 정보 저장
     const [newTemplate] = await db.insert(schema.docTemplates)
       .values({
         name,
         description,
         docxFilePath: templatePath,
+        placeholderData: {
+          placeholders: analysis.placeholders,
+          htmlPreview: analysis.htmlPreview,
+          analyzedAt: new Date().toISOString(),
+        },
         createdBy: userId,
         createdAt: new Date(),
         updatedAt: new Date()
       })
       .returning();
     
-    // 문서 구조 분석
-    const structure = await analyzeDocxStructure(templatePath);
-    
-    // 구조 정보 저장
-    for (const element of structure) {
-      await db.insert(schema.templateStructures)
+    // 각 placeholder를 템플릿 필드로 저장
+    for (let i = 0; i < analysis.placeholders.length; i++) {
+      const placeholder = analysis.placeholders[i];
+      await db.insert(schema.templateFields)
         .values({
           templateId: newTemplate.id,
-          segmentType: element.elementType,
-          tableIndex: element.tableIndex,
-          rowIndex: element.rowIndex,
-          cellIndex: element.cellIndex,
-          styleName: element.styleName,
-          isTranslationTarget: element.isTranslationTarget,
+          placeholder,
+          fieldType: 'text',
+          description: `Auto-detected field: ${placeholder}`,
+          isRequired: true,
+          isTranslatable: true,
+          orderIndex: i,
           createdAt: new Date(),
           updatedAt: new Date()
         });
@@ -153,21 +120,27 @@ export async function saveTemplate(
 }
 
 /**
- * 템플릿 구조 요소 업데이트
+ * 템플릿 필드 업데이트
  */
-export async function updateTemplateStructure(
-  structureId: number,
-  isTranslationTarget: boolean
+export async function updateTemplateField(
+  fieldId: number,
+  updates: Partial<{
+    description: string;
+    isRequired: boolean;
+    isTranslatable: boolean;
+    fieldType: string;
+    sampleContent: string;
+  }>
 ): Promise<void> {
   try {
-    await db.update(schema.templateStructures)
+    await db.update(schema.templateFields)
       .set({
-        isTranslationTarget,
+        ...updates,
         updatedAt: new Date()
       })
-      .where(eq(schema.templateStructures.id, structureId));
+      .where(eq(schema.templateFields.id, fieldId));
   } catch (error) {
-    console.error("템플릿 구조 업데이트 오류:", error);
+    console.error("템플릿 필드 업데이트 오류:", error);
     throw error;
   }
 }
@@ -184,7 +157,8 @@ export async function getTemplates(): Promise<schema.DocTemplate[]> {
             id: true,
             username: true
           }
-        }
+        },
+        fields: true
       }
     });
     
@@ -198,7 +172,10 @@ export async function getTemplates(): Promise<schema.DocTemplate[]> {
 /**
  * 템플릿 상세 정보 조회
  */
-export async function getTemplateDetails(templateId: number): Promise<TemplateDetail | null> {
+export async function getTemplateDetails(templateId: number): Promise<{
+  template: schema.DocTemplate;
+  fields: schema.TemplateField[];
+} | null> {
   try {
     const template = await db.query.docTemplates.findFirst({
       where: eq(schema.docTemplates.id, templateId),
@@ -209,7 +186,7 @@ export async function getTemplateDetails(templateId: number): Promise<TemplateDe
             username: true
           }
         },
-        structures: true
+        fields: true
       }
     });
     
@@ -217,7 +194,7 @@ export async function getTemplateDetails(templateId: number): Promise<TemplateDe
     
     return {
       template,
-      structures: template.structures
+      fields: template.fields
     };
   } catch (error) {
     console.error("템플릿 상세 정보 조회 오류:", error);
@@ -230,9 +207,9 @@ export async function getTemplateDetails(templateId: number): Promise<TemplateDe
  */
 export async function deleteTemplate(templateId: number): Promise<boolean> {
   try {
-    // 템플릿 구조 요소 먼저 삭제
-    await db.delete(schema.templateStructures)
-      .where(eq(schema.templateStructures.templateId, templateId));
+    // 템플릿 필드 먼저 삭제
+    await db.delete(schema.templateFields)
+      .where(eq(schema.templateFields.templateId, templateId));
     
     // 템플릿 정보 조회
     const template = await db.query.docTemplates.findFirst({
@@ -258,20 +235,26 @@ export async function deleteTemplate(templateId: number): Promise<boolean> {
 }
 
 /**
- * DOCX 파일과 템플릿 구조 비교
+ * DOCX 파일과 템플릿 구조 비교 - docx-templater 기반
  * 사용자가 업로드한 DOCX가 등록된 템플릿과 일치하는지 확인
  */
 export async function matchTemplateToDocument(
   docxPath: string
-): Promise<TemplateMatchResult | null> {
+): Promise<{
+  template: schema.DocTemplate;
+  matchScore: number;
+  fields: schema.TemplateField[];
+} | null> {
   try {
     // 템플릿 목록 조회
     const templates = await getTemplates();
     
     if (templates.length === 0) return null;
     
-    // 문서 구조 분석
-    const documentStructure = await analyzeDocxStructure(docxPath);
+    // 문서에서 placeholder 추출
+    const documentPlaceholders = await extractPlaceholders(docxPath);
+    
+    if (documentPlaceholders.length === 0) return null;
     
     // 각 템플릿과 비교
     for (const template of templates) {
@@ -279,11 +262,10 @@ export async function matchTemplateToDocument(
       
       if (!templateDetail) continue;
       
-      // 기본 구조 일치 검사
-      // (간단한 구현을 위해 요소 개수 및 타입만 비교)
-      const matchScore = calculateTemplateMatchScore(
-        documentStructure, 
-        templateDetail.structures
+      // placeholder 기반 매칭
+      const matchScore = calculatePlaceholderMatchScore(
+        documentPlaceholders, 
+        templateDetail.fields
       );
       
       // 일치율이 높으면 해당 템플릿 반환
@@ -291,7 +273,7 @@ export async function matchTemplateToDocument(
         return {
           template: templateDetail.template,
           matchScore,
-          structures: templateDetail.structures.filter(s => s.isTranslationTarget)
+          fields: templateDetail.fields.filter(f => f.isTranslatable)
         };
       }
     }
@@ -304,60 +286,75 @@ export async function matchTemplateToDocument(
 }
 
 /**
- * 템플릿과 문서 구조의 일치율 계산
+ * placeholder 기반 템플릿 매칭 점수 계산
  */
-function calculateTemplateMatchScore(
-  documentStructure: DocxStructureElement[],
-  templateStructures: schema.TemplateStructure[]
+function calculatePlaceholderMatchScore(
+  documentPlaceholders: string[],
+  templateFields: schema.TemplateField[]
 ): number {
-  // 구조 요소 개수가 너무 다르면 일치하지 않음
-  if (Math.abs(documentStructure.length - templateStructures.length) > 5) {
+  if (documentPlaceholders.length === 0 || templateFields.length === 0) {
     return 0;
   }
   
-  let matches = 0;
+  const templatePlaceholders = templateFields.map(f => f.placeholder);
   
-  // 테이블 구조 비교
-  const docTables = documentStructure.filter(e => e.elementType === 'table');
-  const templateTables = templateStructures.filter(t => t.segmentType === 'table');
+  // 정확히 일치하는 placeholder 개수
+  const exactMatches = documentPlaceholders.filter(dp => 
+    templatePlaceholders.includes(dp)
+  ).length;
   
-  if (docTables.length === templateTables.length) {
-    matches += 1;
+  // Jaccard similarity (교집합 / 합집합)
+  const union = new Set([...documentPlaceholders, ...templatePlaceholders]).size;
+  const intersection = exactMatches;
+  
+  return intersection / union;
+}
+
+/**
+ * 템플릿에 데이터를 삽입하여 DOCX 파일 생성
+ */
+export async function generateDocxFromTemplate(
+  templateId: number,
+  data: TemplateData,
+  outputFileName?: string
+): Promise<{
+  success: boolean;
+  filePath?: string;
+  fileName?: string;
+  error?: string;
+}> {
+  try {
+    const templateDetail = await getTemplateDetails(templateId);
+    
+    if (!templateDetail) {
+      return {
+        success: false,
+        error: '템플릿을 찾을 수 없습니다.'
+      };
+    }
+    
+    const result = await fillDocxTemplate(
+      templateDetail.template.docxFilePath,
+      data,
+      outputFileName
+    );
+    
+    if (result.success) {
+      // 사용 횟수 증가
+      await db.update(schema.docTemplates)
+        .set({
+          useCount: templateDetail.template.useCount + 1,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.docTemplates.id, templateId));
+    }
+    
+    return result;
+  } catch (error) {
+    console.error("DOCX 생성 오류:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
-  
-  // 단락 개수 비교
-  const docParagraphs = documentStructure.filter(e => e.elementType === 'paragraph');
-  const templateParagraphs = templateStructures.filter(t => t.segmentType === 'paragraph');
-  
-  // 단락 일치율 계산
-  const paragraphSimilarity = 1 - Math.abs(docParagraphs.length - templateParagraphs.length) / 
-    (docParagraphs.length + templateParagraphs.length);
-  
-  matches += paragraphSimilarity;
-  
-  // 기본적인 일치율 계산
-  return matches / 2; // 0~1 사이 값으로 정규화
-}
-
-// 타입 정의
-export interface DocxStructureElement {
-  elementType: 'paragraph' | 'table' | 'heading';
-  index?: number;
-  styleName?: string;
-  tableIndex?: number;
-  rowIndex?: number;
-  cellIndex?: number;
-  content?: string; // 요소의 텍스트 내용 미리보기
-  isTranslationTarget: boolean;
-}
-
-export interface TemplateDetail {
-  template: schema.DocTemplate;
-  structures: schema.TemplateStructure[];
-}
-
-export interface TemplateMatchResult {
-  template: schema.DocTemplate;
-  matchScore: number;
-  structures: schema.TemplateStructure[];
 }

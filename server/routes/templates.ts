@@ -61,7 +61,10 @@ router.get('/templates/:id', async (req, res) => {
       return res.status(404).json({ error: '템플릿을 찾을 수 없습니다.' });
     }
 
-    res.json(templateDetail);
+    res.json({
+      template: templateDetail.template,
+      fields: templateDetail.fields
+    });
   } catch (error) {
     console.error('템플릿 상세 정보 조회 오류:', error);
     res.status(500).json({ error: '템플릿 정보를 불러오는 중 오류가 발생했습니다.' });
@@ -100,29 +103,32 @@ router.post('/templates', upload.single('template'), async (req, res) => {
   }
 });
 
-router.put('/templates/:id/structures/:structureId', async (req, res) => {
+router.put('/templates/:id/fields/:fieldId', async (req, res) => {
   try {
     const templateId = parseInt(req.params.id);
-    const structureId = parseInt(req.params.structureId);
+    const fieldId = parseInt(req.params.fieldId);
     
-    if (isNaN(templateId) || isNaN(structureId)) {
+    if (isNaN(templateId) || isNaN(fieldId)) {
       return res.status(400).json({ error: '유효하지 않은 ID입니다.' });
     }
 
-    const { isTranslationTarget } = req.body;
-    if (typeof isTranslationTarget !== 'boolean') {
-      return res.status(400).json({ error: '번역 대상 여부는 필수입니다.' });
-    }
+    const { description, isRequired, isTranslatable, fieldType, sampleContent } = req.body;
 
-    await templateService.updateTemplateStructure(structureId, isTranslationTarget);
+    await templateService.updateTemplateField(fieldId, {
+      description,
+      isRequired,
+      isTranslatable,
+      fieldType,
+      sampleContent
+    });
 
     res.json({ 
       success: true, 
-      message: '템플릿 구조가 성공적으로 업데이트되었습니다.'
+      message: '템플릿 필드가 성공적으로 업데이트되었습니다.'
     });
   } catch (error) {
-    console.error('템플릿 구조 업데이트 오류:', error);
-    res.status(500).json({ error: '템플릿 구조를 업데이트하는 중 오류가 발생했습니다.' });
+    console.error('템플릿 필드 업데이트 오류:', error);
+    res.status(500).json({ error: '템플릿 필드를 업데이트하는 중 오류가 발생했습니다.' });
   }
 });
 

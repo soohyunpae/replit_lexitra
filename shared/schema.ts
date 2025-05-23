@@ -195,13 +195,14 @@ export const insertGlossarySchema = createInsertSchema(glossary, {
 export type InsertGlossary = z.infer<typeof insertGlossarySchema>;
 export type Glossary = typeof glossary.$inferSelect;
 
-// Document Template model
+// Document Template model - docx-templater 기반으로 개선
 export const docTemplates = pgTable("doc_templates", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
   docxFilePath: text("docx_file_path").notNull(),
   useCount: integer("use_count").default(0).notNull(),
+  placeholderData: jsonb("placeholder_data"), // {{field}} placeholders와 메타데이터
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   createdBy: integer("created_by").references(() => users.id).notNull(),
@@ -209,7 +210,7 @@ export const docTemplates = pgTable("doc_templates", {
 
 export const docTemplatesRelations = relations(docTemplates, ({ one, many }) => ({
   creator: one(users, { fields: [docTemplates.createdBy], references: [users.id] }),
-  structures: many(templateStructures),
+  fields: many(templateFields),
 }));
 
 export const insertDocTemplateSchema = createInsertSchema(docTemplates, {
@@ -219,29 +220,31 @@ export const insertDocTemplateSchema = createInsertSchema(docTemplates, {
 export type InsertDocTemplate = z.infer<typeof insertDocTemplateSchema>;
 export type DocTemplate = typeof docTemplates.$inferSelect;
 
-// Template Structure model
-export const templateStructures = pgTable("template_structures", {
+// Template Fields model - docx-templater placeholder 기반
+export const templateFields = pgTable("template_fields", {
   id: serial("id").primaryKey(),
   templateId: integer("template_id").references(() => docTemplates.id).notNull(),
-  segmentType: text("segment_type").notNull(), // 'table', 'paragraph', 'heading'
-  tableIndex: integer("table_index"), // 테이블 기반 세그먼트인 경우 인덱스 
-  rowIndex: integer("row_index"), // 테이블 기반 세그먼트인 경우 행 인덱스
-  cellIndex: integer("cell_index"), // 테이블 기반 세그먼트인 경우 셀 인덱스
-  styleName: text("style_name"), // 'Heading 1', 'BodyText' 등 스타일 이름
-  isTranslationTarget: boolean("is_translation_target").notNull().default(true),
-  pathSelector: text("path_selector"), // DOCX 구조의 XPath 또는 선택자
+  placeholder: text("placeholder").notNull(), // {{fieldName}} 형태의 필드명
+  fieldType: text("field_type").notNull().default("text"), // 'text', 'table', 'list' 등
+  description: text("description"), // 필드 설명
+  isRequired: boolean("is_required").notNull().default(true),
+  isTranslatable: boolean("is_translatable").notNull().default(true),
+  orderIndex: integer("order_index").notNull().default(0), // 문서 내 순서
+  sampleContent: text("sample_content"), // 예시 내용
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const templateStructuresRelations = relations(templateStructures, ({ one }) => ({
-  template: one(docTemplates, { fields: [templateStructures.templateId], references: [docTemplates.id] }),
+export const templateFieldsRelations = relations(templateFields, ({ one }) => ({
+  template: one(docTemplates, { fields: [templateFields.templateId], references: [docTemplates.id] }),
 }));
 
-export const insertTemplateStructureSchema = createInsertSchema(templateStructures);
+export const insertTemplateFieldSchema = createInsertSchema(templateFields, {
+  placeholder: (schema) => schema.min(1, "Placeholder is required"),
+});
 
-export type InsertTemplateStructure = z.infer<typeof insertTemplateStructureSchema>;
-export type TemplateStructure = typeof templateStructures.$inferSelect;
+export type InsertTemplateField = z.infer<typeof insertTemplateFieldSchema>;
+export type TemplateField = typeof templateFields.$inferSelect;
 
 // Status Types Enum - For Translation Memory entries
 export const StatusTypes = z.enum(['MT', '100%', 'Fuzzy', 'Edited', 'Reviewed', 'Rejected']);
