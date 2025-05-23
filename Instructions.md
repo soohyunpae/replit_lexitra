@@ -1,22 +1,31 @@
+
 # Template Upload Feature Debug Guide
 
 ## Problem Analysis
 
-The template upload feature is failing due to missing database tables and columns. The main issues are:
+The template upload feature is failing due to database schema mismatches. There are three critical issues:
 
-1. Missing `template_fields` table
-2. Missing `placeholder_data` column in `doc_templates` table 
-3. Missing `placeholder` column in `template_fields` table
+1. The `doc_templates` table is missing the `placeholder_data` JSONB column
+2. The `template_fields` table structure doesn't match the application code
+3. The database indexes are not properly created
+
+## Root Cause
+
+The database schema defined in the migration files and the schema used in the application code (docx_template_service.ts) are out of sync. The application expects certain columns that don't exist in the database.
 
 ## Solution Plan
 
-### 1. Database Schema Update
+### 1. Drop and Recreate Tables
 
-We need to create SQL migration for the template-related tables with proper columns:
+First, we need to drop the existing tables and recreate them with the correct schema:
 
 ```sql
--- Create doc_templates table
-CREATE TABLE IF NOT EXISTS doc_templates (
+-- Drop existing tables first to avoid conflicts
+DROP TABLE IF EXISTS template_fields CASCADE;
+DROP TABLE IF EXISTS doc_templates CASCADE;
+
+-- Create doc_templates table with correct schema
+CREATE TABLE doc_templates (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
@@ -28,8 +37,8 @@ CREATE TABLE IF NOT EXISTS doc_templates (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create template_fields table
-CREATE TABLE IF NOT EXISTS template_fields (
+-- Create template_fields table with correct schema
+CREATE TABLE template_fields (
     id SERIAL PRIMARY KEY,
     template_id INTEGER REFERENCES doc_templates(id) ON DELETE CASCADE,
     placeholder TEXT NOT NULL,
@@ -43,35 +52,27 @@ CREATE TABLE IF NOT EXISTS template_fields (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Add indexes
-CREATE INDEX IF NOT EXISTS idx_template_fields_template_id ON template_fields(template_id);
+-- Add necessary indexes
+CREATE INDEX idx_template_fields_template_id ON template_fields(template_id);
+CREATE INDEX idx_doc_templates_created_by ON doc_templates(created_by);
 ```
 
 ### 2. Implementation Steps
 
-1. Create new migration file with above SQL
-2. Run the migration
-3. Test template upload again
-4. Verify data insertion in both tables
+1. Execute the above SQL to recreate the tables with correct schema
+2. Test template upload again to verify database operations
+3. Monitor for any additional errors in the application logs
 
-### 3. Implementation Details
+### 3. Verification Checklist
 
-The template upload flow should:
+After applying the changes, verify:
 
-1. Save uploaded DOCX file
-2. Extract placeholders using docx-templater
-3. Create template record with placeholders data
-4. Create field records for each placeholder
-5. Return success response
-
-### 4. Testing Plan
-
-1. Upload a test DOCX template
-2. Verify file storage
-3. Check database records
-4. Validate field extraction
-5. Test template usage
+- [ ] Template file upload succeeds
+- [ ] Template metadata is saved in doc_templates
+- [ ] Template fields are correctly extracted and saved
+- [ ] Template preview works
+- [ ] Template deletion works
 
 ## Current Status
 
-Template upload is non-functional due to missing database schema. After implementing the above solution, the feature should work as expected.
+Template upload is failing due to database schema mismatch. After implementing the above solution, particularly recreating the tables with the correct schema, the feature should work as expected.
