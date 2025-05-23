@@ -260,8 +260,7 @@ export default function TemplateManager() {
                 등록된 템플릿을 확인하고 관리할 수 있습니다.
               </CardDescription>
             </div>
-          </CardHeader>
-          <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Upload className="mr-2 h-4 w-4" />
