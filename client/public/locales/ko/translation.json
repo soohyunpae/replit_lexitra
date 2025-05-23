@@ -401,7 +401,23 @@
     "updateFailed": "프로젝트 정보 업데이트에 실패했습니다. 다시 시도해 주세요."
   },
   "admin": {
-    "title": "관리자 콘솔",
+    "accessRequired": "관리자 권한 필요",
+    "noPermission": "이 페이지에 접근할 권한이 없습니다.",
+    "goToHome": "홈으로 가기",
+    "templates": {
+      "title": "템플릿 관리",
+      "description": "템플릿 관리 시스템",
+      "uploadNew": "새 템플릿 업로드",
+      "list": "템플릿 목록",
+      "listDescription": "등록된 템플릿을 확인하고 관리할 수 있습니다."
+    },
+    "userManagement": {
+      "title": "사용자 관리",
+      "titleDescription": "사용자 계정을 관리합니다",
+      "username": "사용자명",
+      "role": "권한",
+      "actions": "작업"
+    },
     "console": "관리자 콘솔",
     "apiKeys": "API 키",
     "users": "사용자",
@@ -461,12 +477,6 @@
     "noPermission": "관리자 대시보드에 접근할 권한이 없습니다.",
     "goToHome": "홈으로 이동",
     "userManagementDesc": "사용자 계정과 권한을 관리합니다.",
-    "userManagement": {
-      "title": "사용자 관리",
-      "fetchError": "사용자 목록을 불러오는 중 오류가 발생했습니다.",
-      "roleUpdateSuccess": "사용자 역할이 성공적으로 업데이트되었습니다.",
-      "roleUpdateError": "사용자 역할 업데이트에 실패했습니다."
-    },
     "addUser": "사용자 추가",
     "manageUserAccess": "시스템에 대한 사용자 접근 권한을 관리합니다.",
     "username": "사용자 이름",
