@@ -123,47 +123,6 @@ export default function AdminConsole() {
     });
   };
 
-  // 템플릿 데이터 가져오기
-  const fetchTemplates = async () => {
-    try {
-      setIsLoadingTemplates(true);
-      
-      import("@/lib/queryClient")
-        .then(async ({ apiRequest }) => {
-          try {
-            const response = await apiRequest("GET", "/api/templates");
-            const data = await response.json();
-            
-            if (data && data.templates) {
-              setTemplates(data.templates);
-            } else {
-              // Empty array if no templates
-              setTemplates([]);
-            }
-          } catch (apiError) {
-            console.error("Template API call error:", apiError);
-            setTemplates([]);
-          }
-        })
-        .catch((importError) => {
-          console.error("Module import error:", importError);
-          setTemplates([]);
-        })
-        .finally(() => {
-          setIsLoadingTemplates(false);
-        });
-    } catch (error) {
-      console.error("Error fetching templates:", error);
-      setTemplates([]);
-      setIsLoadingTemplates(false);
-    }
-  };
-
-  const handleViewTemplate = (templateId: number) => {
-    // Template detail view logic (to be implemented later)
-    console.log("View template:", templateId);
-  };
-
   // Fetch user data through user management API
   const fetchUsers = async () => {
     try {
@@ -228,9 +187,6 @@ export default function AdminConsole() {
   useEffect(() => {
     if (activeTab === "user-management") {
       fetchUsers();
-    }
-    if (activeTab === "templates") {
-      fetchTemplates();
     }
   }, [activeTab]);
 
@@ -647,7 +603,7 @@ export default function AdminConsole() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => handleViewTemplate(template.id)}
+                                  onClick={() => {}}
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
