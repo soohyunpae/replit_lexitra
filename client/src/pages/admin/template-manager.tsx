@@ -248,13 +248,25 @@ export default function TemplateManager() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">템플릿 관리자</h1>
-        <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Upload className="mr-2 h-4 w-4" />
-              새 템플릿 업로드
-            </Button>
-          </DialogTrigger>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 템플릿 목록 */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle>템플릿 목록</CardTitle>
+              <CardDescription>
+                등록된 템플릿을 확인하고 관리할 수 있습니다.
+              </CardDescription>
+            </div>
+            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Upload className="mr-2 h-4 w-4" />
+                  새 템플릿 업로드
+                </Button>
+              </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>새 템플릿 업로드</DialogTitle>
