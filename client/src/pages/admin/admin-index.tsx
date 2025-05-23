@@ -94,6 +94,16 @@ export default function AdminConsole() {
   const [hasUserChanges, setHasUserChanges] = useState(false);
   const [roleChanges, setRoleChanges] = useState<Record<number, string>>({});
 
+  // Template management states
+  const [templates, setTemplates] = useState<Array<{ 
+    id: number; 
+    name: string; 
+    description?: string; 
+    useCount: number; 
+    createdAt: string; 
+  }>>([]);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
+
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     setActiveSubSection(`admin-${value}`);
@@ -113,12 +123,53 @@ export default function AdminConsole() {
     });
   };
 
-  // 사용자 관리 API 호출을 통해 사용자 데이터 가져오기
+  // 템플릿 데이터 가져오기
+  const fetchTemplates = async () => {
+    try {
+      setIsLoadingTemplates(true);
+      
+      import("@/lib/queryClient")
+        .then(async ({ apiRequest }) => {
+          try {
+            const response = await apiRequest("GET", "/api/templates");
+            const data = await response.json();
+            
+            if (data && data.templates) {
+              setTemplates(data.templates);
+            } else {
+              // Empty array if no templates
+              setTemplates([]);
+            }
+          } catch (apiError) {
+            console.error("Template API call error:", apiError);
+            setTemplates([]);
+          }
+        })
+        .catch((importError) => {
+          console.error("Module import error:", importError);
+          setTemplates([]);
+        })
+        .finally(() => {
+          setIsLoadingTemplates(false);
+        });
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      setTemplates([]);
+      setIsLoadingTemplates(false);
+    }
+  };
+
+  const handleViewTemplate = (templateId: number) => {
+    // Template detail view logic (to be implemented later)
+    console.log("View template:", templateId);
+  };
+
+  // Fetch user data through user management API
   const fetchUsers = async () => {
     try {
       setIsLoadingUsers(true);
 
-      // API 호출 방식으로 변경
+      // Changed to API call method
       import("@/lib/queryClient")
         .then(async ({ apiRequest }) => {
           try {
@@ -128,7 +179,7 @@ export default function AdminConsole() {
             if (data && data.users) {
               setUsers(data.users);
             } else {
-              // 데이터가 없는 경우, 기본 데이터 사용
+              // Use default data if no data available
               setUsers([
                 { id: 1, username: "demo", role: "user" },
                 { id: 2, username: "soohyun", role: "user" },
@@ -138,8 +189,8 @@ export default function AdminConsole() {
               ]);
             }
           } catch (apiError) {
-            console.error("API 호출 오류:", apiError);
-            // 대체 데이터 설정
+            console.error("API call error:", apiError);
+            // Set fallback data
             setUsers([
               { id: 1, username: "demo", role: "user" },
               { id: 2, username: "soohyun", role: "user" },
@@ -150,8 +201,8 @@ export default function AdminConsole() {
           }
         })
         .catch((importError) => {
-          console.error("모듈 임포트 오류:", importError);
-          // 대체 데이터 설정
+          console.error("Module import error:", importError);
+          // Set fallback data
           setUsers([
             { id: 1, username: "demo", role: "user" },
             { id: 2, username: "soohyun", role: "user" },
@@ -178,6 +229,9 @@ export default function AdminConsole() {
     if (activeTab === "user-management") {
       fetchUsers();
     }
+    if (activeTab === "templates") {
+      fetchTemplates();
+    }
   }, [activeTab]);
 
   const handleRoleChange = (userId: number, newRole: string) => {
@@ -190,7 +244,7 @@ export default function AdminConsole() {
 
   const handleSaveUserChanges = async () => {
     try {
-      // API 호출로 사용자 역할 변경
+      // Change user roles via API call
       import("@/lib/queryClient")
         .then(async ({ apiRequest }) => {
           const updatePromises = Object.entries(roleChanges).map(
@@ -200,7 +254,7 @@ export default function AdminConsole() {
                   role: newRole,
                 });
               } catch (error) {
-                console.error(`사용자 ${userId} 역할 변경 실패:`, error);
+                console.error(`Failed to change role for user ${userId}:`, error);
                 throw error;
               }
             }
@@ -208,7 +262,7 @@ export default function AdminConsole() {
 
           await Promise.all(updatePromises);
 
-          // 성공적으로 업데이트되었으면 UI 상태 업데이트
+          // Update UI state if successfully updated
           setUsers((prevUsers) =>
             prevUsers.map((user) => ({
               ...user,
@@ -225,7 +279,7 @@ export default function AdminConsole() {
           });
         })
         .catch((error) => {
-          console.error("사용자 역할 변경 오류:", error);
+          console.error("User role change error:", error);
           toast({
             variant: "destructive",
             title: t("common.error"),
@@ -556,40 +610,54 @@ export default function AdminConsole() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t("admin.templates.name")}</TableHead>
-                        <TableHead>{t("admin.templates.templateDescription")}</TableHead>
-                        <TableHead>{t("admin.templates.useCount")}</TableHead>
-                        <TableHead>{t("admin.templates.createdOn")}</TableHead>
-                        <TableHead>{t("common.actions")}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {templates?.map((template) => (
-                        <TableRow key={template.id}>
-                          <TableCell>{template.name}</TableCell>
-                          <TableCell>
-                            {template.description || t("admin.templates.noDescription")}
-                          </TableCell>
-                          <TableCell>{template.useCount}</TableCell>
-                          <TableCell>
-                            {new Date(template.createdAt).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleViewTemplate(template.id)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
+                  {isLoadingTemplates ? (
+                    <div className="flex justify-center items-center py-10">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{t("admin.templates.name")}</TableHead>
+                          <TableHead>{t("admin.templates.templateDescription")}</TableHead>
+                          <TableHead>{t("admin.templates.useCount")}</TableHead>
+                          <TableHead>{t("admin.templates.createdOn")}</TableHead>
+                          <TableHead>{t("common.actions")}</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {templates.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                              {t("admin.templates.noTemplatesYet")}
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          templates.map((template) => (
+                            <TableRow key={template.id}>
+                              <TableCell>{template.name}</TableCell>
+                              <TableCell>
+                                {template.description || t("admin.templates.noDescription")}
+                              </TableCell>
+                              <TableCell>{template.useCount}</TableCell>
+                              <TableCell>
+                                {new Date(template.createdAt).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleViewTemplate(template.id)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  )}
                 </CardContent>
               </Card>
           </TabsContent>
