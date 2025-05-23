@@ -4,6 +4,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 import { SidebarContext } from "@/components/layout/sidebar";
+import TemplateManager from "./template-manager";
 import {
   Card,
   CardContent,
@@ -861,24 +862,16 @@ export default function AdminConsole() {
 
           {/* Templates Tab Content */}
           <TabsContent value="templates" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <FileText className="h-5 w-5 mr-2" />
-                  {t("admin.templates.title")}
-                </CardTitle>
-                <CardDescription>
-                  {t("admin.templates.titleDescription")}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div></div>
-                  <Dialog
-                    open={showAddTemplateDialog}
-                    onOpenChange={setShowAddTemplateDialog}
-                  >
-                    <DialogTrigger asChild>
+            <TemplateManager />
+          </TabsContent>
+          <div className="text-sm text-muted-foreground mt-6 pt-4 border-t">
+            {t("admin.settingsAffectAll")}
+          </div>
+        </Tabs>
+      </div>
+    </MainLayout>
+  );
+}
                       <Button className="flex items-center gap-2">
                         <Plus className="h-4 w-4" />
                         {t("admin.templates.upload")}
