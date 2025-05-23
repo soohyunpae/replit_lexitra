@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/form";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "@/i18n";
 
 const loginSchema = z.object({
   username: z.string().min(1, { message: "Please enter your username." }),
@@ -59,6 +60,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
   const { user, loginMutation, registerMutation } = useAuth();
+  const { t } = useTranslation();
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -134,10 +136,10 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Username</FormLabel>
+                            <FormLabel>{t('auth.username')}</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="Enter your username"
+                                placeholder={t('auth.enterUsername')}
                                 {...field}
                               />
                             </FormControl>
@@ -199,10 +201,10 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Username</FormLabel>
+                            <FormLabel>{t('auth.username')}</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="Enter your username"
+                                placeholder={t('auth.enterUsername')}
                                 {...field}
                               />
                             </FormControl>
