@@ -99,9 +99,9 @@ export default function AuthPage() {
       <div className="flex flex-col justify-center w-full lg:w-1/2 px-4 sm:px-6 lg:px-8 py-12">
         <div className="mx-auto w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold tracking-tight mb-2">Lexitra</h1>
+            <h1 className="text-3xl font-bold tracking-tight mb-2">{t('common.appName')}</h1>
             <p className="text-muted-foreground">
-              Professional Patent Document Translation Platform
+              {t('auth.platformDescription')}
             </p>
           </div>
 
@@ -111,16 +111,16 @@ export default function AuthPage() {
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
+              <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
+              <TabsTrigger value="register">{t('auth.register')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
               <Card>
                 <CardHeader>
-                  <CardTitle>Login</CardTitle>
+                  <CardTitle>{t('auth.login')}</CardTitle>
                   <CardDescription>
-                    Enter your account information to log in.
+                    {t('auth.loginDescription')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -185,8 +185,8 @@ export default function AuthPage() {
             <TabsContent value="register">
               <Card>
                 <CardHeader>
-                  <CardTitle>Register</CardTitle>
-                  <CardDescription>Create a new account.</CardDescription>
+                  <CardTitle>{t('auth.register')}</CardTitle>
+                  <CardDescription>{t('auth.registerDescription')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Form {...registerForm}>
