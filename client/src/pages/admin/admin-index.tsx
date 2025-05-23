@@ -74,6 +74,7 @@ import {
 
 export default function AdminConsole() {
   const { t } = useTranslation();
+  const [templates, setTemplates] = useState<any[]>([]);
   const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("api-keys");
