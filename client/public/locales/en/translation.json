@@ -559,23 +559,7 @@
     "updateFailed": "Failed to update project information. Please try again."
   },
   "admin": {
-    "accessRequired": "Admin Access Required",
-    "noPermission": "You don't have permission to access this page.",
-    "goToHome": "Go to Home",
-    "templates": {
-      "title": "Template Management",
-      "description": "Template Management System",
-      "uploadNew": "Upload New Template",
-      "list": "Template List", 
-      "listDescription": "View and manage registered templates"
-    },
-    "userManagement": {
-      "title": "User Management",
-      "titleDescription": "Manage user accounts",
-      "username": "Username",
-      "role": "Role",
-      "actions": "Actions"
-    },
+    "title": "Admin Console",
     "users": "Users",
     "projects": "Projects",
     "settings": "Settings",
@@ -583,6 +567,12 @@
     "editUser": "Edit User",
     "deleteUser": "Delete User",
     "userManagementDesc": "Manage user roles and permissions",
+    "userManagement": {
+      "title": "User Management",
+      "fetchError": "Failed to fetch users list",
+      "roleUpdateSuccess": "User roles updated successfully",
+      "roleUpdateError": "Failed to update user roles"
+    },
     "username": "Username",
     "role": "Role",
     "actions": "Actions",
