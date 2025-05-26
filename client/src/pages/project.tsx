@@ -308,6 +308,50 @@ export default function Project() {
     },
   });
 
+  // Template-based DOCX download mutation
+  const downloadTemplateMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/projects/${projectId}/download-template`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("auth_token") || ""}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || "템플릿 다운로드에 실패했습니다.");
+      }
+
+      // Create blob and download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${project.name}_translated_${Date.now()}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    },
+    onSuccess: () => {
+      toast({
+        title: "다운로드 완료",
+        description: "번역된 DOCX 파일이 다운로드되었습니다.",
+      });
+    },
+    onError: (error) => {
+      console.error("Template download error:", error);
+      toast({
+        title: "다운로드 실패",
+        description: error instanceof Error ? error.message : "템플릿 다운로드 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Get all segments for all files in this project
   const getFileSegments = async (fileId: number) => {
     const response = await apiRequest("GET", `/api/segments/${fileId}`);
@@ -689,6 +733,28 @@ export default function Project() {
 
             {/* Workflow actions based on project status */}
             <div className="flex gap-2">
+              {/* Template Download Button */}
+              {project.templateId && projectStats && projectStats.completionPercentage > 0 && (
+                <Button
+                  variant="outline"
+                  className="border-purple-500 text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950"
+                  onClick={() => downloadTemplateMutation.mutate()}
+                  disabled={downloadTemplateMutation.isPending}
+                >
+                  {downloadTemplateMutation.isPending ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      생성중...
+                    </>
+                  ) : (
+                    <>
+                      <FileDownIcon className="h-4 w-4 mr-2" />
+                      템플릿 다운로드
+                    </>
+                  )}
+                </Button>
+              )}
+
               {project.status === "Unclaimed" && (
                 <Button
                   variant="default"

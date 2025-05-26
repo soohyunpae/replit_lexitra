@@ -2085,6 +2085,23 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
                     // 파일 처리
                     const fileContent = await processFile(file);
                     
+                    // 템플릿 매칭 정보가 있다면 프로젝트에 저장
+                    if ((file as any).matchedTemplate) {
+                      const matchResult = (file as any).matchedTemplate;
+                      await db
+                        .update(schema.projects)
+                        .set({
+                          templateId: matchResult.template.id,
+                          templateMatchScore: JSON.stringify({
+                            score: matchResult.matchScore,
+                            templateName: matchResult.template.name
+                          }),
+                          updatedAt: new Date(),
+                        })
+                        .where(eq(schema.projects.id, project.id));
+                      console.log(`프로젝트에 템플릿 정보 저장: ${matchResult.template.name}`);
+                    }
+                    
                     // 파일 내용 업데이트 (processingStatus는 아직 "processing"으로 유지)
                     await db
                       .update(schema.files)
@@ -2833,6 +2850,123 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       return res.json({ success: true, project: updatedProject });
     } catch (error) {
       return handleApiError(res, error);
+    }
+  });
+
+  // 템플릿 기반 DOCX 파일 다운로드 API
+  app.post(`${apiPrefix}/projects/:id/download-template`, verifyToken, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      if (isNaN(projectId)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+
+      // 프로젝트 정보와 템플릿 정보 조회
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, projectId),
+        with: {
+          template: true,
+          files: {
+            with: {
+              segments: true
+            }
+          }
+        }
+      });
+
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+
+      if (!project.templateId || !project.template) {
+        return res.status(400).json({ 
+          message: "이 프로젝트는 템플릿이 적용되지 않았습니다." 
+        });
+      }
+
+      // 번역된 세그먼트들을 placeholder 데이터로 변환
+      const templateData: { [key: string]: string } = {};
+      
+      // 모든 파일의 세그먼트에서 번역 완료된 내용 수집
+      for (const file of project.files) {
+        if (file.type === 'work' && file.segments) {
+          for (const segment of file.segments) {
+            if (segment.target && segment.target.trim()) {
+              // 세그먼트 순서나 내용을 기반으로 템플릿 placeholder에 매핑
+              // 간단한 구현: 세그먼트 ID나 순서를 기반으로 placeholder 생성
+              const placeholderKey = `segment_${segment.id}`;
+              templateData[placeholderKey] = segment.target;
+            }
+          }
+        }
+      }
+
+      // 템플릿 필드 정보 조회
+      const { generateDocxFromTemplate } = await import('./services/docx_template_service');
+      
+      // 템플릿 필드를 기반으로 실제 데이터 매핑
+      const templateDetail = await db.query.docTemplates.findFirst({
+        where: eq(schema.docTemplates.id, project.templateId),
+        with: {
+          fields: true
+        }
+      });
+
+      if (templateDetail && templateDetail.fields) {
+        // 템플릿 필드 기반으로 번역된 세그먼트 매핑
+        const translatedSegments = project.files
+          .filter(f => f.type === 'work')
+          .flatMap(f => f.segments || [])
+          .filter(s => s.target && s.target.trim());
+
+        // 번역 가능한 필드에 순서대로 번역된 내용 할당
+        const translatableFields = templateDetail.fields
+          .filter(f => f.isTranslatable)
+          .sort((a, b) => a.orderIndex - b.orderIndex);
+
+        translatableFields.forEach((field, index) => {
+          if (index < translatedSegments.length) {
+            templateData[field.placeholder] = translatedSegments[index].target || '';
+          }
+        });
+      }
+
+      // DOCX 파일 생성
+      const outputFileName = `${project.name}_translated_${Date.now()}.docx`;
+      const result = await generateDocxFromTemplate(
+        project.templateId,
+        templateData,
+        outputFileName
+      );
+
+      if (result.success && result.filePath) {
+        // 파일 다운로드 응답
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        res.setHeader('Content-Disposition', `attachment; filename="${result.fileName}"`);
+        
+        const fileStream = fs.createReadStream(result.filePath);
+        fileStream.pipe(res);
+
+        // 임시 파일 정리 (5분 후)
+        setTimeout(() => {
+          if (fs.existsSync(result.filePath!)) {
+            fs.unlinkSync(result.filePath!);
+          }
+        }, 5 * 60 * 1000);
+
+      } else {
+        return res.status(500).json({
+          message: "DOCX 파일 생성에 실패했습니다.",
+          error: result.error
+        });
+      }
+
+    } catch (error) {
+      console.error("Template DOCX download error:", error);
+      return res.status(500).json({ 
+        message: "템플릿 기반 다운로드 중 오류가 발생했습니다.",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
