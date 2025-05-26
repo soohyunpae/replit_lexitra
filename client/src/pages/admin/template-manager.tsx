@@ -1,16 +1,37 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, FileText, Trash2, Edit, Eye } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface Template {
   id: number;
@@ -41,13 +62,15 @@ interface TemplateField {
 export default function TemplateManager() {
   const { t } = useTranslation();
   const { toast } = useToast();
-  
+
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
+    null,
+  );
   const [templateFields, setTemplateFields] = useState<TemplateField[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  
+
   // 새 템플릿 업로드 상태
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -140,7 +163,7 @@ export default function TemplateManager() {
       }
 
       const result = await response.json();
-      
+
       toast({
         title: "성공",
         description: "템플릿이 성공적으로 업로드되었습니다.",
@@ -151,7 +174,7 @@ export default function TemplateManager() {
       setUploadName("");
       setUploadDescription("");
       setIsUploadDialogOpen(false);
-      
+
       // 템플릿 목록 새로고침
       fetchTemplates();
     } catch (error) {
@@ -167,18 +190,24 @@ export default function TemplateManager() {
   };
 
   // 템플릿 필드 업데이트
-  const handleUpdateField = async (fieldId: number, updates: Partial<TemplateField>) => {
+  const handleUpdateField = async (
+    fieldId: number,
+    updates: Partial<TemplateField>,
+  ) => {
     if (!selectedTemplate) return;
 
     try {
-      const response = await fetch(`/api/admin/templates/${selectedTemplate.id}/fields/${fieldId}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `/api/admin/templates/${selectedTemplate.id}/fields/${fieldId}`,
+        {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updates),
         },
-        body: JSON.stringify(updates),
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Update failed: ${response.status}`);
@@ -223,8 +252,8 @@ export default function TemplateManager() {
       });
 
       // 목록에서 삭제된 템플릿 제거
-      setTemplates(templates.filter(t => t.id !== templateId));
-      
+      setTemplates(templates.filter((t) => t.id !== templateId));
+
       // 선택된 템플릿이 삭제된 경우 초기화
       if (selectedTemplate?.id === templateId) {
         setSelectedTemplate(null);
@@ -246,83 +275,6 @@ export default function TemplateManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">템플릿 관리자</h1>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 템플릿 목록 */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle>템플릿 목록</CardTitle>
-              <CardDescription>
-                등록된 템플릿을 확인하고 관리할 수 있습니다.
-              </CardDescription>
-            </div>
-            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Upload className="mr-2 h-4 w-4" />
-                  새 템플릿 업로드
-                </Button>
-              </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>새 템플릿 업로드</DialogTitle>
-              <DialogDescription>
-                DOCX 템플릿 파일을 업로드하여 새로운 템플릿을 생성합니다.
-                파일에는 {"{{placeholder}}"} 형태의 마커가 포함되어야 합니다.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="template-file">템플릿 파일 (.docx)</Label>
-                <Input
-                  id="template-file"
-                  type="file"
-                  accept=".docx"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) setUploadFile(file);
-                  }}
-                />
-              </div>
-              <div>
-                <Label htmlFor="template-name">템플릿 이름</Label>
-                <Input
-                  id="template-name"
-                  value={uploadName}
-                  onChange={(e) => setUploadName(e.target.value)}
-                  placeholder="예: 계약서 템플릿"
-                />
-              </div>
-              <div>
-                <Label htmlFor="template-description">설명 (선택사항)</Label>
-                <Textarea
-                  id="template-description"
-                  value={uploadDescription}
-                  onChange={(e) => setUploadDescription(e.target.value)}
-                  placeholder="템플릿에 대한 간단한 설명을 입력하세요"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsUploadDialogOpen(false)}
-                disabled={isUploading}
-              >
-                취소
-              </Button>
-              <Button onClick={handleUploadTemplate} disabled={isUploading}>
-                {isUploading ? "업로드 중..." : "업로드"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 템플릿 목록 */}
         <Card>
@@ -330,12 +282,83 @@ export default function TemplateManager() {
             <CardTitle>템플릿 목록</CardTitle>
             <CardDescription>
               등록된 템플릿을 확인하고 관리할 수 있습니다.
+              <Dialog
+                open={isUploadDialogOpen}
+                onOpenChange={setIsUploadDialogOpen}
+              >
+                <DialogTrigger asChild>
+                  <Button>
+                    <Upload className="mr-2 h-4 w-4" />새 템플릿 업로드
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>새 템플릿 업로드</DialogTitle>
+                    <DialogDescription>
+                      DOCX 템플릿 파일을 업로드하여 새로운 템플릿을 생성합니다.
+                      파일에는 {"{{placeholder}}"} 형태의 마커가 포함되어야
+                      합니다.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="template-file">템플릿 파일 (.docx)</Label>
+                      <Input
+                        id="template-file"
+                        type="file"
+                        accept=".docx"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) setUploadFile(file);
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="template-name">템플릿 이름</Label>
+                      <Input
+                        id="template-name"
+                        value={uploadName}
+                        onChange={(e) => setUploadName(e.target.value)}
+                        placeholder="예: 계약서 템플릿"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="template-description">
+                        설명 (선택사항)
+                      </Label>
+                      <Textarea
+                        id="template-description"
+                        value={uploadDescription}
+                        onChange={(e) => setUploadDescription(e.target.value)}
+                        placeholder="템플릿에 대한 간단한 설명을 입력하세요"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsUploadDialogOpen(false)}
+                      disabled={isUploading}
+                    >
+                      취소
+                    </Button>
+                    <Button
+                      onClick={handleUploadTemplate}
+                      disabled={isUploading}
+                    >
+                      {isUploading ? "업로드 중..." : "업로드"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading && templates.length === 0 ? (
               <div className="text-center py-8">
-                <div className="text-sm text-muted-foreground">템플릿을 불러오는 중...</div>
+                <div className="text-sm text-muted-foreground">
+                  템플릿을 불러오는 중...
+                </div>
               </div>
             ) : templates.length === 0 ? (
               <div className="text-center py-8">
@@ -367,7 +390,10 @@ export default function TemplateManager() {
                             사용 횟수: {template.useCount}
                           </Badge>
                           <Badge variant="outline">
-                            필드: {template.placeholderData?.placeholders?.length || 0}개
+                            필드:{" "}
+                            {template.placeholderData?.placeholders?.length ||
+                              0}
+                            개
                           </Badge>
                         </div>
                       </div>
@@ -419,7 +445,9 @@ export default function TemplateManager() {
             ) : (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-medium">{selectedTemplate.name}</h3>
+                  <h3 className="text-lg font-medium">
+                    {selectedTemplate.name}
+                  </h3>
                   <p className="text-sm text-muted-foreground">
                     {selectedTemplate.description || "설명 없음"}
                   </p>
@@ -452,7 +480,9 @@ export default function TemplateManager() {
                               <Switch
                                 checked={field.isTranslatable}
                                 onCheckedChange={(checked) =>
-                                  handleUpdateField(field.id, { isTranslatable: checked })
+                                  handleUpdateField(field.id, {
+                                    isTranslatable: checked,
+                                  })
                                 }
                               />
                             </TableCell>
@@ -460,7 +490,9 @@ export default function TemplateManager() {
                               <Switch
                                 checked={field.isRequired}
                                 onCheckedChange={(checked) =>
-                                  handleUpdateField(field.id, { isRequired: checked })
+                                  handleUpdateField(field.id, {
+                                    isRequired: checked,
+                                  })
                                 }
                               />
                             </TableCell>

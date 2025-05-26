@@ -89,19 +89,23 @@ export default function AdminConsole() {
   const [defaultTargetLang, setDefaultTargetLang] = useState<string>("EN");
 
   // User management states
-  const [users, setUsers] = useState<Array<{ id: number; username: string; role: string }>>([]);
+  const [users, setUsers] = useState<
+    Array<{ id: number; username: string; role: string }>
+  >([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [hasUserChanges, setHasUserChanges] = useState(false);
   const [roleChanges, setRoleChanges] = useState<Record<number, string>>({});
 
   // Template management states
-  const [templates, setTemplates] = useState<Array<{ 
-    id: number; 
-    name: string; 
-    description?: string; 
-    useCount: number; 
-    createdAt: string; 
-  }>>([]);
+  const [templates, setTemplates] = useState<
+    Array<{
+      id: number;
+      name: string;
+      description?: string;
+      useCount: number;
+      createdAt: string;
+    }>
+  >([]);
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
 
   const handleTabChange = (value: string) => {
@@ -210,10 +214,13 @@ export default function AdminConsole() {
                   role: newRole,
                 });
               } catch (error) {
-                console.error(`Failed to change role for user ${userId}:`, error);
+                console.error(
+                  `Failed to change role for user ${userId}:`,
+                  error,
+                );
                 throw error;
               }
-            }
+            },
           );
 
           await Promise.all(updatePromises);
@@ -223,7 +230,7 @@ export default function AdminConsole() {
             prevUsers.map((user) => ({
               ...user,
               role: roleChanges[user.id] || user.role,
-            }))
+            })),
           );
 
           setRoleChanges({});
@@ -482,9 +489,15 @@ export default function AdminConsole() {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>{t("admin.userManagement.username")}</TableHead>
-                            <TableHead>{t("admin.userManagement.role")}</TableHead>
-                            <TableHead>{t("admin.userManagement.actions")}</TableHead>
+                            <TableHead>
+                              {t("admin.userManagement.username")}
+                            </TableHead>
+                            <TableHead>
+                              {t("admin.userManagement.role")}
+                            </TableHead>
+                            <TableHead>
+                              {t("admin.userManagement.actions")}
+                            </TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -550,8 +563,10 @@ export default function AdminConsole() {
           <TabsContent value="templates" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>{t("admin.templates.manager")}</CardTitle>
-                <CardDescription>{t("admin.templates.description")}</CardDescription>
+                <CardTitle>{t("admin.templates.title")}</CardTitle>
+                <CardDescription>
+                  {t("admin.templates.titleDescription")}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <TemplateManager />

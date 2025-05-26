@@ -489,7 +489,7 @@
     "administratorDesc": "모든 시스템 기능에 대한 전체 접근 권한을 가집니다.",
     "userDesc": "번역 작업과 할당된 프로젝트에 대한 접근 권한을 가집니다.",
     "templates": {
-      "title": "템플릿",
+      "title": "템플릿 관리",
       "titleDescription": "문서 템플릿을 관리합니다.",
       "templatesExplanation": "템플릿은 반복되는 레이아웃을 가진 문서의 번역 과정을 간소화하는 데 도움이 됩니다.",
       "manageTemplates": "템플릿 관리",

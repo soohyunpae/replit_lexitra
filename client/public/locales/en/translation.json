@@ -649,7 +649,7 @@
     "manageUserAccess": "Manage user access to the system.",
     "userFunctionalityNotImplemented": "Add user functionality not implemented yet",
     "templates": {
-      "title": "Templates",
+      "title": "Template Manager",
       "titleDescription": "Manage document templates",
       "templatesExplanation": "Templates help streamline the translation process for documents with repeating layouts",
       "manageTemplates": "Manage Templates",
