@@ -260,12 +260,8 @@ export async function matchTemplateToDocument(
       return null;
     }
     
-    // 문서에서 placeholder 추출
-    const analysis = await analyzeDocxTemplate(docxPath);
-    const documentPlaceholders = analysis.placeholders;
-    console.log("문서에서 추출된 placeholders:", documentPlaceholders);
-    
-    // placeholder가 없어도 텍스트 기반 매칭 시도
+    // 사용자 문서는 일반 텍스트 문서이므로 placeholder가 없는 것이 정상
+    // 텍스트 기반 매칭만 사용
     let bestMatch: {
       template: schema.DocTemplate;
       matchScore: number;
@@ -280,22 +276,9 @@ export async function matchTemplateToDocument(
       
       console.log(`템플릿 "${template.name}" 검사 중...`);
       
-      let matchScore = 0;
-      
-      // placeholder 기반 매칭 (있는 경우)
-      if (documentPlaceholders.length > 0) {
-        matchScore = calculatePlaceholderMatchScore(
-          documentPlaceholders, 
-          templateDetail.fields
-        );
-        console.log(`템플릿 "${template.name}" placeholder 매칭 점수: ${matchScore}`);
-      }
-      
-      // placeholder 매칭이 부족한 경우 텍스트 기반 매칭
-      if (matchScore < 0.5) {
-        matchScore = await calculateTextBasedMatchScore(docxPath, template);
-        console.log(`템플릿 "${template.name}" 텍스트 기반 매칭 점수: ${matchScore}`);
-      }
+      // 텍스트 기반 매칭만 사용 (사용자 문서에는 placeholder가 없음)
+      const matchScore = await calculateTextBasedMatchScore(docxPath, template);
+      console.log(`템플릿 "${template.name}" 텍스트 기반 매칭 점수: ${matchScore}`);
       
       // 현재까지의 최고 점수 업데이트 (임계값을 0.02로 낮춤)
       if (matchScore > 0.02 && (!bestMatch || matchScore > bestMatch.matchScore)) {
@@ -322,29 +305,9 @@ export async function matchTemplateToDocument(
 }
 
 /**
- * placeholder 기반 템플릿 매칭 점수 계산
+ * 사용자 문서는 일반 텍스트이므로 placeholder 매칭은 사용하지 않음
+ * 템플릿은 {{placeholder}} 형태이고, 사용자 문서는 실제 내용이 있는 일반 문서
  */
-function calculatePlaceholderMatchScore(
-  documentPlaceholders: string[],
-  templateFields: schema.TemplateField[]
-): number {
-  if (documentPlaceholders.length === 0 || templateFields.length === 0) {
-    return 0;
-  }
-  
-  const templatePlaceholders = templateFields.map(f => f.placeholder);
-  
-  // 정확히 일치하는 placeholder 개수
-  const exactMatches = documentPlaceholders.filter(dp => 
-    templatePlaceholders.includes(dp)
-  ).length;
-  
-  // Jaccard similarity (교집합 / 합집합)
-  const union = new Set([...documentPlaceholders, ...templatePlaceholders]).size;
-  const intersection = exactMatches;
-  
-  return intersection / union;
-}
 
 /**
  * 텍스트 기반 템플릿 매칭 점수 계산
