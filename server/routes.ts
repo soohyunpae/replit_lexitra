@@ -3345,8 +3345,7 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       const { matchTemplateToDocument } = await import('./services/docx_template_service');
       
       // 실제 파일 경로를 찾기 위해 uploads/tmp 디렉토리 확인
-      const fs = require('fs');
-      const path = require('path');
+      // fs와 path는 이미 파일 상단에서 import됨
       const uploadsDir = path.join(process.cwd(), 'uploads', 'tmp');
       
       // 업로드된 파일들 중에서 해당 프로젝트의 파일 찾기
