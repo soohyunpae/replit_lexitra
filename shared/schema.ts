@@ -33,6 +33,8 @@ export const projects = pgTable("projects", {
   deadline: timestamp("deadline"),
   notes: text("notes"),
   references: text("references"), // JSON-encoded string for reference file metadata
+  templateId: integer("template_id").references(() => docTemplates.id), // 매칭된 템플릿 ID
+  templateMatchScore: text("template_match_score"), // 템플릿 매칭 점수 (JSON)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   userId: integer("user_id").references(() => users.id),

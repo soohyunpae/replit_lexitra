@@ -372,6 +372,23 @@ async function processFile(file: Express.Multer.File) {
           // mammoth 라이브러리를 사용하여 DOCX 파일에서 텍스트 추출
           const docxResult = await mammoth.extractRawText({ path: file.path });
           text = docxResult.value || "";
+          
+          // 템플릿 매칭 시도
+          notifyProgress(0, file.originalname, "processing", 30, "템플릿 매칭 확인중");
+          try {
+            const { matchTemplateToDocument } = await import('./services/docx_template_service');
+            const matchResult = await matchTemplateToDocument(file.path);
+            
+            if (matchResult) {
+              console.log(`템플릿 매칭 성공: ${matchResult.template.name} (일치율: ${matchResult.matchScore})`);
+              notifyProgress(0, file.originalname, "processing", 50, `템플릿 "${matchResult.template.name}" 적용됨`);
+              // 매칭된 템플릿 정보를 파일에 저장 (나중에 프로젝트와 연결)
+              (file as any).matchedTemplate = matchResult;
+            }
+          } catch (templateError) {
+            console.warn("템플릿 매칭 중 오류 (계속 진행):", templateError);
+          }
+          
           if (!text || text.trim() === "") {
             console.error("DOCX에서 텍스트를 추출했지만 결과가 비어있습니다.");
             text = `[DOCX 파일: ${file.originalname}] - 파일에서 텍스트를 추출할 수 없습니다.`;

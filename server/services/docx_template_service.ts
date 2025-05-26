@@ -10,8 +10,8 @@ import { REPO_ROOT } from '../constants';
 import { db } from "@db";
 import * as schema from "@shared/schema";
 import { eq, and } from "drizzle-orm";
-// Import docx utility functions - will be implemented
-// import { validateTemplate, extractPlaceholders, fillDocxTemplate, type TemplateData } from '../utils/docx_fill';
+// Import docx utility functions
+import { validateTemplate, extractPlaceholders, fillDocxTemplate, type TemplateData } from '../utils/docx_fill';
 
 // 템플릿 파일 업로드 및 저장 경로
 const TEMPLATE_DIR = path.join(REPO_ROOT, 'uploads', 'templates');
@@ -31,27 +31,24 @@ export async function analyzeDocxTemplate(filePath: string): Promise<{
   htmlPreview: string;
 }> {
   try {
-    // 임시로 mammoth를 사용해 기본 분석 - 향후 docx-templater로 교체
-    const result = await mammoth.convertToHtml({ path: filePath });
-    const html = result.value;
+    // docx-templater를 사용하여 템플릿 유효성 검사 및 placeholder 추출
+    const validation = await validateTemplate(filePath);
     
-    // {{placeholder}} 패턴 매칭으로 placeholder 추출
-    const placeholderRegex = /\{\{([^}]+)\}\}/g;
-    const placeholders = new Set<string>();
-    let match;
-    
-    while ((match = placeholderRegex.exec(html)) !== null) {
-      const placeholder = match[1].trim();
-      if (placeholder) {
-        placeholders.add(placeholder);
-      }
+    // mammoth를 사용해 HTML 미리보기 생성 (표시용)
+    let htmlPreview = '';
+    try {
+      const result = await mammoth.convertToHtml({ path: filePath });
+      htmlPreview = result.value.substring(0, 1000);
+    } catch (previewError) {
+      console.warn("HTML 미리보기 생성 실패:", previewError);
+      htmlPreview = '미리보기를 생성할 수 없습니다.';
     }
     
     return {
-      placeholders: Array.from(placeholders),
-      isValid: true,
-      errors: [],
-      htmlPreview: html.substring(0, 1000),
+      placeholders: validation.placeholders,
+      isValid: validation.isValid,
+      errors: validation.errors,
+      htmlPreview,
     };
   } catch (error) {
     console.error("DOCX 템플릿 분석 오류:", error);
@@ -340,22 +337,33 @@ export async function generateDocxFromTemplate(
       };
     }
     
-    // 임시로 기본 응답 - 향후 docx-templater 구현 후 실제 파일 생성
-    const fileName = outputFileName || `filled_template_${Date.now()}.docx`;
+    // docxtemplater를 사용하여 실제 DOCX 파일 생성
+    const result = await fillDocxTemplate(
+      templateDetail.template.docxFilePath,
+      data,
+      outputFileName
+    );
     
-    // 사용 횟수 증가
-    await db.update(schema.docTemplates)
-      .set({
-        useCount: templateDetail.template.useCount + 1,
-        updatedAt: new Date()
-      })
-      .where(eq(schema.docTemplates.id, templateId));
-    
-    return {
-      success: true,
-      fileName,
-      filePath: `/uploads/generated/${fileName}`,
-    };
+    if (result.success) {
+      // 사용 횟수 증가
+      await db.update(schema.docTemplates)
+        .set({
+          useCount: templateDetail.template.useCount + 1,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.docTemplates.id, templateId));
+      
+      return {
+        success: true,
+        fileName: result.fileName,
+        filePath: result.filePath,
+      };
+    } else {
+      return {
+        success: false,
+        error: result.error || 'DOCX 파일 생성에 실패했습니다.'
+      };
+    }
   } catch (error) {
     console.error("DOCX 생성 오류:", error);
     return {
