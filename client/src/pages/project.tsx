@@ -1029,24 +1029,38 @@ export default function Project() {
                                     credentials: 'include',
                                   });
                                   
+                                  const result = await response.json();
+                                  
                                   if (response.ok) {
-                                    const result = await response.json();
-                                    toast({
-                                      title: "템플릿 매칭 완료",
-                                      description: result.matched ? 
-                                        `템플릿이 매칭되었습니다: ${result.templateName}` :
-                                        "매칭되는 템플릿을 찾을 수 없습니다.",
-                                    });
+                                    if (result.matched) {
+                                      toast({
+                                        title: "템플릿 매칭 성공",
+                                        description: `템플릿 "${result.templateName}"이 적용되었습니다. (매칭률: ${Math.round(result.matchScore * 100)}%)`,
+                                      });
+                                    } else {
+                                      toast({
+                                        title: "템플릿 매칭 실패",
+                                        description: result.message || "매칭되는 템플릿을 찾을 수 없습니다.",
+                                        variant: "destructive",
+                                      });
+                                    }
+                                    
+                                    // 프로젝트 정보 새로고침
                                     queryClient.invalidateQueries({
                                       queryKey: [`/api/projects/${projectId}`],
                                     });
                                   } else {
-                                    throw new Error('템플릿 매칭 실패');
+                                    toast({
+                                      title: "템플릿 매칭 오류",
+                                      description: result.message || "템플릿 매칭 중 서버 오류가 발생했습니다.",
+                                      variant: "destructive",
+                                    });
                                   }
                                 } catch (error) {
+                                  console.error("템플릿 매칭 요청 오류:", error);
                                   toast({
                                     title: "템플릿 매칭 실패",
-                                    description: "템플릿 매칭 중 오류가 발생했습니다.",
+                                    description: "네트워크 오류가 발생했습니다.",
                                     variant: "destructive",
                                   });
                                 }
