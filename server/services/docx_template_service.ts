@@ -297,13 +297,14 @@ export async function matchTemplateToDocument(
         console.log(`템플릿 "${template.name}" 텍스트 기반 매칭 점수: ${matchScore}`);
       }
       
-      // 현재까지의 최고 점수 업데이트
-      if (matchScore > 0.3 && (!bestMatch || matchScore > bestMatch.matchScore)) {
+      // 현재까지의 최고 점수 업데이트 (임계값을 0.02로 낮춤)
+      if (matchScore > 0.02 && (!bestMatch || matchScore > bestMatch.matchScore)) {
         bestMatch = {
           template: templateDetail.template,
           matchScore,
           fields: templateDetail.fields.filter(f => f.isTranslatable)
         };
+        console.log(`새로운 최고 매칭: "${template.name}" (점수: ${matchScore})`);
       }
     }
     
@@ -361,13 +362,18 @@ async function calculateTextBasedMatchScore(
     const templateResult = await mammoth.extractRawText({ path: template.docxFilePath });
     const templateText = templateResult.value.toLowerCase();
     
-    // 간단한 키워드 기반 유사도 계산
-    const documentWords = new Set(documentText.split(/\s+/).filter(w => w.length > 3));
-    const templateWords = new Set(templateText.split(/\s+/).filter(w => w.length > 3));
+    // 개선된 키워드 기반 유사도 계산
+    const documentWords = new Set(documentText.split(/\s+/).filter(w => w.length > 2)); // 길이 제한 완화
+    const templateWords = new Set(templateText.split(/\s+/).filter(w => w.length > 2));
+    
+    console.log(`문서 단어 수: ${documentWords.size}, 템플릿 단어 수: ${templateWords.size}`);
     
     // 공통 단어 수 계산
     const commonWords = [...documentWords].filter(word => templateWords.has(word));
     const union = new Set([...documentWords, ...templateWords]);
+    
+    console.log(`공통 단어 수: ${commonWords.length}, 전체 단어 수: ${union.size}`);
+    console.log(`공통 단어 예시:`, commonWords.slice(0, 5));
     
     const similarity = commonWords.length / union.size;
     
@@ -376,15 +382,21 @@ async function calculateTextBasedMatchScore(
     const docName = docxPath.toLowerCase();
     const templateName = template.name.toLowerCase();
     
+    console.log(`파일명 분석: 문서="${docName}", 템플릿="${templateName}"`);
+    
     // 이름에 공통 키워드가 있으면 보너스 점수
     const nameWords = templateName.split(/\s+/);
     for (const word of nameWords) {
       if (word.length > 2 && docName.includes(word)) {
         nameBonus += 0.1;
+        console.log(`파일명 매칭 보너스: "${word}" (+0.1)`);
       }
     }
     
-    return Math.min(similarity + nameBonus, 1.0);
+    const finalScore = Math.min(similarity + nameBonus, 1.0);
+    console.log(`최종 점수: 텍스트유사도(${similarity}) + 파일명보너스(${nameBonus}) = ${finalScore}`);
+    
+    return finalScore;
   } catch (error) {
     console.error("텍스트 기반 매칭 오류:", error);
     return 0;
