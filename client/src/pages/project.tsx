@@ -990,24 +990,75 @@ export default function Project() {
                   </div>
 
                   {/* Template Information */}
-                  {project.templateId && (
-                    <div className="grid grid-cols-2 gap-1">
-                      <div className="text-muted-foreground">
-                        템플릿:
-                      </div>
-                      <div className="font-medium flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
-                        <span className="text-green-600 dark:text-green-400">
-                          템플릿 적용됨
-                        </span>
-                        {project.templateMatchScore && (
-                          <span className="ml-2 text-xs text-muted-foreground">
-                            ({JSON.parse(project.templateMatchScore).templateName})
-                          </span>
-                        )}
-                      </div>
+                  <div className="grid grid-cols-2 gap-1">
+                    <div className="text-muted-foreground">
+                      템플릿:
                     </div>
-                  )}
+                    <div className="font-medium flex items-center">
+                      {project.templateId ? (
+                        <>
+                          <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
+                          <span className="text-green-600 dark:text-green-400">
+                            템플릿 적용됨
+                          </span>
+                          {project.templateMatchScore && (
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              ({JSON.parse(project.templateMatchScore).templateName})
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="h-4 w-4 text-orange-500 mr-1" />
+                          <span className="text-orange-600 dark:text-orange-400">
+                            템플릿 미적용
+                          </span>
+                          {isAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="ml-2 h-6 px-2 text-xs"
+                              onClick={async () => {
+                                try {
+                                  const response = await fetch(`/api/projects/${projectId}/match-template`, {
+                                    method: 'POST',
+                                    headers: {
+                                      'Authorization': `Bearer ${localStorage.getItem("auth_token") || ""}`,
+                                      'Content-Type': 'application/json',
+                                    },
+                                    credentials: 'include',
+                                  });
+                                  
+                                  if (response.ok) {
+                                    const result = await response.json();
+                                    toast({
+                                      title: "템플릿 매칭 완료",
+                                      description: result.matched ? 
+                                        `템플릿이 매칭되었습니다: ${result.templateName}` :
+                                        "매칭되는 템플릿을 찾을 수 없습니다.",
+                                    });
+                                    queryClient.invalidateQueries({
+                                      queryKey: [`/api/projects/${projectId}`],
+                                    });
+                                  } else {
+                                    throw new Error('템플릿 매칭 실패');
+                                  }
+                                } catch (error) {
+                                  toast({
+                                    title: "템플릿 매칭 실패",
+                                    description: "템플릿 매칭 중 오류가 발생했습니다.",
+                                    variant: "destructive",
+                                  });
+                                }
+                              }}
+                            >
+                              매칭 시도
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
 
                   <div className="grid grid-cols-2 gap-1 items-center">
                     <div className="text-muted-foreground">
