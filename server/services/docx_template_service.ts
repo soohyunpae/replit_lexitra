@@ -249,16 +249,28 @@ export async function matchTemplateToDocument(
   fields: schema.TemplateField[];
 } | null> {
   try {
+    console.log("템플릿 매칭 시작:", docxPath);
+    
     // 템플릿 목록 조회
     const templates = await getTemplates();
+    console.log(`등록된 템플릿 수: ${templates.length}`);
     
-    if (templates.length === 0) return null;
+    if (templates.length === 0) {
+      console.log("등록된 템플릿이 없습니다.");
+      return null;
+    }
     
     // 문서에서 placeholder 추출
     const analysis = await analyzeDocxTemplate(docxPath);
     const documentPlaceholders = analysis.placeholders;
+    console.log("문서에서 추출된 placeholders:", documentPlaceholders);
     
-    if (documentPlaceholders.length === 0) return null;
+    // placeholder가 없어도 텍스트 기반 매칭 시도
+    let bestMatch: {
+      template: schema.DocTemplate;
+      matchScore: number;
+      fields: schema.TemplateField[];
+    } | null = null;
     
     // 각 템플릿과 비교
     for (const template of templates) {
@@ -266,15 +278,28 @@ export async function matchTemplateToDocument(
       
       if (!templateDetail) continue;
       
-      // placeholder 기반 매칭
-      const matchScore = calculatePlaceholderMatchScore(
-        documentPlaceholders, 
-        templateDetail.fields
-      );
+      console.log(`템플릿 "${template.name}" 검사 중...`);
       
-      // 일치율이 높으면 해당 템플릿 반환
-      if (matchScore > 0.8) {
-        return {
+      let matchScore = 0;
+      
+      // placeholder 기반 매칭 (있는 경우)
+      if (documentPlaceholders.length > 0) {
+        matchScore = calculatePlaceholderMatchScore(
+          documentPlaceholders, 
+          templateDetail.fields
+        );
+        console.log(`템플릿 "${template.name}" placeholder 매칭 점수: ${matchScore}`);
+      }
+      
+      // placeholder 매칭이 부족한 경우 텍스트 기반 매칭
+      if (matchScore < 0.5) {
+        matchScore = await calculateTextBasedMatchScore(docxPath, template);
+        console.log(`템플릿 "${template.name}" 텍스트 기반 매칭 점수: ${matchScore}`);
+      }
+      
+      // 현재까지의 최고 점수 업데이트
+      if (matchScore > 0.3 && (!bestMatch || matchScore > bestMatch.matchScore)) {
+        bestMatch = {
           template: templateDetail.template,
           matchScore,
           fields: templateDetail.fields.filter(f => f.isTranslatable)
@@ -282,7 +307,13 @@ export async function matchTemplateToDocument(
       }
     }
     
-    return null;
+    if (bestMatch) {
+      console.log(`최적 매칭 템플릿: "${bestMatch.template.name}" (점수: ${bestMatch.matchScore})`);
+    } else {
+      console.log("매칭되는 템플릿을 찾을 수 없습니다.");
+    }
+    
+    return bestMatch;
   } catch (error) {
     console.error("템플릿 매칭 오류:", error);
     return null;
@@ -312,6 +343,52 @@ function calculatePlaceholderMatchScore(
   const intersection = exactMatches;
   
   return intersection / union;
+}
+
+/**
+ * 텍스트 기반 템플릿 매칭 점수 계산
+ */
+async function calculateTextBasedMatchScore(
+  docxPath: string,
+  template: schema.DocTemplate
+): Promise<number> {
+  try {
+    // mammoth를 사용해 문서 텍스트 추출
+    const documentResult = await mammoth.extractRawText({ path: docxPath });
+    const documentText = documentResult.value.toLowerCase();
+    
+    // 템플릿 파일에서 텍스트 추출
+    const templateResult = await mammoth.extractRawText({ path: template.docxFilePath });
+    const templateText = templateResult.value.toLowerCase();
+    
+    // 간단한 키워드 기반 유사도 계산
+    const documentWords = new Set(documentText.split(/\s+/).filter(w => w.length > 3));
+    const templateWords = new Set(templateText.split(/\s+/).filter(w => w.length > 3));
+    
+    // 공통 단어 수 계산
+    const commonWords = [...documentWords].filter(word => templateWords.has(word));
+    const union = new Set([...documentWords, ...templateWords]);
+    
+    const similarity = commonWords.length / union.size;
+    
+    // 파일명 기반 추가 점수 (옵션)
+    let nameBonus = 0;
+    const docName = docxPath.toLowerCase();
+    const templateName = template.name.toLowerCase();
+    
+    // 이름에 공통 키워드가 있으면 보너스 점수
+    const nameWords = templateName.split(/\s+/);
+    for (const word of nameWords) {
+      if (word.length > 2 && docName.includes(word)) {
+        nameBonus += 0.1;
+      }
+    }
+    
+    return Math.min(similarity + nameBonus, 1.0);
+  } catch (error) {
+    console.error("텍스트 기반 매칭 오류:", error);
+    return 0;
+  }
 }
 
 /**
