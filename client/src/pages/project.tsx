@@ -989,6 +989,26 @@ export default function Project() {
                     </div>
                   </div>
 
+                  {/* Template Information */}
+                  {project.templateId && (
+                    <div className="grid grid-cols-2 gap-1">
+                      <div className="text-muted-foreground">
+                        템플릿:
+                      </div>
+                      <div className="font-medium flex items-center">
+                        <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
+                        <span className="text-green-600 dark:text-green-400">
+                          템플릿 적용됨
+                        </span>
+                        {project.templateMatchScore && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            ({JSON.parse(project.templateMatchScore).templateName})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-2 gap-1 items-center">
                     <div className="text-muted-foreground">
                       {t("projects.deadline")}:
