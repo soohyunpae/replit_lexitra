@@ -33,8 +33,8 @@ export const projects = pgTable("projects", {
   deadline: timestamp("deadline"),
   notes: text("notes"),
   references: text("references"), // JSON-encoded string for reference file metadata
-  templateId: integer("template_id").references(() => docTemplates.id), // 매칭된 템플릿 ID
-  templateMatchScore: text("template_match_score"), // 템플릿 매칭 점수 (JSON)
+  templateId: integer("template_id"),
+  templateMatchScore: integer("template_match_score"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   userId: integer("user_id").references(() => users.id),
@@ -43,7 +43,6 @@ export const projects = pgTable("projects", {
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   user: one(users, { fields: [projects.userId], references: [users.id] }),
   claimer: one(users, { fields: [projects.claimedBy], references: [users.id] }),
-  template: one(docTemplates, { fields: [projects.templateId], references: [docTemplates.id] }),
   files: many(files),
 }));
 

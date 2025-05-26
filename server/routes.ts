@@ -375,6 +375,25 @@ async function processFile(file: Express.Multer.File) {
           
           // 템플릿 매칭 시도
           notifyProgress(0, file.originalname, "processing", 30, "템플릿 매칭 확인중");
+          
+          try {
+            const templateService = await import('../services/docx_template_service');
+            const matchResult = await templateService.matchTemplateToDocument(file.path);
+            
+            if (matchResult) {
+              console.log(`템플릿 매칭 성공: ${matchResult.template.name} (점수: ${matchResult.matchScore})`);
+              notifyProgress(0, file.originalname, "processing", 40, `템플릿 "${matchResult.template.name}" 적용됨`);
+              
+              // TODO: 프로젝트에 템플릿 정보 저장 로직 추가 필요
+              // 현재는 projects 테이블에 template 관련 컬럼이 없어서 저장할 수 없음
+            } else {
+              console.log("매칭되는 템플릿을 찾을 수 없습니다.");
+              notifyProgress(0, file.originalname, "processing", 40, "템플릿 매칭 실패");
+            }
+          } catch (templateError) {
+            console.error("템플릿 매칭 중 오류:", templateError);
+            notifyProgress(0, file.originalname, "processing", 40, "템플릿 매칭 오류");
+          }
           try {
             const { matchTemplateToDocument } = await import('./services/docx_template_service');
             const matchResult = await matchTemplateToDocument(file.path);
