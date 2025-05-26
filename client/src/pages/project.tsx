@@ -734,7 +734,7 @@ export default function Project() {
             {/* Workflow actions based on project status */}
             <div className="flex gap-2">
               {/* Template Download Button */}
-              {project.templateId && projectStats && projectStats.completionPercentage > 0 && (
+              {project.templateId && (
                 <Button
                   variant="outline"
                   className="border-purple-500 text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950"
