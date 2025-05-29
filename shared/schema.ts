@@ -34,7 +34,7 @@ export const projects = pgTable("projects", {
   notes: text("notes"),
   references: text("references"), // JSON-encoded string for reference file metadata
   templateId: integer("template_id").references(() => docTemplates.id),
-  templateMatchScore: integer("template_match_score"),
+  templateMatchScore: jsonb("template_match_score"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   userId: integer("user_id").references(() => users.id),
