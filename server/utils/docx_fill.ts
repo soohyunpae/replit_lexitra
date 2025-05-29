@@ -1,3 +1,4 @@
+
 import * as fs from 'fs';
 import * as path from 'path';
 import PizZip from 'pizzip';
@@ -44,7 +45,8 @@ export async function validateTemplate(templatePath: string): Promise<Validation
 
     // Extract placeholders by getting all tags
     const placeholders: string[] = [];
-    const tags = doc.getFullText().match(/\{\{[^}]+\}\}/g) || [];
+    const fullText = doc.getFullText();
+    const tags = fullText.match(/\{\{[^}]+\}\}/g) || [];
 
     tags.forEach(tag => {
       const cleanTag = tag.replace(/[{}]/g, '');

@@ -2880,85 +2880,92 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         return res.status(400).json({ message: "Invalid project ID" });
       }
 
-      // 프로젝트 정보와 템플릿 정보 조회
+      // 먼저 프로젝트 기본 정보 조회
       const project = await db.query.projects.findFirst({
-        where: eq(schema.projects.id, projectId),
-        with: {
-          template: true,
-          files: {
-            with: {
-              segments: true
-            }
-          }
-        }
+        where: eq(schema.projects.id, projectId)
       });
 
       if (!project) {
         return res.status(404).json({ message: "Project not found" });
       }
 
-      if (!project.templateId || !project.template) {
+      if (!project.templateId) {
         return res.status(400).json({ 
           message: "이 프로젝트는 템플릿이 적용되지 않았습니다." 
         });
       }
 
-      // 번역된 세그먼트들을 placeholder 데이터로 변환
-      const templateData: { [key: string]: string } = {};
-      
-      // 모든 파일의 세그먼트에서 번역 완료된 내용 수집
-      for (const file of project.files) {
-        if (file.type === 'work' && file.segments) {
-          for (const segment of file.segments) {
-            if (segment.target && segment.target.trim()) {
-              // 세그먼트 순서나 내용을 기반으로 템플릿 placeholder에 매핑
-              // 간단한 구현: 세그먼트 ID나 순서를 기반으로 placeholder 생성
-              const placeholderKey = `segment_${segment.id}`;
-              templateData[placeholderKey] = segment.target;
-            }
-          }
-        }
-      }
-
-      // 템플릿 필드 정보 조회
-      const { generateDocxFromTemplate } = await import('./services/docx_template_service');
-      
-      // 템플릿 필드를 기반으로 실제 데이터 매핑
-      const templateDetail = await db.query.docTemplates.findFirst({
-        where: eq(schema.docTemplates.id, project.templateId),
-        with: {
-          fields: true
-        }
+      // 템플릿 정보 별도 조회
+      const template = await db.query.docTemplates.findFirst({
+        where: eq(schema.docTemplates.id, project.templateId)
       });
 
-      if (templateDetail && templateDetail.fields) {
-        // 템플릿 필드 기반으로 번역된 세그먼트 매핑
-        const translatedSegments = project.files
-          .filter(f => f.type === 'work')
-          .flatMap(f => f.segments || [])
-          .filter(s => s.target && s.target.trim());
-
-        // 번역 가능한 필드에 순서대로 번역된 내용 할당
-        const translatableFields = templateDetail.fields
-          .filter(f => f.isTranslatable)
-          .sort((a, b) => a.orderIndex - b.orderIndex);
-
-        translatableFields.forEach((field, index) => {
-          if (index < translatedSegments.length) {
-            templateData[field.placeholder] = translatedSegments[index].target || '';
-          }
+      if (!template) {
+        return res.status(400).json({ 
+          message: "템플릿을 찾을 수 없습니다." 
         });
       }
 
-      // DOCX 파일 생성
+      // 템플릿 필드 별도 조회
+      const templateFields = await db.query.templateFields.findMany({
+        where: eq(schema.templateFields.templateId, project.templateId)
+      });
+
+      // 프로젝트 파일 조회
+      const files = await db.query.files.findMany({
+        where: eq(schema.files.projectId, projectId)
+      });
+
+      // 각 파일의 세그먼트 조회
+      const allSegments = [];
+      for (const file of files) {
+        if (file.type === 'work' || !file.type) {
+          const segments = await db.query.translationUnits.findMany({
+            where: eq(schema.translationUnits.fileId, file.id)
+          });
+          allSegments.push(...segments);
+        }
+      }
+
+      // 번역된 세그먼트들을 placeholder 데이터로 변환
+      const templateData: { [key: string]: string } = {};
+      
+      // 번역 완료된 세그먼트만 필터링
+      const translatedSegments = allSegments.filter(s => s.target && s.target.trim());
+
+      // 번역 가능한 필드에 순서대로 번역된 내용 할당
+      const translatableFields = templateFields
+        .filter(f => f.isTranslatable)
+        .sort((a, b) => a.orderIndex - b.orderIndex);
+
+      translatableFields.forEach((field, index) => {
+        if (index < translatedSegments.length) {
+          templateData[field.placeholder] = translatedSegments[index].target || '';
+        } else {
+          // 번역된 세그먼트가 부족한 경우 빈 문자열로 채움
+          templateData[field.placeholder] = '';
+        }
+      });
+
+      // docx_fill 유틸리티를 직접 사용하여 DOCX 파일 생성
+      const { fillDocxTemplate } = await import('./utils/docx_fill');
+      
       const outputFileName = `${project.name}_translated_${Date.now()}.docx`;
-      const result = await generateDocxFromTemplate(
-        project.templateId,
+      const result = await fillDocxTemplate(
+        template.docxFilePath,
         templateData,
         outputFileName
       );
 
       if (result.success && result.filePath) {
+        // 사용 횟수 증가
+        await db.update(schema.docTemplates)
+          .set({
+            useCount: template.useCount + 1,
+            updatedAt: new Date()
+          })
+          .where(eq(schema.docTemplates.id, project.templateId));
+
         // 파일 다운로드 응답
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
         res.setHeader('Content-Disposition', `attachment; filename="${result.fileName}"`);

@@ -1,225 +1,163 @@
+# 템플릿 다운로드 기능 문제 분석 및 해결 방안
 
-## 🔧 현재 구현 상태 분석 및 완성 가이드
+## 🔍 문제 상황 분석
 
-### 📊 현재 구현된 기능들
+### 현재 증상
+- 프로젝트 ID 96에서 "템플릿 다운로드" 버튼 클릭 시 페이지가 blank 상태가 됨
+- 로그에서 다음과 같은 오류 발생:
+```
+Template DOCX download error: TypeError: Cannot read properties of undefined (reading 'referencedTable')
+```
 
-✅ **완료된 기능**
-- Admin Console의 Template Manager UI (템플릿 목록, 업로드, 상세보기)
-- 템플릿 파일 업로드 및 placeholder 추출 기능
-- 템플릿 필드 관리 (번역 대상 지정, 필수 여부 설정)
-- DB 스키마 (docTemplates, templateFields 테이블)
-- 기본 API 엔드포인트 (/api/admin/templates)
+### 🔧 심층 코드베이스 분석
 
-❌ **미완성/누락된 기능**
-- 실제 docx-templater 라이브러리 설치 및 구현
-- 사용자 문서 업로드 시 템플릿 자동 매칭
-- 번역 완료 후 템플릿 기반 DOCX 파일 생성
-- 완성된 DOCX 파일 다운로드 기능
+#### 1. 관련 파일 및 함수 매핑
 
----
+**프론트엔드 (클라이언트)**
+- `client/src/pages/project.tsx` - 템플릿 다운로드 버튼 UI 및 요청 로직
+- 관련 함수: `downloadTemplateMutation.mutate()`
 
-### 🛠️ 단계별 완성 구현 가이드
+**백엔드 (서버)**
+- `server/routes.ts` - `/api/projects/:id/download-template` API 엔드포인트
+- `server/services/docx_template_service.ts` - 템플릿 서비스 로직
+- `server/utils/docx_fill.ts` - docx-templater 기반 DOCX 생성
+- 관련 함수: `generateDocxFromTemplate()`, `getTemplateDetails()`, `fillDocxTemplate()`
 
-#### **1단계: 필수 라이브러리 설치**
+**데이터베이스 스키마**
+- `shared/schema.ts` - docTemplates, templateFields, projects 테이블 정의
+- `db/migrations/` - 템플릿 관련 데이터베이스 구조
 
+#### 2. 오류 원인 분석
+
+**주요 문제점:**
+1. **Drizzle ORM 관계 설정 오류**: `referencedTable` 오류는 Drizzle의 관계(relation) 설정에서 발생
+2. **템플릿 필드 관계 설정 누락**: `projects.template` 관계가 제대로 정의되지 않음
+3. **docx-templater 라이브러리 미설치**: 실제 DOCX 생성 라이브러리가 없음
+4. **템플릿 데이터 매핑 로직 불완전**: 번역된 세그먼트를 템플릿 placeholder에 매핑하는 로직 부족
+
+**세부 분석:**
+- 로그에서 `QueryPromise._getQuery`에서 오류 발생 → Drizzle ORM의 `with` 구문에서 관계 해석 실패
+- `projects` 테이블과 `docTemplates` 테이블 간의 관계가 제대로 설정되지 않음
+- `templateId` 필드는 있지만 실제 관계 매핑이 스키마에서 누락
+
+#### 3. 현재 구현 상태 검토
+
+**✅ 완료된 부분:**
+- 템플릿 관리 UI (Admin Console)
+- 템플릿 업로드 및 메타데이터 저장
+- 기본 API 엔드포인트 구조
+- 프로젝트에 템플릿 ID 저장
+
+**❌ 누락/문제 부분:**
+- docx-templater 라이브러리 설치
+- Drizzle ORM 관계 정의 오류
+- 실제 DOCX 파일 생성 로직
+- 번역 세그먼트 → 템플릿 매핑 로직
+- 파일 다운로드 응답 처리
+
+## 🛠️ 해결 방안 및 구현 계획
+
+### Phase 1: 기반 인프라 수정
+
+#### 1-1. 필수 라이브러리 설치
 ```bash
 npm install docxtemplater pizzip
 npm install @types/pizzip --save-dev
 ```
 
-#### **2단계: docx_fill.ts 실제 구현**
+#### 1-2. 데이터베이스 스키마 관계 수정
+- `shared/schema.ts`에서 projects와 docTemplates 간의 관계 올바르게 정의
+- Drizzle 관계 설정 문법 수정
 
-현재 `server/utils/docx_fill.ts`가 기본 틀만 있고 실제 docx-templater 구현이 누락되어 있음. 다음과 같이 완성:
+#### 1-3. docx_fill.ts 실제 구현
+- 현재 기본 틀만 있는 파일을 실제 docx-templater 기반으로 완성
+- `fillDocxTemplate()`, `validateTemplate()`, `extractPlaceholders()` 함수 구현
 
-**주요 구현 포인트:**
-- `fillDocxTemplate()` 함수에서 실제 docx-templater 사용
-- `validateTemplate()` 함수로 템플릿 유효성 검사
-- `extractPlaceholders()` 함수로 placeholder 정확히 추출
+### Phase 2: 핵심 로직 구현
 
-#### **3단계: 템플릿 매칭 로직 개선**
+#### 2-1. 템플릿 데이터 매핑 로직
+- 번역된 세그먼트를 템플릿의 placeholder에 매핑하는 알고리즘 구현
+- 템플릿 필드의 `orderIndex`를 활용한 순서 기반 매핑
 
-`server/services/docx_template_service.ts`의 `matchTemplateToDocument()` 함수 개선:
+#### 2-2. API 엔드포인트 수정
+- `/api/projects/:id/download-template`에서 Drizzle 쿼리 수정
+- 올바른 관계 로딩 및 오류 처리 추가
 
-**현재 문제점:**
-- mammoth만 사용하여 기본적인 분석만 수행
-- docx-templater 기반 정확한 placeholder 매칭 부족
+#### 2-3. DOCX 파일 생성 및 다운로드
+- docx-templater를 사용한 실제 파일 생성
+- 생성된 파일의 HTTP 스트림 응답 처리
+- 임시 파일 정리 로직
 
-**개선 방안:**
-- docx-templater로 업로드된 문서의 placeholder 추출
-- 기존 템플릿들과 placeholder 기반 정확한 매칭
-- 유사도 계산 알고리즘 개선 (Jaccard similarity 외 추가 방법)
+### Phase 3: 프론트엔드 개선
 
-#### **4단계: 사용자 워크플로우에 템플릿 적용**
+#### 3-1. 오류 처리 강화
+- 템플릿이 없는 경우 처리
+- 네트워크 오류 및 서버 오류 대응
+- 사용자 친화적 오류 메시지
 
-**파일 업로드 시 템플릿 매칭:**
-- `server/routes/pdf-routes.ts`나 파일 업로드 라우트에서 템플릿 매칭 호출
-- 매칭된 템플릿이 있으면 프로젝트에 연결
-- 프론트엔드에서 "템플릿이 적용되었습니다" 알림 표시
+#### 3-2. UX 개선
+- 다운로드 진행 상태 표시
+- 성공/실패 피드백 개선
 
-**번역 프로세스 연동:**
-- 세그먼트 추출 시 템플릿 구조 고려
-- placeholder 위치에 따른 세그먼트 순서 및 구조 보존
+## 🔧 상세 구현 단계
 
-#### **5단계: 번역 완료 후 DOCX 생성**
+### Step 1: 라이브러리 설치 및 타입 정의
 
-**번역 완료 시 템플릿 기반 파일 생성:**
-- 프로젝트 페이지에 "템플릿으로 다운로드" 버튼 추가
-- 번역된 세그먼트를 placeholder에 매핑
-- `fillDocxTemplate()` 호출하여 완성된 DOCX 생성
-- 생성된 파일 다운로드 제공
+### Step 2: 스키마 관계 수정
+```typescript
+// shared/schema.ts 수정 필요
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+  // ... 기존 관계들
+  template: one(docTemplates, {
+    fields: [projects.templateId],
+    references: [docTemplates.id],
+  }),
+}));
 
-#### **6단계: 프론트엔드 UI 개선**
-
-**프로젝트 페이지 개선:**
-- 템플릿 적용 여부 표시
-- 템플릿 기반 다운로드 옵션 추가
-- 템플릿 구조에 따른 세그먼트 그룹핑 표시
-
-**파일 업로드 페이지 개선:**
-- 템플릿 자동 감지 알림
-- 수동 템플릿 선택 드롭다운
-- 템플릿 적용 미리보기
-
----
-
-### 🔗 구현 우선순위
-
-1. **High Priority**: docx-templater 라이브러리 설치 및 기본 구현
-2. **High Priority**: 템플릿 기반 DOCX 생성 및 다운로드 기능
-3. **Medium Priority**: 사용자 워크플로우에 템플릿 매칭 연동
-4. **Low Priority**: UI/UX 개선 및 고급 매칭 알고리즘
-
----
-
-### 📝 테스트 시나리오
-
-**ID 94 template test 프로젝트 검증:**
-1. 업로드된 ASMA00359-KR.docx가 템플릿과 매칭되었는지 확인
-2. 번역 완료 후 템플릿 기반 다운로드 가능한지 테스트
-3. 생성된 DOCX가 원본 템플릿 구조를 유지하는지 검증
-
----
-
-### 🚨 주의사항
-
-- 현재 mammoth 기반 분석은 보조용으로만 사용, 실제 처리는 docx-templater 사용
-- placeholder 추출 시 정확성 중요 (공백, 대소문자, 특수문자 처리)
-- 대용량 파일 처리 시 메모리 관리 고려
-- 생성된 파일의 임시 저장 및 자동 정리 구현
-
----
-
-🧱 개발자용 구현 설계서 (Replit 기준)
-
-### 🔧 개요
-
-- 목적: 사용자가 업로드한 `.docx` 문서를 템플릿 구조에 맞춰 번역하고, 번역 결과를 원래 템플릿 구조에 삽입하여 `.docx`로 다시 다운로드할 수 있게 구현
-- 개발 환경: Replit (Next.js + FastAPI), 템플릿 구조는 프론트/백엔드 공통 schema 사용
-
----
-
-### 📂 주요 디렉토리 및 파일 구조
-
-```
-/server
-  └─ routes/templates.ts        # 템플릿 업로드/매칭 API
-  └─ services/docx_template_service.ts  # 템플릿 구조 추출/변환 처리
-  └─ utils/docx_fill.ts         # docx-templater 기반 변환 모듈 (신규)
-  └─ uploads/templates/         # 업로드된 원본 템플릿 저장 위치
-
-/shared
-  └─ schema.ts                  # Template, TemplateStructure 타입 정의
-
-/web
-  └─ pages/admin/templates      # 관리자 템플릿 목록/등록/수정 UI
-  └─ pages/upload               # 사용자 문서 업로드 및 매칭 UI
+export const docTemplatesRelations = relations(docTemplates, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [docTemplates.createdBy],
+    references: [users.id],
+  }),
+  fields: many(templateFields),
+  projects: many(projects), // 역방향 관계 추가
+}));
 ```
 
----
+### Step 3: docx_fill.ts 완성
+- PizZip과 Docxtemplater 라이브러리 사용
+- 실제 DOCX 파일 읽기/쓰기 구현
+- placeholder 추출 및 데이터 삽입 로직
 
-### ⚙️ 단계별 구현 설계
+### Step 4: 서비스 레이어 완성
+- `docx_template_service.ts`에서 실제 파일 생성 로직 구현
+- 템플릿과 번역 데이터 매핑 알고리즘
 
-#### 1. 템플릿 업로드 및 구조 추출
-- 사용자가 `.docx` 업로드 (`POST /templates`)
-- 백엔드에서 `docx-templater` 또는 `mammoth`를 사용하여 구조 추출
-- 추출된 구조를 `TemplateStructure[]`로 저장 (type, placeholder, isTranslatable 포함)
-- 구조 정보 DB에 저장
+### Step 5: API 엔드포인트 수정
+- Drizzle 쿼리에서 `with` 구문 수정
+- 올바른 관계 로딩 및 오류 처리
 
-#### 2. 사용자 문서 업로드 시 템플릿 매칭
-- 업로드된 문서의 구조를 `TemplateStructure[]`로 파싱
-- 기존 템플릿과 구조 유사도 비교 (필드 수, 순서 등)
-- 유사한 템플릿이 있을 경우 자동 적용 or 수동 선택 제공
+### Step 6: 프론트엔드 오류 처리 개선
 
-#### 3. 번역 세그먼트 추출 및 처리
-- 각 `placeholder`에 대응되는 원문 텍스트를 추출하여 GPT or TM으로 번역
-- 번역 결과는 `{ placeholder, translatedText }` 형식으로 보관
+## 🚨 주의사항
 
-#### 4. 템플릿에 번역 삽입 및 `.docx` 재생성
-- `docx_fill.ts`에서 `docx-templater` 사용
-- 기존 템플릿 파일에 `{ placeholder: translatedText }` 데이터를 삽입
-- 완성된 `.docx` 생성 후 사용자에게 다운로드 제공
+1. **데이터베이스 마이그레이션**: 스키마 변경 시 기존 데이터 보존 필요
+2. **메모리 관리**: 대용량 DOCX 파일 처리 시 메모리 사용량 모니터링
+3. **파일 보안**: 생성된 임시 파일 자동 정리 및 접근 권한 관리
+4. **성능 최적화**: 큰 프로젝트의 경우 비동기 처리 고려
 
-#### 5. 프론트엔드 UI 구성
-- 관리자 UI에서 템플릿 구조 확인 및 번역 대상 설정 가능
-- 사용자 업로드 후 적용된 템플릿 구조와 번역 세그먼트 확인 가능
+## 🎯 우선순위
 
----
+1. **High Priority**: docx-templater 라이브러리 설치 및 Drizzle 관계 수정
+2. **High Priority**: 기본 DOCX 생성 및 다운로드 기능 구현
+3. **Medium Priority**: 템플릿 매핑 로직 완성
+4. **Low Priority**: UX 개선 및 고급 기능
 
-### 🔑 주요 고려사항
+## 🧪 테스트 계획
 
-- 템플릿 구조는 `placeholder` 기반으로 통일 (`{{fieldName}}` 형식)
-- 번역 중간 결과와 최종 결과는 모두 DB에 저장 (히스토리 관리 대비)
-- 비정형 문서 대비 에러 처리 필요 (템플릿에 포함되지 않은 경우 등)
+1. ID 96 프로젝트에서 템플릿 다운로드 기능 테스트
+2. 다양한 템플릿 구조로 매핑 정확성 검증
+3. 대용량 프로젝트에서 성능 테스트
+4. 오류 시나리오 테스트 (템플릿 없음, 네트워크 오류 등)
 
-
-⸻
-
-### 🛠️ 주요 API 명세
-
-📌 1. 템플릿 업로드
-    •	POST /api/templates
-    •	FormData로 .docx 파일 업로드
-    •	서버에서 docx-templater 또는 mammoth로 구조 추출
-    •	DB에 Template, TemplateStructure 저장
-
-⸻
-
-📌 2. 템플릿 목록 조회
-    •	GET /api/templates
-    •	관리자 UI에서 사용
-    •	저장된 템플릿의 id, name, description, createdAt, usageCount 등 반환
-
-⸻
-
-📌 3. 특정 템플릿 상세 조회
-    •	GET /api/templates/:id
-    •	해당 템플릿 구조(TemplateStructure[]) 반환
-
-⸻
-
-📌 4. 템플릿 구조 수정
-    •	PUT /api/templates/:id/structures/:structureId
-    •	구조 항목의 isTranslatable 값 등을 업데이트 (ex: 사용자가 번역 대상 여부 변경)
-
-⸻
-
-📌 5. 템플릿 삭제
-    •	DELETE /api/templates/:id
-    •	사용 중인 경우 경고 처리 필요
-
-⸻
-
-📌 6. 템플릿 매칭
-    •	POST /api/templates/match
-    •	본문: 업로드된 문서의 구조 JSON
-    •	응답: 가장 유사한 템플릿 ID + 유사도 점수
-
-⸻
-
-📌 7. 번역 삽입 및 .docx 생성
-    •	POST /api/templates/:id/fill
-    •	본문: { placeholder: translatedText } 맵
-    •	응답: 생성된 .docx 파일 다운로드 URL
-
-⸻
-
+이 계획에 따라 단계적으로 구현하면 템플릿 다운로드 기능이 정상적으로 작동할 것입니다.

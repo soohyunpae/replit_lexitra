@@ -44,6 +44,10 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   user: one(users, { fields: [projects.userId], references: [users.id] }),
   claimer: one(users, { fields: [projects.claimedBy], references: [users.id] }),
   files: many(files),
+  template: one(docTemplates, {
+    fields: [projects.templateId],
+    references: [docTemplates.id],
+  }),
 }));
 
 export const insertProjectSchema = createInsertSchema(projects, {
@@ -185,7 +189,19 @@ export const glossary = pgTable("glossary", {
 });
 
 export const glossaryRelations = relations(glossary, ({ one }) => ({
-  resource: one(tbResources, { fields: [glossary.resourceId], references: [tbResources.id] }),
+  resource: one(tbResources, {
+    fields: [glossary.resourceId],
+    references: [tbResources.id],
+  }),
+}));
+
+export const docTemplatesRelations = relations(docTemplates, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [docTemplates.createdBy],
+    references: [users.id],
+  }),
+  fields: many(templateFields),
+  projects: many(projects),
 }));
 
 export const insertGlossarySchema = createInsertSchema(glossary, {
@@ -210,10 +226,7 @@ export const docTemplates = pgTable("doc_templates", {
   createdBy: integer("created_by").references(() => users.id).notNull(),
 });
 
-export const docTemplatesRelations = relations(docTemplates, ({ one, many }) => ({
-  creator: one(users, { fields: [docTemplates.createdBy], references: [users.id] }),
-  fields: many(templateFields),
-}));
+
 
 export const insertDocTemplateSchema = createInsertSchema(docTemplates, {
   name: (schema) => schema.min(3, "Template name must be at least 3 characters"),
@@ -238,7 +251,10 @@ export const templateFields = pgTable("template_fields", {
 });
 
 export const templateFieldsRelations = relations(templateFields, ({ one }) => ({
-  template: one(docTemplates, { fields: [templateFields.templateId], references: [docTemplates.id] }),
+  template: one(docTemplates, {
+    fields: [templateFields.templateId],
+    references: [docTemplates.id],
+  }),
 }));
 
 export const insertTemplateFieldSchema = createInsertSchema(templateFields, {
