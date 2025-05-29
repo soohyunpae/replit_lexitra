@@ -90,8 +90,10 @@ export default function Project() {
 
   // Get project ID from URL params - 더 안전한 파싱
   const projectId = useMemo(() => {
+    console.log("Route parsing debug:", { isMatch, params });
+    
     if (!isMatch || !params?.id) {
-      console.log("Project route not matched or no ID parameter");
+      console.log("Project route not matched or no ID parameter", { isMatch, params });
       return null;
     }
     
@@ -111,6 +113,8 @@ export default function Project() {
     enabled: !!projectId && projectId > 0,
     retry: 1,
     staleTime: 5 * 60 * 1000, // 5분
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
   });
 
   // Get all TM entries to count TM matches
@@ -731,6 +735,9 @@ export default function Project() {
             <p className="text-muted-foreground mb-4">
               Failed to load project data. Please try again.
             </p>
+            <div className="text-xs text-muted-foreground mb-4">
+              Error details: {error instanceof Error ? error.message : String(error)}
+            </div>
             <Button onClick={() => window.location.reload()}>Retry</Button>
             <Button variant="outline" onClick={() => navigate("/projects")} className="ml-2">
               Go back to projects
@@ -741,7 +748,8 @@ export default function Project() {
     );
   }
 
-  if (!project) {
+  if (!project && !isLoading) {
+    console.log("Project is null/undefined but not loading", { projectId, isLoading, error });
     return (
       <MainLayout title="Project Not Found">
         <div className="flex-1 p-6 flex items-center justify-center">
@@ -751,7 +759,26 @@ export default function Project() {
               The project you're looking for doesn't exist or you don't have
               access to it.
             </p>
+            <div className="text-xs text-muted-foreground mb-4">
+              Project ID: {projectId}, Loading: {isLoading ? "Yes" : "No"}
+            </div>
             <Button onClick={() => navigate("/projects")}>Go back to projects</Button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // 안전성 검사: project가 유효한지 확인
+  if (!project || !project.id) {
+    console.log("Project data is invalid", { project, projectId });
+    return (
+      <MainLayout title="Loading...">
+        <div className="flex-1 p-6 flex items-center justify-center">
+          <div className="animate-pulse space-y-4 w-full max-w-2xl">
+            <div className="h-8 bg-accent rounded w-1/3"></div>
+            <div className="h-4 bg-accent rounded w-1/2"></div>
+            <div className="h-40 bg-accent rounded"></div>
           </div>
         </div>
       </MainLayout>
@@ -766,7 +793,7 @@ export default function Project() {
             <div className="flex items-center">
               <h1 className="text-xl font-semibold mb-1 flex items-center">
                 <span>
-                  [ID {project.id}] {project.name}
+                  [ID {project.id}] {project.name || 'Unnamed Project'}
                 </span>
                 <span
                   className={`ml-3 text-sm font-medium rounded-md px-2 py-0.5 ${

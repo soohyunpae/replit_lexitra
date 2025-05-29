@@ -2240,6 +2240,8 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         tokenAuthenticated: !!req.user,
         user: req.user,
         requestedId: req.params.id,
+        url: req.url,
+        method: req.method,
       });
 
       const id = parseInt(req.params.id);
@@ -2253,6 +2255,8 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         });
       }
 
+      console.log(`Querying database for project ID: ${id}`);
+      
       const project = await db.query.projects.findFirst({
         where: eq(schema.projects.id, id),
         with: {
@@ -2269,17 +2273,19 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         });
       }
 
-      console.log(`Project found: ${project.name} (ID: ${project.id})`);
+      console.log(`Project found: ${project.name} (ID: ${project.id}), files: ${project.files?.length || 0}`);
 
       // 클레임된 프로젝트이고 현재 사용자가 클레임하지 않았고 관리자가 아닌 경우 접근 거부
       if (project.status === "Claimed" && 
           project.claimedBy !== req.user?.id && 
           req.user?.role !== "admin") {
+        console.log(`Access denied for project ${id}: claimed by user ${project.claimedBy}, current user: ${req.user?.id}`);
         return res.status(403).json({
           message: "Access denied. This project is claimed by another user.",
         });
       }
 
+      console.log(`Returning project data for ID: ${id}`);
       return res.json(project);
     } catch (error) {
       console.error("Project detail fetch error:", error);
