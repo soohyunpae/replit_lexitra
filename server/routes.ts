@@ -2239,64 +2239,31 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       console.log("[PROJECT DETAIL]", {
         tokenAuthenticated: !!req.user,
         user: req.user,
-        requestedId: req.params.id,
-        url: req.url,
-        method: req.method,
       });
 
       const id = parseInt(req.params.id);
-      
-      // ID 유효성 검사
-      if (isNaN(id) || id <= 0) {
-        console.log("Invalid project ID requested:", req.params.id);
-        return res.status(400).json({ 
-          message: "Invalid project ID",
-          details: `Project ID must be a positive number, got: ${req.params.id}`
+
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, id),
+        with: {
+          files: true,
+          claimer: true,
+        },
+      });
+
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+
+      // 클레임된 프로젝트이고 현재 사용자가 클레임하지 않았다면 접근 거부
+      if (project.status === "Claimed" && project.claimedBy !== req.user?.id) {
+        return res.status(403).json({
+          message: "Access denied. This project is claimed by another user.",
         });
       }
 
-      console.log(`Querying database for project ID: ${id}`);
-      
-      try {
-        const project = await db.query.projects.findFirst({
-          where: eq(schema.projects.id, id),
-          with: {
-            files: true,
-            claimer: true,
-          },
-        });
-
-        if (!project) {
-          console.log(`Project not found with ID: ${id}`);
-          return res.status(404).json({ 
-            message: "Project not found",
-            details: `No project exists with ID: ${id}`
-          });
-        }
-
-        console.log(`Project found: ${project.name} (ID: ${project.id}), files: ${project.files?.length || 0}`);
-
-        // 클레임된 프로젝트이고 현재 사용자가 클레임하지 않았고 관리자가 아닌 경우 접근 거부
-        if (project.status === "Claimed" && 
-            project.claimedBy !== req.user?.id && 
-            req.user?.role !== "admin") {
-          console.log(`Access denied for project ${id}: claimed by user ${project.claimedBy}, current user: ${req.user?.id}`);
-          return res.status(403).json({
-            message: "Access denied. This project is claimed by another user.",
-          });
-        }
-
-        console.log(`Returning project data for ID: ${id}`);
-        return res.json(project);
-      } catch (dbError) {
-        console.error("Database error when fetching project:", dbError);
-        return res.status(500).json({
-          message: "Database error",
-          details: "Failed to query project from database"
-        });
-      }
+      return res.json(project);
     } catch (error) {
-      console.error("Project detail fetch error:", error);
       return handleApiError(res, error);
     }
   });
