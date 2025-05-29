@@ -107,11 +107,35 @@ export default function Project() {
     return id;
   }, [isMatch, params]);
 
+  // 프로젝트 ID가 유효하지 않은 경우 조기 반환
+  if (!projectId) {
+    return (
+      <MainLayout title="Invalid Project">
+        <div className="flex-1 p-6 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-medium mb-2">Invalid Project ID</h2>
+            <p className="text-muted-foreground mb-4">
+              The project ID in the URL is not valid: {params?.id}
+            </p>
+            <Button onClick={() => navigate("/projects")}>Go back to projects</Button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   // Get project data
   const { data: project, isLoading, error } = useQuery<any>({
     queryKey: [`/api/projects/${projectId}`],
+    queryFn: async () => {
+      console.log(`Fetching project data for ID: ${projectId}`);
+      const res = await apiRequest("GET", `/api/projects/${projectId}`);
+      const data = await res.json();
+      console.log("Project data received:", data);
+      return data;
+    },
     enabled: !!projectId && projectId > 0,
-    retry: 1,
+    retry: 2,
     staleTime: 5 * 60 * 1000, // 5분
     refetchOnWindowFocus: false,
     refetchOnMount: true,
@@ -694,24 +718,10 @@ export default function Project() {
     },
   });
 
-  // 프로젝트 ID가 유효하지 않은 경우
-  if (!projectId) {
-    return (
-      <MainLayout title="Invalid Project">
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-xl font-medium mb-2">Invalid Project ID</h2>
-            <p className="text-muted-foreground mb-4">
-              The project ID in the URL is not valid.
-            </p>
-            <Button onClick={() => navigate("/projects")}>Go back to projects</Button>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
+  
 
   if (isLoading) {
+    console.log("Project is loading...");
     return (
       <MainLayout title="Loading Project...">
         <div className="flex-1 p-6 flex items-center justify-center">
@@ -748,8 +758,8 @@ export default function Project() {
     );
   }
 
-  if (!project && !isLoading) {
-    console.log("Project is null/undefined but not loading", { projectId, isLoading, error });
+  if (!project) {
+    console.log("Project not found", { projectId, isLoading, error });
     return (
       <MainLayout title="Project Not Found">
         <div className="flex-1 p-6 flex items-center justify-center">
@@ -763,22 +773,6 @@ export default function Project() {
               Project ID: {projectId}, Loading: {isLoading ? "Yes" : "No"}
             </div>
             <Button onClick={() => navigate("/projects")}>Go back to projects</Button>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
-
-  // 안전성 검사: project가 유효한지 확인
-  if (!project || !project.id) {
-    console.log("Project data is invalid", { project, projectId });
-    return (
-      <MainLayout title="Loading...">
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <div className="animate-pulse space-y-4 w-full max-w-2xl">
-            <div className="h-8 bg-accent rounded w-1/3"></div>
-            <div className="h-4 bg-accent rounded w-1/2"></div>
-            <div className="h-40 bg-accent rounded"></div>
           </div>
         </div>
       </MainLayout>
