@@ -195,15 +195,6 @@ export const glossaryRelations = relations(glossary, ({ one }) => ({
   }),
 }));
 
-export const docTemplatesRelations = relations(docTemplates, ({ one, many }) => ({
-  creator: one(users, {
-    fields: [docTemplates.createdBy],
-    references: [users.id],
-  }),
-  fields: many(templateFields),
-  projects: many(projects),
-}));
-
 export const insertGlossarySchema = createInsertSchema(glossary, {
   source: (schema) => schema.min(1, "Source term is required"),
   target: (schema) => schema.min(1, "Target term is required"),
@@ -225,6 +216,15 @@ export const docTemplates = pgTable("doc_templates", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   createdBy: integer("created_by").references(() => users.id).notNull(),
 });
+
+export const docTemplatesRelations = relations(docTemplates, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [docTemplates.createdBy],
+    references: [users.id],
+  }),
+  fields: many(templateFields),
+  projects: many(projects),
+}));
 
 
 
