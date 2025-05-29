@@ -61,6 +61,7 @@ function Router() {
       <ProtectedRoute path="/dashboard" component={Dashboard} />
       <ProtectedRoute path="/projects" component={Projects} />
       <ProtectedRoute path="/projects/:id" component={Project} />
+      <ProtectedRoute path="/project/:id" component={Project} />
       <ProtectedRoute path="/translation/:fileId" component={Translation} />
 
       {/* New unified glossary page */}
