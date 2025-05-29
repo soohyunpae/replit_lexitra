@@ -55,7 +55,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Project() {
-  const [isMatch, params] = useRoute("/projects/:id");
+  const [isMatch1, params1] = useRoute("/projects/:id");
+  const [isMatch2, params2] = useRoute("/project/:id");
   const [, navigate] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -88,7 +89,9 @@ export default function Project() {
   const [tmInput, setTmInput] = useState("default");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Get project ID from URL params
+  // Get project ID from URL params (support both routes)
+  const isMatch = isMatch1 || isMatch2;
+  const params = params1 || params2;
   const projectId = isMatch && params ? parseInt(params.id) : null;
 
   // Get project data
