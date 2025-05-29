@@ -93,6 +93,17 @@ export default function Project() {
   const isMatch = isMatch1 || isMatch2;
   const params = params1 || params2;
   const projectId = isMatch && params ? parseInt(params.id) : null;
+  
+  // Debug logging
+  console.log("Project route debug:", {
+    isMatch1,
+    isMatch2,
+    params1,
+    params2,
+    isMatch,
+    params,
+    projectId
+  });
 
   // Get project data
   const { data: project, isLoading } = useQuery<any>({
