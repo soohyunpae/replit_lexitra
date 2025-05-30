@@ -389,3 +389,38 @@ export const docTemplatesRelations = relations(docTemplates, ({ one, many }) => 
 4. **UI 안정성 테스트**: 매칭 실패 후 페이지 복구 확인
 
 이 계획에 따라 단계적으로 구현하면 템플릿 매칭 기능이 안정적으로 작동하고 blank 페이지 문제가 해결될 것입니다.
+
+
+## 템플릿 시스템 관련 파일 목록
+1. 백엔드 서비스 파일들
+server/services/docx_template_service.ts - 템플릿 관리 핵심 서비스 (분석, 저장, 매칭, 생성)
+server/utils/docx_fill.ts - docx-templater 기반 DOCX 파일 처리 유틸리티
+server/routes/templates.ts - 템플릿 관련 API 라우트
+2. 데이터베이스 스키마
+shared/schema.ts - docTemplates, templateFields 테이블 정의
+db/migrations/add-template-to-projects.sql - 프로젝트에 템플릿 관계 추가
+db/migrations/manual-template-tables.sql - 템플릿 테이블 생성
+3. 프론트엔드 파일들
+client/src/pages/admin/template-manager.tsx - 관리자용 템플릿 관리 페이지
+client/src/pages/project.tsx - 프로젝트 페이지 (템플릿 매칭 버튼 및 다운로드 기능)
+4. 메인 라우트 파일
+server/routes.ts - 프로젝트 템플릿 매칭 API (/api/projects/:id/match-template)
+5. 업로드 디렉토리
+uploads/templates/ - 업로드된 템플릿 파일들 저장소
+uploads/tmp/ - 임시 업로드 파일들
+6. 테스트 파일
+test/template-test.js - 템플릿 테스트 스크립트
+주요 기능별 파일 분류
+템플릿 관리 (관리자)
+server/services/docx_template_service.ts - 템플릿 CRUD
+server/routes/templates.ts - 템플릿 API
+client/src/pages/admin/template-manager.tsx - 관리자 UI
+템플릿 매칭 (사용자)
+server/routes.ts (Line 1700+) - 매칭 API
+client/src/pages/project.tsx (Line 400+) - 매칭 버튼
+server/services/docx_template_service.ts - matchTemplateToDocument() 함수
+템플릿 기반 파일 생성
+server/utils/docx_fill.ts - docx-templater 처리
+server/routes.ts (Line 1650+) - 다운로드 API
+client/src/pages/project.tsx (Line 200+) - 다운로드 버튼
+이러한 파일들이 협력하여 DOCX 템플릿을 업로드, 분석, 매칭, 적용하는 전체 시스템을 구성합니다.
