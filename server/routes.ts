@@ -27,16 +27,17 @@ import {
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { v4 as uuidv4 } from "uuid";
 import * as os from "os";
 import mammoth from "mammoth";
 import { WebSocketServer, WebSocket } from "ws";
-import { spawn } from "child_process"; 
+import { spawn } from "child_process";
 import { promisify } from "util";
-import iconv from 'iconv-lite';
+import iconv from "iconv-lite";
 
 // 개선된 PDF 처리 및 템플릿 관리 라우트
-import pdfRoutes from './routes/pdf-routes';
-import templateRoutes from './routes/templates';
+import pdfRoutes from "./routes/pdf-routes";
+import templateRoutes from "./routes/templates";
 
 // Request에 커스텀 필드 추가를 위한 타입 확장
 declare global {
@@ -83,11 +84,13 @@ ensureDirectories();
 
 // PDF에서 텍스트 추출 함수 - pdftotext 사용
 const extractTextFromPdf = async (pdfPath: string): Promise<string> => {
-  const { spawn } = require('child_process');
-  
+  const { spawn } = require("child_process");
+
   return new Promise((resolve, reject) => {
     // Python 스크립트 실행
-    const pythonProcess = spawn('python', ['-c', `
+    const pythonProcess = spawn("python", [
+      "-c",
+      `
 import fitz
 import sys
 import json
@@ -109,20 +112,21 @@ try:
     doc.close()
 except Exception as e:
     print(json.dumps({"error": str(e)}))
-`]);
+`,
+    ]);
 
-    let stdoutData = '';
-    let stderrData = '';
+    let stdoutData = "";
+    let stderrData = "";
 
-    pythonProcess.stdout.on('data', (data) => {
+    pythonProcess.stdout.on("data", (data) => {
       stdoutData += data.toString();
     });
 
-    pythonProcess.stderr.on('data', (data) => {
+    pythonProcess.stderr.on("data", (data) => {
       stderrData += data.toString();
     });
 
-    pythonProcess.on('close', (code) => {
+    pythonProcess.on("close", (code) => {
       if (code !== 0) {
         console.error(`Python 프로세스 오류:`, stderrData);
         reject(new Error(`PDF 처리 실패: ${stderrData}`));
@@ -145,30 +149,42 @@ except Exception as e:
 };
 
 // 백그라운드 파일 처리 함수
-async function processFilesInBackground(uploadedFiles: any, savedFiles: any[], projectId: number) {
+async function processFilesInBackground(
+  uploadedFiles: any,
+  savedFiles: any[],
+  projectId: number,
+) {
   try {
-    console.log("[Background] Starting file processing for project:", projectId);
+    console.log(
+      "[Background] Starting file processing for project:",
+      projectId,
+    );
 
     // 작업 파일 처리
     if (uploadedFiles.files) {
       for (const file of uploadedFiles.files) {
-        const fileRecord = savedFiles.find(f => 
-          f.type === "work" && (
-            f.name === file.originalname || 
-            f.name.includes(path.parse(file.originalname).name)
-          )
+        const fileRecord = savedFiles.find(
+          (f) =>
+            f.type === "work" &&
+            (f.name === file.originalname ||
+              f.name.includes(path.parse(file.originalname).name)),
         );
-        
+
         if (!fileRecord) {
-          console.warn(`[Background] File record not found for: ${file.originalname}`);
+          console.warn(
+            `[Background] File record not found for: ${file.originalname}`,
+          );
           continue;
         }
-        
+
         try {
-          console.log(`[Background] Processing work file: ${file.originalname}`);
-          
+          console.log(
+            `[Background] Processing work file: ${file.originalname}`,
+          );
+
           // 파일 상태를 processing으로 업데이트
-          await db.update(schema.files)
+          await db
+            .update(schema.files)
             .set({
               processingStatus: "processing",
               updatedAt: new Date(),
@@ -177,29 +193,38 @@ async function processFilesInBackground(uploadedFiles: any, savedFiles: any[], p
 
           // 파일 처리
           const fileContent = await processFile(file);
-          
+
           // 파일 내용 업데이트
-          await db.update(schema.files)
+          await db
+            .update(schema.files)
             .set({
               content: fileContent,
               processingStatus: "parsed",
               updatedAt: new Date(),
             })
             .where(eq(schema.files.id, fileRecord.id));
-          
+
           // 세그먼트 생성 및 처리
           await processFileSegments(fileRecord.id, fileContent, projectId);
-          
-          console.log(`[Background] Completed processing: ${file.originalname}`);
-          
+
+          console.log(
+            `[Background] Completed processing: ${file.originalname}`,
+          );
         } catch (fileError) {
-          console.error(`[Background] Error processing file ${file.originalname}:`, fileError);
-          
+          console.error(
+            `[Background] Error processing file ${file.originalname}:`,
+            fileError,
+          );
+
           // 오류 상태로 업데이트
-          await db.update(schema.files)
+          await db
+            .update(schema.files)
             .set({
               processingStatus: "error",
-              errorMessage: fileError instanceof Error ? fileError.message : "Unknown error",
+              errorMessage:
+                fileError instanceof Error
+                  ? fileError.message
+                  : "Unknown error",
               updatedAt: new Date(),
             })
             .where(eq(schema.files.id, fileRecord.id));
@@ -210,40 +235,51 @@ async function processFilesInBackground(uploadedFiles: any, savedFiles: any[], p
     // 참조 파일 처리
     if (uploadedFiles.references) {
       for (const file of uploadedFiles.references) {
-        const fileRecord = savedFiles.find(f => 
-          f.type === "reference" && (
-            f.name === file.originalname ||
-            f.name.includes(path.parse(file.originalname).name)
-          )
+        const fileRecord = savedFiles.find(
+          (f) =>
+            f.type === "reference" &&
+            (f.name === file.originalname ||
+              f.name.includes(path.parse(file.originalname).name)),
         );
-        
+
         if (!fileRecord) {
-          console.warn(`[Background] Reference file record not found for: ${file.originalname}`);
+          console.warn(
+            `[Background] Reference file record not found for: ${file.originalname}`,
+          );
           continue;
         }
-        
+
         try {
-          console.log(`[Background] Processing reference file: ${file.originalname}`);
-          
+          console.log(
+            `[Background] Processing reference file: ${file.originalname}`,
+          );
+
           const fileContent = await processFile(file);
-          
-          await db.update(schema.files)
+
+          await db
+            .update(schema.files)
             .set({
               content: fileContent,
               processingStatus: "ready",
               updatedAt: new Date(),
             })
             .where(eq(schema.files.id, fileRecord.id));
-          
-          console.log(`[Background] Completed reference file: ${file.originalname}`);
-          
+
+          console.log(
+            `[Background] Completed reference file: ${file.originalname}`,
+          );
         } catch (refError) {
-          console.error(`[Background] Error processing reference file ${file.originalname}:`, refError);
-          
-          await db.update(schema.files)
+          console.error(
+            `[Background] Error processing reference file ${file.originalname}:`,
+            refError,
+          );
+
+          await db
+            .update(schema.files)
             .set({
               processingStatus: "error",
-              errorMessage: refError instanceof Error ? refError.message : "Unknown error",
+              errorMessage:
+                refError instanceof Error ? refError.message : "Unknown error",
               updatedAt: new Date(),
             })
             .where(eq(schema.files.id, fileRecord.id));
@@ -259,20 +295,29 @@ async function processFilesInBackground(uploadedFiles: any, savedFiles: any[], p
             fs.unlinkSync(file.path);
           }
         } catch (unlinkErr) {
-          console.error(`[Background] Failed to unlink file ${file.path}:`, unlinkErr);
+          console.error(
+            `[Background] Failed to unlink file ${file.path}:`,
+            unlinkErr,
+          );
         }
       });
     });
 
-    console.log("[Background] File processing completed for project:", projectId);
-
+    console.log(
+      "[Background] File processing completed for project:",
+      projectId,
+    );
   } catch (error) {
     console.error("[Background] Fatal error in file processing:", error);
   }
 }
 
 // 세그먼트 처리 헬퍼 함수
-async function processFileSegments(fileId: number, fileContent: string, projectId: number) {
+async function processFileSegments(
+  fileId: number,
+  fileContent: string,
+  projectId: number,
+) {
   try {
     // Parse content into segments by splitting into sentences
     const segmentText = (text: string): string[] => {
@@ -285,9 +330,7 @@ async function processFileSegments(fileId: number, fileContent: string, projectI
 
       // Split on sentence endings
       while ((match = regex.exec(text)) !== null) {
-        const sentence = text
-          .substring(lastIndex, match.index + 1)
-          .trim();
+        const sentence = text.substring(lastIndex, match.index + 1).trim();
         if (sentence) sentences.push(sentence);
         lastIndex = match.index + match[0].length;
       }
@@ -325,7 +368,9 @@ async function processFileSegments(fileId: number, fileContent: string, projectI
         .values(segmentInserts)
         .returning();
 
-      console.log(`[비동기 처리] ${savedSegments.length}개의 세그먼트 저장 완료`);
+      console.log(
+        `[비동기 처리] ${savedSegments.length}개의 세그먼트 저장 완료`,
+      );
 
       // 만약 OpenAI API가 사용 가능하면 자동 번역 적용
       const projectInfo = await db.query.projects.findFirst({
@@ -358,14 +403,8 @@ async function processFileSegments(fileId: number, fileContent: string, projectI
         // 용어집 준비
         const glossaryTerms = await db.query.glossary.findMany({
           where: and(
-            eq(
-              schema.glossary.sourceLanguage,
-              projectInfo.sourceLanguage,
-            ),
-            eq(
-              schema.glossary.targetLanguage,
-              projectInfo.targetLanguage,
-            ),
+            eq(schema.glossary.sourceLanguage, projectInfo.sourceLanguage),
+            eq(schema.glossary.targetLanguage, projectInfo.targetLanguage),
           ),
           limit: 100,
         });
@@ -376,17 +415,13 @@ async function processFileSegments(fileId: number, fileContent: string, projectI
             // TM 매칭 찾기
             const relevantTmMatches = tmMatches
               .filter(
-                (tm) =>
-                  calculateSimilarity(segment.source, tm.source) >
-                  0.7,
+                (tm) => calculateSimilarity(segment.source, tm.source) > 0.7,
               )
               .slice(0, 5);
 
             // 용어집 매칭 찾기
             const relevantTerms = glossaryTerms.filter((term) =>
-              segment.source
-                .toLowerCase()
-                .includes(term.source.toLowerCase()),
+              segment.source.toLowerCase().includes(term.source.toLowerCase()),
             );
 
             // TM 컨텍스트 준비
@@ -405,10 +440,10 @@ async function processFileSegments(fileId: number, fileContent: string, projectI
               sourceLanguage: projectInfo.sourceLanguage,
               targetLanguage: projectInfo.targetLanguage,
               context: context.length > 0 ? context : undefined,
-              glossaryTerms: relevantTerms.map(term => ({
+              glossaryTerms: relevantTerms.map((term) => ({
                 source: term.source,
-                target: term.target
-              }))
+                target: term.target,
+              })),
             });
 
             if (translationResult) {
@@ -436,7 +471,7 @@ async function processFileSegments(fileId: number, fileContent: string, projectI
             );
           }
         }
-        
+
         // 모든 세그먼트의 번역이 완료되면 파일 상태를 "ready"로 업데이트
         await db
           .update(schema.files)
@@ -445,19 +480,27 @@ async function processFileSegments(fileId: number, fileContent: string, projectI
             updatedAt: new Date(),
           })
           .where(eq(schema.files.id, fileId));
-          
-        console.log(`[비동기 처리] 파일 ID ${fileId}의 모든 처리 완료. 상태를 'ready'로 변경함`);
+
+        console.log(
+          `[비동기 처리] 파일 ID ${fileId}의 모든 처리 완료. 상태를 'ready'로 변경함`,
+        );
       }
     }
   } catch (error) {
-    console.error(`[비동기 처리] 세그먼트 처리 오류 (파일 ID: ${fileId}):`, error);
-    
+    console.error(
+      `[비동기 처리] 세그먼트 처리 오류 (파일 ID: ${fileId}):`,
+      error,
+    );
+
     // 오류 발생 시 파일 상태를 "error"로 업데이트
     await db
       .update(schema.files)
       .set({
         processingStatus: "error",
-        errorMessage: error instanceof Error ? error.message : "Unknown error during segment processing",
+        errorMessage:
+          error instanceof Error
+            ? error.message
+            : "Unknown error during segment processing",
         updatedAt: new Date(),
       })
       .where(eq(schema.files.id, fileId));
@@ -500,42 +543,81 @@ async function processFile(file: Express.Multer.File) {
           // mammoth 라이브러리를 사용하여 DOCX 파일에서 텍스트 추출
           const docxResult = await mammoth.extractRawText({ path: file.path });
           text = docxResult.value || "";
-          
+
           // 템플릿 매칭 시도
-          notifyProgress(0, file.originalname, "processing", 30, "템플릿 매칭 확인중");
-          
+          notifyProgress(
+            0,
+            file.originalname,
+            "processing",
+            30,
+            "템플릿 매칭 확인중",
+          );
+
           try {
-            const templateService = await import('./services/docx_template_service.js');
-            const matchResult = await templateService.matchTemplateToDocumentFile(0, file.path);
-            
+            const templateService = await import(
+              "./services/docx_template_service.js"
+            );
+            const matchResult =
+              await templateService.matchTemplateToDocumentFile(0, file.path);
+
             if (matchResult) {
-              console.log(`템플릿 매칭 성공: ${matchResult.templateName} (점수: ${matchResult.matchScore})`);
-              notifyProgress(0, file.originalname, "processing", 40, `템플릿 "${matchResult.templateName}" 적용됨`);
-              
+              console.log(
+                `템플릿 매칭 성공: ${matchResult.templateName} (점수: ${matchResult.matchScore})`,
+              );
+              notifyProgress(
+                0,
+                file.originalname,
+                "processing",
+                40,
+                `템플릿 "${matchResult.templateName}" 적용됨`,
+              );
+
               // TODO: 프로젝트에 템플릿 정보 저장 로직 추가 필요
               // 현재는 projects 테이블에 template 관련 컬럼이 없어서 저장할 수 없음
             } else {
               console.log("매칭되는 템플릿을 찾을 수 없습니다.");
-              notifyProgress(0, file.originalname, "processing", 40, "템플릿 매칭 실패");
+              notifyProgress(
+                0,
+                file.originalname,
+                "processing",
+                40,
+                "템플릿 매칭 실패",
+              );
             }
           } catch (templateError) {
             console.error("템플릿 매칭 중 오류:", templateError);
-            notifyProgress(0, file.originalname, "processing", 40, "템플릿 매칭 오류");
+            notifyProgress(
+              0,
+              file.originalname,
+              "processing",
+              40,
+              "템플릿 매칭 오류",
+            );
           }
           try {
-            const { matchTemplateToDocumentFile } = await import('./services/docx_template_service');
+            const { matchTemplateToDocumentFile } = await import(
+              "./services/docx_template_service"
+            );
             const matchResult = await matchTemplateToDocumentFile(0, file.path);
-            
+
             if (matchResult) {
-              console.log(`템플릿 매칭 성공: ${matchResult.templateName} (일치율: ${matchResult.matchScore})`);
-              notifyProgress(0, file.originalname, "processing", 50, `템플릿 "${matchResult.templateName}" 적용됨`);
+              console.log(
+                `템플릿 매칭 성공: ${matchResult.templateName} (일치율: ${matchResult.matchScore})`,
+              );
+              notifyProgress(
+                0,
+                file.originalname,
+                "processing",
+                50,
+                `템플릿 "${matchResult.templateName}" 적용됨`,
+              );
               // 매칭된 템플릿 정보를 파일에 저장 (나중에 프로젝트와 연결)
               (file as any).matchedTemplate = matchResult;
             }
           } catch (templateError) {
             console.warn("템플릿 매칭 중 오류 (계속 진행):", templateError);
           }
-          
+
           if (!text || text.trim() === "") {
             console.error("DOCX에서 텍스트를 추출했지만 결과가 비어있습니다.");
             text = `[DOCX 파일: ${file.originalname}] - 파일에서 텍스트를 추출할 수 없습니다.`;
@@ -554,22 +636,31 @@ async function processFile(file: Express.Multer.File) {
       case ".pdf":
         // PDF 파일 처리 시작
         console.log("PDF 파일 처리 시작:", file.originalname);
-        
+
         try {
           // 진행 상황 업데이트
-          notifyProgress(0, file.originalname, "processing", 30, "PDF 내용 추출중");
-          
+          notifyProgress(
+            0,
+            file.originalname,
+            "processing",
+            30,
+            "PDF 내용 추출중",
+          );
+
           console.log(`PDF 추출 시작: ${file.path}`);
           console.log(`PDF 파일 크기: ${fs.statSync(file.path).size} 바이트`);
-          
+
           // PDF 텍스트 추출 방식 선택
           let extractedText = "";
           try {
             // pdftotext 명령어를 사용하여 텍스트 추출 시도
             extractedText = await extractTextFromPdf(file.path);
           } catch (pdfErr) {
-            console.error("pdftotext 처리 실패, pdf-parse 라이브러리로 시도합니다:", pdfErr);
-            
+            console.error(
+              "pdftotext 처리 실패, pdf-parse 라이브러리로 시도합니다:",
+              pdfErr,
+            );
+
             // pdf-parse 라이브러리를 대안으로 사용
             try {
               const pdfParse = require("pdf-parse");
@@ -580,47 +671,58 @@ async function processFile(file: Express.Multer.File) {
             } catch (error) {
               const parseErr = error as Error;
               console.error("pdf-parse 추출 실패:", parseErr);
-              throw new Error("모든 PDF 텍스트 추출 방법이 실패했습니다: " + parseErr.message);
+              throw new Error(
+                "모든 PDF 텍스트 추출 방법이 실패했습니다: " + parseErr.message,
+              );
             }
           }
-          
+
           // 텍스트가 비어있는지 확인
           if (!extractedText || extractedText.trim() === "") {
             console.error("PDF에서 텍스트를 추출했지만 결과가 비어있습니다.");
             text = `PDF 파일 내용을 추출할 수 없습니다. 파일명: ${file.originalname.normalize("NFC")}`;
           } else {
             console.log("PDF 텍스트 추출 성공! 길이:", extractedText.length);
-            console.log("텍스트 샘플:", extractedText.substring(0, 100) + "...");
-            
+            console.log(
+              "텍스트 샘플:",
+              extractedText.substring(0, 100) + "...",
+            );
+
             // 출력 디렉토리
             const outputDir = path.join(REPO_ROOT, "uploads", "processed");
             if (!fs.existsSync(outputDir)) {
               fs.mkdirSync(outputDir, { recursive: true });
             }
-            
+
             // 디버깅용 출력 파일 생성
             // 한글 파일명 처리 개선
             console.log("PDF 원본 파일명:", file.originalname);
-            
+
             // 데이터베이스에 저장할 표시용 파일명 처리
             let displayName = file.originalname;
-            
+
             // 파일명이 이미 UTF-8이 아닌 경우를 처리
             if (!/^[\x00-\x7F]*$/.test(displayName)) {
               try {
                 // 여러 인코딩을 시도해 가장 적합한 것을 찾음
-                const encodingsToTry = ['euc-kr', 'cp949', 'latin1'];
-                
+                const encodingsToTry = ["euc-kr", "cp949", "latin1"];
+
                 for (const encoding of encodingsToTry) {
                   try {
                     // 원본 데이터를 바이너리로 변환 후 디코딩 시도
-                    const bytes = Buffer.from(displayName, 'binary' as BufferEncoding);
+                    const bytes = Buffer.from(
+                      displayName,
+                      "binary" as BufferEncoding,
+                    );
                     const decoded = iconv.decode(bytes, encoding);
-                    
+
                     // 디코딩된 문자열에 한글이 포함되어 있다면 성공으로 판단
                     if (/[\uAC00-\uD7A3]/.test(decoded)) {
                       displayName = decoded;
-                      console.log(`성공적인 PDF 파일명 인코딩 변환 (${encoding}):`, displayName);
+                      console.log(
+                        `성공적인 PDF 파일명 인코딩 변환 (${encoding}):`,
+                        displayName,
+                      );
                       break;
                     }
                   } catch (err: any) {
@@ -631,53 +733,65 @@ async function processFile(file: Express.Multer.File) {
                 console.log("PDF 파일명 디코딩 오류:", decodeErr.message);
               }
             }
-            
+
             // 이름 정규화 (한글 조합 문자 처리를 위해 필수)
             displayName = displayName.normalize("NFC");
             console.log("정규화된 PDF 파일명:", displayName);
-            
+
             // 파일 시스템용 안전한 파일명 생성
             const timestamp = Date.now();
             const randomString = Math.random().toString(36).substring(2, 8);
             const ext = path.extname(file.originalname);
             const safeFileName = `${timestamp}-${randomString}${ext}`;
             console.log("시스템 저장용 PDF 파일명:", safeFileName);
-            
-            const outputFileName = displayName.replace(/\.pdf$/i, "-extracted.txt");
-            const outputPath = path.join(outputDir, `${safeFileName.replace(/\.pdf$/i, "-extracted.txt")}`);
-            
+
+            const outputFileName = displayName.replace(
+              /\.pdf$/i,
+              "-extracted.txt",
+            );
+            const outputPath = path.join(
+              outputDir,
+              `${safeFileName.replace(/\.pdf$/i, "-extracted.txt")}`,
+            );
+
             // 보수적+정확한 처리: 모든 줄바꿈을 공백으로 대체하고 연속 공백 처리
             const flatText = extractedText
-              .replace(/\n+/g, ' ')     // 모든 줄바꿈을 공백으로 변환
-              .replace(/\s{2,}/g, ' ')  // 연속된 공백을 하나로 통합
-              .trim();                  // 양쪽 공백 제거
-            
+              .replace(/\n+/g, " ") // 모든 줄바꿈을 공백으로 변환
+              .replace(/\s{2,}/g, " ") // 연속된 공백을 하나로 통합
+              .trim(); // 양쪽 공백 제거
+
             console.log(`텍스트 정리 완료. 길이: ${flatText.length} 바이트`);
-            
+
             // 문장 단위로 직접 분리 (마침표/물음표/느낌표 + 공백)
             let sentences = flatText
               .split(/(?<=[.?!])\s+/)
               .filter((s: string) => s.trim().length > 0);
-            
+
             // 너무 짧은 문장은 제외 (옵션)
-            sentences = sentences.filter(sentence => sentence.length > 5);
-            
+            sentences = sentences.filter((sentence) => sentence.length > 5);
+
             console.log(`문장 분리 완료: ${sentences.length}개 문장 추출`);
             console.log("문장 샘플:", sentences.slice(0, 2));
-            
+
             // 최종 텍스트 생성 (문장 단위로 구분)
             text = sentences.join("\n\n");
-            
+
             // 디버깅용으로 추출된 텍스트 저장
             fs.writeFileSync(outputPath, text);
-            
+
             // 디버깅용 정보 출력
             console.log(`PDF 처리 완료: ${sentences.length}개 세그먼트 생성`);
             console.log("첫 세그먼트 샘플:", sentences.slice(0, 2));
           }
-          
+
           // 진행 상황 업데이트
-          notifyProgress(0, file.originalname, "processing", 70, "PDF 처리 완료");
+          notifyProgress(
+            0,
+            file.originalname,
+            "processing",
+            70,
+            "PDF 처리 완료",
+          );
         } catch (error) {
           const err = error as Error;
           console.error("PDF 처리 중 오류:", err);
@@ -722,59 +836,27 @@ const storage = multer.diskStorage({
     try {
       // 원본 파일명 로깅 (디버깅용)
       console.log("업로드된 원본 파일명:", file.originalname);
-      
-      // 원본 파일명 보존 (표시용/다운로드용)
-      let displayName = file.originalname;
-      
-      // 한글이 포함된 경우 최대한 복원 시도
-      if (!/^[\x00-\x7F]*$/.test(displayName)) {
-        try {
-          const encodingsToTry = ['euc-kr', 'cp949', 'latin1'];
-          
-          for (const encoding of encodingsToTry) {
-            try {
-              const bytes = Buffer.from(displayName, 'binary' as BufferEncoding);
-              const decoded = iconv.decode(bytes, encoding);
-              
-              if (/[\uAC00-\uD7A3]/.test(decoded)) {
-                displayName = decoded;
-                console.log(`한글 파일명 복원 (${encoding}):`, displayName);
-                break;
-              }
-            } catch (err: any) {
-              console.log(`${encoding} 디코딩 시도 실패:`, err.message);
-            }
-          }
-        } catch (decodeErr: any) {
-          console.log("파일명 디코딩 시도 중 오류:", decodeErr.message);
-        }
-      }
-      
-      // 디스플레이용 이름 정규화 및 저장
-      displayName = displayName.normalize('NFC');
-      
-      // 실제 파일 시스템용 안전한 영문 파일명 생성
-      const timestamp = Date.now();
-      const randomString = Math.random().toString(36).substring(2, 8);
+
+      // 안전한 파일명 생성 (UUID)
       const ext = path.extname(file.originalname);
-      
-      // 안전한 시스템 파일명 생성 (타임스탬프 + 랜덤 문자열 + 확장자)
-      const safeFileName = `${timestamp}-${randomString}${ext}`;
-      
+      const safeFilename = `${uuidv4()}${ext}`;
+
       // 원본 파일명 매핑 저장 (화면 표시용)
+      let displayName = file.originalname;
       if (!req.fileOriginalNames) {
         (req as any).fileOriginalNames = {};
       }
-      (req as any).fileOriginalNames[safeFileName] = displayName;
-      
-      console.log(`파일 저장: 시스템명 "${safeFileName}", 표시명 "${displayName}"`);
-      
-      // 안전한 파일명으로 저장
-      cb(null, safeFileName);
+      (req as any).fileOriginalNames[safeFilename] =
+        displayName.normalize("NFC");
+
+      console.log(
+        `파일 저장: 시스템명 "${safeFilename}", 표시명 "${displayName}"`,
+      );
+      cb(null, safeFilename);
     } catch (error) {
       console.error("Filename processing error:", error);
       // 오류 발생시 기본 파일명 사용
-      const fallbackName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}${path.extname(file.originalname)}`;
+      const fallbackName = `${uuidv4()}${path.extname(file.originalname)}`;
       cb(null, fallbackName);
     }
   },
@@ -793,65 +875,26 @@ const referenceStorage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     try {
-      // projectId를 파일명에 포함시켜 저장
-      const projectId = req.params.id;
-      
-      // 원본 파일명 로깅 (디버깅용)
-      console.log("업로드된 참조 파일명:", file.originalname);
-      
-      // 원본 파일명 보존 (표시용/다운로드용)
-      let displayName = file.originalname;
-      
-      // 한글이 포함된 경우 최대한 복원 시도
-      if (!/^[\x00-\x7F]*$/.test(displayName)) {
-        try {
-          const encodingsToTry = ['euc-kr', 'cp949', 'latin1'];
-          
-          for (const encoding of encodingsToTry) {
-            try {
-              const bytes = Buffer.from(displayName, 'binary' as BufferEncoding);
-              const decoded = iconv.decode(bytes, encoding);
-              
-              if (/[\uAC00-\uD7A3]/.test(decoded)) {
-                displayName = decoded;
-                console.log(`참조 파일 한글명 복원 (${encoding}):`, displayName);
-                break;
-              }
-            } catch (err: any) {
-              console.log(`참조 파일 ${encoding} 디코딩 실패:`, err.message);
-            }
-          }
-        } catch (decodeErr: any) {
-          console.log("참조 파일명 디코딩 오류:", decodeErr.message);
-        }
-      }
-      
-      // 디스플레이용 이름 정규화 및 저장
-      displayName = displayName.normalize('NFC');
-      
-      // 실제 파일 시스템용 안전한 영문 파일명 생성
-      const timestamp = Date.now();
-      const randomString = Math.random().toString(36).substring(2, 8);
+      // 안전한 파일명 생성 (UUID)
       const ext = path.extname(file.originalname);
-      
-      // 안전한 시스템 파일명 생성 (프로젝트ID + 타임스탬프 + 랜덤 문자열 + 확장자)
-      const safeFileName = `${projectId}_${timestamp}-${randomString}${ext}`;
-      
+      const safeFilename = `${uuidv4()}${ext}`;
+
       // 원본 파일명 매핑 저장 (화면 표시용)
+      let displayName = file.originalname;
       if (!req.fileOriginalNames) {
         (req as any).fileOriginalNames = {};
       }
-      (req as any).fileOriginalNames[safeFileName] = displayName;
-      
-      console.log(`참조 파일 저장: 시스템명 "${safeFileName}", 표시명 "${displayName}"`);
-      
-      // 안전한 파일명으로 저장
-      cb(null, safeFileName);
+      (req as any).fileOriginalNames[safeFilename] =
+        displayName.normalize("NFC");
+
+      console.log(
+        `참조 파일 저장: 시스템명 "${safeFilename}", 표시명 "${displayName}"`,
+      );
+      cb(null, safeFilename);
     } catch (error) {
       console.error("참조 파일명 처리 오류:", error);
       // 오류 발생시 기본 파일명 사용
-      const projectId = req.params.id;
-      const fallbackName = `${projectId}_${Date.now()}-${Math.random().toString(36).substring(2, 10)}${path.extname(file.originalname)}`;
+      const fallbackName = `${uuidv4()}${path.extname(file.originalname)}`;
       cb(null, fallbackName);
     }
   },
@@ -897,15 +940,15 @@ const referenceUpload = multer({
     console.log(
       `Accepting reference file upload: ${file.originalname} (${ext})`,
     );
-    
+
     // 디버깅을 위한 요청 정보 출력
     console.log("[Reference Upload] Request received:", {
       projectId: req.params.id,
-      contentType: req.headers['content-type'],
-      fileCount: req.files ? 'Files present' : 'No files yet',
-      fileName: file.originalname
+      contentType: req.headers["content-type"],
+      fileCount: req.files ? "Files present" : "No files yet",
+      fileName: file.originalname,
     });
-    
+
     return cb(null, true);
   },
 });
@@ -1089,39 +1132,40 @@ function registerAdminRoutes(app: Express) {
   function restoreKoreanFilename(filename: string): string {
     // 원본 파일명 보존
     let displayName = filename;
-    
+
     // 한글 파일명 깨짐 여부 확인 (특정 패턴)
     const koreanPatterns = [
-      { pattern: '諛붾떎', replace: '바다' },
-      { pattern: '�깦�뵆', replace: '샘플' },
-      { pattern: 'ë°ë¤', replace: '바다' },
-      { pattern: 'ìí', replace: '샘플' },
-      { pattern: 'íê¸', replace: '한글' },
-      { pattern: '삊', replace: '한' },
-      { pattern: '�', replace: '코' },
+      { pattern: "諛붾떎", replace: "바다" },
+      { pattern: "�깦�뵆", replace: "샘플" },
+      { pattern: "ë°ë¤", replace: "바다" },
+      { pattern: "ìí", replace: "샘플" },
+      { pattern: "íê¸", replace: "한글" },
+      { pattern: "삊", replace: "한" },
+      { pattern: "�", replace: "코" },
       // 추가 패턴은 로그를 분석해서 추가할 수 있음
     ];
-    
+
     // 패턴 기반 복원 시도
     for (const { pattern, replace } of koreanPatterns) {
       if (displayName.includes(pattern)) {
-        displayName = displayName.replace(new RegExp(pattern, 'g'), replace);
+        displayName = displayName.replace(new RegExp(pattern, "g"), replace);
         console.log(`파일명 패턴 매칭: ${pattern} => ${replace}`);
       }
     }
-    
+
     // 인코딩 기반 복원 시도
     if (!/[\uAC00-\uD7A3]/.test(displayName)) {
-      const encodingsToTry = ['euc-kr', 'cp949', 'utf-8', 'latin1', 'binary'];
+      const encodingsToTry = ["euc-kr", "cp949", "utf-8", "latin1", "binary"];
       let bestResult = displayName;
       let maxKoreanChars = 0;
-      
+
       for (const encoding of encodingsToTry) {
         try {
-          const bytes = Buffer.from(displayName, 'binary' as BufferEncoding);
+          const bytes = Buffer.from(displayName, "binary" as BufferEncoding);
           const decoded = iconv.decode(bytes, encoding);
-          const koreanCharCount = (decoded.match(/[\uAC00-\uD7A3]/g) || []).length;
-          
+          const koreanCharCount = (decoded.match(/[\uAC00-\uD7A3]/g) || [])
+            .length;
+
           if (koreanCharCount > maxKoreanChars) {
             maxKoreanChars = koreanCharCount;
             bestResult = decoded;
@@ -1130,15 +1174,15 @@ function registerAdminRoutes(app: Express) {
           // 에러 무시하고 다음 인코딩 시도
         }
       }
-      
+
       if (maxKoreanChars > 0) {
         displayName = bestResult;
       }
     }
-    
+
     // 정규화 처리
-    displayName = displayName.normalize('NFC');
-    
+    displayName = displayName.normalize("NFC");
+
     return displayName;
   }
 
@@ -1870,14 +1914,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication systems
   setupAuth(app);
   setupTokenAuth(app); // Also setup token-based auth
-  
+
   // 개선된 PDF 처리 라우트 연결
-  app.use('/api/pdf', pdfRoutes);
-  
+  app.use("/api/pdf", pdfRoutes);
+
   // 템플릿 관리 라우트 연결
   app.use(templateRoutes);
-
-
 
   // Register admin routes
   registerAdminRoutes(app);
@@ -1901,60 +1943,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Projects API
   // 프로젝트 검토 통계 API
-app.get(`${apiPrefix}/projects/review-stats`, verifyToken, async (req, res) => {
-  try {
-    // 1. 진행 중인 프로젝트 (In Progress 및 Claimed 상태) 가져오기
-    const inProgressProjects = await db.query.projects.findMany({
-      where: or(
-        eq(schema.projects.status, "In Progress"),
-        eq(schema.projects.status, "Claimed")
-      ),
-      with: {
-        files: true,
-      },
-    });
+  app.get(
+    `${apiPrefix}/projects/review-stats`,
+    verifyToken,
+    async (req, res) => {
+      try {
+        // 1. 진행 중인 프로젝트 (In Progress 및 Claimed 상태) 가져오기
+        const inProgressProjects = await db.query.projects.findMany({
+          where: or(
+            eq(schema.projects.status, "In Progress"),
+            eq(schema.projects.status, "Claimed"),
+          ),
+          with: {
+            files: true,
+          },
+        });
 
-    // 프로젝트 관련 파일 ID 추출
-    const fileIds = inProgressProjects.flatMap(project => 
-      project.files.map(file => file.id)
-    );
+        // 프로젝트 관련 파일 ID 추출
+        const fileIds = inProgressProjects.flatMap((project) =>
+          project.files.map((file) => file.id),
+        );
 
-    let awaitingReview = 0;
-    let totalCompleted = 0;
+        let awaitingReview = 0;
+        let totalCompleted = 0;
 
-    if (fileIds.length > 0) {
-      // 모든 세그먼트 가져오기
-      const segments = await db.query.translationUnits.findMany({
-        where: inArray(schema.translationUnits.fileId, fileIds),
-      });
+        if (fileIds.length > 0) {
+          // 모든 세그먼트 가져오기
+          const segments = await db.query.translationUnits.findMany({
+            where: inArray(schema.translationUnits.fileId, fileIds),
+          });
 
-      // "Reviewed" 상태와 그 외 상태의 세그먼트 개수 계산
-      totalCompleted = segments.filter(seg => seg.status === "Reviewed").length;
-      awaitingReview = segments.length - totalCompleted;
-    }
+          // "Reviewed" 상태와 그 외 상태의 세그먼트 개수 계산
+          totalCompleted = segments.filter(
+            (seg) => seg.status === "Reviewed",
+          ).length;
+          awaitingReview = segments.length - totalCompleted;
+        }
 
-    // 2. 참여 가능한 프로젝트 수 계산 (Unclaimed 상태)
-    const availableProjects = await db.query.projects.findMany({
-      where: eq(schema.projects.status, "Unclaimed"),
-    });
+        // 2. 참여 가능한 프로젝트 수 계산 (Unclaimed 상태)
+        const availableProjects = await db.query.projects.findMany({
+          where: eq(schema.projects.status, "Unclaimed"),
+        });
 
-    console.log("[REVIEW STATS API]", {
-      inProgressCount: inProgressProjects.length,
-      awaitingReview,
-      availableProjects: availableProjects.length
-    });
+        console.log("[REVIEW STATS API]", {
+          inProgressCount: inProgressProjects.length,
+          awaitingReview,
+          availableProjects: availableProjects.length,
+        });
 
-    return res.json({
-      totalAwaitingReview: awaitingReview,
-      totalCompleted: totalCompleted,
-      availableProjects: availableProjects.length
-    });
-  } catch (error) {
-    return handleApiError(res, error);
-  }
-});
+        return res.json({
+          totalAwaitingReview: awaitingReview,
+          totalCompleted: totalCompleted,
+          availableProjects: availableProjects.length,
+        });
+      } catch (error) {
+        return handleApiError(res, error);
+      }
+    },
+  );
 
-app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
+  app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
     try {
       console.log("[PROJECTS API]", {
         tokenAuthenticated: !!req.user,
@@ -1985,7 +2033,7 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
     async (req, res) => {
       let project: any = null;
       let uploadedFiles: any = null;
-      
+      let savedFiles: (typeof schema.files.$inferSelect)[] = [];
       try {
         if (!req.user) {
           return res.status(401).json({ message: "Authentication required" });
@@ -1995,7 +2043,7 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
           body: req.body,
           files: req.files ? "Files present" : "No files",
           user: req.user,
-          contentType: req.get('content-type')
+          contentType: req.get("content-type"),
         });
 
         const {
@@ -2017,128 +2065,143 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         };
 
         // 작업 파일이 없으면 프로젝트 생성 불가
-        if (!uploadedFiles || !uploadedFiles.files || uploadedFiles.files.length === 0) {
-          return res.status(400).json({ 
-            message: "At least one work file is required to create a project" 
+        if (
+          !uploadedFiles ||
+          !uploadedFiles.files ||
+          uploadedFiles.files.length === 0
+        ) {
+          return res.status(400).json({
+            message: "At least one work file is required to create a project",
           });
         }
 
-        // 프로젝트 기본 정보 저장
-        const projectData = {
-          name: name.trim(),
-          sourceLanguage,
-          targetLanguage,
-          description: description?.trim() || null,
-          notes: notes?.trim() || null,
-          deadline: deadline ? new Date(deadline) : null,
-          userId: req.user.id,
-          status: "Unclaimed",
-        };
+        // DB 트랜잭션으로 프로젝트 및 파일 생성
+        await db.transaction(async (tx) => {
+          // 프로젝트 기본 정보 저장
+          const projectData = {
+            name: name.trim(),
+            sourceLanguage,
+            targetLanguage,
+            description: description?.trim() || null,
+            notes: notes?.trim() || null,
+            deadline: deadline ? new Date(deadline) : null,
+            userId: req.user.id,
+            status: "Unclaimed",
+          };
 
-        console.log("Creating project with data:", projectData);
+          console.log("Creating project with data:", projectData);
 
-        // 프로젝트 추가
-        const [createdProject] = await db
-          .insert(schema.projects)
-          .values(projectData)
-          .returning();
+          // 프로젝트 추가
+          const [createdProject] = await tx
+            .insert(schema.projects)
+            .values(projectData)
+            .returning();
 
-        project = createdProject;
-        console.log("Project created successfully:", project.id);
+          project = createdProject;
+          console.log("Project created successfully:", project.id);
 
-        // 파일 정보 준비
-        const fileRecords: (typeof schema.files.$inferInsert)[] = [];
+          // 파일 정보 준비
+          const fileRecords: (typeof schema.files.$inferInsert)[] = [];
 
-        // 작업 파일 처리
-        if (uploadedFiles.files) {
-          for (const file of uploadedFiles.files) {
-            try {
-              // 안전한 파일명 처리
-              let displayName = file.originalname;
-              
-              // 매핑된 파일명이 있다면 사용
-              if (req.fileOriginalNames && req.fileOriginalNames[file.filename]) {
-                displayName = req.fileOriginalNames[file.filename];
-              }
-              
-              // 정규화 처리
-              displayName = displayName.normalize('NFC');
-              
-              console.log(`Processing work file: ${displayName}`);
-              
-              // 파일 내용 읽기
-              let fileContent = "";
+          // 작업 파일 처리
+          if (uploadedFiles.files) {
+            for (const file of uploadedFiles.files) {
               try {
-                fileContent = fs.readFileSync(file.path, 'utf8');
-              } catch (readError) {
-                console.error(`Failed to read file ${displayName}:`, readError);
-                // 파일 읽기 실패 시 기본 내용으로 설정
-                fileContent = `[File processing failed: ${displayName}]`;
+                // 안전한 파일명 처리
+                let displayName = file.originalname;
+                if (
+                  req.fileOriginalNames &&
+                  req.fileOriginalNames[file.filename]
+                ) {
+                  displayName = req.fileOriginalNames[file.filename];
+                }
+                displayName = displayName.normalize("NFC");
+                console.log(`Processing work file: ${displayName}`);
+                // 파일 내용 읽기
+                let fileContent = "";
+                try {
+                  fileContent = fs.readFileSync(file.path, "utf8");
+                } catch (readError) {
+                  console.error(
+                    `Failed to read file ${displayName}:`,
+                    readError,
+                  );
+                  fileContent = `[File processing failed: ${displayName}]`;
+                }
+                // 파일 레코드 추가
+                fileRecords.push({
+                  name: displayName,
+                  content: fileContent,
+                  projectId: project.id,
+                  type: "work",
+                  processingStatus: "uploaded",
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                });
+              } catch (fileError) {
+                console.error(
+                  `Error processing file ${file.originalname}:`,
+                  fileError,
+                );
               }
-              
-              // 파일 레코드 추가
-              fileRecords.push({
-                name: displayName,
-                content: fileContent,
-                projectId: project.id,
-                type: "work",
-                processingStatus: "uploaded",
-                createdAt: new Date(),
-                updatedAt: new Date(),
-              });
-            } catch (fileError) {
-              console.error(`Error processing file ${file.originalname}:`, fileError);
-              // 개별 파일 오류는 무시하고 계속 진행
             }
           }
-        }
 
-        // 참조 파일 처리
-        if (uploadedFiles.references) {
-          for (const file of uploadedFiles.references) {
+          // 참조 파일 처리
+          if (uploadedFiles.references) {
+            for (const file of uploadedFiles.references) {
+              try {
+                let displayName = file.originalname;
+                if (
+                  req.fileOriginalNames &&
+                  req.fileOriginalNames[file.filename]
+                ) {
+                  displayName = req.fileOriginalNames[file.filename];
+                }
+                displayName = displayName.normalize("NFC");
+                console.log(`Processing reference file: ${displayName}`);
+                fileRecords.push({
+                  name: displayName,
+                  content: `[Processing reference file: ${displayName}]`,
+                  projectId: project.id,
+                  type: "reference",
+                  processingStatus: "processing",
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                });
+              } catch (fileError) {
+                console.error(
+                  `Error processing reference file ${file.originalname}:`,
+                  fileError,
+                );
+              }
+            }
+          }
+
+          // 파일 레코드 저장
+          if (fileRecords.length > 0) {
             try {
-              let displayName = file.originalname;
-              
-              if (req.fileOriginalNames && req.fileOriginalNames[file.filename]) {
-                displayName = req.fileOriginalNames[file.filename];
-              }
-              
-              displayName = displayName.normalize('NFC');
-              
-              console.log(`Processing reference file: ${displayName}`);
-              
-              fileRecords.push({
-                name: displayName,
-                content: `[Processing reference file: ${displayName}]`,
-                projectId: project.id,
-                type: "reference",
-                processingStatus: "processing",
-                createdAt: new Date(),
-                updatedAt: new Date(),
-              });
-            } catch (fileError) {
-              console.error(`Error processing reference file ${file.originalname}:`, fileError);
+              savedFiles = await tx
+                .insert(schema.files)
+                .values(fileRecords)
+                .returning();
+              console.log(`Saved ${savedFiles.length} file records`);
+            } catch (dbError) {
+              console.error("Database error saving files:", dbError);
+              throw new Error("Failed to save file information to database");
             }
           }
-        }
-
-        // 파일 레코드 저장
-        let savedFiles: (typeof schema.files.$inferSelect)[] = [];
-        if (fileRecords.length > 0) {
-          try {
-            savedFiles = await db.insert(schema.files).values(fileRecords).returning();
-            console.log(`Saved ${savedFiles.length} file records`);
-          } catch (dbError) {
-            console.error("Database error saving files:", dbError);
-            throw new Error("Failed to save file information to database");
-          }
-        }
+        });
 
         // 백그라운드에서 파일 처리 시작
         if (uploadedFiles && savedFiles.length > 0) {
           setImmediate(async () => {
             try {
-              await processFilesInBackground(uploadedFiles, savedFiles, project.id);
+              await processFilesInBackground(
+                uploadedFiles,
+                savedFiles,
+                project.id,
+              );
             } catch (bgError) {
               console.error("[Background Processing] Error:", bgError);
             }
@@ -2148,27 +2211,29 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         // 즉시 성공 응답 반환
         return res.status(201).json({
           ...project,
-          message: "Project created successfully. Files are being processed in the background.",
-          filesCount: fileRecords.length,
-          filesProcessing: savedFiles.length > 0
+          message:
+            "Project created successfully. Files are being processed in the background.",
+          filesCount: savedFiles.length,
+          filesProcessing: savedFiles.length > 0,
         });
-
       } catch (error) {
         console.error("Project creation error:", error);
-        
         // 프로젝트가 생성되었지만 파일 처리 중 오류가 발생한 경우
         if (project) {
           console.log("Cleaning up partially created project:", project.id);
           try {
             // 생성된 파일 레코드 삭제
-            await db.delete(schema.files).where(eq(schema.files.projectId, project.id));
+            await db
+              .delete(schema.files)
+              .where(eq(schema.files.projectId, project.id));
             // 프로젝트 삭제
-            await db.delete(schema.projects).where(eq(schema.projects.id, project.id));
+            await db
+              .delete(schema.projects)
+              .where(eq(schema.projects.id, project.id));
           } catch (cleanupError) {
             console.error("Cleanup error:", cleanupError);
           }
         }
-
         // 업로드된 임시 파일 정리
         if (uploadedFiles) {
           Object.values(uploadedFiles).forEach((fileArray: any) => {
@@ -2183,7 +2248,6 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
             });
           });
         }
-
         return handleApiError(res, error);
       }
     },
@@ -2794,14 +2858,14 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
             processedDeadline = new Date(deadline);
             // 유효한 날짜인지 확인
             if (isNaN(processedDeadline.getTime())) {
-              return res.status(400).json({ 
-                message: "Invalid date format for deadline" 
+              return res.status(400).json({
+                message: "Invalid date format for deadline",
               });
             }
           } catch (err) {
             console.error("Date parsing error:", err);
-            return res.status(400).json({ 
-              message: "Invalid date format for deadline" 
+            return res.status(400).json({
+              message: "Invalid date format for deadline",
             });
           }
         }
@@ -2811,7 +2875,9 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       const [updatedProject] = await db
         .update(schema.projects)
         .set({
-          ...(processedDeadline !== undefined && { deadline: processedDeadline }),
+          ...(processedDeadline !== undefined && {
+            deadline: processedDeadline,
+          }),
           ...(glossaryId !== undefined && { glossaryId }),
           ...(tmId !== undefined && { tmId }),
           ...(name !== undefined && { name }),
@@ -2828,128 +2894,143 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
   });
 
   // 템플릿 기반 DOCX 파일 다운로드 API
-  app.post(`${apiPrefix}/projects/:id/download-template`, verifyToken, async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.id);
-      if (isNaN(projectId)) {
-        return res.status(400).json({ message: "Invalid project ID" });
-      }
+  app.post(
+    `${apiPrefix}/projects/:id/download-template`,
+    verifyToken,
+    async (req, res) => {
+      try {
+        const projectId = parseInt(req.params.id);
+        if (isNaN(projectId)) {
+          return res.status(400).json({ message: "Invalid project ID" });
+        }
 
-      // 먼저 프로젝트 기본 정보 조회
-      const project = await db.query.projects.findFirst({
-        where: eq(schema.projects.id, projectId)
-      });
-
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-
-      if (!project.templateId) {
-        return res.status(400).json({ 
-          message: "이 프로젝트는 템플릿이 적용되지 않았습니다." 
+        // 먼저 프로젝트 기본 정보 조회
+        const project = await db.query.projects.findFirst({
+          where: eq(schema.projects.id, projectId),
         });
-      }
 
-      // 템플릿 정보 별도 조회
-      const template = await db.query.docTemplates.findFirst({
-        where: eq(schema.docTemplates.id, project.templateId)
-      });
+        if (!project) {
+          return res.status(404).json({ message: "Project not found" });
+        }
 
-      if (!template) {
-        return res.status(400).json({ 
-          message: "템플릿을 찾을 수 없습니다." 
-        });
-      }
-
-      // 템플릿 필드 별도 조회
-      const templateFields = await db.query.templateFields.findMany({
-        where: eq(schema.templateFields.templateId, project.templateId)
-      });
-
-      // 프로젝트 파일 조회
-      const files = await db.query.files.findMany({
-        where: eq(schema.files.projectId, projectId)
-      });
-
-      // 각 파일의 세그먼트 조회
-      const allSegments = [];
-      for (const file of files) {
-        if (file.type === 'work' || !file.type) {
-          const segments = await db.query.translationUnits.findMany({
-            where: eq(schema.translationUnits.fileId, file.id)
+        if (!project.templateId) {
+          return res.status(400).json({
+            message: "이 프로젝트는 템플릿이 적용되지 않았습니다.",
           });
-          allSegments.push(...segments);
         }
-      }
 
-      // 번역된 세그먼트들을 placeholder 데이터로 변환
-      const templateData: { [key: string]: string } = {};
-      
-      // 번역 완료된 세그먼트만 필터링
-      const translatedSegments = allSegments.filter(s => s.target && s.target.trim());
+        // 템플릿 정보 별도 조회
+        const template = await db.query.docTemplates.findFirst({
+          where: eq(schema.docTemplates.id, project.templateId),
+        });
 
-      // 번역 가능한 필드에 순서대로 번역된 내용 할당
-      const translatableFields = templateFields
-        .filter(f => f.isTranslatable)
-        .sort((a, b) => a.orderIndex - b.orderIndex);
-
-      translatableFields.forEach((field, index) => {
-        if (index < translatedSegments.length) {
-          templateData[field.placeholder] = translatedSegments[index].target || '';
-        } else {
-          // 번역된 세그먼트가 부족한 경우 빈 문자열로 채움
-          templateData[field.placeholder] = '';
+        if (!template) {
+          return res.status(400).json({
+            message: "템플릿을 찾을 수 없습니다.",
+          });
         }
-      });
 
-      // docx_fill 유틸리티를 직접 사용하여 DOCX 파일 생성
-      const { fillDocxTemplate } = await import('./utils/docx_fill');
-      
-      const outputFileName = `${project.name}_translated_${Date.now()}.docx`;
-      const result = await fillDocxTemplate(
-        template.docxFilePath,
-        templateData,
-        outputFileName
-      );
+        // 템플릿 필드 별도 조회
+        const templateFields = await db.query.templateFields.findMany({
+          where: eq(schema.templateFields.templateId, project.templateId),
+        });
 
-      if (result.success && result.filePath) {
-        // 사용 횟수 증가
-        await db.update(schema.docTemplates)
-          .set({
-            useCount: template.useCount + 1,
-            updatedAt: new Date()
-          })
-          .where(eq(schema.docTemplates.id, project.templateId));
+        // 프로젝트 파일 조회
+        const files = await db.query.files.findMany({
+          where: eq(schema.files.projectId, projectId),
+        });
 
-        // 파일 다운로드 응답
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-        res.setHeader('Content-Disposition', `attachment; filename="${result.fileName}"`);
-        
-        const fileStream = fs.createReadStream(result.filePath);
-        fileStream.pipe(res);
-
-        // 임시 파일 정리 (5분 후)
-        setTimeout(() => {
-          if (fs.existsSync(result.filePath!)) {
-            fs.unlinkSync(result.filePath!);
+        // 각 파일의 세그먼트 조회
+        const allSegments = [];
+        for (const file of files) {
+          if (file.type === "work" || !file.type) {
+            const segments = await db.query.translationUnits.findMany({
+              where: eq(schema.translationUnits.fileId, file.id),
+            });
+            allSegments.push(...segments);
           }
-        }, 5 * 60 * 1000);
+        }
 
-      } else {
+        // 번역된 세그먼트들을 placeholder 데이터로 변환
+        const templateData: { [key: string]: string } = {};
+
+        // 번역 완료된 세그먼트만 필터링
+        const translatedSegments = allSegments.filter(
+          (s) => s.target && s.target.trim(),
+        );
+
+        // 번역 가능한 필드에 순서대로 번역된 내용 할당
+        const translatableFields = templateFields
+          .filter((f) => f.isTranslatable)
+          .sort((a, b) => a.orderIndex - b.orderIndex);
+
+        translatableFields.forEach((field, index) => {
+          if (index < translatedSegments.length) {
+            templateData[field.placeholder] =
+              translatedSegments[index].target || "";
+          } else {
+            // 번역된 세그먼트가 부족한 경우 빈 문자열로 채움
+            templateData[field.placeholder] = "";
+          }
+        });
+
+        // docx_fill 유틸리티를 직접 사용하여 DOCX 파일 생성
+        const { fillDocxTemplate } = await import("./utils/docx_fill");
+
+        const outputFileName = `${project.name}_translated_${Date.now()}.docx`;
+        const result = await fillDocxTemplate(
+          template.docxFilePath,
+          templateData,
+          outputFileName,
+        );
+
+        if (result.success && result.filePath) {
+          // 사용 횟수 증가
+          await db
+            .update(schema.docTemplates)
+            .set({
+              useCount: template.useCount + 1,
+              updatedAt: new Date(),
+            })
+            .where(eq(schema.docTemplates.id, project.templateId));
+
+          // 파일 다운로드 응답
+          res.setHeader(
+            "Content-Type",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          );
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${result.fileName}"`,
+          );
+
+          const fileStream = fs.createReadStream(result.filePath);
+          fileStream.pipe(res);
+
+          // 임시 파일 정리 (5분 후)
+          setTimeout(
+            () => {
+              if (fs.existsSync(result.filePath!)) {
+                fs.unlinkSync(result.filePath!);
+              }
+            },
+            5 * 60 * 1000,
+          );
+        } else {
+          return res.status(500).json({
+            message: "DOCX 파일 생성에 실패했습니다.",
+            error: result.error,
+          });
+        }
+      } catch (error) {
+        console.error("Template DOCX download error:", error);
         return res.status(500).json({
-          message: "DOCX 파일 생성에 실패했습니다.",
-          error: result.error
+          message: "템플릿 기반 다운로드 중 오류가 발생했습니다.",
+          error: error instanceof Error ? error.message : "Unknown error",
         });
       }
-
-    } catch (error) {
-      console.error("Template DOCX download error:", error);
-      return res.status(500).json({ 
-        message: "템플릿 기반 다운로드 중 오류가 발생했습니다.",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
+    },
+  );
 
   // 프로젝트 노트 저장 API
   app.post(`${apiPrefix}/projects/:id/notes`, verifyToken, async (req, res) => {
@@ -3071,18 +3152,23 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
     referenceUpload.array("files"),
     async (req, res) => {
       console.log("[Reference Upload Route] Starting file upload process");
-      
+
       try {
         const id = parseInt(req.params.id);
         const userId = req.user!.id;
         const userRole = req.user!.role;
-        
-        console.log(`[Reference Upload] Processing upload for project ${id} by user ${userId} (role: ${userRole})`);
+
+        console.log(
+          `[Reference Upload] Processing upload for project ${id} by user ${userId} (role: ${userRole})`,
+        );
 
         // 업로드된 파일 확인
         const files = req.files as Express.Multer.File[];
-        console.log(`[Reference Upload] Files received:`, files ? files.length : 'none');
-        
+        console.log(
+          `[Reference Upload] Files received:`,
+          files ? files.length : "none",
+        );
+
         if (!files || files.length === 0) {
           console.log("[Reference Upload] Error: No files found in request");
           return res.status(400).json({ message: "No files uploaded" });
@@ -3137,7 +3223,9 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
 
         // 참조 파일 메타데이터 업데이트
         const updatedReferences = [...existingReferences, ...fileMetadata];
-        console.log("[Reference Upload] Updating project with new reference files");
+        console.log(
+          "[Reference Upload] Updating project with new reference files",
+        );
 
         try {
           // 프로젝트 업데이트
@@ -3149,7 +3237,7 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
             })
             .where(eq(schema.projects.id, id))
             .returning();
-          
+
           console.log("[Reference Upload] Project updated successfully");
 
           // 클라이언트에게 필요한 정보만 반환
@@ -3162,9 +3250,11 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
             }),
           );
 
-          console.log("[Reference Upload] Returning metadata to client:", 
-            clientMetadata.map(m => m.name).join(", "));
-          
+          console.log(
+            "[Reference Upload] Returning metadata to client:",
+            clientMetadata.map((m) => m.name).join(", "),
+          );
+
           return res.status(200).json(clientMetadata);
         } catch (dbError) {
           console.error("[Reference Upload] Database error:", dbError);
@@ -3263,16 +3353,6 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       }
     },
   );
-
-
-
-
-
-
-
-
-
-
 
   // 프로젝트 참조 파일 다운로드 API (인증 불필요)
   app.get(
@@ -3636,7 +3716,7 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
 
       // Check if project exists and user has access
       const project = await db.query.projects.findFirst({
-        where: eq(schema.projects.id, projectId)
+        where: eq(schema.projects.id, projectId),
       });
 
       if (!project) {
@@ -3647,8 +3727,8 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       const file = await db.query.files.findFirst({
         where: and(
           eq(schema.files.id, fileId),
-          eq(schema.files.projectId, projectId)
-        )
+          eq(schema.files.projectId, projectId),
+        ),
       });
 
       if (!file) {
@@ -3656,10 +3736,11 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       }
 
       // Update file status to parsing
-      await db.update(schema.files)
+      await db
+        .update(schema.files)
         .set({
-          processingStatus: 'parsing',
-          updatedAt: new Date()
+          processingStatus: "parsing",
+          updatedAt: new Date(),
         })
         .where(eq(schema.files.id, fileId));
 
@@ -3667,16 +3748,17 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       await processFileSegments(fileId, file.content, projectId);
 
       // Update file status to parsed (segments ready, but not translated)
-      await db.update(schema.files)
+      await db
+        .update(schema.files)
         .set({
-          processingStatus: 'parsed',
-          updatedAt: new Date()
+          processingStatus: "parsed",
+          updatedAt: new Date(),
         })
         .where(eq(schema.files.id, fileId));
 
       // Get created segments count
       const segments = await db.query.translationUnits.findMany({
-        where: eq(schema.translationUnits.fileId, fileId)
+        where: eq(schema.translationUnits.fileId, fileId),
       });
 
       return res.json({
@@ -3684,110 +3766,115 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         message: "File parsed successfully",
         fileId,
         segmentCount: segments.length,
-        status: 'parsed'
+        status: "parsed",
       });
-
     } catch (error) {
-      console.error('Parse API error:', error);
+      console.error("Parse API error:", error);
       return handleApiError(res, error);
     }
   });
 
   // Start translation for a file
-  app.post(`${apiPrefix}/projects/:id/translate`, verifyToken, async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.id);
-      const { fileId } = req.body;
+  app.post(
+    `${apiPrefix}/projects/:id/translate`,
+    verifyToken,
+    async (req, res) => {
+      try {
+        const projectId = parseInt(req.params.id);
+        const { fileId } = req.body;
 
-      if (!fileId) {
-        return res.status(400).json({ message: "File ID is required" });
-      }
+        if (!fileId) {
+          return res.status(400).json({ message: "File ID is required" });
+        }
 
-      // Check if project exists and user has access
-      const project = await db.query.projects.findFirst({
-        where: eq(schema.projects.id, projectId)
-      });
-
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-
-      // Get file info
-      const file = await db.query.files.findFirst({
-        where: and(
-          eq(schema.files.id, fileId),
-          eq(schema.files.projectId, projectId)
-        )
-      });
-
-      if (!file) {
-        return res.status(404).json({ message: "File not found" });
-      }
-
-      if (file.processingStatus !== 'parsed') {
-        return res.status(400).json({ 
-          message: "File must be parsed before translation can start",
-          currentStatus: file.processingStatus
+        // Check if project exists and user has access
+        const project = await db.query.projects.findFirst({
+          where: eq(schema.projects.id, projectId),
         });
+
+        if (!project) {
+          return res.status(404).json({ message: "Project not found" });
+        }
+
+        // Get file info
+        const file = await db.query.files.findFirst({
+          where: and(
+            eq(schema.files.id, fileId),
+            eq(schema.files.projectId, projectId),
+          ),
+        });
+
+        if (!file) {
+          return res.status(404).json({ message: "File not found" });
+        }
+
+        if (file.processingStatus !== "parsed") {
+          return res.status(400).json({
+            message: "File must be parsed before translation can start",
+            currentStatus: file.processingStatus,
+          });
+        }
+
+        // Start translation using the queue
+        const result = await TranslationQueue.startTranslation(fileId);
+
+        return res.json({
+          success: true,
+          message: "Translation started",
+          ...result,
+        });
+      } catch (error) {
+        console.error("Translation start API error:", error);
+        return handleApiError(res, error);
       }
-
-      // Start translation using the queue
-      const result = await TranslationQueue.startTranslation(fileId);
-
-      return res.json({
-        success: true,
-        message: "Translation started",
-        ...result
-      });
-
-    } catch (error) {
-      console.error('Translation start API error:', error);
-      return handleApiError(res, error);
-    }
-  });
+    },
+  );
 
   // Get translation progress for a file
-  app.get(`${apiPrefix}/projects/:id/files/:fileId/progress`, verifyToken, async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.id);
-      const fileId = parseInt(req.params.fileId);
+  app.get(
+    `${apiPrefix}/projects/:id/files/:fileId/progress`,
+    verifyToken,
+    async (req, res) => {
+      try {
+        const projectId = parseInt(req.params.id);
+        const fileId = parseInt(req.params.fileId);
 
-      // Check if project exists and user has access
-      const project = await db.query.projects.findFirst({
-        where: eq(schema.projects.id, projectId)
-      });
+        // Check if project exists and user has access
+        const project = await db.query.projects.findFirst({
+          where: eq(schema.projects.id, projectId),
+        });
 
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
+        if (!project) {
+          return res.status(404).json({ message: "Project not found" });
+        }
+
+        // Get file info
+        const file = await db.query.files.findFirst({
+          where: and(
+            eq(schema.files.id, fileId),
+            eq(schema.files.projectId, projectId),
+          ),
+        });
+
+        if (!file) {
+          return res.status(404).json({ message: "File not found" });
+        }
+
+        // Get progress from database
+        const progress = await TranslationQueue.getProgressFromDB(fileId);
+
+        return res.json({
+          fileId,
+          fileName: file.name,
+          processingStatus: file.processingStatus,
+          ...progress,
+        });
+      } catch (error) {
+        console.error("Progress API error:", error);
+        return handleApiError(res, error);
       }
-
-      // Get file info
-      const file = await db.query.files.findFirst({
-        where: and(
-          eq(schema.files.id, fileId),
-          eq(schema.files.projectId, projectId)
-        )
-      });
-
-      if (!file) {
-        return res.status(404).json({ message: "File not found" });
-      }
-
-      // Get progress from database
-      const progress = await TranslationQueue.getProgressFromDB(fileId);
-
-      return res.json({
-        fileId,
-        fileName: file.name,
-        processingStatus: file.processingStatus,
-        ...progress
-      });
-
-    } catch (error) {
-      console.error('Progress API error:', error);
-      return handleApiError(res, error);
-    }
-  });
+    },
+  );
 
   // Translation API
   app.post(`${apiPrefix}/translate`, verifyToken, async (req, res) => {
@@ -4561,7 +4648,7 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       return handleApiError(res, error);
     }
   });
-  
+
   // Admin User Management API
   // GET: 모든 사용자 목록 가져오기
   app.get(`${apiPrefix}/admin/users`, async (req, res) => {
@@ -4570,12 +4657,12 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       if (!req.isAuthenticated() || !req.user || req.user.role !== "admin") {
         return res.status(403).json({ message: "Admin privileges required" });
       }
-      
+
       // Fetch all users from the database
       const allUsers = await db.query.users.findMany({
-        orderBy: (users, { desc }) => [desc(users.role)]
+        orderBy: (users, { desc }) => [desc(users.role)],
       });
-      
+
       // Return the users (excluding passwords for security)
       const safeUsers = allUsers.map(({ password, ...user }) => user);
       return res.json({ users: safeUsers });
@@ -4584,7 +4671,7 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       return handleApiError(res, error);
     }
   });
-  
+
   // PUT: 사용자 권한 업데이트
   app.put(`${apiPrefix}/admin/users/roles`, async (req, res) => {
     try {
@@ -4592,46 +4679,53 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       if (!req.isAuthenticated() || !req.user || req.user.role !== "admin") {
         return res.status(403).json({ message: "Admin privileges required" });
       }
-      
+
       // Validate request body
       const changes = req.body.changes as Record<number, string>;
       if (!changes || Object.keys(changes).length === 0) {
         return res.status(400).json({ message: "No changes provided" });
       }
-      
+
       console.log("Receiving role changes:", changes);
-      
+
       // For each user ID in the changes object, update their role
-      const updatePromises = Object.entries(changes).map(async ([userId, newRole]) => {
-        const id = parseInt(userId);
-        
-        // Don't allow changing the main admin account
-        const userToUpdate = await db.query.users.findFirst({
-          where: eq(schema.users.id, id)
-        });
-        
-        if (userToUpdate?.username === "admin") {
-          return { success: false, id, message: "Cannot change main admin role" };
-        }
-        
-        // Validate role
-        if (newRole !== "admin" && newRole !== "user") {
-          return { success: false, id, message: "Invalid role" };
-        }
-        
-        // Update the user's role
-        await db.update(schema.users)
-          .set({ role: newRole })
-          .where(eq(schema.users.id, id));
-          
-        return { success: true, id, newRole };
-      });
-      
+      const updatePromises = Object.entries(changes).map(
+        async ([userId, newRole]) => {
+          const id = parseInt(userId);
+
+          // Don't allow changing the main admin account
+          const userToUpdate = await db.query.users.findFirst({
+            where: eq(schema.users.id, id),
+          });
+
+          if (userToUpdate?.username === "admin") {
+            return {
+              success: false,
+              id,
+              message: "Cannot change main admin role",
+            };
+          }
+
+          // Validate role
+          if (newRole !== "admin" && newRole !== "user") {
+            return { success: false, id, message: "Invalid role" };
+          }
+
+          // Update the user's role
+          await db
+            .update(schema.users)
+            .set({ role: newRole })
+            .where(eq(schema.users.id, id));
+
+          return { success: true, id, newRole };
+        },
+      );
+
       const results = await Promise.all(updatePromises);
-      
-      return res.json({ 
+
+      return res.json({
         message: "User roles updated successfully",
-        results
+        results,
       });
     } catch (error) {
       return handleApiError(res, error);
@@ -4640,9 +4734,9 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
 
   // Register template routes with API prefix
   app.use(`${apiPrefix}/admin`, templateRoutes);
-  
+
   // Log registered routes for debugging
-  console.log('Template routes registered with prefix:', `${apiPrefix}/admin`);
+  console.log("Template routes registered with prefix:", `${apiPrefix}/admin`);
 
   const httpServer = createServer(app);
 
