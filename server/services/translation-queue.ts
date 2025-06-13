@@ -1,7 +1,7 @@
 import { db } from "@db";
 import * as schema from "@shared/schema";
 import { eq, and, lt } from "drizzle-orm";
-import { translateWithGPT } from "../openai";
+import { translateBatchWithGPT, translateWithGPT } from "../openai";
 
 export interface TranslationJob {
   fileId: number;
@@ -117,9 +117,23 @@ class TranslationQueue {
         const chunk = segments.slice(i, i + CHUNK_SIZE);
         
         try {
+          // Get project info for language settings
+          const fileInfo = await db.query.files.findFirst({
+            where: eq(schema.files.id, fileId),
+            with: { project: true }
+          });
+
+          if (!fileInfo?.project) {
+            throw new Error('File or project not found');
+          }
+
           // Prepare segments for GPT translation
           const sources = chunk.map(segment => segment.source);
-          const translations = await translateWithGPT(sources);
+          const translations = await translateBatchWithGPT(
+            sources,
+            fileInfo.project.sourceLanguage,
+            fileInfo.project.targetLanguage
+          );
 
           // Update segments with translations
           for (let j = 0; j < chunk.length; j++) {
@@ -184,8 +198,22 @@ class TranslationQueue {
       const delay = RETRY_DELAYS[segment.retryCount] || 15000;
       await new Promise(resolve => setTimeout(resolve, delay));
 
+      // Get project info for single segment translation
+      const fileInfo = await db.query.files.findFirst({
+        where: eq(schema.files.id, segment.fileId),
+        with: { project: true }
+      });
+
+      if (!fileInfo?.project) {
+        throw new Error('File or project not found for retry');
+      }
+
       // Attempt single segment translation
-      const translations = await translateWithGPT([segment.source]);
+      const translations = await translateBatchWithGPT(
+        [segment.source],
+        fileInfo.project.sourceLanguage,
+        fileInfo.project.targetLanguage
+      );
       const translation = translations[0] || '';
 
       await db.update(schema.translationUnits)

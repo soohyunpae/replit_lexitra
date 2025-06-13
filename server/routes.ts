@@ -3668,6 +3668,175 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
     }
   });
 
+  // ===============================================
+  // NEW SEPARATED FILE PROCESSING API ENDPOINTS
+  // ===============================================
+
+  // Parse file and create segments (without translation)
+  app.post(`${apiPrefix}/projects/:id/parse`, verifyToken, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const { fileId } = req.body;
+
+      if (!fileId) {
+        return res.status(400).json({ message: "File ID is required" });
+      }
+
+      // Check if project exists and user has access
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, projectId)
+      });
+
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+
+      // Get file info
+      const file = await db.query.files.findFirst({
+        where: and(
+          eq(schema.files.id, fileId),
+          eq(schema.files.projectId, projectId)
+        )
+      });
+
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+
+      // Update file status to parsing
+      await db.update(schema.files)
+        .set({
+          processingStatus: 'parsing',
+          updatedAt: new Date()
+        })
+        .where(eq(schema.files.id, fileId));
+
+      // Process file content and create segments
+      await processFileSegments(fileId, file.content, projectId);
+
+      // Update file status to parsed (segments ready, but not translated)
+      await db.update(schema.files)
+        .set({
+          processingStatus: 'parsed',
+          updatedAt: new Date()
+        })
+        .where(eq(schema.files.id, fileId));
+
+      // Get created segments count
+      const segments = await db.query.translationUnits.findMany({
+        where: eq(schema.translationUnits.fileId, fileId)
+      });
+
+      return res.json({
+        success: true,
+        message: "File parsed successfully",
+        fileId,
+        segmentCount: segments.length,
+        status: 'parsed'
+      });
+
+    } catch (error) {
+      console.error('Parse API error:', error);
+      return handleApiError(res, error);
+    }
+  });
+
+  // Start translation for a file
+  app.post(`${apiPrefix}/projects/:id/translate`, verifyToken, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const { fileId } = req.body;
+
+      if (!fileId) {
+        return res.status(400).json({ message: "File ID is required" });
+      }
+
+      // Check if project exists and user has access
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, projectId)
+      });
+
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+
+      // Get file info
+      const file = await db.query.files.findFirst({
+        where: and(
+          eq(schema.files.id, fileId),
+          eq(schema.files.projectId, projectId)
+        )
+      });
+
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+
+      if (file.processingStatus !== 'parsed') {
+        return res.status(400).json({ 
+          message: "File must be parsed before translation can start",
+          currentStatus: file.processingStatus
+        });
+      }
+
+      // Start translation using the queue
+      const result = await TranslationQueue.startTranslation(fileId);
+
+      return res.json({
+        success: true,
+        message: "Translation started",
+        ...result
+      });
+
+    } catch (error) {
+      console.error('Translation start API error:', error);
+      return handleApiError(res, error);
+    }
+  });
+
+  // Get translation progress for a file
+  app.get(`${apiPrefix}/projects/:id/files/:fileId/progress`, verifyToken, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const fileId = parseInt(req.params.fileId);
+
+      // Check if project exists and user has access
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, projectId)
+      });
+
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+
+      // Get file info
+      const file = await db.query.files.findFirst({
+        where: and(
+          eq(schema.files.id, fileId),
+          eq(schema.files.projectId, projectId)
+        )
+      });
+
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+
+      // Get progress from database
+      const progress = await TranslationQueue.getProgressFromDB(fileId);
+
+      return res.json({
+        fileId,
+        fileName: file.name,
+        processingStatus: file.processingStatus,
+        ...progress
+      });
+
+    } catch (error) {
+      console.error('Progress API error:', error);
+      return handleApiError(res, error);
+    }
+  });
+
   // Translation API
   app.post(`${apiPrefix}/translate`, verifyToken, async (req, res) => {
     try {
