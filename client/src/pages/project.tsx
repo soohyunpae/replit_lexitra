@@ -1718,6 +1718,46 @@ export default function Project() {
             </Card>
           </div>
 
+          {/* Translation Progress Section */}
+          {project?.files && project.files.length > 0 && (
+            <div className="grid grid-cols-1 gap-4 mb-6">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center">
+                    <span>⚡ Translation Progress</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Real-time translation status for each file
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {project.files.map((file: FileType) => (
+                    <TranslationProgress
+                      key={file.id}
+                      projectId={projectId!}
+                      fileId={file.id}
+                      fileName={file.name}
+                      onTranslationStart={() => {
+                        queryClient.invalidateQueries({
+                          queryKey: [`/api/projects/${projectId}`]
+                        });
+                      }}
+                      onTranslationComplete={() => {
+                        queryClient.invalidateQueries({
+                          queryKey: [`/api/projects/${projectId}`]
+                        });
+                        toast({
+                          title: "Translation Complete",
+                          description: `${file.name} has been translated successfully`,
+                        });
+                      }}
+                    />
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {/* Notes Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <Card className="md:col-span-2">

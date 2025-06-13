@@ -1980,13 +1980,16 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
             console.log("5. 최종 정규화된 파일명:", displayName);
             console.log("=== 파일명 복원 시도 완료 ===");
             
-            // 초기 파일 정보만 저장 (처리 전) - 복원된 파일명 사용
+            // 파일 내용 읽기
+            const fileContent = fs.readFileSync(file.path, 'utf8');
+            
+            // 초기 파일 정보 저장 (업로드됨, 아직 파싱되지 않음)
             fileRecords.push({
               name: displayName, // 복원된 한글 파일명 사용
-              content: `[Processing ${displayName}...]`, // 임시 콘텐츠, 나중에 업데이트됨
+              content: fileContent, // 실제 파일 내용 저장
               projectId: project.id,
               type: "work",
-              processingStatus: "processing", // 처리 중 상태로 표시
+              processingStatus: "uploaded", // 업로드됨, 파싱 대기 중
               createdAt: new Date(),
               updatedAt: new Date(),
             });
