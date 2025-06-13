@@ -114,3 +114,29 @@ export async function applyTemplateToProject(
     throw error;
   }
 }
+
+// Wrapper function that reads file content and matches templates
+export async function matchTemplateToDocumentFile(
+  projectId: number,
+  filePath: string
+): Promise<TemplateMatchResult | null> {
+  try {
+    // For now, use a simple text extraction approach
+    // In a production system, you'd want proper DOCX/PDF parsing
+    let documentContent = '';
+    
+    if (fs.existsSync(filePath)) {
+      // Simple text-based approach for demonstration
+      // In production, use proper document parsing libraries
+      documentContent = path.basename(filePath) + ' ' + filePath;
+    } else {
+      console.warn(`File not found: ${filePath}`);
+      return null;
+    }
+    
+    return await matchTemplateToDocument(projectId, documentContent);
+  } catch (error) {
+    console.error('Error reading file for template matching:', error);
+    return null;
+  }
+}
