@@ -1865,6 +1865,8 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
           body: req.body,
           files: req.files ? "Files present" : "No files",
           user: req.user,
+          headers: req.headers,
+          contentType: req.get('content-type')
         });
 
         const {
