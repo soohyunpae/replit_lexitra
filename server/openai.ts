@@ -29,6 +29,72 @@ interface TranslationResponse {
 /**
  * Translates text using OpenAI's GPT model
  */
+/**
+ * Translates multiple texts in batch using OpenAI's GPT model
+ */
+export async function translateBatchWithGPT(
+  sources: string[],
+  sourceLanguage: string,
+  targetLanguage: string,
+  context?: string[],
+  glossaryTerms?: { source: string; target: string }[]
+): Promise<string[]> {
+  if (sources.length === 0) return [];
+
+  // For batch translation, we'll process multiple sources in a single request
+  const systemPrompt = `You are a professional translator specializing in technical documents. 
+Translate the following texts from ${sourceLanguage} to ${targetLanguage}. 
+Maintain technical accuracy and terminology consistency.
+${glossaryTerms && glossaryTerms.length > 0 
+  ? `Use these glossary terms when applicable: ${glossaryTerms.map(t => `${t.source} -> ${t.target}`).join(', ')}.`
+  : ''
+}
+
+Respond with a JSON array of translations in the same order as the input texts:
+["translation 1", "translation 2", "translation 3"]`;
+
+  const userPrompt = `Translate these texts:\n${sources.map((s, i) => `${i + 1}. ${s}`).join('\n')}`;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      temperature: 0.3,
+      max_tokens: Math.min(4000, sources.length * 200)
+    });
+
+    const responseContent = completion.choices[0]?.message?.content?.trim();
+    if (!responseContent) {
+      throw new Error("Empty response from OpenAI");
+    }
+
+    try {
+      const translations = JSON.parse(responseContent);
+      if (Array.isArray(translations)) {
+        // Ensure we have the same number of translations as sources
+        const result = sources.map((_, i) => translations[i] || '');
+        return result;
+      } else {
+        // Fallback: split response by lines if JSON parsing fails
+        const lines = responseContent.split('\n').filter(line => line.trim());
+        return sources.map((_, i) => lines[i]?.replace(/^\d+\.\s*/, '') || '');
+      }
+    } catch (parseError) {
+      console.error("Error parsing batch translation JSON:", parseError);
+      // Fallback: split response and return best effort
+      const lines = responseContent.split('\n').filter(line => line.trim());
+      return sources.map((_, i) => lines[i] || '');
+    }
+  } catch (error: any) {
+    console.error("Error in batch translation:", error);
+    // Return empty strings for failed translations
+    return sources.map(() => '');
+  }
+}
+
 export async function translateWithGPT(
   request: TranslationRequest
 ): Promise<TranslationResponse> {

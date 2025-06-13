@@ -8,6 +8,7 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { ZodError } from "zod";
 import { translateWithGPT } from "./openai";
+import TranslationQueue from "./services/translation-queue";
 import { setupAuth } from "./auth";
 import {
   setupTokenAuth,
