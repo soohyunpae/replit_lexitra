@@ -164,14 +164,7 @@ export const queryClient = new QueryClient({
       retry: 1
     },
     mutations: {
-      retry: false,
-      onError: (error: unknown) => {
-        if (error instanceof Error) {
-          console.error("Mutation Error:", error.message);
-        } else {
-          console.error("Unknown Mutation Error:", error);
-        }
-      }
+      retry: false
     },
   },
 });
