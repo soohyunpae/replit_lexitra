@@ -390,6 +390,137 @@ export const docTemplatesRelations = relations(docTemplates, ({ one, many }) => 
 
 이 계획에 따라 단계적으로 구현하면 템플릿 매칭 기능이 안정적으로 작동하고 blank 페이지 문제가 해결될 것입니다.
 
+---
+
+# 📄 레이아웃 기반 템플릿 매칭 기능 개선 방안
+
+## 🔍 현재 상황 분석
+
+### 현재 텍스트 기반 매칭의 한계
+현재 구현된 템플릿 매칭은 `mammoth.extractRawText()`를 사용하여 순수 텍스트 내용만 비교하는 방식입니다:
+
+**문제점:**
+- 특허 문서처럼 구조가 중요한 문서에서 낮은 정확도
+- 표, 제목 계층, 레이아웃 정보 무시
+- 실제 템플릿 구조와 관계없이 단어 빈도수만으로 매칭
+
+### 특허 문서의 구조적 특성
+- **표 구조**: 발명의 명세, 청구항 등이 표 형태로 구성
+- **제목 계층**: "발명의 명칭", "기술분야", "발명의 내용" 등 표준화된 섹션
+- **번호 매기기**: 청구항 번호, 도면 번호 등 일정한 패턴
+- **페이지 레이아웃**: 여백, 헤더/푸터, 섹션 구분
+
+## 🛠️ 레이아웃 기반 매칭 구현 계획
+
+### Phase 1: DOCX 구조 파싱 개선
+
+#### 1-1. mammoth 대신 docx-templater의 구조 분석 활용
+현재 `server/utils/docx_fill.ts`에서 이미 docx-templater를 사용하고 있으므로, 이를 확장하여 구조 정보 추출
+
+#### 1-2. XML 기반 문서 구조 분석 함수 추가
+```typescript
+// 새로운 함수: analyzeDocumentStructure()
+interface DocumentStructure {
+  tables: TableInfo[];
+  headings: HeadingInfo[];
+  paragraphs: ParagraphInfo[];
+  sections: SectionInfo[];
+  layoutMetrics: LayoutMetrics;
+}
+
+interface TableInfo {
+  position: number;
+  rowCount: number;
+  columnCount: number;
+  hasHeaders: boolean;
+  cellTypes: string[];
+}
+
+interface HeadingInfo {
+  level: number;
+  text: string;
+  position: number;
+  style: string;
+}
+```
+
+### Phase 2: 구조적 유사도 계산 알고리즘
+
+#### 2-1. 레이아웃 트리 비교
+- 문서를 계층적 트리 구조로 변환
+- Tree Edit Distance 알고리즘 적용
+- 구조적 위치와 요소 타입 가중치 적용
+
+#### 2-2. 다차원 유사도 스코어
+```typescript
+interface MatchScore {
+  structureScore: number;    // 레이아웃 구조 유사도 (0-1)
+  tableScore: number;        // 표 구조 유사도 (0-1)
+  headingScore: number;      // 제목 계층 유사도 (0-1)
+  contentScore: number;      // 텍스트 내용 유사도 (0-1)
+  overallScore: number;      // 가중 평균 점수
+}
+```
+
+#### 2-3. 가중치 기반 종합 점수
+- 구조 점수: 40%
+- 표 점수: 30%
+- 제목 점수: 20%
+- 내용 점수: 10%
+
+### Phase 3: 템플릿 매칭 서비스 개선
+
+#### 3-1. 기존 함수 리팩토링
+`server/services/docx_template_service.ts`의 `calculateTextBasedMatchScore()` 함수를 `calculateLayoutBasedMatchScore()`로 교체
+
+#### 3-2. 구조 기반 필드 매핑
+템플릿의 placeholder 위치와 업로드 문서의 해당 구조 요소를 매핑하여 정확한 데이터 추출
+
+### Phase 4: 고급 매칭 기능
+
+#### 4-1. 학습 기반 매칭 개선
+- 성공적인 매칭 결과를 DB에 저장
+- 매칭 패턴 학습을 통한 정확도 향상
+
+#### 4-2. 템플릿 유형별 전용 매칭 로직
+- 특허 문서용 매칭 로직
+- 계약서용 매칭 로직
+- 일반 문서용 매칭 로직
+
+## 🔧 구현 우선순위
+
+### 즉시 구현 (High Priority)
+1. **DOCX XML 구조 파싱 함수** - 표, 제목, 단락 구조 추출
+2. **구조적 유사도 계산** - Tree Edit Distance 기반 알고리즘
+3. **가중치 기반 종합 매칭 스코어** - 다차원 유사도 통합
+
+### 중기 구현 (Medium Priority)
+1. **템플릿 유형별 매칭 로직** - 문서 유형에 따른 최적화
+2. **매칭 결과 학습 시스템** - 성공 패턴 축적 및 활용
+3. **시각적 매칭 결과 표시** - 어떤 구조가 매칭되었는지 UI에서 확인
+
+### 장기 구현 (Low Priority)
+1. **AI 기반 구조 인식** - 머신러닝을 통한 문서 구조 자동 분류
+2. **실시간 매칭 피드백** - 업로드 중 실시간 매칭률 표시
+3. **템플릿 구조 시각화** - 관리자가 템플릿 구조를 시각적으로 확인
+
+## 📊 기대 효과
+
+### 정확도 개선
+- **현재**: 텍스트 기반 매칭률 ~20% (추정)
+- **개선 후**: 레이아웃 기반 매칭률 ~80% (목표)
+
+### 사용성 향상
+- 특허 문서에 대한 자동 템플릿 적용률 대폭 증가
+- 수동 템플릿 선택 필요성 최소화
+- 번역 작업 시작 시간 단축
+
+### 확장성
+- 새로운 문서 유형에 대한 매칭 로직 추가 용이
+- 기존 텍스트 기반 매칭과 병행 사용 가능
+- 단계적 성능 개선 가능
+
+---
 
 ## 템플릿 시스템 관련 파일 목록
 1. 백엔드 서비스 파일들
