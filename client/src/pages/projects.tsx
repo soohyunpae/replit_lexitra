@@ -414,15 +414,11 @@ export default function ProjectsPage() {
 
   const createProject = useMutation({
     mutationFn: async (data: ProjectFormValues) => {
-      console.log("Starting project creation with data:", data);
-      
       // 폼 데이터를 FormData로 변환하여 파일 업로드 처리
       const formData = new FormData();
       formData.append("name", data.name);
       formData.append("sourceLanguage", data.sourceLanguage);
       formData.append("targetLanguage", data.targetLanguage);
-      
-      console.log("FormData created, adding optional fields...");
 
       if (data.description) {
         formData.append("description", data.description);
@@ -460,16 +456,12 @@ export default function ProjectsPage() {
         });
       }
 
-      console.log("Sending request to API...");
       const response = await apiRequest("POST", "/api/projects", formData, {
         headers: {
           // FormData를 사용할 때는 Content-Type 헤더를 설정하지 않음 (브라우저가 자동으로 설정)
         },
       });
-      console.log("API response received:", response.status);
-      const result = await response.json();
-      console.log("Response data:", result);
-      return result;
+      return response.json();
     },
     onSuccess: (data) => {
       console.log("Project created successfully:", data);
@@ -491,14 +483,6 @@ export default function ProjectsPage() {
             "프로젝트가 생성되었지만 상세 페이지로 이동할 수 없습니다.",
         });
       }
-    },
-    onError: (error) => {
-      console.error("Project creation failed:", error);
-      toast({
-        title: t("common.error"),
-        description: error instanceof Error ? error.message : t("projects.creationError"),
-        variant: "destructive",
-      });
     },
   });
 
