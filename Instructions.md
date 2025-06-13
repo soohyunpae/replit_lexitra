@@ -236,10 +236,272 @@ const retryFailedSegments = async (fileId: number) => {
 2. 성능 모니터링 및 튜닝
 3. 사용자 피드백 반영
 
+## 🔧 추가 개선 사항 (ChatGPT 제안 반영)
+
+### 1. 중복 번역 방지
+**문제**: translate API가 중복 요청되면 중복 번역이 발생할 수 있음
+```typescript
+// server/services/translation-queue.ts
+class TranslationQueue {
+  private static queue: Map<number, TranslationJob> = new Map();
+  private static processing: Set<number> = new Set(); // 처리 중인 파일 추적
+
+  static async startTranslation(fileId: number) {
+    // 중복 실행 방지
+    if (this.processing.has(fileId)) {
+      return { 
+        jobId: fileId, 
+        status: 'already_processing',
+        message: '이미 번역이 진행 중입니다.'
+      };
+    }
+    
+    this.processing.add(fileId);
+    const job = new TranslationJob(fileId);
+    this.queue.set(fileId, job);
+    
+    try {
+      await job.start();
+    } finally {
+      this.processing.delete(fileId); // 완료 후 제거
+    }
+    
+    return { jobId: fileId, status: 'started' };
+  }
+}
+```
+
+### 2. 실시간 피드백 최적화
+**현재**: 2초마다 polling
+**개선**: 프로젝트 수에 따른 동적 조정 + 향후 WebSocket 지원
+```typescript
+// 프로젝트 수에 따른 polling 간격 조정
+const getPollingInterval = (projectCount: number) => {
+  if (projectCount <= 5) return 2000;      // 2초
+  if (projectCount <= 20) return 3000;     // 3초  
+  return 5000;                             // 5초
+};
+
+// 향후 WebSocket 지원을 위한 인터페이스 준비
+interface ProgressUpdate {
+  type: 'translation_progress';
+  fileId: number;
+  progress: {
+    completed: number;
+    total: number;
+    percentage: number;
+    status: string;
+  };
+}
+```
+
+### 3. 오류 세그먼트 처리 강화
+**문제**: 실패한 세그먼트가 계속 실패할 경우 무한 루프 위험
+```sql
+-- translation_units 테이블에 재시도 추적 필드 추가
+ALTER TABLE translation_units ADD COLUMN retry_count INTEGER DEFAULT 0;
+ALTER TABLE translation_units ADD COLUMN last_error_at TIMESTAMP;
+ALTER TABLE translation_units ADD COLUMN error_message TEXT;
+```
+
+```typescript
+// 재시도 로직 개선
+const MAX_RETRY_COUNT = 3;
+const RETRY_DELAY = [1000, 5000, 15000]; // 1초, 5초, 15초
+
+const retryFailedSegments = async (fileId: number) => {
+  const failedSegments = await db.query.translationUnits.findMany({
+    where: and(
+      eq(schema.translationUnits.fileId, fileId),
+      eq(schema.translationUnits.status, 'error'),
+      lt(schema.translationUnits.retryCount, MAX_RETRY_COUNT)
+    )
+  });
+
+  for (const segment of failedSegments) {
+    try {
+      // 재시도 간격 적용
+      await new Promise(resolve => 
+        setTimeout(resolve, RETRY_DELAY[segment.retryCount] || 15000)
+      );
+      
+      await translateSingleSegment(segment);
+      
+      // 성공 시 재시도 카운트 리셋
+      await db.update(schema.translationUnits)
+        .set({ retryCount: 0, errorMessage: null })
+        .where(eq(schema.translationUnits.id, segment.id));
+        
+    } catch (error) {
+      // 재시도 카운트 증가 및 오류 기록
+      await db.update(schema.translationUnits)
+        .set({ 
+          retryCount: segment.retryCount + 1,
+          lastErrorAt: new Date(),
+          errorMessage: error.message
+        })
+        .where(eq(schema.translationUnits.id, segment.id));
+      
+      // 최대 재시도 횟수 도달 시 수동 번역으로 마킹
+      if (segment.retryCount + 1 >= MAX_RETRY_COUNT) {
+        await markAsManualTranslationNeeded(segment.id);
+      }
+    }
+  }
+};
+```
+
+### 4. 대형 문서 처리 전략
+**문제**: A4 수십 페이지 문서에서 세그먼트 수천 개가 생길 수 있음
+```typescript
+// 대형 문서 처리를 위한 pagination 및 우선순위 로딩
+const LARGE_DOCUMENT_THRESHOLD = 1000; // 1000개 이상 세그먼트
+const PRIORITY_BATCH_SIZE = 50;        // 우선 처리할 배치 크기
+
+interface LargeDocumentStrategy {
+  // 1. 우선순위 기반 번역 (첫 50개 세그먼트 먼저)
+  async translatePrioritySegments(fileId: number) {
+    const prioritySegments = await db.query.translationUnits.findMany({
+      where: eq(schema.translationUnits.fileId, fileId),
+      limit: PRIORITY_BATCH_SIZE,
+      orderBy: schema.translationUnits.id
+    });
+    
+    return this.processBatch(prioritySegments);
+  }
+  
+  // 2. 나머지 세그먼트 백그라운드 처리
+  async translateRemainingSegments(fileId: number) {
+    const totalSegments = await this.getSegmentCount(fileId);
+    
+    for (let offset = PRIORITY_BATCH_SIZE; offset < totalSegments; offset += PRIORITY_BATCH_SIZE) {
+      const batch = await db.query.translationUnits.findMany({
+        where: eq(schema.translationUnits.fileId, fileId),
+        limit: PRIORITY_BATCH_SIZE,
+        offset: offset
+      });
+      
+      await this.processBatch(batch);
+      
+      // CPU 부하 방지를 위한 짧은 대기
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }
+}
+
+// 프론트엔드: 가상화된 세그먼트 목록
+const VirtualizedSegmentList = ({ fileId }: { fileId: number }) => {
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 50 });
+  
+  // 화면에 보이는 세그먼트만 로드
+  const { data: segments } = useQuery({
+    queryKey: ['segments', fileId, visibleRange],
+    queryFn: () => fetchSegmentsPaginated(fileId, visibleRange.start, visibleRange.end)
+  });
+  
+  return (
+    <FixedSizeList
+      height={600}
+      itemCount={totalSegmentCount}
+      itemSize={80}
+      onItemsRendered={({ visibleStartIndex, visibleStopIndex }) => {
+        setVisibleRange({ start: visibleStartIndex, end: visibleStopIndex });
+      }}
+    >
+      {SegmentItem}
+    </FixedSizeList>
+  );
+};
+```
+
+### 5. 사용자 알림 시스템
+**현재**: 번역 완료나 실패 알림이 없음
+```typescript
+// 알림 시스템 인터페이스
+interface NotificationSystem {
+  // 즉시 알림 (Toast)
+  showToast(type: 'success' | 'error' | 'info', message: string): void;
+  
+  // 알림 센터 (지속적 알림)
+  addNotification(notification: {
+    id: string;
+    type: 'translation_complete' | 'translation_failed' | 'project_claimed';
+    title: string;
+    message: string;
+    timestamp: Date;
+    read: boolean;
+    actions?: NotificationAction[];
+  }): void;
+  
+  // 이메일 알림 (중요한 이벤트)
+  sendEmailNotification(userId: number, event: EmailEvent): Promise<void>;
+}
+
+// 번역 완료 알림 통합
+const notifyTranslationComplete = async (fileId: number, userId: number) => {
+  const file = await getFileDetails(fileId);
+  
+  // 1. 즉시 Toast 알림
+  notificationSystem.showToast('success', 
+    `"${file.name}" 번역이 완료되었습니다.`);
+  
+  // 2. 알림 센터에 추가
+  notificationSystem.addNotification({
+    id: `translation_${fileId}_${Date.now()}`,
+    type: 'translation_complete',
+    title: '번역 완료',
+    message: `파일 "${file.name}"의 번역이 완료되었습니다.`,
+    timestamp: new Date(),
+    read: false,
+    actions: [
+      { type: 'view_file', label: '파일 보기', url: `/translation/${fileId}` },
+      { type: 'download', label: '다운로드', url: `/api/files/${fileId}/download` }
+    ]
+  });
+  
+  // 3. 이메일 알림 (사용자 설정에 따라)
+  const userPrefs = await getUserNotificationPreferences(userId);
+  if (userPrefs.emailOnTranslationComplete) {
+    await notificationSystem.sendEmailNotification(userId, {
+      type: 'translation_complete',
+      fileId,
+      fileName: file.name,
+      projectId: file.projectId
+    });
+  }
+};
+```
+
+## 📋 업데이트된 구현 우선순위
+
+### Phase 1: 기본 분리 + 안정성 강화 (2-3일)
+1. API 엔드포인트 분리 (`/parse`, `/translate`, `/status`)
+2. 파일 상태 관리 개선
+3. **중복 번역 방지 로직 추가**
+4. **오류 세그먼트 재시도 메커니즘 구현**
+
+### Phase 2: 성능 최적화 (2-3일)
+1. 백그라운드 번역 작업 시스템
+2. **동적 polling 간격 조정**
+3. **대형 문서를 위한 우선순위 처리**
+4. 진행 상황 추적 및 UI 업데이트
+
+### Phase 3: 사용자 경험 개선 (1-2일)
+1. **알림 시스템 구현 (Toast + 알림센터)**
+2. 가상화된 세그먼트 목록 (대형 문서용)
+3. 성능 모니터링 및 튜닝
+
+### Phase 4: 고급 기능 (향후)
+1. **WebSocket/SSE 기반 실시간 업데이트**
+2. **이메일 알림 시스템**
+3. 사용자 피드백 반영
+
 ## 🎯 예상 효과
 
 - **사용자 경험**: 파일 업로드 후 즉시 원문 확인 가능
 - **응답성**: 긴 번역 작업이 UI를 블록하지 않음
 - **투명성**: 번역 진행 상황을 실시간으로 확인 가능
-- **안정성**: 부분 실패 시에도 전체가 실패하지 않음
+- **안정성**: 부분 실패 시에도 전체가 실패하지 않음 + 재시도 메커니즘
 - **확장성**: 향후 더 큰 파일이나 병렬 처리에 대응 가능
+- **신뢰성**: 중복 처리 방지 및 오류 복구 기능
+- **성능**: 대형 문서와 다중 프로젝트 환경에서도 원활한 동작
