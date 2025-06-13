@@ -97,6 +97,29 @@ export const translationUnits = pgTable("translation_units", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Job Processing System for Template Application
+export const templateJobs = pgTable("template_jobs", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  status: text("status").notNull().default("pending"), // 'pending', 'processing', 'completed', 'failed'
+  type: text("type").notNull().default("template_application"), // 'template_matching', 'template_application', 'gpt_translation'
+  progress: integer("progress").default(0), // 0-100
+  result: jsonb("result"), // 작업 결과 저장
+  errorMessage: text("error_message"),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const templateJobsRelations = relations(templateJobs, ({ one }) => ({
+  project: one(projects, { fields: [templateJobs.projectId], references: [projects.id] }),
+}));
+
+export const insertTemplateJobSchema = createInsertSchema(templateJobs);
+export type InsertTemplateJob = z.infer<typeof insertTemplateJobSchema>;
+export type TemplateJob = typeof templateJobs.$inferSelect;
+
 export const translationUnitsRelations = relations(translationUnits, ({ one }) => ({
   file: one(files, { fields: [translationUnits.fileId], references: [files.id] }),
 }));
