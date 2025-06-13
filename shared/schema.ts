@@ -41,13 +41,15 @@ export const projects = pgTable("projects", {
 });
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
-  user: one(users, { fields: [projects.userId], references: [users.id] }),
-  claimer: one(users, { fields: [projects.claimedBy], references: [users.id] }),
-  files: many(files),
-  template: one(docTemplates, {
-    fields: [projects.templateId],
-    references: [docTemplates.id],
+  creator: one(users, {
+    fields: [projects.userId],
+    references: [users.id],
   }),
+  claimer: one(users, {
+    fields: [projects.claimedBy],
+    references: [users.id],
+  }),
+  files: many(files),
 }));
 
 export const insertProjectSchema = createInsertSchema(projects, {
