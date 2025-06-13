@@ -368,7 +368,9 @@ async function processFile(file: Express.Multer.File) {
         break;
 
       case ".docx":
-        console.log("DOCX 파일 처리 시작:", file.originalname);
+      case ".dotx":
+      case ".dotm":
+        console.log("DOCX/DOTX 파일 처리 시작:", file.originalname);
         try {
           // mammoth 라이브러리를 사용하여 DOCX 파일에서 텍스트 추출
           const docxResult = await mammoth.extractRawText({ path: file.path });
@@ -421,6 +423,28 @@ async function processFile(file: Express.Multer.File) {
         } catch (docxError) {
           console.error("DOCX 처리 오류:", docxError);
           text = `[DOCX 파일: ${file.originalname}] - 파일 처리 중 오류가 발생했습니다.`;
+        }
+        break;
+
+      case ".doc":
+        console.log("DOC 파일 처리 시작:", file.originalname);
+        try {
+          // mammoth 라이브러리를 사용하여 DOC 파일에서 텍스트 추출
+          const docResult = await mammoth.extractRawText({ path: file.path });
+          text = docResult.value || "";
+          
+          if (!text || text.trim() === "") {
+            console.error("DOC에서 텍스트를 추출했지만 결과가 비어있습니다.");
+            text = `[DOC 파일: ${file.originalname}] - 파일에서 텍스트를 추출할 수 없습니다.`;
+          } else {
+            console.log(
+              "DOC 텍스트 추출 성공:",
+              text.substring(0, 100) + "...",
+            );
+          }
+        } catch (docError) {
+          console.error("DOC 처리 오류:", docError);
+          text = `[DOC 파일: ${file.originalname}] - 파일 처리 중 오류가 발생했습니다.`;
         }
         break;
 
