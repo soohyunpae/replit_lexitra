@@ -161,14 +161,7 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 1,
-      onError: (error: unknown) => {
-        if (error instanceof Error) {
-          console.error("Query Error:", error.message);
-        } else {
-          console.error("Unknown Query Error:", error);
-        }
-      }
+      retry: 1
     },
     mutations: {
       retry: false,

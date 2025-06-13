@@ -113,15 +113,15 @@ except Exception as e:
     let stdoutData = '';
     let stderrData = '';
 
-    pythonProcess.stdout.on('data', (data) => {
+    pythonProcess.stdout.on('data', (data: Buffer) => {
       stdoutData += data.toString();
     });
 
-    pythonProcess.stderr.on('data', (data) => {
+    pythonProcess.stderr.on('data', (data: Buffer) => {
       stderrData += data.toString();
     });
 
-    pythonProcess.on('close', (code) => {
+    pythonProcess.on('close', (code: number | null) => {
       if (code !== 0) {
         console.error(`Python 프로세스 오류:`, stderrData);
         reject(new Error(`PDF 처리 실패: ${stderrData}`));
@@ -137,7 +137,7 @@ except Exception as e:
           resolve(result.text);
         }
       } catch (err) {
-        reject(new Error(`JSON 파싱 오류: ${err.message}`));
+        reject(new Error(`JSON 파싱 오류: ${err instanceof Error ? err.message : String(err)}`));
       }
     });
   });
@@ -739,6 +739,7 @@ const upload = multer({
       ".txt",
       ".docx",
       ".doc",
+      ".dotx",
       ".pdf",
       ".xml",
       ".xliff",
@@ -1941,7 +1942,7 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
                   bestName = decodedName;
                 }
               } catch (err) {
-                console.log(`인코딩 ${encoding} 시도 실패:`, err.message);
+                console.log(`인코딩 ${encoding} 시도 실패:`, err instanceof Error ? err.message : String(err));
               }
             }
             
@@ -2030,7 +2031,7 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
                   bestName = decodedName;
                 }
               } catch (err) {
-                console.log(`참조 파일 인코딩 ${encoding} 시도 실패:`, err.message);
+                console.log(`참조 파일 인코딩 ${encoding} 시도 실패:`, err instanceof Error ? err.message : String(err));
               }
             }
             
