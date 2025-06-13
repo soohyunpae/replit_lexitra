@@ -91,18 +91,18 @@ export default function Project() {
   // Get project ID from URL params - 더 안전한 파싱
   const projectId = useMemo(() => {
     console.log("Route parsing debug:", { isMatch, params });
-    
+
     if (!isMatch || !params?.id) {
       console.log("Project route not matched or no ID parameter", { isMatch, params });
       return null;
     }
-    
+
     const id = parseInt(params.id);
     if (isNaN(id) || id <= 0) {
       console.log("Invalid project ID:", params.id);
       return null;
     }
-    
+
     console.log("Valid project ID extracted:", id);
     return id;
   }, [isMatch, params]);
@@ -718,7 +718,7 @@ export default function Project() {
     },
   });
 
-  
+
 
   if (isLoading) {
     console.log("Project is loading...");
@@ -809,25 +809,16 @@ export default function Project() {
             <div className="flex gap-2">
               {/* Template Download Button */}
               {project.templateId && (
-                <Button
-                  variant="outline"
-                  className="border-purple-500 text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950"
-                  onClick={() => downloadTemplateMutation.mutate()}
-                  disabled={downloadTemplateMutation.isPending}
-                >
-                  {downloadTemplateMutation.isPending ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      생성중...
-                    </>
-                  ) : (
-                    <>
-                      <FileDownIcon className="h-4 w-4 mr-2" />
-                      템플릿 다운로드
-                    </>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled
+                      className="gap-2"
+                    >
+                      <FileDownIcon className="h-4 w-4" />
+                      템플릿 다운로드 (개발 중)
+                    </Button>
                   )}
-                </Button>
-              )}
 
               {project.status === "Unclaimed" && (
                 <Button
@@ -1087,60 +1078,15 @@ export default function Project() {
                           <span className="text-orange-600 dark:text-orange-400">
                             템플릿 미적용
                           </span>
-                          {isAdmin && (
+                          {/* 템플릿 매칭 기능 임시 비활성화 */}
+                          {false && isAdmin && (
                             <Button
                               variant="ghost"
                               size="sm"
                               className="ml-2 h-6 px-2 text-xs"
-                              onClick={async () => {
-                                try {
-                                  const response = await fetch(`/api/projects/${projectId}/match-template`, {
-                                    method: 'POST',
-                                    headers: {
-                                      'Authorization': `Bearer ${localStorage.getItem("auth_token") || ""}`,
-                                      'Content-Type': 'application/json',
-                                    },
-                                    credentials: 'include',
-                                  });
-                                  
-                                  const result = await response.json();
-                                  
-                                  if (response.ok) {
-                                    if (result.matched) {
-                                      toast({
-                                        title: "템플릿 매칭 성공",
-                                        description: `템플릿 "${result.templateName}"이 적용되었습니다. (매칭률: ${Math.round(result.matchScore * 100)}%)`,
-                                      });
-                                    } else {
-                                      toast({
-                                        title: "템플릿 매칭 실패",
-                                        description: result.message || "매칭되는 템플릿을 찾을 수 없습니다.",
-                                        variant: "destructive",
-                                      });
-                                    }
-                                    
-                                    // 프로젝트 정보 새로고침
-                                    queryClient.invalidateQueries({
-                                      queryKey: [`/api/projects/${projectId}`],
-                                    });
-                                  } else {
-                                    toast({
-                                      title: "템플릿 매칭 오류",
-                                      description: result.message || "템플릿 매칭 중 서버 오류가 발생했습니다.",
-                                      variant: "destructive",
-                                    });
-                                  }
-                                } catch (error) {
-                                  console.error("템플릿 매칭 요청 오류:", error);
-                                  toast({
-                                    title: "템플릿 매칭 실패",
-                                    description: "네트워크 오류가 발생했습니다.",
-                                    variant: "destructive",
-                                  });
-                                }
-                              }}
+                              disabled
                             >
-                              매칭 시도
+                              템플릿 매칭 시도 (개발 중)
                             </Button>
                           )}
                         </>
