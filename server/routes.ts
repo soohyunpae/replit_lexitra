@@ -1751,7 +1751,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // 비동기 작업 처리기 시작
   console.log("[Job Processor] Starting background job processor...");
-  const { jobProcessor } = await import('./services/job_processor');
+  const { jobProcessor } = await import('./services/job_processor.js');
   jobProcessor.start();
 
   // Register admin routes
@@ -3368,7 +3368,7 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       }
 
       // Job Processor 가져오기
-      const { jobProcessor } = await import('./services/job_processor');
+      const { jobProcessor } = await import('./services/job_processor.js');
       
       // 새 템플릿 매칭 작업 생성
       const job = await jobProcessor.createJob(projectId, 'template_matching');
@@ -3403,7 +3403,7 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         });
       }
 
-      const { jobProcessor } = await import('./services/job_processor');
+      const { jobProcessor } = await import('./services/job_processor.js');
       const job = await jobProcessor.getJobStatus(jobId);
 
       if (!job) {
@@ -3459,7 +3459,7 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         });
       }
 
-      const { jobProcessor } = await import('./services/job_processor');
+      const { jobProcessor } = await import('./services/job_processor.js');
       const jobs = await jobProcessor.getProjectJobs(projectId);
 
       return res.json({
@@ -3549,7 +3549,7 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       }
 
       // Job Processor 가져오기
-      const { jobProcessor } = await import('./services/job_processor');
+      const { jobProcessor } = await import('./services/job_processor.js');
       
       // 새 템플릿 적용 작업 생성
       const job = await jobProcessor.createJob(projectId, 'template_application');
@@ -3626,7 +3626,7 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       }
 
       // Job Processor 가져오기
-      const { jobProcessor } = await import('./services/job_processor');
+      const { jobProcessor } = await import('./services/job_processor.js');
       
       // 새 GPT 번역 작업 생성
       const job = await jobProcessor.createJob(projectId, 'gpt_translation');

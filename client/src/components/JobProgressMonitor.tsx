@@ -47,8 +47,8 @@ const JobProgressMonitor: React.FC<JobProgressMonitorProps> = ({
   });
 
   useEffect(() => {
-    if (jobsData?.success && jobsData.jobs) {
-      const jobs = jobsData.jobs as Job[];
+    if (jobsData && (jobsData as any).success && (jobsData as any).jobs) {
+      const jobs = (jobsData as any).jobs as Job[];
       
       // 진행 중인 작업만 필터링
       const currentActiveJobs = jobs.filter(job => 

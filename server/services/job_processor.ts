@@ -1,5 +1,5 @@
-import { db } from "../db/index.js";
-import * as schema from "../../shared/schema.js";
+import { db } from "@db";
+import * as schema from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import OpenAI from "openai";
 
