@@ -1036,9 +1036,7 @@ export default function Project() {
                               onClick={async () => {
                                 try {
                                   const { apiRequest } = await import('@/lib/queryClient');
-                                  const result = await apiRequest(`/api/projects/${projectId}/match-template`, {
-                                    method: 'POST'
-                                  }) as any;
+                                  const result = await apiRequest(`/api/projects/${projectId}/match-template`, 'POST') as any;
                                   
                                   if (result.success) {
                                     toast({

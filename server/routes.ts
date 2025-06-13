@@ -377,7 +377,7 @@ async function processFile(file: Express.Multer.File) {
           notifyProgress(0, file.originalname, "processing", 30, "템플릿 매칭 확인중");
           
           try {
-            const templateService = await import('../services/docx_template_service');
+            const templateService = await import('./services/docx_template_service.js');
             const matchResult = await templateService.matchTemplateToDocument(file.path);
             
             if (matchResult) {
