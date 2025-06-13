@@ -1,6 +1,8 @@
 import { db } from "@db";
 import * as schema from "@shared/schema";
 import { eq } from "drizzle-orm";
+import * as fs from 'fs';
+import * as path from 'path';
 
 export interface TemplateMatchResult {
   templateId: number;
@@ -36,7 +38,7 @@ export async function matchTemplateToDocument(
 
       // Check how many template fields can be found in the document
       for (const field of template.fields) {
-        const fieldName = field.name.toLowerCase();
+        const fieldName = field.placeholder.toLowerCase();
         const contentLower = documentContent.toLowerCase();
 
         // Simple keyword matching - can be enhanced with more sophisticated NLP
@@ -44,7 +46,7 @@ export async function matchTemplateToDocument(
             contentLower.includes(fieldName.replace('_', ' ')) ||
             contentLower.includes(fieldName.replace('-', ' '))) {
           matchedFieldsCount++;
-          matchedFields.push(field.name);
+          matchedFields.push(field.placeholder);
         }
       }
 
