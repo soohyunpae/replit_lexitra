@@ -1933,6 +1933,10 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         const uploadedFiles = req.files as {
           [fieldname: string]: Express.Multer.File[];
         };
+        
+        console.log("업로드된 파일 정보:", uploadedFiles);
+        console.log("files 배열:", uploadedFiles?.files);
+        console.log("references 배열:", uploadedFiles?.references);
 
         if (uploadedFiles && uploadedFiles.files) {
           // 작업 파일 정보 저장
