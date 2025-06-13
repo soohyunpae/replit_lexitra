@@ -13,6 +13,7 @@ import { formatDate, formatFileSize } from "@/lib/utils";
 import { downloadFile } from "@/lib/api";
 import { TranslationUnit } from "@/types";
 import { File as FileType } from "@shared/schema";
+import { TranslationProgress } from "@/components/TranslationProgress";
 import {
   ArrowRight,
   FileText,

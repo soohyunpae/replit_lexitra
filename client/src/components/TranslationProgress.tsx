@@ -26,8 +26,9 @@ export function TranslationProgress({
       const response = await apiRequest("GET", `/api/projects/${projectId}/files/${fileId}/progress`);
       return response.json();
     },
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Stop refetching if completed or error
+      const data = query.state.data;
       if (data?.processingStatus === 'ready' || data?.processingStatus === 'error') {
         return false;
       }
