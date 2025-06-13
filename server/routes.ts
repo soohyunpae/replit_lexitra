@@ -740,6 +740,8 @@ const upload = multer({
       ".txt",
       ".docx",
       ".doc",
+      ".dotx",
+      ".dotm",
       ".pdf",
       ".xml",
       ".xliff",
