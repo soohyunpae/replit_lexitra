@@ -456,6 +456,30 @@ export function NewTranslationEditor({
     // Translate segments sequentially to avoid overloading the API
     for (let i = 0; i < untranslatedSegments.length; i++) {
       const segment = untranslatedSegments[i];
+      
+      // Skip empty or punctuation-only segments
+      const trimmedSource = segment.source.trim();
+      if (!trimmedSource) {
+        setTranslatedCount(i + 1);
+        continue;
+      }
+      
+      // Check if segment contains only punctuation/symbols
+      const hasOnlyPunctuation = /^[^\w\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]+$/.test(trimmedSource);
+      const meaningfulChars = trimmedSource.replace(/[^\w\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]/g, '');
+      
+      if (hasOnlyPunctuation || meaningfulChars.length < 2) {
+        // For punctuation-only segments, copy source to target as-is
+        await apiRequest("PATCH", `/api/segments/${segment.id}`, {
+          target: segment.source,
+          status: "100%", // Mark as perfect match since no translation needed
+          origin: "HT", // Human/Technical decision
+        });
+        
+        setTranslatedCount(i + 1);
+        continue;
+      }
+      
       try {
         const response = await apiRequest("POST", "/api/translate", {
           source: segment.source,

@@ -34,11 +34,40 @@ export async function translateWithGPT(
 ): Promise<TranslationResponse> {
   const { source, sourceLanguage, targetLanguage, context, glossaryTerms } = request;
   
+  // Input validation - check for empty or punctuation-only segments
+  const trimmedSource = source.trim();
+  
+  // If empty or only whitespace, return as-is
+  if (!trimmedSource) {
+    return { target: "" };
+  }
+  
+  // Check if segment contains only punctuation/symbols (no letters or numbers)
+  const hasOnlyPunctuation = /^[^\w\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]+$/.test(trimmedSource);
+  
+  if (hasOnlyPunctuation) {
+    // For punctuation-only segments, return as-is without translation
+    return { target: trimmedSource };
+  }
+  
+  // Check if segment is too short to be meaningful (less than 2 characters, excluding punctuation)
+  const meaningfulChars = trimmedSource.replace(/[^\w\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]/g, '');
+  if (meaningfulChars.length < 2) {
+    return { target: trimmedSource };
+  }
+  
   // Construct prompt with context if available
   let systemPrompt = `You are a professional translator specializing in patent documents. 
 `;
   systemPrompt += `Translate the following text from ${sourceLanguage} to ${targetLanguage}. `;
   systemPrompt += `Maintain the technical accuracy and terminology. `;
+  systemPrompt += `
+IMPORTANT RULES:
+- If the input is very short (1-2 characters) or contains only punctuation, translate it literally
+- Do not add explanatory text like "Please provide the text you would like translated"
+- Always provide a direct translation, even for short phrases or technical terms
+- For standalone punctuation marks, mathematical symbols, or formatting characters, return them unchanged
+`;
   systemPrompt += `Respond with a JSON object in the following format:
 {
   "translation": "your translation here",
