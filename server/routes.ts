@@ -368,16 +368,11 @@ async function processFile(file: Express.Multer.File) {
         break;
 
       case ".docx":
-      case ".dotx":
-      case ".dotm":
-        console.log("DOCX/DOTX 파일 처리 시작:", file.originalname);
+        console.log("DOCX 파일 처리 시작:", file.originalname);
         try {
           // mammoth 라이브러리를 사용하여 DOCX 파일에서 텍스트 추출
           const docxResult = await mammoth.extractRawText({ path: file.path });
           text = docxResult.value || "";
-          
-          // null 바이트 및 기타 제어 문자 제거 (PostgreSQL 호환성)
-          text = text.replace(/\x00/g, '').replace(/[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
           
           // 템플릿 매칭 시도
           notifyProgress(0, file.originalname, "processing", 30, "템플릿 매칭 확인중");
@@ -426,31 +421,6 @@ async function processFile(file: Express.Multer.File) {
         } catch (docxError) {
           console.error("DOCX 처리 오류:", docxError);
           text = `[DOCX 파일: ${file.originalname}] - 파일 처리 중 오류가 발생했습니다.`;
-        }
-        break;
-
-      case ".doc":
-        console.log("DOC 파일 처리 시작:", file.originalname);
-        try {
-          // mammoth 라이브러리를 사용하여 DOC 파일에서 텍스트 추출
-          const docResult = await mammoth.extractRawText({ path: file.path });
-          text = docResult.value || "";
-          
-          // null 바이트 및 기타 제어 문자 제거 (PostgreSQL 호환성)
-          text = text.replace(/\x00/g, '').replace(/[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-          
-          if (!text || text.trim() === "") {
-            console.error("DOC에서 텍스트를 추출했지만 결과가 비어있습니다.");
-            text = `[DOC 파일: ${file.originalname}] - 파일에서 텍스트를 추출할 수 없습니다.`;
-          } else {
-            console.log(
-              "DOC 텍스트 추출 성공:",
-              text.substring(0, 100) + "...",
-            );
-          }
-        } catch (docError) {
-          console.error("DOC 처리 오류:", docError);
-          text = `[DOC 파일: ${file.originalname}] - 파일 처리 중 오류가 발생했습니다.`;
         }
         break;
 
@@ -770,8 +740,6 @@ const upload = multer({
       ".txt",
       ".docx",
       ".doc",
-      ".dotx",
-      ".dotm",
       ".pdf",
       ".xml",
       ".xliff",
@@ -1927,22 +1895,16 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         };
 
         // 프로젝트 추가
-        console.log("Inserting project with data:", projectData);
         const [project] = await db
           .insert(schema.projects)
           .values(projectData)
           .returning();
-        console.log("Project created successfully:", project);
 
         // 업로드된 파일 기본 정보만 빠르게 DB에 저장 (파일 처리는 비동기적으로 진행)
         const fileRecords: (typeof schema.files.$inferInsert)[] = [];
         const uploadedFiles = req.files as {
           [fieldname: string]: Express.Multer.File[];
         };
-        
-        console.log("업로드된 파일 정보:", uploadedFiles);
-        console.log("files 배열:", uploadedFiles?.files);
-        console.log("references 배열:", uploadedFiles?.references);
 
         if (uploadedFiles && uploadedFiles.files) {
           // 작업 파일 정보 저장
