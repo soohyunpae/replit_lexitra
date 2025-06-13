@@ -794,6 +794,9 @@ export default function ProjectsPage() {
   };
 
   function onSubmit(data: ProjectFormValues) {
+    console.log("Form onSubmit called with data:", data);
+    console.log("Form validation state:", form.formState);
+    console.log("Form errors:", form.formState.errors);
     createProject.mutate(data);
   }
 

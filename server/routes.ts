@@ -1895,10 +1895,12 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         };
 
         // 프로젝트 추가
+        console.log("Inserting project with data:", projectData);
         const [project] = await db
           .insert(schema.projects)
           .values(projectData)
           .returning();
+        console.log("Project created successfully:", project);
 
         // 업로드된 파일 기본 정보만 빠르게 DB에 저장 (파일 처리는 비동기적으로 진행)
         const fileRecords: (typeof schema.files.$inferInsert)[] = [];
