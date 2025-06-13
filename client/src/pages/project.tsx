@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/card";
 import { CombinedProgress } from "@/components/ui/combined-progress";
 import { Badge } from "@/components/ui/badge";
+import JobProgressMonitor from "@/components/JobProgressMonitor";
 import {
   Dialog,
   DialogContent,
@@ -1034,46 +1035,27 @@ export default function Project() {
                               className="ml-2 h-6 px-2 text-xs"
                               onClick={async () => {
                                 try {
-                                  const response = await fetch(`/api/projects/${projectId}/match-template`, {
-                                    method: 'POST',
-                                    headers: {
-                                      'Authorization': `Bearer ${localStorage.getItem("auth_token") || ""}`,
-                                      'Content-Type': 'application/json',
-                                    },
-                                    credentials: 'include',
+                                  const { apiRequest } = await import('@/lib/queryClient');
+                                  const result = await apiRequest(`/api/projects/${projectId}/match-template`, {
+                                    method: 'POST'
                                   });
                                   
-                                  const result = await response.json();
-                                  
-                                  if (response.ok) {
-                                    if (result.matched) {
-                                      toast({
-                                        title: "템플릿 매칭 성공",
-                                        description: `템플릿 "${result.templateName}"이 적용되었습니다. (매칭률: ${Math.round(result.matchScore * 100)}%)`,
-                                      });
-                                    } else {
-                                      toast({
-                                        title: "템플릿 매칭 실패",
-                                        description: result.message || "매칭되는 템플릿을 찾을 수 없습니다.",
-                                        variant: "destructive",
-                                      });
-                                    }
-                                    
-                                    // 프로젝트 정보 새로고침
-                                    queryClient.invalidateQueries({
-                                      queryKey: [`/api/projects/${projectId}`],
+                                  if (result.success) {
+                                    toast({
+                                      title: "템플릿 매칭 시작",
+                                      description: result.message || "템플릿 매칭 작업이 시작되었습니다.",
                                     });
                                   } else {
                                     toast({
-                                      title: "템플릿 매칭 오류",
-                                      description: result.message || "템플릿 매칭 중 서버 오류가 발생했습니다.",
+                                      title: "작업 시작 실패",
+                                      description: result.message || "템플릿 매칭 작업을 시작할 수 없습니다.",
                                       variant: "destructive",
                                     });
                                   }
                                 } catch (error) {
                                   console.error("템플릿 매칭 요청 오류:", error);
                                   toast({
-                                    title: "템플릿 매칭 실패",
+                                    title: "작업 시작 실패",
                                     description: "네트워크 오류가 발생했습니다.",
                                     variant: "destructive",
                                   });

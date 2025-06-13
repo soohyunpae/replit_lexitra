@@ -1749,6 +1749,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 템플릿 관리 라우트 연결
   app.use(templateRoutes);
 
+  // 비동기 작업 처리기 시작
+  console.log("[Job Processor] Starting background job processor...");
+  const { jobProcessor } = await import('./services/job_processor');
+  jobProcessor.start();
+
   // Register admin routes
   registerAdminRoutes(app);
 
@@ -3309,136 +3314,336 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
     },
   );
 
-  // 프로젝트 템플릿 매칭 API
+  // 비동기 템플릿 매칭 작업 시작 API
   app.post(`${apiPrefix}/projects/:id/match-template`, verifyToken, async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
-      if (isNaN(projectId)) {
-        return res.status(400).json({ message: "Invalid project ID" });
+      const userId = req.user!.id;
+      const userRole = req.user!.role;
+
+      // 관리자 권한 체크
+      if (userRole !== "admin") {
+        return res.status(403).json({ 
+          success: false,
+          message: "관리자만 템플릿 매칭을 수행할 수 있습니다." 
+        });
       }
 
-      // 프로젝트 정보 조회
+      if (isNaN(projectId)) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Invalid project ID" 
+        });
+      }
+
+      // 프로젝트 존재 확인
       const project = await db.query.projects.findFirst({
         where: eq(schema.projects.id, projectId),
-        with: {
-          files: true
-        }
+        with: { files: true }
       });
 
       if (!project) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-
-      // 프로젝트의 첫 번째 작업 파일 찾기 (DOCX 파일)
-      const workFile = project.files.find(f => 
-        f.type === 'work' && 
-        f.name.toLowerCase().endsWith('.docx')
-      );
-
-      if (!workFile) {
-        return res.status(400).json({ 
-          message: "이 프로젝트에 DOCX 작업 파일이 없습니다." 
+        return res.status(404).json({ 
+          success: false,
+          message: "Project not found" 
         });
       }
 
-      // 파일 경로가 없는 경우 처리
-      if (!workFile.name) {
-        return res.status(400).json({ 
-          message: "파일 정보가 불완전합니다." 
-        });
-      }
+      // 이미 진행 중인 작업이 있는지 확인
+      const existingJob = await db.query.templateJobs.findFirst({
+        where: and(
+          eq(schema.templateJobs.projectId, projectId),
+          eq(schema.templateJobs.status, 'processing')
+        )
+      });
 
-      // 템플릿 매칭 서비스 호출
-      const { matchTemplateToDocument } = await import('./services/docx_template_service');
-      
-      // 실제 파일 경로를 찾기 위해 uploads/tmp 디렉토리 확인
-      // fs와 path는 이미 파일 상단에서 import됨
-      const uploadsDir = path.join(process.cwd(), 'uploads', 'tmp');
-      
-      // 업로드된 파일들 중에서 해당 프로젝트의 파일 찾기
-      let matchedFilePath = null;
-      try {
-        const files = fs.readdirSync(uploadsDir);
-        const targetFile = files.find(f => f.includes('files-') && f.endsWith('.docx'));
-        if (targetFile) {
-          matchedFilePath = path.join(uploadsDir, targetFile);
-        }
-      } catch (err) {
-        console.log("업로드 디렉토리에서 파일을 찾을 수 없습니다.");
-      }
-
-      // 파일이 없으면 더미 매칭 결과 반환 (테스트용)
-      if (!matchedFilePath || !fs.existsSync(matchedFilePath)) {
-        // 기존 템플릿이 있는지 확인
-        const templates = await db.query.docTemplates.findMany({
-          limit: 1
-        });
-        
-        if (templates.length === 0) {
-          return res.status(400).json({
-            matched: false,
-            message: "등록된 템플릿이 없습니다. 관리자 콘솔에서 템플릿을 먼저 등록해주세요."
-          });
-        }
-
-        // 첫 번째 템플릿을 임시로 매칭
-        const template = templates[0];
-        await db
-          .update(schema.projects)
-          .set({
-            templateId: template.id,
-            templateMatchScore: JSON.stringify({
-              score: 0.85,
-              templateName: template.name,
-              method: 'fallback'
-            }),
-            updatedAt: new Date(),
-          })
-          .where(eq(schema.projects.id, projectId));
-
+      if (existingJob) {
         return res.json({
-          matched: true,
-          templateName: template.name,
-          matchScore: 0.85,
-          method: 'fallback',
-          message: "템플릿이 성공적으로 적용되었습니다."
+          success: true,
+          jobId: existingJob.id,
+          status: 'processing',
+          progress: existingJob.progress,
+          message: "템플릿 매칭이 이미 진행 중입니다."
         });
       }
 
-      // 실제 템플릿 매칭 수행
-      const matchResult = await matchTemplateToDocument(matchedFilePath);
+      // Job Processor 가져오기
+      const { jobProcessor } = await import('./services/job_processor');
       
-      if (matchResult) {
-        // 프로젝트에 템플릿 정보 저장
-        await db
-          .update(schema.projects)
-          .set({
-            templateId: matchResult.template.id,
-            templateMatchScore: JSON.stringify({
-              score: matchResult.matchScore,
-              templateName: matchResult.template.name
-            }),
-            updatedAt: new Date(),
-          })
-          .where(eq(schema.projects.id, projectId));
+      // 새 템플릿 매칭 작업 생성
+      const job = await jobProcessor.createJob(projectId, 'template_matching');
 
-        return res.json({
-          matched: true,
-          templateName: matchResult.template.name,
-          matchScore: matchResult.matchScore,
-          message: "템플릿이 성공적으로 매칭되었습니다."
-        });
-      } else {
-        return res.json({
-          matched: false,
-          message: "매칭되는 템플릿을 찾을 수 없습니다."
-        });
-      }
+      return res.json({
+        success: true,
+        jobId: job.id,
+        status: 'pending',
+        progress: 0,
+        message: "템플릿 매칭 작업이 시작되었습니다."
+      });
 
     } catch (error) {
-      console.error("템플릿 매칭 오류:", error);
+      console.error("템플릿 매칭 작업 생성 오류:", error);
       return res.status(500).json({ 
-        message: "템플릿 매칭 중 오류가 발생했습니다.",
+        success: false,
+        message: "템플릿 매칭 작업 생성 중 오류가 발생했습니다.",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // 작업 상태 조회 API
+  app.get(`${apiPrefix}/jobs/:jobId/status`, verifyToken, async (req, res) => {
+    try {
+      const jobId = parseInt(req.params.jobId);
+      
+      if (isNaN(jobId)) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Invalid job ID" 
+        });
+      }
+
+      const { jobProcessor } = await import('./services/job_processor');
+      const job = await jobProcessor.getJobStatus(jobId);
+
+      if (!job) {
+        return res.status(404).json({
+          success: false,
+          message: "Job not found"
+        });
+      }
+
+      let result = null;
+      if (job.result && typeof job.result === 'string') {
+        try {
+          result = JSON.parse(job.result);
+        } catch (e) {
+          result = job.result;
+        }
+      } else {
+        result = job.result;
+      }
+
+      return res.json({
+        success: true,
+        jobId: job.id,
+        status: job.status,
+        progress: job.progress,
+        type: job.type,
+        result: result,
+        errorMessage: job.errorMessage,
+        startedAt: job.startedAt,
+        completedAt: job.completedAt,
+        createdAt: job.createdAt
+      });
+
+    } catch (error) {
+      console.error("작업 상태 조회 오류:", error);
+      return res.status(500).json({
+        success: false,
+        message: "작업 상태 조회 중 오류가 발생했습니다.",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // 프로젝트의 모든 작업 조회 API
+  app.get(`${apiPrefix}/projects/:id/jobs`, verifyToken, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      
+      if (isNaN(projectId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid project ID"
+        });
+      }
+
+      const { jobProcessor } = await import('./services/job_processor');
+      const jobs = await jobProcessor.getProjectJobs(projectId);
+
+      return res.json({
+        success: true,
+        jobs: jobs.map(job => ({
+          id: job.id,
+          status: job.status,
+          type: job.type,
+          progress: job.progress,
+          result: job.result ? (typeof job.result === 'string' ? JSON.parse(job.result) : job.result) : null,
+          errorMessage: job.errorMessage,
+          startedAt: job.startedAt,
+          completedAt: job.completedAt,
+          createdAt: job.createdAt
+        }))
+      });
+
+    } catch (error) {
+      console.error("프로젝트 작업 조회 오류:", error);
+      return res.status(500).json({
+        success: false,
+        message: "프로젝트 작업 조회 중 오류가 발생했습니다.",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // 템플릿 적용 작업 시작 API
+  app.post(`${apiPrefix}/projects/:id/apply-template`, verifyToken, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      const userRole = req.user!.role;
+
+      // 관리자 권한 체크
+      if (userRole !== "admin") {
+        return res.status(403).json({ 
+          success: false,
+          message: "관리자만 템플릿 적용을 수행할 수 있습니다." 
+        });
+      }
+
+      if (isNaN(projectId)) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Invalid project ID" 
+        });
+      }
+
+      // 프로젝트에 템플릿이 매칭되어 있는지 확인
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, projectId),
+        with: { template: true }
+      });
+
+      if (!project) {
+        return res.status(404).json({ 
+          success: false,
+          message: "Project not found" 
+        });
+      }
+
+      if (!project.templateId) {
+        return res.status(400).json({
+          success: false,
+          message: "프로젝트에 템플릿이 매칭되지 않았습니다. 먼저 템플릿 매칭을 수행해주세요."
+        });
+      }
+
+      // 이미 진행 중인 작업이 있는지 확인
+      const existingJob = await db.query.templateJobs.findFirst({
+        where: and(
+          eq(schema.templateJobs.projectId, projectId),
+          eq(schema.templateJobs.type, 'template_application'),
+          eq(schema.templateJobs.status, 'processing')
+        )
+      });
+
+      if (existingJob) {
+        return res.json({
+          success: true,
+          jobId: existingJob.id,
+          status: 'processing',
+          progress: existingJob.progress,
+          message: "템플릿 적용이 이미 진행 중입니다."
+        });
+      }
+
+      // Job Processor 가져오기
+      const { jobProcessor } = await import('./services/job_processor');
+      
+      // 새 템플릿 적용 작업 생성
+      const job = await jobProcessor.createJob(projectId, 'template_application');
+
+      return res.json({
+        success: true,
+        jobId: job.id,
+        status: 'pending',
+        progress: 0,
+        message: "템플릿 적용 작업이 시작되었습니다."
+      });
+
+    } catch (error) {
+      console.error("템플릿 적용 작업 생성 오류:", error);
+      return res.status(500).json({ 
+        success: false,
+        message: "템플릿 적용 작업 생성 중 오류가 발생했습니다.",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // GPT 번역 작업 시작 API
+  app.post(`${apiPrefix}/projects/:id/translate`, verifyToken, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      const userRole = req.user!.role;
+
+      // 관리자 권한 체크
+      if (userRole !== "admin") {
+        return res.status(403).json({ 
+          success: false,
+          message: "관리자만 GPT 번역을 수행할 수 있습니다." 
+        });
+      }
+
+      if (isNaN(projectId)) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Invalid project ID" 
+        });
+      }
+
+      // 프로젝트 존재 확인
+      const project = await db.query.projects.findFirst({
+        where: eq(schema.projects.id, projectId)
+      });
+
+      if (!project) {
+        return res.status(404).json({ 
+          success: false,
+          message: "Project not found" 
+        });
+      }
+
+      // 이미 진행 중인 작업이 있는지 확인
+      const existingJob = await db.query.templateJobs.findFirst({
+        where: and(
+          eq(schema.templateJobs.projectId, projectId),
+          eq(schema.templateJobs.type, 'gpt_translation'),
+          eq(schema.templateJobs.status, 'processing')
+        )
+      });
+
+      if (existingJob) {
+        return res.json({
+          success: true,
+          jobId: existingJob.id,
+          status: 'processing',
+          progress: existingJob.progress,
+          message: "GPT 번역이 이미 진행 중입니다."
+        });
+      }
+
+      // Job Processor 가져오기
+      const { jobProcessor } = await import('./services/job_processor');
+      
+      // 새 GPT 번역 작업 생성
+      const job = await jobProcessor.createJob(projectId, 'gpt_translation');
+
+      return res.json({
+        success: true,
+        jobId: job.id,
+        status: 'pending',
+        progress: 0,
+        message: "GPT 번역 작업이 시작되었습니다."
+      });
+
+    } catch (error) {
+      console.error("GPT 번역 작업 생성 오류:", error);
+      return res.status(500).json({ 
+        success: false,
+        message: "GPT 번역 작업 생성 중 오류가 발생했습니다.",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
