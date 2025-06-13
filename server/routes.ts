@@ -1749,10 +1749,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 템플릿 관리 라우트 연결
   app.use(templateRoutes);
 
-  // 비동기 작업 처리기 시작
-  console.log("[Job Processor] Starting background job processor...");
-  const { jobProcessor } = await import('./services/job_processor.js');
-  jobProcessor.start();
+
 
   // Register admin routes
   registerAdminRoutes(app);

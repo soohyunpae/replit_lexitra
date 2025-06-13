@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/card";
 import { CombinedProgress } from "@/components/ui/combined-progress";
 import { Badge } from "@/components/ui/badge";
-import JobProgressMonitor from "@/components/JobProgressMonitor";
+
 import {
   Dialog,
   DialogContent,
