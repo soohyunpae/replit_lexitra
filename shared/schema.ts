@@ -65,7 +65,7 @@ export const files = pgTable("files", {
   content: text("content").notNull(),
   projectId: integer("project_id").references(() => projects.id).notNull(),
   type: text("type").default("work"),  // 'work' 또는 'reference' 값을 가짐
-  processingStatus: text("processing_status").default("uploaded").notNull(), // 'uploaded', 'parsing', 'parsed', 'translating', 'ready', 'error' 값을 가짐
+  processingStatus: text("processing_status").default("processing").notNull(), // 'processing', 'ready', 'error' 값을 가짐
   errorMessage: text("error_message"), // 오류 발생 시 오류 메시지 저장
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -74,7 +74,6 @@ export const files = pgTable("files", {
 export const filesRelations = relations(files, ({ one, many }) => ({
   project: one(projects, { fields: [files.projectId], references: [projects.id] }),
   segments: many(translationUnits),
-  progress: one(translationProgress, { fields: [files.id], references: [translationProgress.fileId] }),
 }));
 
 export const insertFileSchema = createInsertSchema(files, {
@@ -94,34 +93,12 @@ export const translationUnits = pgTable("translation_units", {
   origin: text("origin").notNull().default("MT"),
   comment: text("comment"),
   fileId: integer("file_id").references(() => files.id).notNull(),
-  retryCount: integer("retry_count").default(0).notNull(),
-  lastErrorAt: timestamp("last_error_at"),
-  errorMessage: text("error_message"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
-
-// Translation Progress tracking table
-export const translationProgress = pgTable("translation_progress", {
-  fileId: integer("file_id").primaryKey().references(() => files.id),
-  totalSegments: integer("total_segments").notNull(),
-  completedSegments: integer("completed_segments").default(0).notNull(),
-  status: text("status").default("pending").notNull(), // 'pending', 'processing', 'completed', 'error'
-  startedAt: timestamp("started_at"),
-  completedAt: timestamp("completed_at"),
-  errorMessage: text("error_message"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-
 
 export const translationUnitsRelations = relations(translationUnits, ({ one }) => ({
   file: one(files, { fields: [translationUnits.fileId], references: [files.id] }),
-}));
-
-export const translationProgressRelations = relations(translationProgress, ({ one }) => ({
-  file: one(files, { fields: [translationProgress.fileId], references: [files.id] }),
 }));
 
 export const insertTranslationUnitSchema = createInsertSchema(translationUnits, {
@@ -130,10 +107,6 @@ export const insertTranslationUnitSchema = createInsertSchema(translationUnits, 
 
 export type InsertTranslationUnit = z.infer<typeof insertTranslationUnitSchema>;
 export type TranslationUnit = typeof translationUnits.$inferSelect;
-
-export const insertTranslationProgressSchema = createInsertSchema(translationProgress);
-export type InsertTranslationProgress = z.infer<typeof insertTranslationProgressSchema>;
-export type TranslationProgress = typeof translationProgress.$inferSelect;
 
 // Translation Memories model
 export const tmResources = pgTable("tm_resources", {

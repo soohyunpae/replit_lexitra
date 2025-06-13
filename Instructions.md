@@ -1,507 +1,163 @@
+# 템플릿 다운로드 기능 문제 분석 및 해결 방안
 
-# 📄 Lexitra 파일 처리 구조 개선안
+## 🔍 문제 상황 분석
 
-## ✅ 현재 구조 (문제점 포함)
+### 현재 증상
+- 프로젝트 ID 96에서 "템플릿 다운로드" 버튼 클릭 시 페이지가 blank 상태가 됨
+- 로그에서 다음과 같은 오류 발생:
+```
+Template DOCX download error: TypeError: Cannot read properties of undefined (reading 'referencedTable')
+```
 
-| 단계 | 작업 내용 | 문제점 |
-|------|-----------|--------|
-| ① 파일 업로드 | 문서 저장 | 빠름 |
-| ② 파싱 + TM 매칭 + GPT 번역 | 모든 처리 동시에 수행 | 처리 시간이 길어 UI가 멈춘 것처럼 보임 |
-| ③ 화면 표시 | 번역 결과 표시 | 전 단계 완료까지 기다려야 하므로 사용자 경험 나쁨 |
+### 🔧 심층 코드베이스 분석
 
-## 🚀 개선 후 구조 (단계 분리 + 비동기 처리)
+#### 1. 관련 파일 및 함수 매핑
 
-| 단계 | 작업 내용 | 실행 시점 |
-|------|-----------|-----------|
-| ① 파일 업로드 | 문서 저장 | 업로드 즉시 |
-| ② 전처리 (파싱/세그먼트 추출) | 원문만 추출 | 업로드 직후 빠르게 처리 |
-| ③ 화면 표시 | 원문만 먼저 렌더링 | 사용자 즉시 확인 가능 |
-| ④ TM 매칭 + GPT 번역 | 번역 버튼 클릭 시 실행 | 프론트에서 요청 후 백엔드 비동기 처리 |
-| ⑤ 상태 UI 표시 | 진행 중 상태 / 완료 알림 | 사용자 경험 개선 |
+**프론트엔드 (클라이언트)**
+- `client/src/pages/project.tsx` - 템플릿 다운로드 버튼 UI 및 요청 로직
+- 관련 함수: `downloadTemplateMutation.mutate()`
 
-## 🛠 구체적인 구현 작업 항목
+**백엔드 (서버)**
+- `server/routes.ts` - `/api/projects/:id/download-template` API 엔드포인트
+- `server/services/docx_template_service.ts` - 템플릿 서비스 로직
+- `server/utils/docx_fill.ts` - docx-templater 기반 DOCX 생성
+- 관련 함수: `generateDocxFromTemplate()`, `getTemplateDetails()`, `fillDocxTemplate()`
 
-### 1. 백엔드 API 분리 및 리팩토링
+**데이터베이스 스키마**
+- `shared/schema.ts` - docTemplates, templateFields, projects 테이블 정의
+- `db/migrations/` - 템플릿 관련 데이터베이스 구조
 
-#### 현재 문제점 분석
-- `server/routes.ts`의 `/api/initialize` 엔드포인트가 모든 처리를 한 번에 수행
-- 파일 파싱, TM 매칭, GPT 번역이 순차적으로 실행되어 응답 시간이 길어짐
+#### 2. 오류 원인 분석
 
-#### 개선 방안
+**주요 문제점:**
+1. **Drizzle ORM 관계 설정 오류**: `referencedTable` 오류는 Drizzle의 관계(relation) 설정에서 발생
+2. **템플릿 필드 관계 설정 누락**: `projects.template` 관계가 제대로 정의되지 않음
+3. **docx-templater 라이브러리 미설치**: 실제 DOCX 생성 라이브러리가 없음
+4. **템플릿 데이터 매핑 로직 불완전**: 번역된 세그먼트를 템플릿 placeholder에 매핑하는 로직 부족
 
-**A. API 엔드포인트 분리**
+**세부 분석:**
+- 로그에서 `QueryPromise._getQuery`에서 오류 발생 → Drizzle ORM의 `with` 구문에서 관계 해석 실패
+- `projects` 테이블과 `docTemplates` 테이블 간의 관계가 제대로 설정되지 않음
+- `templateId` 필드는 있지만 실제 관계 매핑이 스키마에서 누락
+
+#### 3. 현재 구현 상태 검토
+
+**✅ 완료된 부분:**
+- 템플릿 관리 UI (Admin Console)
+- 템플릿 업로드 및 메타데이터 저장
+- 기본 API 엔드포인트 구조
+- 프로젝트에 템플릿 ID 저장
+
+**❌ 누락/문제 부분:**
+- docx-templater 라이브러리 설치
+- Drizzle ORM 관계 정의 오류
+- 실제 DOCX 파일 생성 로직
+- 번역 세그먼트 → 템플릿 매핑 로직
+- 파일 다운로드 응답 처리
+
+## 🛠️ 해결 방안 및 구현 계획
+
+### Phase 1: 기반 인프라 수정
+
+#### 1-1. 필수 라이브러리 설치
+```bash
+npm install docxtemplater pizzip
+npm install @types/pizzip --save-dev
+```
+
+#### 1-2. 데이터베이스 스키마 관계 수정
+- `shared/schema.ts`에서 projects와 docTemplates 간의 관계 올바르게 정의
+- Drizzle 관계 설정 문법 수정
+
+#### 1-3. docx_fill.ts 실제 구현
+- 현재 기본 틀만 있는 파일을 실제 docx-templater 기반으로 완성
+- `fillDocxTemplate()`, `validateTemplate()`, `extractPlaceholders()` 함수 구현
+
+### Phase 2: 핵심 로직 구현
+
+#### 2-1. 템플릿 데이터 매핑 로직
+- 번역된 세그먼트를 템플릿의 placeholder에 매핑하는 알고리즘 구현
+- 템플릿 필드의 `orderIndex`를 활용한 순서 기반 매핑
+
+#### 2-2. API 엔드포인트 수정
+- `/api/projects/:id/download-template`에서 Drizzle 쿼리 수정
+- 올바른 관계 로딩 및 오류 처리 추가
+
+#### 2-3. DOCX 파일 생성 및 다운로드
+- docx-templater를 사용한 실제 파일 생성
+- 생성된 파일의 HTTP 스트림 응답 처리
+- 임시 파일 정리 로직
+
+### Phase 3: 프론트엔드 개선
+
+#### 3-1. 오류 처리 강화
+- 템플릿이 없는 경우 처리
+- 네트워크 오류 및 서버 오류 대응
+- 사용자 친화적 오류 메시지
+
+#### 3-2. UX 개선
+- 다운로드 진행 상태 표시
+- 성공/실패 피드백 개선
+
+## 🔧 상세 구현 단계
+
+### Step 1: 라이브러리 설치 및 타입 정의
+
+### Step 2: 스키마 관계 수정
 ```typescript
-// 기존: POST /api/initialize (모든 처리 한 번에)
-// 개선: 아래 3개 API로 분리
+// shared/schema.ts 수정 필요
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+  // ... 기존 관계들
+  template: one(docTemplates, {
+    fields: [projects.templateId],
+    references: [docTemplates.id],
+  }),
+}));
 
-POST /api/projects/:id/parse        // 파일 파싱 및 세그먼트 추출만
-POST /api/projects/:id/translate    // TM 매칭 + GPT 번역 (비동기)
-GET  /api/projects/:id/status       // 번역 진행 상황 조회
+export const docTemplatesRelations = relations(docTemplates, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [docTemplates.createdBy],
+    references: [users.id],
+  }),
+  fields: many(templateFields),
+  projects: many(projects), // 역방향 관계 추가
+}));
 ```
 
-**B. 파일 상태 관리 개선**
-```typescript
-// files 테이블에 상태 필드 추가/활용
-enum FileStatus {
-  UPLOADED = 'uploaded',     // 업로드 완료
-  PARSING = 'parsing',       // 파싱 중
-  PARSED = 'parsed',         // 파싱 완료 (원문 세그먼트 추출됨)
-  TRANSLATING = 'translating', // 번역 중
-  READY = 'ready'            // 번역 완료
-}
-```
+### Step 3: docx_fill.ts 완성
+- PizZip과 Docxtemplater 라이브러리 사용
+- 실제 DOCX 파일 읽기/쓰기 구현
+- placeholder 추출 및 데이터 삽입 로직
 
-### 2. 프론트엔드 UI/UX 개선
+### Step 4: 서비스 레이어 완성
+- `docx_template_service.ts`에서 실제 파일 생성 로직 구현
+- 템플릿과 번역 데이터 매핑 알고리즘
 
-#### A. 프로젝트 페이지 개선 (`client/src/pages/project.tsx`)
-```typescript
-// 파일 상태별 UI 표시 로직
-const renderFileStatus = (file: FileInfo) => {
-  switch (file.status) {
-    case 'uploaded':
-    case 'parsing':
-      return <Skeleton>파싱 중...</Skeleton>;
-    case 'parsed':
-      return (
-        <div>
-          <Button onClick={() => startTranslation(file.id)}>
-            전체 번역 시작
-          </Button>
-          <span>원문 {file.segmentCount}개 세그먼트 준비됨</span>
-        </div>
-      );
-    case 'translating':
-      return <TranslationProgress fileId={file.id} />;
-    case 'ready':
-      return <Button variant="success">번역 완료 - 편집하기</Button>;
-  }
-};
-```
+### Step 5: API 엔드포인트 수정
+- Drizzle 쿼리에서 `with` 구문 수정
+- 올바른 관계 로딩 및 오류 처리
 
-#### B. 번역 진행 상황 컴포넌트 추가
-```typescript
-// client/src/components/TranslationProgress.tsx
-const TranslationProgress = ({ fileId }: { fileId: number }) => {
-  const { data: progress } = useQuery({
-    queryKey: ['translation-progress', fileId],
-    queryFn: () => api.getTranslationProgress(fileId),
-    refetchInterval: 2000, // 2초마다 상태 확인
-  });
+### Step 6: 프론트엔드 오류 처리 개선
 
-  return (
-    <div>
-      <ProgressBar value={progress?.percentage || 0} />
-      <span>{progress?.completed || 0} / {progress?.total || 0} 세그먼트 완료</span>
-    </div>
-  );
-};
-```
+## 🚨 주의사항
 
-### 3. 백엔드 비동기 처리 로직
+1. **데이터베이스 마이그레이션**: 스키마 변경 시 기존 데이터 보존 필요
+2. **메모리 관리**: 대용량 DOCX 파일 처리 시 메모리 사용량 모니터링
+3. **파일 보안**: 생성된 임시 파일 자동 정리 및 접근 권한 관리
+4. **성능 최적화**: 큰 프로젝트의 경우 비동기 처리 고려
 
-#### A. 번역 작업 큐 시스템 (간단한 버전)
-```typescript
-// server/services/translation-queue.ts
-class TranslationQueue {
-  private static queue: Map<number, TranslationJob> = new Map();
+## 🎯 우선순위
 
-  static async startTranslation(fileId: number) {
-    const job = new TranslationJob(fileId);
-    this.queue.set(fileId, job);
-    
-    // 백그라운드에서 비동기 실행
-    job.start().catch(console.error);
-    
-    return { jobId: fileId, status: 'started' };
-  }
+1. **High Priority**: docx-templater 라이브러리 설치 및 Drizzle 관계 수정
+2. **High Priority**: 기본 DOCX 생성 및 다운로드 기능 구현
+3. **Medium Priority**: 템플릿 매핑 로직 완성
+4. **Low Priority**: UX 개선 및 고급 기능
 
-  static getProgress(fileId: number) {
-    const job = this.queue.get(fileId);
-    return job?.getProgress() || { status: 'not_found' };
-  }
-}
-```
+## 🧪 테스트 계획
 
-#### B. 청크 단위 번역 처리
-```typescript
-// 10-20 세그먼트씩 묶어서 GPT 요청
-const translateInChunks = async (segments: Segment[]) => {
-  const CHUNK_SIZE = 15;
-  const chunks = chunkArray(segments, CHUNK_SIZE);
-  
-  for (const chunk of chunks) {
-    try {
-      const translations = await openai.translateBatch(chunk);
-      await saveTranslations(translations);
-      
-      // 진행 상황 업데이트
-      await updateTranslationProgress(fileId, chunk.length);
-    } catch (error) {
-      console.error('청크 번역 실패:', error);
-      // 실패한 청크는 개별 처리 또는 재시도
-    }
-  }
-};
-```
+1. ID 96 프로젝트에서 템플릿 다운로드 기능 테스트
+2. 다양한 템플릿 구조로 매핑 정확성 검증
+3. 대용량 프로젝트에서 성능 테스트
+4. 오류 시나리오 테스트 (템플릿 없음, 네트워크 오류 등)
 
-### 4. 데이터베이스 스키마 조정
-
-#### A. 번역 진행 상황 추적 테이블
-```sql
--- translation_progress 테이블 추가
-CREATE TABLE translation_progress (
-  file_id INTEGER PRIMARY KEY,
-  total_segments INTEGER NOT NULL,
-  completed_segments INTEGER DEFAULT 0,
-  status VARCHAR(20) DEFAULT 'pending',
-  started_at TIMESTAMP,
-  completed_at TIMESTAMP,
-  error_message TEXT
-);
-```
-
-#### B. 기존 files 테이블 활용
-```typescript
-// 기존 status 필드 값 확장 활용
-// 'processing' -> 'parsing', 'translating', 'ready' 등으로 세분화
-```
-
-### 5. API 호출 플로우 개선
-
-#### A. 파일 업로드 후 플로우
-```typescript
-// 1. 파일 업로드
-const uploadResponse = await api.uploadFile(file);
-
-// 2. 즉시 파싱 시작 (빠른 처리)
-const parseResponse = await api.parseFile(uploadResponse.fileId);
-
-// 3. 원문 세그먼트 즉시 표시
-router.push(`/projects/${projectId}`);
-
-// 4. 사용자가 "번역 시작" 버튼 클릭 시
-const translateResponse = await api.startTranslation(fileId);
-
-// 5. 번역 진행 상황 모니터링
-const { data: progress } = useQuery({
-  queryKey: ['translation-progress', fileId],
-  queryFn: () => api.getTranslationProgress(fileId),
-  refetchInterval: 3000,
-  enabled: isTranslating
-});
-```
-
-### 6. 타임아웃 및 에러 처리
-
-#### A. 요청 타임아웃 설정
-```typescript
-// 각 API 요청별 적절한 타임아웃 설정
-const API_TIMEOUTS = {
-  parse: 30000,      // 30초 (파싱)
-  translate: 300000, // 5분 (번역 시작)
-  progress: 10000    // 10초 (상태 조회)
-};
-```
-
-#### B. 에러 복구 로직
-```typescript
-// 번역 실패 시 재시도 로직
-const retryFailedSegments = async (fileId: number) => {
-  const failedSegments = await getFailedSegments(fileId);
-  for (const segment of failedSegments) {
-    try {
-      await translateSingleSegment(segment);
-    } catch (error) {
-      // 최대 3회 재시도 후 수동 번역으로 마킹
-      await markAsManualTranslationNeeded(segment.id);
-    }
-  }
-};
-```
-
-## 📋 구현 우선순위
-
-### Phase 1: 기본 분리 (1-2일)
-1. API 엔드포인트 분리 (`/parse`, `/translate`, `/status`)
-2. 파일 상태 관리 개선
-3. 프론트엔드 기본 UI 개선
-
-### Phase 2: 비동기 처리 (2-3일)
-1. 백그라운드 번역 작업 시스템
-2. 진행 상황 추적 및 UI 업데이트
-3. 에러 처리 및 재시도 로직
-
-### Phase 3: 최적화 (1-2일)
-1. 청크 단위 병렬 처리
-2. 성능 모니터링 및 튜닝
-3. 사용자 피드백 반영
-
-## 🔧 추가 개선 사항 (ChatGPT 제안 반영)
-
-### 1. 중복 번역 방지
-**문제**: translate API가 중복 요청되면 중복 번역이 발생할 수 있음
-```typescript
-// server/services/translation-queue.ts
-class TranslationQueue {
-  private static queue: Map<number, TranslationJob> = new Map();
-  private static processing: Set<number> = new Set(); // 처리 중인 파일 추적
-
-  static async startTranslation(fileId: number) {
-    // 중복 실행 방지
-    if (this.processing.has(fileId)) {
-      return { 
-        jobId: fileId, 
-        status: 'already_processing',
-        message: '이미 번역이 진행 중입니다.'
-      };
-    }
-    
-    this.processing.add(fileId);
-    const job = new TranslationJob(fileId);
-    this.queue.set(fileId, job);
-    
-    try {
-      await job.start();
-    } finally {
-      this.processing.delete(fileId); // 완료 후 제거
-    }
-    
-    return { jobId: fileId, status: 'started' };
-  }
-}
-```
-
-### 2. 실시간 피드백 최적화
-**현재**: 2초마다 polling
-**개선**: 프로젝트 수에 따른 동적 조정 + 향후 WebSocket 지원
-```typescript
-// 프로젝트 수에 따른 polling 간격 조정
-const getPollingInterval = (projectCount: number) => {
-  if (projectCount <= 5) return 2000;      // 2초
-  if (projectCount <= 20) return 3000;     // 3초  
-  return 5000;                             // 5초
-};
-
-// 향후 WebSocket 지원을 위한 인터페이스 준비
-interface ProgressUpdate {
-  type: 'translation_progress';
-  fileId: number;
-  progress: {
-    completed: number;
-    total: number;
-    percentage: number;
-    status: string;
-  };
-}
-```
-
-### 3. 오류 세그먼트 처리 강화
-**문제**: 실패한 세그먼트가 계속 실패할 경우 무한 루프 위험
-```sql
--- translation_units 테이블에 재시도 추적 필드 추가
-ALTER TABLE translation_units ADD COLUMN retry_count INTEGER DEFAULT 0;
-ALTER TABLE translation_units ADD COLUMN last_error_at TIMESTAMP;
-ALTER TABLE translation_units ADD COLUMN error_message TEXT;
-```
-
-```typescript
-// 재시도 로직 개선
-const MAX_RETRY_COUNT = 3;
-const RETRY_DELAY = [1000, 5000, 15000]; // 1초, 5초, 15초
-
-const retryFailedSegments = async (fileId: number) => {
-  const failedSegments = await db.query.translationUnits.findMany({
-    where: and(
-      eq(schema.translationUnits.fileId, fileId),
-      eq(schema.translationUnits.status, 'error'),
-      lt(schema.translationUnits.retryCount, MAX_RETRY_COUNT)
-    )
-  });
-
-  for (const segment of failedSegments) {
-    try {
-      // 재시도 간격 적용
-      await new Promise(resolve => 
-        setTimeout(resolve, RETRY_DELAY[segment.retryCount] || 15000)
-      );
-      
-      await translateSingleSegment(segment);
-      
-      // 성공 시 재시도 카운트 리셋
-      await db.update(schema.translationUnits)
-        .set({ retryCount: 0, errorMessage: null })
-        .where(eq(schema.translationUnits.id, segment.id));
-        
-    } catch (error) {
-      // 재시도 카운트 증가 및 오류 기록
-      await db.update(schema.translationUnits)
-        .set({ 
-          retryCount: segment.retryCount + 1,
-          lastErrorAt: new Date(),
-          errorMessage: error.message
-        })
-        .where(eq(schema.translationUnits.id, segment.id));
-      
-      // 최대 재시도 횟수 도달 시 수동 번역으로 마킹
-      if (segment.retryCount + 1 >= MAX_RETRY_COUNT) {
-        await markAsManualTranslationNeeded(segment.id);
-      }
-    }
-  }
-};
-```
-
-### 4. 대형 문서 처리 전략
-**문제**: A4 수십 페이지 문서에서 세그먼트 수천 개가 생길 수 있음
-```typescript
-// 대형 문서 처리를 위한 pagination 및 우선순위 로딩
-const LARGE_DOCUMENT_THRESHOLD = 1000; // 1000개 이상 세그먼트
-const PRIORITY_BATCH_SIZE = 50;        // 우선 처리할 배치 크기
-
-interface LargeDocumentStrategy {
-  // 1. 우선순위 기반 번역 (첫 50개 세그먼트 먼저)
-  async translatePrioritySegments(fileId: number) {
-    const prioritySegments = await db.query.translationUnits.findMany({
-      where: eq(schema.translationUnits.fileId, fileId),
-      limit: PRIORITY_BATCH_SIZE,
-      orderBy: schema.translationUnits.id
-    });
-    
-    return this.processBatch(prioritySegments);
-  }
-  
-  // 2. 나머지 세그먼트 백그라운드 처리
-  async translateRemainingSegments(fileId: number) {
-    const totalSegments = await this.getSegmentCount(fileId);
-    
-    for (let offset = PRIORITY_BATCH_SIZE; offset < totalSegments; offset += PRIORITY_BATCH_SIZE) {
-      const batch = await db.query.translationUnits.findMany({
-        where: eq(schema.translationUnits.fileId, fileId),
-        limit: PRIORITY_BATCH_SIZE,
-        offset: offset
-      });
-      
-      await this.processBatch(batch);
-      
-      // CPU 부하 방지를 위한 짧은 대기
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-  }
-}
-
-// 프론트엔드: 가상화된 세그먼트 목록
-const VirtualizedSegmentList = ({ fileId }: { fileId: number }) => {
-  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 50 });
-  
-  // 화면에 보이는 세그먼트만 로드
-  const { data: segments } = useQuery({
-    queryKey: ['segments', fileId, visibleRange],
-    queryFn: () => fetchSegmentsPaginated(fileId, visibleRange.start, visibleRange.end)
-  });
-  
-  return (
-    <FixedSizeList
-      height={600}
-      itemCount={totalSegmentCount}
-      itemSize={80}
-      onItemsRendered={({ visibleStartIndex, visibleStopIndex }) => {
-        setVisibleRange({ start: visibleStartIndex, end: visibleStopIndex });
-      }}
-    >
-      {SegmentItem}
-    </FixedSizeList>
-  );
-};
-```
-
-### 5. 사용자 알림 시스템
-**현재**: 번역 완료나 실패 알림이 없음
-```typescript
-// 알림 시스템 인터페이스
-interface NotificationSystem {
-  // 즉시 알림 (Toast)
-  showToast(type: 'success' | 'error' | 'info', message: string): void;
-  
-  // 알림 센터 (지속적 알림)
-  addNotification(notification: {
-    id: string;
-    type: 'translation_complete' | 'translation_failed' | 'project_claimed';
-    title: string;
-    message: string;
-    timestamp: Date;
-    read: boolean;
-    actions?: NotificationAction[];
-  }): void;
-  
-  // 이메일 알림 (중요한 이벤트)
-  sendEmailNotification(userId: number, event: EmailEvent): Promise<void>;
-}
-
-// 번역 완료 알림 통합
-const notifyTranslationComplete = async (fileId: number, userId: number) => {
-  const file = await getFileDetails(fileId);
-  
-  // 1. 즉시 Toast 알림
-  notificationSystem.showToast('success', 
-    `"${file.name}" 번역이 완료되었습니다.`);
-  
-  // 2. 알림 센터에 추가
-  notificationSystem.addNotification({
-    id: `translation_${fileId}_${Date.now()}`,
-    type: 'translation_complete',
-    title: '번역 완료',
-    message: `파일 "${file.name}"의 번역이 완료되었습니다.`,
-    timestamp: new Date(),
-    read: false,
-    actions: [
-      { type: 'view_file', label: '파일 보기', url: `/translation/${fileId}` },
-      { type: 'download', label: '다운로드', url: `/api/files/${fileId}/download` }
-    ]
-  });
-  
-  // 3. 이메일 알림 (사용자 설정에 따라)
-  const userPrefs = await getUserNotificationPreferences(userId);
-  if (userPrefs.emailOnTranslationComplete) {
-    await notificationSystem.sendEmailNotification(userId, {
-      type: 'translation_complete',
-      fileId,
-      fileName: file.name,
-      projectId: file.projectId
-    });
-  }
-};
-```
-
-## 📋 업데이트된 구현 우선순위
-
-### Phase 1: 기본 분리 + 안정성 강화 (2-3일)
-1. API 엔드포인트 분리 (`/parse`, `/translate`, `/status`)
-2. 파일 상태 관리 개선
-3. **중복 번역 방지 로직 추가**
-4. **오류 세그먼트 재시도 메커니즘 구현**
-
-### Phase 2: 성능 최적화 (2-3일)
-1. 백그라운드 번역 작업 시스템
-2. **동적 polling 간격 조정**
-3. **대형 문서를 위한 우선순위 처리**
-4. 진행 상황 추적 및 UI 업데이트
-
-### Phase 3: 사용자 경험 개선 (1-2일)
-1. **알림 시스템 구현 (Toast + 알림센터)**
-2. 가상화된 세그먼트 목록 (대형 문서용)
-3. 성능 모니터링 및 튜닝
-
-### Phase 4: 고급 기능 (향후)
-1. **WebSocket/SSE 기반 실시간 업데이트**
-2. **이메일 알림 시스템**
-3. 사용자 피드백 반영
-
-## 🎯 예상 효과
-
-- **사용자 경험**: 파일 업로드 후 즉시 원문 확인 가능
-- **응답성**: 긴 번역 작업이 UI를 블록하지 않음
-- **투명성**: 번역 진행 상황을 실시간으로 확인 가능
-- **안정성**: 부분 실패 시에도 전체가 실패하지 않음 + 재시도 메커니즘
-- **확장성**: 향후 더 큰 파일이나 병렬 처리에 대응 가능
-- **신뢰성**: 중복 처리 방지 및 오류 복구 기능
-- **성능**: 대형 문서와 다중 프로젝트 환경에서도 원활한 동작
+이 계획에 따라 단계적으로 구현하면 템플릿 다운로드 기능이 정상적으로 작동할 것입니다.

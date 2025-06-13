@@ -39,7 +39,6 @@ import {
 } from "@/components/ui/card";
 import { CombinedProgress } from "@/components/ui/combined-progress";
 import { Badge } from "@/components/ui/badge";
-
 import {
   Dialog,
   DialogContent,
@@ -56,8 +55,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Project() {
-  const [isMatch1, params1] = useRoute("/projects/:id");
-  const [isMatch2, params2] = useRoute("/project/:id");
+  const [isMatch, params] = useRoute("/projects/:id");
   const [, navigate] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -90,26 +88,57 @@ export default function Project() {
   const [tmInput, setTmInput] = useState("default");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Get project ID from URL params (support both routes)
-  const isMatch = isMatch1 || isMatch2;
-  const params = params1 || params2;
-  const projectId = isMatch && params ? parseInt(params.id) : null;
-  
-  // Debug logging
-  console.log("Project route debug:", {
-    isMatch1,
-    isMatch2,
-    params1,
-    params2,
-    isMatch,
-    params,
-    projectId
-  });
+  // Get project ID from URL params - 더 안전한 파싱
+  const projectId = useMemo(() => {
+    console.log("Route parsing debug:", { isMatch, params });
+    
+    if (!isMatch || !params?.id) {
+      console.log("Project route not matched or no ID parameter", { isMatch, params });
+      return null;
+    }
+    
+    const id = parseInt(params.id);
+    if (isNaN(id) || id <= 0) {
+      console.log("Invalid project ID:", params.id);
+      return null;
+    }
+    
+    console.log("Valid project ID extracted:", id);
+    return id;
+  }, [isMatch, params]);
+
+  // 프로젝트 ID가 유효하지 않은 경우 조기 반환
+  if (!projectId) {
+    return (
+      <MainLayout title="Invalid Project">
+        <div className="flex-1 p-6 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-medium mb-2">Invalid Project ID</h2>
+            <p className="text-muted-foreground mb-4">
+              The project ID in the URL is not valid: {params?.id}
+            </p>
+            <Button onClick={() => navigate("/projects")}>Go back to projects</Button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   // Get project data
-  const { data: project, isLoading } = useQuery<any>({
+  const { data: project, isLoading, error } = useQuery<any>({
     queryKey: [`/api/projects/${projectId}`],
-    enabled: !!projectId,
+    queryFn: async () => {
+      console.log(`Fetching project data for ID: ${projectId}`);
+      const res = await apiRequest("GET", `/api/projects/${projectId}`);
+      const data = await res.json();
+      console.log("Project data received:", data);
+      return data;
+    },
+    enabled: !!projectId && projectId > 0,
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5분
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
   });
 
   // Get all TM entries to count TM matches
@@ -689,7 +718,10 @@ export default function Project() {
     },
   });
 
+  
+
   if (isLoading) {
+    console.log("Project is loading...");
     return (
       <MainLayout title="Loading Project...">
         <div className="flex-1 p-6 flex items-center justify-center">
@@ -703,7 +735,31 @@ export default function Project() {
     );
   }
 
+  if (error) {
+    console.error("Project fetch error:", error);
+    return (
+      <MainLayout title="Error Loading Project">
+        <div className="flex-1 p-6 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-medium mb-2">Error Loading Project</h2>
+            <p className="text-muted-foreground mb-4">
+              Failed to load project data. Please try again.
+            </p>
+            <div className="text-xs text-muted-foreground mb-4">
+              Error details: {error instanceof Error ? error.message : String(error)}
+            </div>
+            <Button onClick={() => window.location.reload()}>Retry</Button>
+            <Button variant="outline" onClick={() => navigate("/projects")} className="ml-2">
+              Go back to projects
+            </Button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   if (!project) {
+    console.log("Project not found", { projectId, isLoading, error });
     return (
       <MainLayout title="Project Not Found">
         <div className="flex-1 p-6 flex items-center justify-center">
@@ -713,7 +769,10 @@ export default function Project() {
               The project you're looking for doesn't exist or you don't have
               access to it.
             </p>
-            <Button onClick={() => navigate("/")}>Go back to projects</Button>
+            <div className="text-xs text-muted-foreground mb-4">
+              Project ID: {projectId}, Loading: {isLoading ? "Yes" : "No"}
+            </div>
+            <Button onClick={() => navigate("/projects")}>Go back to projects</Button>
           </div>
         </div>
       </MainLayout>
@@ -728,7 +787,7 @@ export default function Project() {
             <div className="flex items-center">
               <h1 className="text-xl font-semibold mb-1 flex items-center">
                 <span>
-                  [ID {project.id}] {project.name}
+                  [ID {project.id}] {project.name || 'Unnamed Project'}
                 </span>
                 <span
                   className={`ml-3 text-sm font-medium rounded-md px-2 py-0.5 ${
@@ -1035,25 +1094,46 @@ export default function Project() {
                               className="ml-2 h-6 px-2 text-xs"
                               onClick={async () => {
                                 try {
-                                  const { apiRequest } = await import('@/lib/queryClient');
-                                  const result = await apiRequest(`/api/projects/${projectId}/match-template`, 'POST') as any;
+                                  const response = await fetch(`/api/projects/${projectId}/match-template`, {
+                                    method: 'POST',
+                                    headers: {
+                                      'Authorization': `Bearer ${localStorage.getItem("auth_token") || ""}`,
+                                      'Content-Type': 'application/json',
+                                    },
+                                    credentials: 'include',
+                                  });
                                   
-                                  if (result.success) {
-                                    toast({
-                                      title: "템플릿 매칭 시작",
-                                      description: result.message || "템플릿 매칭 작업이 시작되었습니다.",
+                                  const result = await response.json();
+                                  
+                                  if (response.ok) {
+                                    if (result.matched) {
+                                      toast({
+                                        title: "템플릿 매칭 성공",
+                                        description: `템플릿 "${result.templateName}"이 적용되었습니다. (매칭률: ${Math.round(result.matchScore * 100)}%)`,
+                                      });
+                                    } else {
+                                      toast({
+                                        title: "템플릿 매칭 실패",
+                                        description: result.message || "매칭되는 템플릿을 찾을 수 없습니다.",
+                                        variant: "destructive",
+                                      });
+                                    }
+                                    
+                                    // 프로젝트 정보 새로고침
+                                    queryClient.invalidateQueries({
+                                      queryKey: [`/api/projects/${projectId}`],
                                     });
                                   } else {
                                     toast({
-                                      title: "작업 시작 실패",
-                                      description: result.message || "템플릿 매칭 작업을 시작할 수 없습니다.",
+                                      title: "템플릿 매칭 오류",
+                                      description: result.message || "템플릿 매칭 중 서버 오류가 발생했습니다.",
                                       variant: "destructive",
                                     });
                                   }
                                 } catch (error) {
                                   console.error("템플릿 매칭 요청 오류:", error);
                                   toast({
-                                    title: "작업 시작 실패",
+                                    title: "템플릿 매칭 실패",
                                     description: "네트워크 오류가 발생했습니다.",
                                     variant: "destructive",
                                   });
