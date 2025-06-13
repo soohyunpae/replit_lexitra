@@ -11,7 +11,14 @@ import { db } from "@db";
 import * as schema from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 // Import docx utility functions
-import { validateTemplate, extractPlaceholders, fillDocxTemplate, type TemplateData } from '../utils/docx_fill';
+import { 
+  validateTemplate, 
+  extractPlaceholders, 
+  fillDocxTemplate, 
+  analyzeDocumentStructure,
+  type TemplateData,
+  type DocumentStructure 
+} from '../utils/docx_fill';
 
 // 템플릿 파일 업로드 및 저장 경로
 const TEMPLATE_DIR = path.join(REPO_ROOT, 'uploads', 'templates');
@@ -276,18 +283,24 @@ export async function matchTemplateToDocument(
       
       console.log(`템플릿 "${template.name}" 검사 중...`);
       
-      // 텍스트 기반 매칭만 사용 (사용자 문서에는 placeholder가 없음)
-      const matchScore = await calculateTextBasedMatchScore(docxPath, template);
-      console.log(`템플릿 "${template.name}" 텍스트 기반 매칭 점수: ${matchScore}`);
+      // 레이아웃 기반 매칭 사용 (구조 + 내용 종합 분석)
+      const layoutMatchResult = await calculateLayoutBasedMatchScore(docxPath, template);
+      const matchScore = layoutMatchResult.overallScore;
       
-      // 현재까지의 최고 점수 업데이트 (임계값을 0.02로 낮춤)
-      if (matchScore > 0.02 && (!bestMatch || matchScore > bestMatch.matchScore)) {
+      console.log(`템플릿 "${template.name}" 레이아웃 기반 매칭:`);
+      console.log(`  - ${layoutMatchResult.details}`);
+      console.log(`  - 최종 점수: ${(matchScore * 100).toFixed(1)}%`);
+      
+      // 현재까지의 최고 점수 업데이트 (임계값을 0.3으로 상향 조정)
+      if (matchScore > 0.3 && (!bestMatch || matchScore > bestMatch.matchScore)) {
         bestMatch = {
           template: templateDetail.template,
           matchScore,
-          fields: templateDetail.fields.filter(f => f.isTranslatable)
+          fields: templateDetail.fields.filter(f => f.isTranslatable),
+          matchDetails: layoutMatchResult.details // 매칭 상세 정보 추가
         };
-        console.log(`새로운 최고 매칭: "${template.name}" (점수: ${matchScore})`);
+        console.log(`새로운 최고 매칭: "${template.name}" (점수: ${(matchScore * 100).toFixed(1)}%)`);
+        console.log(`  상세: ${layoutMatchResult.details}`);
       }
     }
     
@@ -310,7 +323,194 @@ export async function matchTemplateToDocument(
  */
 
 /**
- * 텍스트 기반 템플릿 매칭 점수 계산
+ * 레이아웃 기반 템플릿 매칭 스코어 계산 (새로운 메인 함수)
+ */
+async function calculateLayoutBasedMatchScore(
+  docxPath: string,
+  template: schema.DocTemplate
+): Promise<{
+  overallScore: number;
+  structureScore: number;
+  tableScore: number;
+  headingScore: number;
+  contentScore: number;
+  details: string;
+}> {
+  try {
+    // 사용자 문서와 템플릿 문서 구조 분석
+    const [userStructure, templateStructure] = await Promise.all([
+      analyzeDocumentStructure(docxPath),
+      analyzeDocumentStructure(template.docxFilePath)
+    ]);
+
+    // 1. 구조적 유사도 (40% 가중치)
+    const structureScore = calculateStructuralSimilarity(userStructure, templateStructure);
+    
+    // 2. 표 구조 유사도 (30% 가중치)  
+    const tableScore = calculateTableSimilarity(userStructure.tables, templateStructure.tables);
+    
+    // 3. 제목 계층 유사도 (20% 가중치)
+    const headingScore = calculateHeadingSimilarity(userStructure.headings, templateStructure.headings);
+    
+    // 4. 텍스트 내용 유사도 (10% 가중치)
+    const contentScore = await calculateTextBasedMatchScore(docxPath, template);
+    
+    // 가중 평균 계산
+    const overallScore = (
+      structureScore * 0.4 +
+      tableScore * 0.3 +
+      headingScore * 0.2 +
+      contentScore * 0.1
+    );
+
+    const details = `구조:${(structureScore*100).toFixed(1)}% | 표:${(tableScore*100).toFixed(1)}% | 제목:${(headingScore*100).toFixed(1)}% | 내용:${(contentScore*100).toFixed(1)}%`;
+
+    console.log(`레이아웃 매칭 분석: ${details} => 최종:${(overallScore*100).toFixed(1)}%`);
+
+    return {
+      overallScore,
+      structureScore,
+      tableScore,
+      headingScore,
+      contentScore,
+      details
+    };
+  } catch (error) {
+    console.error("레이아웃 기반 매칭 오류:", error);
+    // 구조 분석 실패 시 텍스트 기반 매칭으로 폴백
+    const fallbackScore = await calculateTextBasedMatchScore(docxPath, template);
+    return {
+      overallScore: fallbackScore,
+      structureScore: 0,
+      tableScore: 0,
+      headingScore: 0,
+      contentScore: fallbackScore,
+      details: `구조분석실패, 텍스트기반: ${(fallbackScore*100).toFixed(1)}%`
+    };
+  }
+}
+
+/**
+ * 구조적 유사도 계산
+ */
+function calculateStructuralSimilarity(user: DocumentStructure, template: DocumentStructure): number {
+  let score = 0;
+  let factors = 0;
+
+  // 1. 문서 유형 일치 (가장 중요)
+  if (user.layoutMetrics.documentType === template.layoutMetrics.documentType) {
+    score += 0.4;
+  }
+  factors += 0.4;
+
+  // 2. 표 개수 유사도
+  const tableRatio = Math.min(user.layoutMetrics.totalTables, template.layoutMetrics.totalTables) / 
+                    Math.max(user.layoutMetrics.totalTables, template.layoutMetrics.totalTables, 1);
+  score += tableRatio * 0.25;
+  factors += 0.25;
+
+  // 3. 제목 계층 깊이 유사도
+  const headingRatio = Math.min(user.layoutMetrics.maxHeadingLevel, template.layoutMetrics.maxHeadingLevel) / 
+                      Math.max(user.layoutMetrics.maxHeadingLevel, template.layoutMetrics.maxHeadingLevel, 1);
+  score += headingRatio * 0.2;
+  factors += 0.2;
+
+  // 4. 번호 매기기 사용 일치
+  if (user.layoutMetrics.hasNumberedLists === template.layoutMetrics.hasNumberedLists) {
+    score += 0.15;
+  }
+  factors += 0.15;
+
+  return score / factors;
+}
+
+/**
+ * 표 구조 유사도 계산
+ */
+function calculateTableSimilarity(userTables: TableInfo[], templateTables: TableInfo[]): number {
+  if (userTables.length === 0 && templateTables.length === 0) {
+    return 1.0; // 둘 다 표가 없으면 완전 일치
+  }
+  
+  if (userTables.length === 0 || templateTables.length === 0) {
+    return 0.1; // 한쪽만 표가 없으면 낮은 점수
+  }
+
+  let totalScore = 0;
+  const maxTables = Math.max(userTables.length, templateTables.length);
+  
+  // 각 표의 구조 비교
+  for (let i = 0; i < Math.min(userTables.length, templateTables.length); i++) {
+    const userTable = userTables[i];
+    const templateTable = templateTables[i];
+    
+    let tableScore = 0;
+    
+    // 행/열 수 유사도
+    const rowSimilarity = Math.min(userTable.rowCount, templateTable.rowCount) / 
+                         Math.max(userTable.rowCount, templateTable.rowCount);
+    const colSimilarity = Math.min(userTable.columnCount, templateTable.columnCount) / 
+                         Math.max(userTable.columnCount, templateTable.columnCount);
+    
+    tableScore = (rowSimilarity + colSimilarity) / 2;
+    totalScore += tableScore;
+  }
+  
+  return totalScore / maxTables;
+}
+
+/**
+ * 제목 계층 유사도 계산  
+ */
+function calculateHeadingSimilarity(userHeadings: HeadingInfo[], templateHeadings: HeadingInfo[]): number {
+  if (userHeadings.length === 0 && templateHeadings.length === 0) {
+    return 1.0;
+  }
+  
+  if (userHeadings.length === 0 || templateHeadings.length === 0) {
+    return 0.1;
+  }
+
+  // 제목 텍스트 유사도 계산
+  let maxSimilarity = 0;
+  
+  for (const userHeading of userHeadings) {
+    for (const templateHeading of templateHeadings) {
+      if (userHeading.level === templateHeading.level) {
+        // 같은 레벨의 제목들 간 텍스트 유사도
+        const similarity = calculateTextSimilarity(
+          userHeading.text.toLowerCase(),
+          templateHeading.text.toLowerCase()
+        );
+        maxSimilarity = Math.max(maxSimilarity, similarity);
+      }
+    }
+  }
+  
+  // 제목 개수 유사도도 고려
+  const countSimilarity = Math.min(userHeadings.length, templateHeadings.length) / 
+                         Math.max(userHeadings.length, templateHeadings.length);
+  
+  return (maxSimilarity + countSimilarity) / 2;
+}
+
+/**
+ * 텍스트 유사도 계산 (기존 함수를 재사용 가능하도록 분리)
+ */
+function calculateTextSimilarity(text1: string, text2: string): number {
+  if (!text1 || !text2) return 0;
+
+  const words1 = new Set(text1.split(/\s+/).filter(word => word.length > 2));
+  const words2 = new Set(text2.split(/\s+/).filter(word => word.length > 2));
+  
+  const intersection = new Set([...words1].filter(word => words2.has(word)));
+  const union = new Set([...words1, ...words2]);
+  
+  return union.size > 0 ? intersection.size / union.size : 0;
+}
+
+/**
+ * 텍스트 기반 템플릿 매칭 점수 계산 (기존 함수 유지)
  */
 async function calculateTextBasedMatchScore(
   docxPath: string,
