@@ -376,6 +376,9 @@ async function processFile(file: Express.Multer.File) {
           const docxResult = await mammoth.extractRawText({ path: file.path });
           text = docxResult.value || "";
           
+          // null 바이트 및 기타 제어 문자 제거 (PostgreSQL 호환성)
+          text = text.replace(/\x00/g, '').replace(/[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+          
           // 템플릿 매칭 시도
           notifyProgress(0, file.originalname, "processing", 30, "템플릿 매칭 확인중");
           
@@ -432,6 +435,9 @@ async function processFile(file: Express.Multer.File) {
           // mammoth 라이브러리를 사용하여 DOC 파일에서 텍스트 추출
           const docResult = await mammoth.extractRawText({ path: file.path });
           text = docResult.value || "";
+          
+          // null 바이트 및 기타 제어 문자 제거 (PostgreSQL 호환성)
+          text = text.replace(/\x00/g, '').replace(/[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
           
           if (!text || text.trim() === "") {
             console.error("DOC에서 텍스트를 추출했지만 결과가 비어있습니다.");
