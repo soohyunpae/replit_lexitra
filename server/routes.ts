@@ -144,6 +144,133 @@ except Exception as e:
   });
 };
 
+// 백그라운드 파일 처리 함수
+async function processFilesInBackground(uploadedFiles: any, savedFiles: any[], projectId: number) {
+  try {
+    console.log("[Background] Starting file processing for project:", projectId);
+
+    // 작업 파일 처리
+    if (uploadedFiles.files) {
+      for (const file of uploadedFiles.files) {
+        const fileRecord = savedFiles.find(f => 
+          f.type === "work" && (
+            f.name === file.originalname || 
+            f.name.includes(path.parse(file.originalname).name)
+          )
+        );
+        
+        if (!fileRecord) {
+          console.warn(`[Background] File record not found for: ${file.originalname}`);
+          continue;
+        }
+        
+        try {
+          console.log(`[Background] Processing work file: ${file.originalname}`);
+          
+          // 파일 상태를 processing으로 업데이트
+          await db.update(schema.files)
+            .set({
+              processingStatus: "processing",
+              updatedAt: new Date(),
+            })
+            .where(eq(schema.files.id, fileRecord.id));
+
+          // 파일 처리
+          const fileContent = await processFile(file);
+          
+          // 파일 내용 업데이트
+          await db.update(schema.files)
+            .set({
+              content: fileContent,
+              processingStatus: "parsed",
+              updatedAt: new Date(),
+            })
+            .where(eq(schema.files.id, fileRecord.id));
+          
+          // 세그먼트 생성 및 처리
+          await processFileSegments(fileRecord.id, fileContent, projectId);
+          
+          console.log(`[Background] Completed processing: ${file.originalname}`);
+          
+        } catch (fileError) {
+          console.error(`[Background] Error processing file ${file.originalname}:`, fileError);
+          
+          // 오류 상태로 업데이트
+          await db.update(schema.files)
+            .set({
+              processingStatus: "error",
+              errorMessage: fileError instanceof Error ? fileError.message : "Unknown error",
+              updatedAt: new Date(),
+            })
+            .where(eq(schema.files.id, fileRecord.id));
+        }
+      }
+    }
+
+    // 참조 파일 처리
+    if (uploadedFiles.references) {
+      for (const file of uploadedFiles.references) {
+        const fileRecord = savedFiles.find(f => 
+          f.type === "reference" && (
+            f.name === file.originalname ||
+            f.name.includes(path.parse(file.originalname).name)
+          )
+        );
+        
+        if (!fileRecord) {
+          console.warn(`[Background] Reference file record not found for: ${file.originalname}`);
+          continue;
+        }
+        
+        try {
+          console.log(`[Background] Processing reference file: ${file.originalname}`);
+          
+          const fileContent = await processFile(file);
+          
+          await db.update(schema.files)
+            .set({
+              content: fileContent,
+              processingStatus: "ready",
+              updatedAt: new Date(),
+            })
+            .where(eq(schema.files.id, fileRecord.id));
+          
+          console.log(`[Background] Completed reference file: ${file.originalname}`);
+          
+        } catch (refError) {
+          console.error(`[Background] Error processing reference file ${file.originalname}:`, refError);
+          
+          await db.update(schema.files)
+            .set({
+              processingStatus: "error",
+              errorMessage: refError instanceof Error ? refError.message : "Unknown error",
+              updatedAt: new Date(),
+            })
+            .where(eq(schema.files.id, fileRecord.id));
+        }
+      }
+    }
+
+    // 임시 파일 정리
+    Object.values(uploadedFiles).forEach((fileArray: any) => {
+      fileArray.forEach((file: any) => {
+        try {
+          if (fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path);
+          }
+        } catch (unlinkErr) {
+          console.error(`[Background] Failed to unlink file ${file.path}:`, unlinkErr);
+        }
+      });
+    });
+
+    console.log("[Background] File processing completed for project:", projectId);
+
+  } catch (error) {
+    console.error("[Background] Fatal error in file processing:", error);
+  }
+}
+
 // 세그먼트 처리 헬퍼 함수
 async function processFileSegments(fileId: number, fileContent: string, projectId: number) {
   try {
@@ -1856,6 +1983,9 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       { name: "references", maxCount: 10 },
     ]),
     async (req, res) => {
+      let project: any = null;
+      let uploadedFiles: any = null;
+      
       try {
         if (!req.user) {
           return res.status(401).json({ message: "Authentication required" });
@@ -1865,7 +1995,6 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
           body: req.body,
           files: req.files ? "Files present" : "No files",
           user: req.user,
-          headers: req.headers,
           contentType: req.get('content-type')
         });
 
@@ -1878,365 +2007,183 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
           deadline,
         } = req.body;
 
+        // 필수 필드 검증
         if (!name || !sourceLanguage || !targetLanguage) {
           return res.status(400).json({ message: "Required fields missing" });
         }
 
+        uploadedFiles = req.files as {
+          [fieldname: string]: Express.Multer.File[];
+        };
+
+        // 작업 파일이 없으면 프로젝트 생성 불가
+        if (!uploadedFiles || !uploadedFiles.files || uploadedFiles.files.length === 0) {
+          return res.status(400).json({ 
+            message: "At least one work file is required to create a project" 
+          });
+        }
+
         // 프로젝트 기본 정보 저장
         const projectData = {
-          name,
+          name: name.trim(),
           sourceLanguage,
           targetLanguage,
-          description: description || null,
-          notes: notes || null,
+          description: description?.trim() || null,
+          notes: notes?.trim() || null,
           deadline: deadline ? new Date(deadline) : null,
           userId: req.user.id,
           status: "Unclaimed",
         };
 
+        console.log("Creating project with data:", projectData);
+
         // 프로젝트 추가
-        const [project] = await db
+        const [createdProject] = await db
           .insert(schema.projects)
           .values(projectData)
           .returning();
 
-        // 업로드된 파일 기본 정보만 빠르게 DB에 저장 (파일 처리는 비동기적으로 진행)
+        project = createdProject;
+        console.log("Project created successfully:", project.id);
+
+        // 파일 정보 준비
         const fileRecords: (typeof schema.files.$inferInsert)[] = [];
-        const uploadedFiles = req.files as {
-          [fieldname: string]: Express.Multer.File[];
-        };
 
-        if (uploadedFiles && uploadedFiles.files) {
-          // 작업 파일 정보 저장
+        // 작업 파일 처리
+        if (uploadedFiles.files) {
           for (const file of uploadedFiles.files) {
-            // 새로운 복원 방식: 한글이 포함된 파일명을 다양한 인코딩으로 시도
-            let displayName = file.originalname;
-            
-            // 한글 파일명 추출 시도 - 다양한 방법 사용
-            console.log("=== 파일명 복원 시도 시작 ===");
-            console.log("1. 원본 파일명:", file.originalname);
-            
-            // 방법 1: 기존 저장된 매핑 사용
-            if (req.fileOriginalNames && req.fileOriginalNames[file.filename]) {
-              displayName = req.fileOriginalNames[file.filename];
-              console.log("2. 매핑 정보에서 복원된 파일명:", displayName);
-            } 
-            
-            // 방법 2: Buffer로 변환 후 다양한 인코딩 시도
-            let bestName = displayName;
-            let maxKoreanChars = 0;
-            
-            // 시도해볼 인코딩 목록
-            const encodingsToTry = ['euc-kr', 'cp949', 'utf-8', 'latin1', 'binary'];
-            
-            for (const encoding of encodingsToTry) {
-              try {
-                // 원본 이름을 바이너리로 다루고 해당 인코딩으로 디코딩
-                const bytes = Buffer.from(displayName, 'binary' as BufferEncoding);
-                const decodedName = iconv.decode(bytes, encoding);
-                
-                // 한글 문자 카운트
-                const koreanCharCount = (decodedName.match(/[\uAC00-\uD7A3]/g) || []).length;
-                
-                console.log(`인코딩 ${encoding} 결과:`, decodedName, `(한글 ${koreanCharCount}자)`);
-                
-                // 더 많은 한글 문자가 포함된 결과를 찾았다면 업데이트
-                if (koreanCharCount > maxKoreanChars) {
-                  maxKoreanChars = koreanCharCount;
-                  bestName = decodedName;
-                }
-              } catch (err) {
-                console.log(`인코딩 ${encoding} 시도 실패:`, err.message);
+            try {
+              // 안전한 파일명 처리
+              let displayName = file.originalname;
+              
+              // 매핑된 파일명이 있다면 사용
+              if (req.fileOriginalNames && req.fileOriginalNames[file.filename]) {
+                displayName = req.fileOriginalNames[file.filename];
               }
-            }
-            
-            // 방법 3: 원본 파일명에서 한글이 깨진 부분 감지 및 복원 시도
-            if (displayName.includes('�') || /諛|붾|떎|삦|씪/.test(displayName)) {
-              console.log("3. 한글 깨짐 패턴 감지됨, 추가 복원 시도");
               
-              // 특정 깨진 패턴에 대한 매핑
-              const patternMap: Record<string, string> = {
-                '諛붾떎': '바다',
-                '�깦�뵆': '샘플',
-                '_�': '_코',
-                '�_': '코_'
-              };
+              // 정규화 처리
+              displayName = displayName.normalize('NFC');
               
-              // 패턴 매핑 적용
-              Object.keys(patternMap).forEach(pattern => {
-                if (displayName.includes(pattern)) {
-                  displayName = displayName.replace(new RegExp(pattern, 'g'), patternMap[pattern]);
-                  console.log(`패턴 매칭 적용: ${pattern} => ${patternMap[pattern]}`);
-                }
+              console.log(`Processing work file: ${displayName}`);
+              
+              // 파일 내용 읽기
+              let fileContent = "";
+              try {
+                fileContent = fs.readFileSync(file.path, 'utf8');
+              } catch (readError) {
+                console.error(`Failed to read file ${displayName}:`, readError);
+                // 파일 읽기 실패 시 기본 내용으로 설정
+                fileContent = `[File processing failed: ${displayName}]`;
+              }
+              
+              // 파일 레코드 추가
+              fileRecords.push({
+                name: displayName,
+                content: fileContent,
+                projectId: project.id,
+                type: "work",
+                processingStatus: "uploaded",
+                createdAt: new Date(),
+                updatedAt: new Date(),
               });
+            } catch (fileError) {
+              console.error(`Error processing file ${file.originalname}:`, fileError);
+              // 개별 파일 오류는 무시하고 계속 진행
             }
-            
-            // 최종 결정: 가장 많은 한글을 포함한 이름 또는 패턴 매칭 결과 사용
-            if (maxKoreanChars > 0) {
-              displayName = bestName;
-              console.log("4. 최종 선택된 파일명 (한글 기준):", displayName);
-            }
-            
-            // 정규화 처리
-            displayName = displayName.normalize('NFC');
-            console.log("5. 최종 정규화된 파일명:", displayName);
-            console.log("=== 파일명 복원 시도 완료 ===");
-            
-            // 파일 내용 읽기
-            const fileContent = fs.readFileSync(file.path, 'utf8');
-            
-            // 초기 파일 정보 저장 (업로드됨, 아직 파싱되지 않음)
-            fileRecords.push({
-              name: displayName, // 복원된 한글 파일명 사용
-              content: fileContent, // 실제 파일 내용 저장
-              projectId: project.id,
-              type: "work",
-              processingStatus: "uploaded", // 업로드됨, 파싱 대기 중
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            });
           }
         }
 
-        if (uploadedFiles && uploadedFiles.references) {
-          // 참조 파일 정보 저장
+        // 참조 파일 처리
+        if (uploadedFiles.references) {
           for (const file of uploadedFiles.references) {
-            // 새로운 복원 방식: 한글이 포함된 파일명을 다양한 인코딩으로 시도
-            let displayName = file.originalname;
-            
-            // 한글 파일명 추출 시도 - 다양한 방법 사용
-            console.log("=== 참조 파일명 복원 시도 시작 ===");
-            console.log("1. 원본 참조 파일명:", file.originalname);
-            
-            // 방법 1: 기존 저장된 매핑 사용
-            if (req.fileOriginalNames && req.fileOriginalNames[file.filename]) {
-              displayName = req.fileOriginalNames[file.filename];
-              console.log("2. 매핑 정보에서 복원된 참조 파일명:", displayName);
-            } 
-            
-            // 방법 2: Buffer로 변환 후 다양한 인코딩 시도
-            let bestName = displayName;
-            let maxKoreanChars = 0;
-            
-            // 시도해볼 인코딩 목록
-            const encodingsToTry = ['euc-kr', 'cp949', 'utf-8', 'latin1', 'binary'];
-            
-            for (const encoding of encodingsToTry) {
-              try {
-                // 원본 이름을 바이너리로 다루고 해당 인코딩으로 디코딩
-                const bytes = Buffer.from(displayName, 'binary' as BufferEncoding);
-                const decodedName = iconv.decode(bytes, encoding);
-                
-                // 한글 문자 카운트
-                const koreanCharCount = (decodedName.match(/[\uAC00-\uD7A3]/g) || []).length;
-                
-                console.log(`참조 파일 인코딩 ${encoding} 결과:`, decodedName, `(한글 ${koreanCharCount}자)`);
-                
-                // 더 많은 한글 문자가 포함된 결과를 찾았다면 업데이트
-                if (koreanCharCount > maxKoreanChars) {
-                  maxKoreanChars = koreanCharCount;
-                  bestName = decodedName;
-                }
-              } catch (err) {
-                console.log(`참조 파일 인코딩 ${encoding} 시도 실패:`, err.message);
+            try {
+              let displayName = file.originalname;
+              
+              if (req.fileOriginalNames && req.fileOriginalNames[file.filename]) {
+                displayName = req.fileOriginalNames[file.filename];
               }
-            }
-            
-            // 방법 3: 원본 파일명에서 한글이 깨진 부분 감지 및 복원 시도
-            if (displayName.includes('�') || /諛|붾|떎|삦|씪/.test(displayName)) {
-              console.log("3. 한글 깨짐 패턴 감지됨, 추가 복원 시도");
               
-              // 특정 깨진 패턴에 대한 매핑
-              const patternMap: Record<string, string> = {
-                '諛붾떎': '바다',
-                '�깦�뵆': '샘플',
-                '_�': '_코',
-                '�_': '코_'
-              };
+              displayName = displayName.normalize('NFC');
               
-              // 패턴 매핑 적용
-              Object.keys(patternMap).forEach(pattern => {
-                if (displayName.includes(pattern)) {
-                  displayName = displayName.replace(new RegExp(pattern, 'g'), patternMap[pattern]);
-                  console.log(`참조 파일 패턴 매칭 적용: ${pattern} => ${patternMap[pattern]}`);
-                }
+              console.log(`Processing reference file: ${displayName}`);
+              
+              fileRecords.push({
+                name: displayName,
+                content: `[Processing reference file: ${displayName}]`,
+                projectId: project.id,
+                type: "reference",
+                processingStatus: "processing",
+                createdAt: new Date(),
+                updatedAt: new Date(),
               });
+            } catch (fileError) {
+              console.error(`Error processing reference file ${file.originalname}:`, fileError);
             }
-            
-            // 최종 결정: 가장 많은 한글을 포함한 이름 또는 패턴 매칭 결과 사용
-            if (maxKoreanChars > 0) {
-              displayName = bestName;
-              console.log("4. 최종 선택된 참조 파일명 (한글 기준):", displayName);
-            }
-            
-            // 정규화 처리
-            displayName = displayName.normalize('NFC');
-            console.log("5. 최종 정규화된 참조 파일명:", displayName);
-            console.log("=== 참조 파일명 복원 시도 완료 ===");
-            
-            // 초기 파일 정보만 저장 (처리 전) - 복원된 파일명 사용
-            fileRecords.push({
-              name: displayName, // 복원된 한글 파일명 사용
-              content: `[Processing ${displayName}...]`, // 임시 콘텐츠, 나중에 업데이트됨
-              projectId: project.id,
-              type: "reference", 
-              processingStatus: "processing", // 처리 중 상태로 표시
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            });
           }
         }
 
-        // 파일 레코드를 데이터베이스에 저장
+        // 파일 레코드 저장
         let savedFiles: (typeof schema.files.$inferSelect)[] = [];
         if (fileRecords.length > 0) {
-          savedFiles = await db.insert(schema.files).values(fileRecords).returning();
+          try {
+            savedFiles = await db.insert(schema.files).values(fileRecords).returning();
+            console.log(`Saved ${savedFiles.length} file records`);
+          } catch (dbError) {
+            console.error("Database error saving files:", dbError);
+            throw new Error("Failed to save file information to database");
+          }
         }
 
-        // 비동기적으로 파일 처리 시작 (응답 반환 후 백그라운드에서 실행)
-        if (uploadedFiles) {
-          // 스레드 차단하지 않고 백그라운드에서 실행
+        // 백그라운드에서 파일 처리 시작
+        if (uploadedFiles && savedFiles.length > 0) {
           setImmediate(async () => {
             try {
-              // 작업 파일 처리
-              if (uploadedFiles.files) {
-                for (let i = 0; i < uploadedFiles.files.length; i++) {
-                  const file = uploadedFiles.files[i];
-                  const fileRecord = savedFiles.find(f => f.name === file.originalname && f.type === "work");
-                  
-                  if (!fileRecord) continue;
-                  
-                  try {
-                    console.log(`[비동기 처리] 파일 처리 시작: ${file.originalname}`);
-                    
-                    // 파일 처리
-                    const fileContent = await processFile(file);
-                    
-                    // 템플릿 매칭 정보가 있다면 프로젝트에 저장
-                    if ((file as any).matchedTemplate) {
-                      const matchResult = (file as any).matchedTemplate;
-                      await db
-                        .update(schema.projects)
-                        .set({
-                          templateId: matchResult.template.id,
-                          templateMatchScore: JSON.stringify({
-                            score: matchResult.matchScore,
-                            templateName: matchResult.template.name
-                          }),
-                          updatedAt: new Date(),
-                        })
-                        .where(eq(schema.projects.id, project.id));
-                      console.log(`프로젝트에 템플릿 정보 저장: ${matchResult.template.name}`);
-                    }
-                    
-                    // 파일 내용 업데이트 (processingStatus는 아직 "processing"으로 유지)
-                    await db
-                      .update(schema.files)
-                      .set({
-                        content: fileContent,
-                        updatedAt: new Date(),
-                      })
-                      .where(eq(schema.files.id, fileRecord.id));
-                    
-                    console.log(`[비동기 처리] 파일 내용 처리 완료: ${file.originalname}`);
-                    
-                    // 세그먼트 생성 및 처리
-                    if (fileRecord.type === "work") {
-                      // GPT 번역 완료 후 processingStatus를 "ready"로 변경하는 기능이 
-                      // processFileSegments 함수 내부에 구현되어 있음
-                      await processFileSegments(fileRecord.id, fileContent, project.id);
-                      
-                      console.log(`[비동기 처리] 세그먼트 처리 및 GPT 번역 완료: ${file.originalname}`);
-                    } else {
-                      // 작업 파일이 아닌 경우(참조 파일 등) 바로 ready 상태로 설정
-                      await db
-                        .update(schema.files)
-                        .set({
-                          processingStatus: "ready",
-                          updatedAt: new Date(),
-                        })
-                        .where(eq(schema.files.id, fileRecord.id));
-                    }
-                  } catch (error) {
-                    console.error(`[비동기 처리] 파일 처리 오류: ${file.originalname}`, error);
-                    // 오류 상태로 업데이트
-                    await db
-                      .update(schema.files)
-                      .set({
-                        processingStatus: "error", 
-                        errorMessage: error instanceof Error ? error.message : "Unknown error",
-                        updatedAt: new Date(),
-                      })
-                      .where(eq(schema.files.id, fileRecord.id));
-                  }
-                }
-              }
-              
-              // 참조 파일 처리
-              if (uploadedFiles.references) {
-                for (let i = 0; i < uploadedFiles.references.length; i++) {
-                  const file = uploadedFiles.references[i];
-                  const fileRecord = savedFiles.find(f => f.name === file.originalname && f.type === "reference");
-                  
-                  if (!fileRecord) continue;
-                  
-                  try {
-                    console.log(`[비동기 처리] 참조 파일 처리 시작: ${file.originalname}`);
-                    
-                    // 파일 처리
-                    const fileContent = await processFile(file);
-                    
-                    // 파일 내용 업데이트
-                    await db
-                      .update(schema.files)
-                      .set({
-                        content: fileContent,
-                        processingStatus: "ready", // 처리 완료 상태로 업데이트
-                        updatedAt: new Date(),
-                      })
-                      .where(eq(schema.files.id, fileRecord.id));
-                    
-                    console.log(`[비동기 처리] 참조 파일 처리 완료: ${file.originalname}`);
-                  } catch (error) {
-                    console.error(`[비동기 처리] 참조 파일 처리 오류: ${file.originalname}`, error);
-                    // 오류 상태로 업데이트
-                    await db
-                      .update(schema.files)
-                      .set({
-                        processingStatus: "error", 
-                        errorMessage: error instanceof Error ? error.message : "Unknown error",
-                        updatedAt: new Date(),
-                      })
-                      .where(eq(schema.files.id, fileRecord.id));
-                  }
-                }
-              }
-              
-              // 임시 파일 정리
-              Object.values(uploadedFiles).forEach((fileArray) => {
-                fileArray.forEach((file) => {
-                  try {
-                    fs.unlinkSync(file.path);
-                  } catch (unlinkErr) {
-                    console.error(`Failed to unlink file ${file.path}:`, unlinkErr);
-                  }
-                });
-              });
-            } catch (error) {
-              console.error("[비동기 처리] 전체 작업 오류:", error);
+              await processFilesInBackground(uploadedFiles, savedFiles, project.id);
+            } catch (bgError) {
+              console.error("[Background Processing] Error:", bgError);
             }
           });
         }
-        
-        // 파일 처리를 기다리지 않고 즉시 프로젝트 생성 응답 반환
+
+        // 즉시 성공 응답 반환
         return res.status(201).json({
           ...project,
           message: "Project created successfully. Files are being processed in the background.",
           filesCount: fileRecords.length,
-          filesProcessing: true
+          filesProcessing: savedFiles.length > 0
         });
+
       } catch (error) {
         console.error("Project creation error:", error);
+        
+        // 프로젝트가 생성되었지만 파일 처리 중 오류가 발생한 경우
+        if (project) {
+          console.log("Cleaning up partially created project:", project.id);
+          try {
+            // 생성된 파일 레코드 삭제
+            await db.delete(schema.files).where(eq(schema.files.projectId, project.id));
+            // 프로젝트 삭제
+            await db.delete(schema.projects).where(eq(schema.projects.id, project.id));
+          } catch (cleanupError) {
+            console.error("Cleanup error:", cleanupError);
+          }
+        }
+
+        // 업로드된 임시 파일 정리
+        if (uploadedFiles) {
+          Object.values(uploadedFiles).forEach((fileArray: any) => {
+            fileArray.forEach((file: any) => {
+              try {
+                if (fs.existsSync(file.path)) {
+                  fs.unlinkSync(file.path);
+                }
+              } catch (unlinkErr) {
+                console.error(`Failed to unlink file ${file.path}:`, unlinkErr);
+              }
+            });
+          });
+        }
+
         return handleApiError(res, error);
       }
     },
