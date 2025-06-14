@@ -1387,11 +1387,19 @@ export default function Project() {
                               </h3>
                               {file.processingStatus && (
                                 <div className="ml-2">
+                                  {file.processingStatus === "pending" && (
+                                    <div className="flex items-center">
+                                      <div className="h-3 w-3 bg-gray-400 rounded-full mr-1"></div>
+                                      <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400 rounded">
+                                        대기 중
+                                      </span>
+                                    </div>
+                                  )}
                                   {file.processingStatus === "processing" && (
                                     <div className="flex items-center">
                                       <div className="animate-spin h-3 w-3 border-2 border-primary border-t-transparent rounded-full mr-1"></div>
                                       <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded">
-                                        {t("projects.processing")}
+                                        파일 처리 중 {file.processingProgress ? `(${file.processingProgress}%)` : ''}
                                       </span>
                                     </div>
                                   )}
@@ -1399,7 +1407,7 @@ export default function Project() {
                                     <div className="flex items-center">
                                       <div className="animate-pulse h-3 w-3 bg-orange-400 rounded-full mr-1"></div>
                                       <span className="text-xs px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded">
-                                        {t("projects.translating")}
+                                        번역 중 {file.processingProgress ? `(${file.processingProgress}%)` : ''}
                                       </span>
                                     </div>
                                   )}
@@ -1407,7 +1415,7 @@ export default function Project() {
                                     <div className="flex items-center">
                                       <div className="h-3 w-3 bg-green-400 rounded-full mr-1"></div>
                                       <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
-                                        {t("projects.ready")}
+                                        번역 완료
                                       </span>
                                     </div>
                                   )}
@@ -1415,33 +1423,27 @@ export default function Project() {
                                     <div className="flex items-center">
                                       <div className="h-3 w-3 bg-red-400 rounded-full mr-1"></div>
                                       <span className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded">
-                                        {t("projects.error")}
+                                        처리 실패
                                       </span>
+                                      {file.errorMessage && (
+                                        <span className="text-xs text-red-600 dark:text-red-400 ml-2 truncate max-w-[200px]" title={file.errorMessage}>
+                                          {file.errorMessage}
+                                        </span>
+                                      )}
                                     </div>
-                                  )}
-                                  {file.processingStatus === "error" && (
-                                    <span
-                                      className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded"
-                                      title={
-                                        file.errorMessage ||
-                                        t("projects.processingError")
-                                      }
-                                    >
-                                      {t("projects.processingError")}
-                                    </span>
-                                  )}
-                                  {file.processingStatus === "ready" && (
-                                    <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
-                                      {t("projects.ready")}
-                                    </span>
                                   )}
                                 </div>
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                              {file.processingStatus === "processing" ? (
+                              {file.processingStatus === "pending" ? (
                                 <Progress
-                                  value={30}
+                                  value={0}
+                                  className="h-2 flex-1"
+                                />
+                              ) : file.processingStatus === "processing" || file.processingStatus === "translating" ? (
+                                <Progress
+                                  value={file.processingProgress || 0}
                                   className="h-2 flex-1 animate-pulse"
                                 />
                               ) : file.processingStatus === "error" ? (
