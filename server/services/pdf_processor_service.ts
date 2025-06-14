@@ -96,6 +96,7 @@ async function updateProcessingProgress(
 ): Promise<void> {
   const updateData: any = {
     processingStatus: status,
+    processingProgress: progress >= 0 ? progress : 0,
     updatedAt: new Date()
   };
 
@@ -146,8 +147,7 @@ async function translateSegments(fileId: number, projectId: number): Promise<voi
       const translation = await translateWithRetry(
         segment.source,
         project.sourceLanguage,
-        project.targetLanguage,
-        3
+        project.targetLanguage
       );
 
       await db.update(schema.translationUnits)
@@ -174,8 +174,12 @@ async function translateWithRetry(
 ): Promise<string> {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const result = await translateWithGPT(text, sourceLanguage, targetLanguage);
-      return result;
+      const result = await translateWithGPT({
+        source: text,
+        sourceLanguage,
+        targetLanguage
+      });
+      return result.target;
     } catch (error) {
       if (attempt === maxRetries) {
         throw error;

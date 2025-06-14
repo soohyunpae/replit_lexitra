@@ -65,7 +65,8 @@ export const files = pgTable("files", {
   content: text("content").notNull(),
   projectId: integer("project_id").references(() => projects.id).notNull(),
   type: text("type").default("work"),  // 'work' 또는 'reference' 값을 가짐
-  processingStatus: text("processing_status").default("processing").notNull(), // 'processing', 'ready', 'error' 값을 가짐
+  processingStatus: text("processing_status").default("pending").notNull(), // 'pending', 'processing', 'translating', 'ready', 'error' 값을 가짐
+  processingProgress: integer("processing_progress").default(0), // 0-100 진행률
   errorMessage: text("error_message"), // 오류 발생 시 오류 메시지 저장
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

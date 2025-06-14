@@ -183,23 +183,27 @@ router.post('/process-project', verifyToken, upload.single('file'), async (req: 
         projectId: project.id,
         name: file.originalname,
         content: "",  // 필요한 경우 내용 저장
-        mimeType: file.mimetype,
-        size: file.size,
-        processingStatus: 'processing',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        processingStatus: 'pending',
+        processingProgress: 0
       }).returning();
 
-      // 3. 비동기로 PDF 처리 및 번역 시작
-      processPDFAndTranslate(fileRecord.id, file.path, project.id)
-        .catch(error => console.error('PDF 처리 및 번역 오류:', error));
-
-      // 4. 응답 반환
-      return res.status(201).json({
-        message: 'Project created and PDF processing started',
+      // 3. 즉시 응답 반환 (사용자가 빠르게 프로젝트에 접근 가능)
+      const response = {
+        message: 'Project created successfully',
         project,
         file: fileRecord
+      };
+
+      // 4. 백그라운드에서 비동기 PDF 처리 및 번역 시작
+      setImmediate(async () => {
+        try {
+          await processPDFAndTranslate(fileRecord.id, file.path, project.id);
+        } catch (error) {
+          console.error('PDF 처리 및 번역 오류:', error);
+        }
       });
+
+      return res.status(201).json(response);
     } catch (error: any) {
       console.error('프로젝트 생성 오류:', error);
       return res.status(500).json({ 
