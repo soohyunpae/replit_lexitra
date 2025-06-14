@@ -1395,6 +1395,30 @@ export default function Project() {
                                       </span>
                                     </div>
                                   )}
+                                  {file.processingStatus === "translating" && (
+                                    <div className="flex items-center">
+                                      <div className="animate-pulse h-3 w-3 bg-orange-400 rounded-full mr-1"></div>
+                                      <span className="text-xs px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded">
+                                        {t("projects.translating")}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {file.processingStatus === "ready" && (
+                                    <div className="flex items-center">
+                                      <div className="h-3 w-3 bg-green-400 rounded-full mr-1"></div>
+                                      <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
+                                        {t("projects.ready")}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {file.processingStatus === "error" && (
+                                    <div className="flex items-center">
+                                      <div className="h-3 w-3 bg-red-400 rounded-full mr-1"></div>
+                                      <span className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded">
+                                        {t("projects.error")}
+                                      </span>
+                                    </div>
+                                  )}
                                   {file.processingStatus === "error" && (
                                     <span
                                       className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded"
