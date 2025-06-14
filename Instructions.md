@@ -1,4 +1,3 @@
-
 # 파일 업로드 UX 개선을 위한 비동기 처리 구현 방안
 
 ## 🔍 현재 문제 상황 분석
@@ -19,7 +18,7 @@
 ### 제안하는 새로운 흐름
 ```
 1단계: 파일 업로드 → 구조 분석 → 세그먼트 저장 → 프로젝트 즉시 생성 (30초 이내)
-2단계: 백그라운드에서 GPT 번역 순차 처리 (별도 버튼 또는 자동)
+2단계: GPT 번역은 업로드 완료 후 자동으로 실행되며, 사용자는 번역 상태만 확인
 ```
 
 ## 🛠️ 구현 방안
@@ -46,7 +45,7 @@ POST /api/projects
 → 프로젝트 즉시 생성 (segments 테이블에 origin: 'PENDING' 상태로 저장)
 
 POST /api/projects/:id/translate
-→ GPT 번역 백그라운드 처리
+→ GPT 번역 백그라운드 처리 자동 실행
 ```
 
 #### 1-2. 세그먼트 상태 관리 개선
@@ -93,13 +92,13 @@ interface TranslationJob {
 class TranslationQueue {
   private queue: TranslationJob[] = [];
   private processing: Map<number, boolean> = new Map();
-  
-  // 번역 작업 추가
+
+  // 번역 작업 추가 (자동 실행)
   async addJob(projectId: number, segmentIds: number[]): Promise<void>
-  
+
   // 백그라운드 번역 처리
   async processQueue(): Promise<void>
-  
+
   // 진행률 업데이트
   async updateProgress(projectId: number, completed: number, total: number): Promise<void>
 }
@@ -125,11 +124,6 @@ socket.emit('translation_progress', {
 **새 파일**: `server/routes/translation.ts`
 
 ```typescript
-// 번역 시작
-POST /api/projects/:id/start-translation
-→ 번역 큐에 작업 추가
-→ 즉시 응답 (202 Accepted)
-
 // 번역 진행률 조회
 GET /api/projects/:id/translation-status
 → { progress: number, status: string, eta: string }
@@ -144,16 +138,15 @@ POST /api/projects/:id/stop-translation
 #### 3-1. 프로젝트 생성 플로우 수정
 **파일**: `client/src/pages/projects.tsx`
 
-프로젝트 생성 후 즉시 번역 페이지로 이동하되, 번역은 선택적으로:
+프로젝트 생성 후 즉시 번역 페이지로 이동하며, 번역은 자동 실행되어 상태만 확인:
 
 ```typescript
 // 프로젝트 생성 완료 후
 const handleProjectCreated = (projectId: number) => {
   // 즉시 프로젝트 페이지로 이동
   navigate(`/projects/${projectId}`);
-  
-  // 번역 시작 옵션 제공
-  showTranslationStartDialog();
+
+  // 번역은 자동 실행되며, 사용자는 진행 상태만 확인
 };
 ```
 
@@ -170,7 +163,7 @@ interface TranslationProgressProps {
 export function TranslationProgress({ projectId, onComplete }: TranslationProgressProps) {
   // WebSocket으로 실시간 진행률 수신
   // 진행 바, ETA, 현재 처리 중인 세그먼트 정보 표시
-  // 일시정지/재시작/중단 버튼 제공
+  // 일시정지/재시작/중단 버튼 없이 자동 진행 상태만 표시
 }
 ```
 
@@ -183,16 +176,16 @@ export function TranslationProgress({ projectId, onComplete }: TranslationProgre
 // 번역 상태별 UI 표시
 switch (project.translationStatus) {
   case 'PENDING':
-    // "번역 시작" 버튼 표시
+    // 번역 대기 중 상태 표시
     break;
   case 'IN_PROGRESS':
-    // 진행률 표시 + 일시정지 옵션
+    // 진행률 표시
     break;
   case 'COMPLETED':
     // 일반 편집기 표시
     break;
   case 'FAILED':
-    // 재시도 옵션 표시
+    // 오류 및 재시도 안내 표시
     break;
 }
 ```
@@ -219,7 +212,7 @@ interface TranslationConfig {
 // 사용자별 번역 설정 저장
 export const userTranslationSettings = pgTable('user_translation_settings', {
   userId: integer('user_id').references(() => users.id),
-  autoStartTranslation: boolean('auto_start_translation').default(false),
+  autoStartTranslation: boolean('auto_start_translation').default(true),
   batchSize: integer('batch_size').default(10),
   // ... 기타 설정들
 });
@@ -242,16 +235,16 @@ interface TranslationMetrics {
 
 ### High Priority (1-2주)
 1. **프로젝트 생성 API 분리**: 즉시 생성 + 번역 대기 상태
-2. **기본 번역 큐 시스템**: 순차 처리 구현
-3. **프론트엔드 번역 시작 버튼**: 수동 번역 시작 옵션
+2. **기본 번역 큐 시스템**: 자동 순차 처리 구현
+3. **프론트엔드 번역 진행률 표시 컴포넌트**: 자동 진행 상태 표시
 
 ### Medium Priority (2-3주)
 1. **WebSocket 진행률 업데이트**: 실시간 상태 표시
-2. **번역 중단/재시작 기능**: 사용자 제어 옵션
+2. **번역 중단 기능**: 사용자 제어 옵션
 3. **배치 처리 최적화**: 성능 개선
 
 ### Low Priority (3-4주)
-1. **자동 번역 시작 옵션**: 사용자 설정 기반
+1. **사용자 설정 기반 자동 번역 옵션**
 2. **번역 분석 및 최적화**: 성능 모니터링
 3. **에러 처리 및 재시도**: 안정성 개선
 
@@ -260,7 +253,7 @@ interface TranslationMetrics {
 ### 사용자 경험 개선
 - **대기 시간 90% 단축**: 30초 내 프로젝트 접근 가능
 - **투명한 진행률**: 실시간 번역 상태 확인
-- **유연한 제어**: 번역 시작/중단/재시작 자유도
+- **유연한 제어**: 자동 번역 실행과 상태 확인
 
 ### 시스템 안정성
 - **리소스 분산**: 피크 시간 부하 분산
@@ -278,15 +271,14 @@ interface TranslationMetrics {
 - [ ] segments 테이블 상태 필드 추가 (PENDING, FAILED)
 - [ ] projects 테이블 번역 진행률 필드 추가
 - [ ] 프로젝트 생성 API 분리 (번역 제외)
-- [ ] 번역 큐 시스템 구현
-- [ ] 번역 API 엔드포인트 분리
+- [ ] 번역 큐 시스템 구현 (자동 실행)
+- [ ] 번역 API 엔드포인트 분리 (진행률 조회, 중단)
 - [ ] WebSocket 진행률 이벤트 구현
 - [ ] 배치 처리 로직 구현
 
 ### 프론트엔드 작업
 - [ ] 프로젝트 생성 플로우 수정
-- [ ] 번역 진행률 컴포넌트 구현
-- [ ] 번역 시작/중단 버튼 추가
+- [ ] 번역 진행률 컴포넌트 구현 (자동 상태 표시)
 - [ ] WebSocket 진행률 수신 구현
 - [ ] 프로젝트 상태별 UI 분기
 - [ ] 사용자 설정 페이지 추가
