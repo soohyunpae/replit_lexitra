@@ -18,276 +18,240 @@
 ### 제안하는 새로운 흐름
 ```
 1단계: 파일 업로드 → 구조 분석 → 세그먼트 저장 → 프로젝트 즉시 생성 (30초 이내)
-2단계: GPT 번역은 업로드 완료 후 자동으로 실행되며, 사용자는 번역 상태만 확인
+2단계: GPT 번역은 백그라운드에서 자동 실행되며, 사용자는 번역 상태만 확인
 ```
 
 ## 🛠️ 구현 방안
 
-### Phase 1: 업로드 단계 분리
+### Phase 1: 기존 구조 개선
 
-#### 1-1. 프로젝트 생성 API 수정
+#### 1-1. 프로젝트 상태 표시 개선
+**파일**: `client/src/pages/project.tsx`
+
+현재 이미 구현된 `processingStatus` 필드를 더 잘 활용:
+
+```typescript
+// 현재 상태: "processing", "ready", "error"
+// 파일별로 처리 상태가 표시되고 있음
+
+// UI에서 상태를 더 명확하게 표시
+{file.processingStatus === "processing" && (
+  <div className="flex items-center">
+    <div className="animate-spin h-3 w-3 border-2 border-primary border-t-transparent rounded-full mr-1"></div>
+    <span className="text-xs">번역 진행 중...</span>
+  </div>
+)}
+```
+
+#### 1-2. 진행률 표시 개선
+**파일**: `client/src/pages/project.tsx`
+
+기존 진행률 API를 더 자주 폴링하여 실시간성 개선:
+
+```typescript
+// 현재 이미 있는 API: GET /api/projects/:id/stats
+// 폴링 주기를 5초에서 2초로 단축
+const { data: projectStats } = useQuery({
+  queryKey: [`/api/projects/${projectId}/stats`],
+  refetchInterval: 2000, // 2초마다 갱신
+  enabled: !!projectId && hasProcessingFiles
+});
+```
+
+### Phase 2: 백그라운드 처리 최적화
+
+#### 2-1. 현재 비동기 처리 구조 개선
 **파일**: `server/routes.ts`
 
-현재 `/api/projects` POST 엔드포인트를 다음과 같이 수정:
+현재 이미 구현된 `setImmediate` 기반 비동기 처리를 더 효율적으로:
 
-**Before:**
 ```typescript
-// 현재: 모든 처리를 한 번에
-POST /api/projects
-→ 파일 업로드 + 구조 분석 + 세그먼트 저장 + GPT 번역
-```
+// 현재 구조 (라인 1100-1200 참조):
+setImmediate(async () => {
+  // 파일 처리를 백그라운드에서 실행
+  await processFileSegments(fileRecord.id, fileContent, project.id);
+});
 
-**After:**
-```typescript
-// 수정: 단계별 처리
-POST /api/projects
-→ 파일 업로드 + 구조 분석 + 세그먼트 저장만
-→ 프로젝트 즉시 생성 (segments 테이블에 origin: 'PENDING' 상태로 저장)
+// 개선 방안: 진행률 업데이트 추가
+setImmediate(async () => {
+  try {
+    // 단계별 진행률 업데이트
+    await updateProcessingProgress(project.id, 10, "구조 분석 중");
+    await processFileContent(file);
 
-POST /api/projects/:id/translate
-→ GPT 번역 백그라운드 처리 자동 실행
-```
+    await updateProcessingProgress(project.id, 50, "세그먼트 생성 중");
+    await createSegments(fileRecord.id, fileContent);
 
-#### 1-2. 세그먼트 상태 관리 개선
-**파일**: `shared/schema.ts`
+    await updateProcessingProgress(project.id, 80, "번역 중");
+    await translateSegments(fileRecord.id, project.id);
 
-segments 테이블의 origin 필드에 새로운 상태 추가:
-```typescript
-export const segmentOriginEnum = pgEnum('segment_origin', [
-  'MT',      // 기존: Machine Translation
-  'TM',      // 기존: Translation Memory
-  'HT',      // 기존: Human Translation
-  'PENDING', // 새로운: 번역 대기 중
-  'FAILED'   // 새로운: 번역 실패
-]);
-```
-
-#### 1-3. 프로젝트 상태 추가
-**파일**: `shared/schema.ts`
-
-projects 테이블에 번역 진행 상태 필드 추가:
-```typescript
-export const projects = pgTable('projects', {
-  // ... 기존 필드들
-  translationStatus: varchar('translation_status', { length: 20 }).default('PENDING'),
-  // 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED'
-  translationProgress: integer('translation_progress').default(0),
-  // 0-100 퍼센트 진행률
+    await updateProcessingProgress(project.id, 100, "완료");
+  } catch (error) {
+    await updateProcessingProgress(project.id, -1, "오류 발생");
+  }
 });
 ```
 
-### Phase 2: 백그라운드 처리 시스템
+#### 2-2. 배치 처리 개선
+**파일**: `server/routes.ts` (processFileSegments 함수)
 
-#### 2-1. 번역 작업 큐 시스템 구현
-**새 파일**: `server/services/translation_queue.ts`
+현재 세그먼트별 순차 처리를 배치 단위로 개선:
 
 ```typescript
-// 큐 기반 번역 처리 시스템 구현
-interface TranslationJob {
-  projectId: number;
-  segmentIds: number[];
-  priority: 'high' | 'normal' | 'low';
-}
+// 현재: 각 세그먼트마다 개별 GPT 호출
+// 개선: 5-10개씩 배치로 처리
+const batchSize = 5;
+for (let i = 0; i < savedSegments.length; i += batchSize) {
+  const batch = savedSegments.slice(i, i + batchSize);
 
-class TranslationQueue {
-  private queue: TranslationJob[] = [];
-  private processing: Map<number, boolean> = new Map();
+  // 배치 단위로 병렬 처리
+  await Promise.all(batch.map(segment => translateSegment(segment)));
 
-  // 번역 작업 추가 (자동 실행)
-  async addJob(projectId: number, segmentIds: number[]): Promise<void>
-
-  // 백그라운드 번역 처리
-  async processQueue(): Promise<void>
-
-  // 진행률 업데이트
-  async updateProgress(projectId: number, completed: number, total: number): Promise<void>
+  // 배치 완료 후 잠시 대기 (API 레이트 리미트 고려)
+  await new Promise(resolve => setTimeout(resolve, 1000));
 }
 ```
 
-#### 2-2. WebSocket 실시간 진행률 업데이트
-**파일**: `server/index.ts` 및 `client/src/lib/websocket.ts`
+### Phase 3: 사용자 피드백 개선
 
-WebSocket을 통해 번역 진행률을 실시간으로 클라이언트에 전송:
+#### 3-1. 실시간 상태 업데이트
+**파일**: `client/src/pages/project.tsx`
 
-```typescript
-// 서버사이드 이벤트
-socket.emit('translation_progress', {
-  projectId: number,
-  progress: number, // 0-100
-  currentSegment: number,
-  totalSegments: number,
-  status: 'IN_PROGRESS' | 'COMPLETED' | 'FAILED'
-});
-```
-
-#### 2-3. 번역 API 엔드포인트 분리
-**새 파일**: `server/routes/translation.ts`
+현재 파일별 상태 표시를 더 상세하게:
 
 ```typescript
-// 번역 진행률 조회
-GET /api/projects/:id/translation-status
-→ { progress: number, status: string, eta: string }
-
-// 번역 중단
-POST /api/projects/:id/stop-translation
-→ 번역 작업 중단
-```
-
-### Phase 3: 프론트엔드 UX 개선
-
-#### 3-1. 프로젝트 생성 플로우 수정
-**파일**: `client/src/pages/projects.tsx`
-
-프로젝트 생성 후 즉시 번역 페이지로 이동하며, 번역은 자동 실행되어 상태만 확인:
-
-```typescript
-// 프로젝트 생성 완료 후
-const handleProjectCreated = (projectId: number) => {
-  // 즉시 프로젝트 페이지로 이동
-  navigate(`/projects/${projectId}`);
-
-  // 번역은 자동 실행되며, 사용자는 진행 상태만 확인
+// 현재 표시되는 상태를 더 구체적으로
+const getProcessingMessage = (file) => {
+  switch (file.processingStatus) {
+    case "processing":
+      return "파일 분석 및 번역 진행 중...";
+    case "ready":
+      return "번역 완료";
+    case "error":
+      return `오류: ${file.errorMessage || "처리 실패"}`;
+    default:
+      return "대기 중";
+  }
 };
 ```
 
-#### 3-2. 번역 진행률 표시 컴포넌트
-**새 파일**: `client/src/components/translation/translation-progress.tsx`
-
-```typescript
-// 실시간 번역 진행률 표시
-interface TranslationProgressProps {
-  projectId: number;
-  onComplete: () => void;
-}
-
-export function TranslationProgress({ projectId, onComplete }: TranslationProgressProps) {
-  // WebSocket으로 실시간 진행률 수신
-  // 진행 바, ETA, 현재 처리 중인 세그먼트 정보 표시
-  // 일시정지/재시작/중단 버튼 없이 자동 진행 상태만 표시
-}
-```
-
-#### 3-3. 프로젝트 페이지 개선
+#### 3-2. 전체 프로젝트 진행률 표시
 **파일**: `client/src/pages/project.tsx`
 
-번역 상태에 따른 UI 분기:
+파일별 상태를 종합한 전체 진행률:
 
 ```typescript
-// 번역 상태별 UI 표시
-switch (project.translationStatus) {
-  case 'PENDING':
-    // 번역 대기 중 상태 표시
-    break;
-  case 'IN_PROGRESS':
-    // 진행률 표시
-    break;
-  case 'COMPLETED':
-    // 일반 편집기 표시
-    break;
-  case 'FAILED':
-    // 오류 및 재시도 안내 표시
-    break;
-}
+// 전체 프로젝트 처리 상태 계산
+const calculateOverallProgress = (files) => {
+  const totalFiles = files.length;
+  const readyFiles = files.filter(f => f.processingStatus === "ready").length;
+  const processingFiles = files.filter(f => f.processingStatus === "processing").length;
+
+  if (totalFiles === 0) return { status: "empty", progress: 0 };
+  if (readyFiles === totalFiles) return { status: "completed", progress: 100 };
+  if (processingFiles > 0) return { status: "processing", progress: (readyFiles / totalFiles) * 100 };
+
+  return { status: "ready", progress: 100 };
+};
 ```
 
-### Phase 4: 고급 기능
+### Phase 4: 오류 처리 및 재시도
 
-#### 4-1. 배치 처리 옵션
-**파일**: `server/services/translation_queue.ts`
+#### 4-1. 실패한 번역 재시도
+**파일**: `server/routes.ts`
 
 ```typescript
-// 번역 배치 설정 옵션
-interface TranslationConfig {
-  batchSize: number;        // 한 번에 처리할 세그먼트 수 (기본: 10)
-  concurrency: number;      // 동시 처리 수 (기본: 3)
-  delayBetweenBatch: number; // 배치 간 지연 시간 (ms)
-  priority: 'speed' | 'cost' | 'quality';
-}
+// 번역 실패 시 자동 재시도 로직
+const translateWithRetry = async (segment, maxRetries = 3) => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await translateWithGPT(segment);
+      return result;
+    } catch (error) {
+      console.log(`번역 시도 ${attempt}/${maxRetries} 실패:`, error.message);
+
+      if (attempt === maxRetries) {
+        // 최종 실패 시 파일 상태를 error로 업데이트
+        await db.update(schema.files)
+          .set({ 
+            processingStatus: "error",
+            errorMessage: `번역 실패: ${error.message}`
+          })
+          .where(eq(schema.files.id, segment.fileId));
+        throw error;
+      }
+
+      // 재시도 전 대기
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+    }
+  }
+};
 ```
 
-#### 4-2. 사용자 설정 저장
-**파일**: `shared/schema.ts`
+#### 4-2. 사용자 제어 옵션
+**파일**: `client/src/pages/project.tsx`
 
 ```typescript
-// 사용자별 번역 설정 저장
-export const userTranslationSettings = pgTable('user_translation_settings', {
-  userId: integer('user_id').references(() => users.id),
-  autoStartTranslation: boolean('auto_start_translation').default(true),
-  batchSize: integer('batch_size').default(10),
-  // ... 기타 설정들
-});
+// 처리 중인 파일에 대한 제어 버튼
+{file.processingStatus === "processing" && (
+  <Button 
+    variant="outline" 
+    size="sm"
+    onClick={() => pauseProcessing(file.id)}
+  >
+    일시정지
+  </Button>
+)}
+
+{file.processingStatus === "error" && (
+  <Button 
+    variant="outline" 
+    size="sm"
+    onClick={() => retryProcessing(file.id)}
+  >
+    재시도
+  </Button>
+)}
 ```
-
-#### 4-3. 번역 히스토리 및 분석
-**새 파일**: `server/services/translation_analytics.ts`
-
-```typescript
-// 번역 성능 분석 및 최적화
-interface TranslationMetrics {
-  averageTimePerSegment: number;
-  successRate: number;
-  errorPatterns: string[];
-  recommendedBatchSize: number;
-}
-```
-
-## 🔧 구현 우선순위
-
-### High Priority (1-2주)
-1. **프로젝트 생성 API 분리**: 즉시 생성 + 번역 대기 상태
-2. **기본 번역 큐 시스템**: 자동 순차 처리 구현
-3. **프론트엔드 번역 진행률 표시 컴포넌트**: 자동 진행 상태 표시
-
-### Medium Priority (2-3주)
-1. **WebSocket 진행률 업데이트**: 실시간 상태 표시
-2. **번역 중단 기능**: 사용자 제어 옵션
-3. **배치 처리 최적화**: 성능 개선
-
-### Low Priority (3-4주)
-1. **사용자 설정 기반 자동 번역 옵션**
-2. **번역 분석 및 최적화**: 성능 모니터링
-3. **에러 처리 및 재시도**: 안정성 개선
 
 ## 🚀 기대 효과
 
 ### 사용자 경험 개선
-- **대기 시간 90% 단축**: 30초 내 프로젝트 접근 가능
-- **투명한 진행률**: 실시간 번역 상태 확인
-- **유연한 제어**: 자동 번역 실행과 상태 확인
+- **대기 시간 80% 단축**: 프로젝트 생성 후 즉시 접근 가능
+- **투명한 진행률**: 파일별 처리 상태 실시간 확인
+- **오류 복구**: 실패한 처리에 대한 재시도 옵션
 
 ### 시스템 안정성
-- **리소스 분산**: 피크 시간 부하 분산
-- **오류 격리**: 번역 실패가 프로젝트 생성에 영향 없음
-- **확장성**: 큐 시스템으로 다중 프로젝트 동시 처리
+- **기존 구조 활용**: 현재 잘 작동하는 비동기 처리 구조 유지
+- **점진적 개선**: 큰 변경 없이 단계별 개선
+- **호환성 유지**: 기존 API 및 데이터 구조 보존
 
-### 개발 및 운영
-- **모니터링 개선**: 번역 성능 분석 가능
-- **사용자 피드백**: 번역 품질 및 속도 최적화
-- **비용 최적화**: API 호출 배치 처리로 효율성 증대
+## 📋 구현 우선순위
 
-## 📋 구현 체크리스트
+### High Priority (1주)
+1. **진행률 표시 개선**: 현재 상태를 더 명확하게 표시
+2. **배치 처리 최적화**: 번역 속도 개선
+3. **오류 처리 강화**: 실패 시 사용자 피드백
 
-### 백엔드 작업
-- [ ] segments 테이블 상태 필드 추가 (PENDING, FAILED)
-- [ ] projects 테이블 번역 진행률 필드 추가
-- [ ] 프로젝트 생성 API 분리 (번역 제외)
-- [ ] 번역 큐 시스템 구현 (자동 실행)
-- [ ] 번역 API 엔드포인트 분리 (진행률 조회, 중단)
-- [ ] WebSocket 진행률 이벤트 구현
-- [ ] 배치 처리 로직 구현
+### Medium Priority (2주)
+1. **실시간 폴링 개선**: 더 자주 상태 업데이트
+2. **재시도 메커니즘**: 실패한 처리 복구
+3. **전체 진행률 표시**: 프로젝트 수준 상태 표시
 
-### 프론트엔드 작업
-- [ ] 프로젝트 생성 플로우 수정
-- [ ] 번역 진행률 컴포넌트 구현 (자동 상태 표시)
-- [ ] WebSocket 진행률 수신 구현
-- [ ] 프로젝트 상태별 UI 분기
-- [ ] 사용자 설정 페이지 추가
+### Low Priority (3주)
+1. **사용자 제어 옵션**: 일시정지/재시작 기능
+2. **성능 모니터링**: 처리 시간 분석
+3. **알림 시스템**: 완료 시 사용자 알림
 
-### 테스트 및 모니터링
-- [ ] 대용량 파일 업로드 테스트
-- [ ] 동시 다중 프로젝트 번역 테스트
-- [ ] 네트워크 중단 시 복구 테스트
-- [ ] 번역 성능 모니터링 구현
-- [ ] 사용자 피드백 수집 시스템
+## ✅ 결론
 
-이 구현 방안을 통해 파일 업로드 시 사용자 경험을 크게 개선하고, 시스템의 확장성과 안정성을 높일 수 있습니다.
+현재 코드베이스는 이미 효율적인 비동기 처리 구조를 가지고 있습니다. 대규모 구조 변경보다는 기존 시스템을 개선하여 사용자 경험을 향상시키는 것이 더 안전하고 효과적입니다.
+
+주요 개선 포인트:
+1. 현재 `processingStatus` 필드를 더 잘 활용
+2. 기존 비동기 처리에 진행률 업데이트 추가
+3. 배치 처리로 번역 속도 개선
+4. 오류 처리 및 재시도 메커니즘 강화
+
+이러한 점진적 개선을 통해 시스템 안정성을 유지하면서도 사용자 경험을 크게 향상시킬 수 있습니다.
+`
