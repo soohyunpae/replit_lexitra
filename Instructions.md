@@ -1,163 +1,301 @@
-# 템플릿 다운로드 기능 문제 분석 및 해결 방안
 
-## 🔍 문제 상황 분석
+# 파일 업로드 UX 개선을 위한 비동기 처리 구현 방안
 
-### 현재 증상
-- 프로젝트 ID 96에서 "템플릿 다운로드" 버튼 클릭 시 페이지가 blank 상태가 됨
-- 로그에서 다음과 같은 오류 발생:
+## 🔍 현재 문제 상황 분석
+
+### UX 문제점
+- 파일 업로드 시 모든 처리(구조 분석 + 세그먼트 저장 + GPT 번역)가 동시에 실행
+- 사용자가 오랜 시간 대기해야 하는 상황 발생
+- 프로젝트 생성 완료까지 페이지가 블로킹됨
+
+### 현재 처리 흐름
 ```
-Template DOCX download error: TypeError: Cannot read properties of undefined (reading 'referencedTable')
-```
-
-### 🔧 심층 코드베이스 분석
-
-#### 1. 관련 파일 및 함수 매핑
-
-**프론트엔드 (클라이언트)**
-- `client/src/pages/project.tsx` - 템플릿 다운로드 버튼 UI 및 요청 로직
-- 관련 함수: `downloadTemplateMutation.mutate()`
-
-**백엔드 (서버)**
-- `server/routes.ts` - `/api/projects/:id/download-template` API 엔드포인트
-- `server/services/docx_template_service.ts` - 템플릿 서비스 로직
-- `server/utils/docx_fill.ts` - docx-templater 기반 DOCX 생성
-- 관련 함수: `generateDocxFromTemplate()`, `getTemplateDetails()`, `fillDocxTemplate()`
-
-**데이터베이스 스키마**
-- `shared/schema.ts` - docTemplates, templateFields, projects 테이블 정의
-- `db/migrations/` - 템플릿 관련 데이터베이스 구조
-
-#### 2. 오류 원인 분석
-
-**주요 문제점:**
-1. **Drizzle ORM 관계 설정 오류**: `referencedTable` 오류는 Drizzle의 관계(relation) 설정에서 발생
-2. **템플릿 필드 관계 설정 누락**: `projects.template` 관계가 제대로 정의되지 않음
-3. **docx-templater 라이브러리 미설치**: 실제 DOCX 생성 라이브러리가 없음
-4. **템플릿 데이터 매핑 로직 불완전**: 번역된 세그먼트를 템플릿 placeholder에 매핑하는 로직 부족
-
-**세부 분석:**
-- 로그에서 `QueryPromise._getQuery`에서 오류 발생 → Drizzle ORM의 `with` 구문에서 관계 해석 실패
-- `projects` 테이블과 `docTemplates` 테이블 간의 관계가 제대로 설정되지 않음
-- `templateId` 필드는 있지만 실제 관계 매핑이 스키마에서 누락
-
-#### 3. 현재 구현 상태 검토
-
-**✅ 완료된 부분:**
-- 템플릿 관리 UI (Admin Console)
-- 템플릿 업로드 및 메타데이터 저장
-- 기본 API 엔드포인트 구조
-- 프로젝트에 템플릿 ID 저장
-
-**❌ 누락/문제 부분:**
-- docx-templater 라이브러리 설치
-- Drizzle ORM 관계 정의 오류
-- 실제 DOCX 파일 생성 로직
-- 번역 세그먼트 → 템플릿 매핑 로직
-- 파일 다운로드 응답 처리
-
-## 🛠️ 해결 방안 및 구현 계획
-
-### Phase 1: 기반 인프라 수정
-
-#### 1-1. 필수 라이브러리 설치
-```bash
-npm install docxtemplater pizzip
-npm install @types/pizzip --save-dev
+파일 업로드 → 구조 분석 → 세그먼트 저장 → GPT 번역 → 프로젝트 생성 완료
+(전체 과정이 한 번에 처리됨 - 3-5분 소요)
 ```
 
-#### 1-2. 데이터베이스 스키마 관계 수정
-- `shared/schema.ts`에서 projects와 docTemplates 간의 관계 올바르게 정의
-- Drizzle 관계 설정 문법 수정
+## 🎯 개선 목표
 
-#### 1-3. docx_fill.ts 실제 구현
-- 현재 기본 틀만 있는 파일을 실제 docx-templater 기반으로 완성
-- `fillDocxTemplate()`, `validateTemplate()`, `extractPlaceholders()` 함수 구현
+### 제안하는 새로운 흐름
+```
+1단계: 파일 업로드 → 구조 분석 → 세그먼트 저장 → 프로젝트 즉시 생성 (30초 이내)
+2단계: 백그라운드에서 GPT 번역 순차 처리 (별도 버튼 또는 자동)
+```
 
-### Phase 2: 핵심 로직 구현
+## 🛠️ 구현 방안
 
-#### 2-1. 템플릿 데이터 매핑 로직
-- 번역된 세그먼트를 템플릿의 placeholder에 매핑하는 알고리즘 구현
-- 템플릿 필드의 `orderIndex`를 활용한 순서 기반 매핑
+### Phase 1: 업로드 단계 분리
 
-#### 2-2. API 엔드포인트 수정
-- `/api/projects/:id/download-template`에서 Drizzle 쿼리 수정
-- 올바른 관계 로딩 및 오류 처리 추가
+#### 1-1. 프로젝트 생성 API 수정
+**파일**: `server/routes.ts`
 
-#### 2-3. DOCX 파일 생성 및 다운로드
-- docx-templater를 사용한 실제 파일 생성
-- 생성된 파일의 HTTP 스트림 응답 처리
-- 임시 파일 정리 로직
+현재 `/api/projects` POST 엔드포인트를 다음과 같이 수정:
 
-### Phase 3: 프론트엔드 개선
-
-#### 3-1. 오류 처리 강화
-- 템플릿이 없는 경우 처리
-- 네트워크 오류 및 서버 오류 대응
-- 사용자 친화적 오류 메시지
-
-#### 3-2. UX 개선
-- 다운로드 진행 상태 표시
-- 성공/실패 피드백 개선
-
-## 🔧 상세 구현 단계
-
-### Step 1: 라이브러리 설치 및 타입 정의
-
-### Step 2: 스키마 관계 수정
+**Before:**
 ```typescript
-// shared/schema.ts 수정 필요
-export const projectsRelations = relations(projects, ({ one, many }) => ({
-  // ... 기존 관계들
-  template: one(docTemplates, {
-    fields: [projects.templateId],
-    references: [docTemplates.id],
-  }),
-}));
-
-export const docTemplatesRelations = relations(docTemplates, ({ one, many }) => ({
-  creator: one(users, {
-    fields: [docTemplates.createdBy],
-    references: [users.id],
-  }),
-  fields: many(templateFields),
-  projects: many(projects), // 역방향 관계 추가
-}));
+// 현재: 모든 처리를 한 번에
+POST /api/projects
+→ 파일 업로드 + 구조 분석 + 세그먼트 저장 + GPT 번역
 ```
 
-### Step 3: docx_fill.ts 완성
-- PizZip과 Docxtemplater 라이브러리 사용
-- 실제 DOCX 파일 읽기/쓰기 구현
-- placeholder 추출 및 데이터 삽입 로직
+**After:**
+```typescript
+// 수정: 단계별 처리
+POST /api/projects
+→ 파일 업로드 + 구조 분석 + 세그먼트 저장만
+→ 프로젝트 즉시 생성 (segments 테이블에 origin: 'PENDING' 상태로 저장)
 
-### Step 4: 서비스 레이어 완성
-- `docx_template_service.ts`에서 실제 파일 생성 로직 구현
-- 템플릿과 번역 데이터 매핑 알고리즘
+POST /api/projects/:id/translate
+→ GPT 번역 백그라운드 처리
+```
 
-### Step 5: API 엔드포인트 수정
-- Drizzle 쿼리에서 `with` 구문 수정
-- 올바른 관계 로딩 및 오류 처리
+#### 1-2. 세그먼트 상태 관리 개선
+**파일**: `shared/schema.ts`
 
-### Step 6: 프론트엔드 오류 처리 개선
+segments 테이블의 origin 필드에 새로운 상태 추가:
+```typescript
+export const segmentOriginEnum = pgEnum('segment_origin', [
+  'MT',      // 기존: Machine Translation
+  'TM',      // 기존: Translation Memory
+  'HT',      // 기존: Human Translation
+  'PENDING', // 새로운: 번역 대기 중
+  'FAILED'   // 새로운: 번역 실패
+]);
+```
 
-## 🚨 주의사항
+#### 1-3. 프로젝트 상태 추가
+**파일**: `shared/schema.ts`
 
-1. **데이터베이스 마이그레이션**: 스키마 변경 시 기존 데이터 보존 필요
-2. **메모리 관리**: 대용량 DOCX 파일 처리 시 메모리 사용량 모니터링
-3. **파일 보안**: 생성된 임시 파일 자동 정리 및 접근 권한 관리
-4. **성능 최적화**: 큰 프로젝트의 경우 비동기 처리 고려
+projects 테이블에 번역 진행 상태 필드 추가:
+```typescript
+export const projects = pgTable('projects', {
+  // ... 기존 필드들
+  translationStatus: varchar('translation_status', { length: 20 }).default('PENDING'),
+  // 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED'
+  translationProgress: integer('translation_progress').default(0),
+  // 0-100 퍼센트 진행률
+});
+```
 
-## 🎯 우선순위
+### Phase 2: 백그라운드 처리 시스템
 
-1. **High Priority**: docx-templater 라이브러리 설치 및 Drizzle 관계 수정
-2. **High Priority**: 기본 DOCX 생성 및 다운로드 기능 구현
-3. **Medium Priority**: 템플릿 매핑 로직 완성
-4. **Low Priority**: UX 개선 및 고급 기능
+#### 2-1. 번역 작업 큐 시스템 구현
+**새 파일**: `server/services/translation_queue.ts`
 
-## 🧪 테스트 계획
+```typescript
+// 큐 기반 번역 처리 시스템 구현
+interface TranslationJob {
+  projectId: number;
+  segmentIds: number[];
+  priority: 'high' | 'normal' | 'low';
+}
 
-1. ID 96 프로젝트에서 템플릿 다운로드 기능 테스트
-2. 다양한 템플릿 구조로 매핑 정확성 검증
-3. 대용량 프로젝트에서 성능 테스트
-4. 오류 시나리오 테스트 (템플릿 없음, 네트워크 오류 등)
+class TranslationQueue {
+  private queue: TranslationJob[] = [];
+  private processing: Map<number, boolean> = new Map();
+  
+  // 번역 작업 추가
+  async addJob(projectId: number, segmentIds: number[]): Promise<void>
+  
+  // 백그라운드 번역 처리
+  async processQueue(): Promise<void>
+  
+  // 진행률 업데이트
+  async updateProgress(projectId: number, completed: number, total: number): Promise<void>
+}
+```
 
-이 계획에 따라 단계적으로 구현하면 템플릿 다운로드 기능이 정상적으로 작동할 것입니다.
+#### 2-2. WebSocket 실시간 진행률 업데이트
+**파일**: `server/index.ts` 및 `client/src/lib/websocket.ts`
+
+WebSocket을 통해 번역 진행률을 실시간으로 클라이언트에 전송:
+
+```typescript
+// 서버사이드 이벤트
+socket.emit('translation_progress', {
+  projectId: number,
+  progress: number, // 0-100
+  currentSegment: number,
+  totalSegments: number,
+  status: 'IN_PROGRESS' | 'COMPLETED' | 'FAILED'
+});
+```
+
+#### 2-3. 번역 API 엔드포인트 분리
+**새 파일**: `server/routes/translation.ts`
+
+```typescript
+// 번역 시작
+POST /api/projects/:id/start-translation
+→ 번역 큐에 작업 추가
+→ 즉시 응답 (202 Accepted)
+
+// 번역 진행률 조회
+GET /api/projects/:id/translation-status
+→ { progress: number, status: string, eta: string }
+
+// 번역 중단
+POST /api/projects/:id/stop-translation
+→ 번역 작업 중단
+```
+
+### Phase 3: 프론트엔드 UX 개선
+
+#### 3-1. 프로젝트 생성 플로우 수정
+**파일**: `client/src/pages/projects.tsx`
+
+프로젝트 생성 후 즉시 번역 페이지로 이동하되, 번역은 선택적으로:
+
+```typescript
+// 프로젝트 생성 완료 후
+const handleProjectCreated = (projectId: number) => {
+  // 즉시 프로젝트 페이지로 이동
+  navigate(`/projects/${projectId}`);
+  
+  // 번역 시작 옵션 제공
+  showTranslationStartDialog();
+};
+```
+
+#### 3-2. 번역 진행률 표시 컴포넌트
+**새 파일**: `client/src/components/translation/translation-progress.tsx`
+
+```typescript
+// 실시간 번역 진행률 표시
+interface TranslationProgressProps {
+  projectId: number;
+  onComplete: () => void;
+}
+
+export function TranslationProgress({ projectId, onComplete }: TranslationProgressProps) {
+  // WebSocket으로 실시간 진행률 수신
+  // 진행 바, ETA, 현재 처리 중인 세그먼트 정보 표시
+  // 일시정지/재시작/중단 버튼 제공
+}
+```
+
+#### 3-3. 프로젝트 페이지 개선
+**파일**: `client/src/pages/project.tsx`
+
+번역 상태에 따른 UI 분기:
+
+```typescript
+// 번역 상태별 UI 표시
+switch (project.translationStatus) {
+  case 'PENDING':
+    // "번역 시작" 버튼 표시
+    break;
+  case 'IN_PROGRESS':
+    // 진행률 표시 + 일시정지 옵션
+    break;
+  case 'COMPLETED':
+    // 일반 편집기 표시
+    break;
+  case 'FAILED':
+    // 재시도 옵션 표시
+    break;
+}
+```
+
+### Phase 4: 고급 기능
+
+#### 4-1. 배치 처리 옵션
+**파일**: `server/services/translation_queue.ts`
+
+```typescript
+// 번역 배치 설정 옵션
+interface TranslationConfig {
+  batchSize: number;        // 한 번에 처리할 세그먼트 수 (기본: 10)
+  concurrency: number;      // 동시 처리 수 (기본: 3)
+  delayBetweenBatch: number; // 배치 간 지연 시간 (ms)
+  priority: 'speed' | 'cost' | 'quality';
+}
+```
+
+#### 4-2. 사용자 설정 저장
+**파일**: `shared/schema.ts`
+
+```typescript
+// 사용자별 번역 설정 저장
+export const userTranslationSettings = pgTable('user_translation_settings', {
+  userId: integer('user_id').references(() => users.id),
+  autoStartTranslation: boolean('auto_start_translation').default(false),
+  batchSize: integer('batch_size').default(10),
+  // ... 기타 설정들
+});
+```
+
+#### 4-3. 번역 히스토리 및 분석
+**새 파일**: `server/services/translation_analytics.ts`
+
+```typescript
+// 번역 성능 분석 및 최적화
+interface TranslationMetrics {
+  averageTimePerSegment: number;
+  successRate: number;
+  errorPatterns: string[];
+  recommendedBatchSize: number;
+}
+```
+
+## 🔧 구현 우선순위
+
+### High Priority (1-2주)
+1. **프로젝트 생성 API 분리**: 즉시 생성 + 번역 대기 상태
+2. **기본 번역 큐 시스템**: 순차 처리 구현
+3. **프론트엔드 번역 시작 버튼**: 수동 번역 시작 옵션
+
+### Medium Priority (2-3주)
+1. **WebSocket 진행률 업데이트**: 실시간 상태 표시
+2. **번역 중단/재시작 기능**: 사용자 제어 옵션
+3. **배치 처리 최적화**: 성능 개선
+
+### Low Priority (3-4주)
+1. **자동 번역 시작 옵션**: 사용자 설정 기반
+2. **번역 분석 및 최적화**: 성능 모니터링
+3. **에러 처리 및 재시도**: 안정성 개선
+
+## 🚀 기대 효과
+
+### 사용자 경험 개선
+- **대기 시간 90% 단축**: 30초 내 프로젝트 접근 가능
+- **투명한 진행률**: 실시간 번역 상태 확인
+- **유연한 제어**: 번역 시작/중단/재시작 자유도
+
+### 시스템 안정성
+- **리소스 분산**: 피크 시간 부하 분산
+- **오류 격리**: 번역 실패가 프로젝트 생성에 영향 없음
+- **확장성**: 큐 시스템으로 다중 프로젝트 동시 처리
+
+### 개발 및 운영
+- **모니터링 개선**: 번역 성능 분석 가능
+- **사용자 피드백**: 번역 품질 및 속도 최적화
+- **비용 최적화**: API 호출 배치 처리로 효율성 증대
+
+## 📋 구현 체크리스트
+
+### 백엔드 작업
+- [ ] segments 테이블 상태 필드 추가 (PENDING, FAILED)
+- [ ] projects 테이블 번역 진행률 필드 추가
+- [ ] 프로젝트 생성 API 분리 (번역 제외)
+- [ ] 번역 큐 시스템 구현
+- [ ] 번역 API 엔드포인트 분리
+- [ ] WebSocket 진행률 이벤트 구현
+- [ ] 배치 처리 로직 구현
+
+### 프론트엔드 작업
+- [ ] 프로젝트 생성 플로우 수정
+- [ ] 번역 진행률 컴포넌트 구현
+- [ ] 번역 시작/중단 버튼 추가
+- [ ] WebSocket 진행률 수신 구현
+- [ ] 프로젝트 상태별 UI 분기
+- [ ] 사용자 설정 페이지 추가
+
+### 테스트 및 모니터링
+- [ ] 대용량 파일 업로드 테스트
+- [ ] 동시 다중 프로젝트 번역 테스트
+- [ ] 네트워크 중단 시 복구 테스트
+- [ ] 번역 성능 모니터링 구현
+- [ ] 사용자 피드백 수집 시스템
+
+이 구현 방안을 통해 파일 업로드 시 사용자 경험을 크게 개선하고, 시스템의 확장성과 안정성을 높일 수 있습니다.
