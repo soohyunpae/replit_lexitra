@@ -103,8 +103,65 @@ const translateWithRetry = async (segment, maxRetries = 3) => {
 ✅ 상태 관리 필드 간소화
 - 번역 상태는 `status` 필드 하나로만 사용자에게 표시됨
 - `origin`은 GPT 번역, TM 매칭 등 출처 기록용으로 내부에서만 활용됨
-- 1
 
 ✅ 단순화된 사용자 경험
 - 사용자는 프로젝트 생성 후 즉시 편집 가능
 - GPT 번역은 세그먼트별로 점진적으로 표시되어 실시간 작업 가능
+
+---
+
+## 🚨 현재 코드베이스 분석 결과 - 구현 필요사항
+
+### 🔍 발견된 문제점들
+
+#### 1. **processingStatus 필드 부재**
+- ❌ **문제**: Instructions.md에서 제안하는 `processingStatus` 필드가 현재 스키마에 없음
+- ✅ **해결방안**: `files` 테이블에 `processingStatus` enum 필드 추가 필요
+- 📋 **값**: `"pending" | "processing" | "translating" | "ready" | "error"`
+
+#### 2. **진행률 추적 함수 미구현**
+- ❌ **문제**: Instructions.md에서 언급하는 `updateProcessingProgress` 함수가 코드베이스에 존재하지 않음
+- ✅ **해결방안**: 프로젝트 및 파일 처리 상태 업데이트 함수 구현 필요
+
+#### 3. **백그라운드 처리 로직 부재**
+- ❌ **문제**: 현재 `pdf_processor_service.ts`에서 모든 처리가 동기적으로 이루어짐
+- ✅ **해결방안**: Instructions.md 제안대로 `setImmediate`를 사용한 백그라운드 처리 구현
+
+#### 4. **재시도 로직 없음**
+- ❌ **문제**: GPT 번역 실패 시 재시도하는 `translateWithRetry` 함수가 구현되어 있지 않음
+- ✅ **해결방안**: 자동 재시도 로직 구현
+
+#### 5. **UI 상태 표시 불완전**
+- ❌ **문제**: `client/src/pages/project.tsx`에서 파일 처리 상태를 실시간으로 보여주는 UI가 부족
+- ✅ **해결방안**: Instructions.md 제안만큼 상세한 상태 표시 UI 구현
+
+### 🎯 주요 불일치 사항
+
+| 구분 | 제안사항 | 현재 상태 | 구현 필요도 |
+|------|----------|-----------|------------|
+| **스키마** | `processingStatus` 필드 | ❌ 없음 | 🔥 높음 |
+| **서비스 로직** | 비동기 백그라운드 처리 | ❌ 동기 처리 | 🔥 높음 |
+| **UI 컴포넌트** | 실시간 상태 표시 | ⚠️ 기본만 있음 | 🔥 높음 |
+| **에러 핸들링** | 재시도 로직 | ❌ 없음 | 🟡 중간 |
+
+### 📋 구현 순서 권장사항
+
+1. **1단계: 스키마 수정**
+   ```sql
+   ALTER TABLE files ADD COLUMN processingStatus TEXT DEFAULT 'pending';
+   ```
+
+2. **2단계: 백그라운드 처리 함수 구현**
+   - `updateProcessingProgress` 함수 추가
+   - `translateWithRetry` 함수 추가
+
+3. **3단계: 서비스 로직 재구성**
+   - 동기 → 비동기 백그라운드 처리로 변경
+   - `setImmediate` 활용한 처리 분리
+
+4. **4단계: UI 컴포넌트 보강**
+   - 실시간 상태 표시 및 진행률 시각화
+   - 에러 상태 표시
+
+### ⚠️ 주의사항
+Instructions.md의 제안을 실제로 구현하려면 위 사항들을 먼저 정비해야 합니다. 현재 코드베이스는 동기적 처리 방식으로 되어 있어, 비동기 백그라운드 처리로 전환하는 것이 핵심 과제입니다.
