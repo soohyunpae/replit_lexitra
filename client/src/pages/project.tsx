@@ -78,7 +78,6 @@ export default function Project() {
   const [selectedFiles, setSelectedFiles] = useState<number[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingSegments, setIsLoadingSegments] = useState(false);
-  
 
   // 관리자 권한 체크
   const isAdmin = useMemo(() => user?.role === "admin", [user?.role]);
@@ -112,7 +111,10 @@ export default function Project() {
     console.log("Route parsing debug:", { isMatch, params });
 
     if (!isMatch || !params?.id) {
-      console.log("Project route not matched or no ID parameter", { isMatch, params });
+      console.log("Project route not matched or no ID parameter", {
+        isMatch,
+        params,
+      });
       return null;
     }
 
@@ -136,7 +138,9 @@ export default function Project() {
             <p className="text-muted-foreground mb-4">
               The project ID in the URL is not valid: {params?.id}
             </p>
-            <Button onClick={() => navigate("/projects")}>Go back to projects</Button>
+            <Button onClick={() => navigate("/projects")}>
+              Go back to projects
+            </Button>
           </div>
         </div>
       </MainLayout>
@@ -144,7 +148,11 @@ export default function Project() {
   }
 
   // Get project data
-  const { data: project, isLoading, error } = useQuery<any>({
+  const {
+    data: project,
+    isLoading,
+    error,
+  } = useQuery<any>({
     queryKey: [`/api/projects/${projectId}`],
     queryFn: async () => {
       console.log(`Fetching project data for ID: ${projectId}`);
@@ -374,14 +382,17 @@ export default function Project() {
   // Template-based DOCX download mutation
   const downloadTemplateMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`/api/projects/${projectId}/download-template`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("auth_token") || ""}`,
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `/api/projects/${projectId}/download-template`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("auth_token") || ""}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
         },
-        credentials: "include",
-      });
+      );
 
       if (!response.ok) {
         const error = await response.text();
@@ -391,20 +402,20 @@ export default function Project() {
       // Create blob and download
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `${project.name}_translated_${Date.now()}.docx`;
-      a.style.display = 'none';
+      a.style.display = "none";
       document.body.appendChild(a);
       a.click();
-      
+
       // 짧은 지연 후 정리
       setTimeout(() => {
         try {
           window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
         } catch (cleanupError) {
-          console.warn('정리 중 오류 (무시 가능):', cleanupError);
+          console.warn("정리 중 오류 (무시 가능):", cleanupError);
         }
       }, 100);
     },
@@ -418,7 +429,10 @@ export default function Project() {
       console.error("Template download error:", error);
       toast({
         title: "다운로드 실패",
-        description: error instanceof Error ? error.message : "템플릿 다운로드 중 오류가 발생했습니다.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "템플릿 다운로드 중 오류가 발생했습니다.",
         variant: "destructive",
       });
     },
@@ -430,53 +444,55 @@ export default function Project() {
     return response.json();
   };
 
-  // DOCX 다운로드 함수 - 안정성 개선
+  // DOCX 다운로드 함수 - a 태그를 사용하여 진짜 파일 다운로드로 처리
   const downloadTranslatedDocx = async (fileId: number, fileName: string) => {
     try {
       const token = localStorage.getItem("auth_token") || "";
-      const translatedFileName = fileName.replace('.docx', '_translated.docx');
+      const translatedFileName = fileName.replace(".docx", "_translated.docx");
 
-      console.log("DOCX 다운로드 시작:", { fileId, fileName, translatedFileName });
+      console.log("DOCX 다운로드 시작:", {
+        fileId,
+        fileName,
+        translatedFileName,
+      });
 
-      // 새 창에서 다운로드 처리 (페이지 이동 방지)
+      // 다운로드 URL 생성
       const downloadUrl = `/api/files/${fileId}/download-docx?token=${encodeURIComponent(token)}`;
-      
-      // iframe을 사용한 안전한 다운로드
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.src = downloadUrl;
-      
-      // 다운로드 완료 후 iframe 제거
-      iframe.onload = () => {
-        setTimeout(() => {
-          if (iframe.parentNode) {
-            iframe.parentNode.removeChild(iframe);
-          }
-        }, 1000);
-      };
-      
-      iframe.onerror = () => {
-        if (iframe.parentNode) {
-          iframe.parentNode.removeChild(iframe);
-        }
-        throw new Error('다운로드 요청 실패');
-      };
-      
-      document.body.appendChild(iframe);
+
+      // a 태그를 사용하여 다운로드 트리거 (페이지 이동/공백 방지)
+      const anchor = document.createElement("a");
+      anchor.href = downloadUrl;
+      anchor.download = ""; // filename will be handled by backend Content-Disposition
+      document.body.appendChild(anchor); // Firefox 호환성
+      anchor.click();
+      document.body.removeChild(anchor);
 
       toast({
         title: "다운로드 시작",
         description: `파일 다운로드가 시작되었습니다: ${translatedFileName}`,
       });
-
     } catch (error) {
       console.error("DOCX 다운로드 오류:", error);
       toast({
         title: "다운로드 실패",
-        description: error instanceof Error ? error.message : "다운로드 중 오류가 발생했습니다.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "다운로드 중 오류가 발생했습니다.",
         variant: "destructive",
       });
     }
+  };
+
+  // 프로젝트 파일 다운로드 핸들러
+  const handleDownload = (fileId: number) => {
+    const url = `/api/download/${fileId}`;
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Fetch segments for each file
@@ -795,8 +811,6 @@ export default function Project() {
     },
   });
 
-
-
   if (isLoading) {
     console.log("Project is loading...");
     return (
@@ -823,10 +837,15 @@ export default function Project() {
               Failed to load project data. Please try again.
             </p>
             <div className="text-xs text-muted-foreground mb-4">
-              Error details: {error instanceof Error ? error.message : String(error)}
+              Error details:{" "}
+              {error instanceof Error ? error.message : String(error)}
             </div>
             <Button onClick={() => window.location.reload()}>Retry</Button>
-            <Button variant="outline" onClick={() => navigate("/projects")} className="ml-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/projects")}
+              className="ml-2"
+            >
               Go back to projects
             </Button>
           </div>
@@ -849,7 +868,9 @@ export default function Project() {
             <div className="text-xs text-muted-foreground mb-4">
               Project ID: {projectId}, Loading: {isLoading ? "Yes" : "No"}
             </div>
-            <Button onClick={() => navigate("/projects")}>Go back to projects</Button>
+            <Button onClick={() => navigate("/projects")}>
+              Go back to projects
+            </Button>
           </div>
         </div>
       </MainLayout>
@@ -864,7 +885,7 @@ export default function Project() {
             <div className="flex items-center">
               <h1 className="text-xl font-semibold mb-1 flex items-center">
                 <span>
-                  [ID {project.id}] {project.name || 'Unnamed Project'}
+                  [ID {project.id}] {project.name || "Unnamed Project"}
                 </span>
                 <span
                   className={`ml-3 text-sm font-medium rounded-md px-2 py-0.5 ${
@@ -886,16 +907,11 @@ export default function Project() {
             <div className="flex gap-2">
               {/* Template Download Button */}
               {project.templateId && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled
-                      className="gap-2"
-                    >
-                      <FileDownIcon className="h-4 w-4" />
-                      템플릿 다운로드 (개발 중)
-                    </Button>
-                  )}
+                <Button variant="outline" size="sm" disabled className="gap-2">
+                  <FileDownIcon className="h-4 w-4" />
+                  템플릿 다운로드 (개발 중)
+                </Button>
+              )}
 
               {project.status === "Unclaimed" && (
                 <Button
@@ -1133,9 +1149,7 @@ export default function Project() {
 
                   {/* Template Information */}
                   <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">
-                      템플릿:
-                    </div>
+                    <div className="text-muted-foreground">템플릿:</div>
                     <div className="font-medium flex items-center">
                       {project.templateId ? (
                         <>
@@ -1145,7 +1159,12 @@ export default function Project() {
                           </span>
                           {project.templateMatchScore && (
                             <span className="ml-2 text-xs text-muted-foreground">
-                              ({JSON.parse(project.templateMatchScore).templateName})
+                              (
+                              {
+                                JSON.parse(project.templateMatchScore)
+                                  .templateName
+                              }
+                              )
                             </span>
                           )}
                         </>
@@ -1476,7 +1495,10 @@ export default function Project() {
                                     <div className="flex items-center">
                                       <div className="animate-spin h-3 w-3 border-2 border-primary border-t-transparent rounded-full mr-1"></div>
                                       <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded">
-                                        파일 처리 중 {file.processingProgress ? `(${file.processingProgress}%)` : ''}
+                                        파일 처리 중{" "}
+                                        {file.processingProgress
+                                          ? `(${file.processingProgress}%)`
+                                          : ""}
                                       </span>
                                     </div>
                                   )}
@@ -1484,7 +1506,10 @@ export default function Project() {
                                     <div className="flex items-center">
                                       <div className="animate-pulse h-3 w-3 bg-orange-400 rounded-full mr-1"></div>
                                       <span className="text-xs px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded">
-                                        번역 중 {file.processingProgress ? `(${file.processingProgress}%)` : ''}
+                                        번역 중{" "}
+                                        {file.processingProgress
+                                          ? `(${file.processingProgress}%)`
+                                          : ""}
                                       </span>
                                     </div>
                                   )}
@@ -1503,7 +1528,10 @@ export default function Project() {
                                         처리 실패
                                       </span>
                                       {file.errorMessage && (
-                                        <span className="text-xs text-red-600 dark:text-red-400 ml-2 truncate max-w-[200px]" title={file.errorMessage}>
+                                        <span
+                                          className="text-xs text-red-600 dark:text-red-400 ml-2 truncate max-w-[200px]"
+                                          title={file.errorMessage}
+                                        >
                                           {file.errorMessage}
                                         </span>
                                       )}
@@ -1514,11 +1542,9 @@ export default function Project() {
                             </div>
                             <div className="flex items-center gap-2">
                               {file.processingStatus === "pending" ? (
-                                <Progress
-                                  value={0}
-                                  className="h-2 flex-1"
-                                />
-                              ) : file.processingStatus === "processing" || file.processingStatus === "translating" ? (
+                                <Progress value={0} className="h-2 flex-1" />
+                              ) : file.processingStatus === "processing" ||
+                                file.processingStatus === "translating" ? (
                                 <Progress
                                   value={file.processingProgress || 0}
                                   className="h-2 flex-1 animate-pulse"
@@ -1568,25 +1594,24 @@ export default function Project() {
                             </div>
                           </div>
 
-                          
                           <div className="flex justify-end gap-2">
-                            {file.name.toLowerCase().endsWith('.docx') && 
-                             file.processingStatus === "ready" && (
-                              <Button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  downloadTranslatedDocx(file.id, file.name);
-                                }}
-                                variant="outline"
-                                size="sm"
-                                className="h-8"
-                                type="button"
-                              >
-                                <Download className="h-3.5 w-3.5 mr-1" />
-                                다운로드
-                              </Button>
-                            )}
+                            {file.name.toLowerCase().endsWith(".docx") &&
+                              file.processingStatus === "ready" && (
+                                <Button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    downloadTranslatedDocx(file.id, file.name);
+                                  }}
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8"
+                                  type="button"
+                                >
+                                  <Download className="h-3.5 w-3.5 mr-1" />
+                                  다운로드
+                                </Button>
+                              )}
                             <Button
                               onClick={() =>
                                 navigate(`/translation/${file.id}`)
@@ -1660,22 +1685,7 @@ export default function Project() {
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7"
-                            onClick={() => {
-                              // 새로 만든 API 헬퍼 함수를 이용해 다운로드 처리
-                              downloadFile(
-                                `/api/projects/${projectId}/references/${index}/download`,
-                                file.name || `reference-${index}.file`,
-                              ).catch((err) => {
-                                console.error("Download error:", err);
-                                toast({
-                                  title: t("notifications.downloadFailed"),
-                                  description: t(
-                                    "notifications.fileDownloadError",
-                                  ),
-                                  variant: "destructive",
-                                });
-                              });
-                            }}
+                            onClick={() => handleDownload(index)}
                             title={t("projects.downloadFile")}
                           >
                             <FileDownIcon className="h-3 w-3" />
@@ -1866,7 +1876,9 @@ export default function Project() {
                 </CardTitle>
                 <CardDescription />
               </CardHeader>
-              <CardContent>                {isNotesEditing ? (
+              <CardContent>
+                {" "}
+                {isNotesEditing ? (
                   <Textarea
                     placeholder={t("projects.notesPlaceholder")}
                     className="min-h-24"
