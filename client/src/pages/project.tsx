@@ -421,7 +421,7 @@ export default function Project() {
     return response.json();
   };
 
-  // DOCX 다운로드 함수
+  // DOCX 다운로드 함수 - 배포 환경 최적화
   const downloadTranslatedDocx = async (fileId: number, fileName: string) => {
     try {
       setIsDownloadingDocx(true);
@@ -429,41 +429,99 @@ export default function Project() {
       const token = localStorage.getItem("auth_token") || "";
       const translatedFileName = fileName.replace('.docx', '_translated.docx');
 
-      // Fetch를 사용하여 파일 데이터 가져오기
+      console.log("DOCX 다운로드 시작:", { fileId, fileName, translatedFileName });
+
+      // 더 안정적인 fetch 요청
       const response = await fetch(`/api/files/${fileId}/download-docx`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
+          "Accept": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         },
         credentials: "include",
         body: JSON.stringify({ token: token })
       });
 
+      console.log("다운로드 응답 상태:", response.status, response.statusText);
+      console.log("응답 헤더들:", Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        const errorText = await response.text();
+        let errorText;
+        try {
+          errorText = await response.text();
+        } catch (e) {
+          errorText = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        console.error("다운로드 실패 응답:", errorText);
         throw new Error(errorText || "DOCX 다운로드에 실패했습니다.");
       }
 
-      // 응답을 Blob으로 변환
-      const blob = await response.blob();
-      
+      // Content-Type 확인
+      const contentType = response.headers.get('content-type');
+      console.log("응답 Content-Type:", contentType);
+
+      if (!contentType || !contentType.includes('application/vnd.openxmlformats-officedocument.wordprocessingml.document')) {
+        console.warn("예상하지 못한 Content-Type:", contentType);
+      }
+
+      // 응답을 ArrayBuffer로 먼저 받기 (더 안정적)
+      const arrayBuffer = await response.arrayBuffer();
+      console.log("ArrayBuffer 크기:", arrayBuffer.byteLength);
+
+      if (arrayBuffer.byteLength === 0) {
+        throw new Error("다운로드된 파일이 비어있습니다.");
+      }
+
+      // ArrayBuffer를 Blob으로 변환
+      const blob = new Blob([arrayBuffer], { 
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+      });
+      console.log("Blob 생성 완료:", blob.size, "bytes");
+
       // Blob URL 생성
       const url = window.URL.createObjectURL(blob);
-      
-      // 다운로드 링크 생성
+      console.log("Blob URL 생성:", url);
+
+      // 다운로드 링크 생성 및 실행
       const a = document.createElement('a');
       a.href = url;
       a.download = translatedFileName;
       a.style.display = 'none';
       
-      // 링크를 DOM에 추가하고 클릭
-      document.body.appendChild(a);
-      a.click();
+      // 브라우저별 호환성을 위한 추가 속성
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener noreferrer');
       
-      // 정리
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      console.log("다운로드 링크 생성:", { href: a.href, download: a.download });
+      
+      // DOM에 추가하고 클릭
+      document.body.appendChild(a);
+      
+      // 약간의 지연을 두고 클릭 (브라우저 호환성)
+      setTimeout(() => {
+        try {
+          a.click();
+          console.log("다운로드 링크 클릭 완료");
+        } catch (clickError) {
+          console.error("다운로드 링크 클릭 실패:", clickError);
+          // 대안: window.open 사용
+          window.open(url, '_blank');
+        }
+      }, 100);
+      
+      // 정리 (5초 후)
+      setTimeout(() => {
+        try {
+          window.URL.revokeObjectURL(url);
+          if (document.body.contains(a)) {
+            document.body.removeChild(a);
+          }
+          console.log("리소스 정리 완료");
+        } catch (cleanupError) {
+          console.warn("리소스 정리 중 오류:", cleanupError);
+        }
+      }, 5000);
 
       toast({
         title: "다운로드 완료",

@@ -2829,13 +2829,22 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         const originalName = file.name.replace('.docx', '');
         const translatedFileName = `${originalName}_translated.docx`;
 
-        // 다운로드 헤더 설정 (Save As 다이얼로그를 위한 개선된 헤더)
+        // 배포 환경 호환 다운로드 헤더 설정
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
         res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(translatedFileName)}; filename="${translatedFileName}"`);
-        res.setHeader('Content-Length', buffer.length);
+        res.setHeader('Content-Length', buffer.length.toString());
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');
+        
+        // CORS 헤더 (배포 환경 대응)
+        res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Length');
+        
+        // 추가 보안 헤더
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Content-Security-Policy', "default-src 'none'");
 
         // 파일 전송
         return res.send(buffer);
