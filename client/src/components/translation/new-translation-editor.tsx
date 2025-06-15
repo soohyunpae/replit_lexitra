@@ -1008,7 +1008,7 @@ export function NewTranslationEditor({
                     size="icon"
                     className="h-8 w-8"
                     onClick={() => handlePageChange(totalPages)}
-                    disabled={currentPage === totalPages)
+                    disabled={currentPage === totalPages}
                   >
                     <ChevronRight className="h-4 w-4" />
                     <ChevronRight className="h-4 w-4 -ml-2" />
