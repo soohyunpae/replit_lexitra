@@ -426,39 +426,49 @@ export default function Project() {
     try {
       setIsDownloadingDocx(true);
 
-      // 다운로드 URL 생성
       const token = localStorage.getItem("auth_token") || "";
-      const downloadUrl = `/api/files/${fileId}/download-docx`;
       const translatedFileName = fileName.replace('.docx', '_translated.docx');
 
-      // POST 요청을 위한 폼 생성
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = downloadUrl;
-      form.target = '_blank'; // 새 창에서 다운로드
-      form.style.display = 'none';
+      // Fetch를 사용하여 파일 데이터 가져오기
+      const response = await fetch(`/api/files/${fileId}/download-docx`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ token: token })
+      });
 
-      // 인증 토큰을 위한 숨겨진 input 추가
-      const tokenInput = document.createElement('input');
-      tokenInput.type = 'hidden';
-      tokenInput.name = 'token';
-      tokenInput.value = token;
-      form.appendChild(tokenInput);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "DOCX 다운로드에 실패했습니다.");
+      }
 
-      // 폼을 페이지에 추가하고 제출
-      document.body.appendChild(form);
-      form.submit();
+      // 응답을 Blob으로 변환
+      const blob = await response.blob();
+      
+      // Blob URL 생성
+      const url = window.URL.createObjectURL(blob);
+      
+      // 다운로드 링크 생성
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = translatedFileName;
+      a.style.display = 'none';
+      
+      // 링크를 DOM에 추가하고 클릭
+      document.body.appendChild(a);
+      a.click();
+      
+      // 정리
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
 
-      // 폼 제거
-      document.body.removeChild(form);
-
-      // 성공 메시지 표시 (약간의 지연 후)
-      setTimeout(() => {
-        toast({
-          title: "다운로드 시작됨",
-          description: `번역된 DOCX 파일 다운로드가 시작되었습니다: ${translatedFileName}`,
-        });
-      }, 500);
+      toast({
+        title: "다운로드 완료",
+        description: `번역된 DOCX 파일이 다운로드되었습니다: ${translatedFileName}`,
+      });
 
     } catch (error) {
       console.error("DOCX 다운로드 오류:", error);
