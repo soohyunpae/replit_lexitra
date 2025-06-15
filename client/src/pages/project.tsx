@@ -421,7 +421,7 @@ export default function Project() {
     return response.json();
   };
 
-  // DOCX 다운로드 함수 - 페이지 네비게이션 방지 (순수 fetch 방식)
+  // DOCX 다운로드 함수 - iframe을 사용한 안전한 다운로드
   const downloadTranslatedDocx = async (fileId: number, fileName: string) => {
     try {
       setIsDownloadingDocx(true);
@@ -431,58 +431,56 @@ export default function Project() {
 
       console.log("DOCX 다운로드 시작:", { fileId, fileName, translatedFileName });
 
-      // 순수 fetch API를 사용한 안전한 다운로드
-      const response = await fetch(`/api/files/${fileId}/download-docx`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ token: token })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => `HTTP ${response.status}`);
-        throw new Error(errorText || "DOCX 다운로드에 실패했습니다.");
-      }
-
-      // Content-Type 확인
-      const contentType = response.headers.get('content-type');
-      console.log("Response Content-Type:", contentType);
-
-      // Blob으로 변환하여 다운로드
-      const blob = await response.blob();
-      console.log("Blob size:", blob.size, "type:", blob.type);
+      // iframe을 사용한 안전한 다운로드 (페이지 네비게이션 방지)
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.style.position = 'absolute';
+      iframe.style.left = '-9999px';
       
-      // Blob URL 생성 및 다운로드
-      const url = window.URL.createObjectURL(blob);
+      // POST 요청을 위한 폼 생성
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = `/api/files/${fileId}/download-docx`;
+      form.target = iframe.name;
       
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = translatedFileName;
-      a.style.display = 'none';
+      // iframe 이름 설정
+      iframe.name = `download-frame-${Date.now()}`;
       
-      // 임시로 DOM에 추가하고 클릭
-      document.body.appendChild(a);
-      a.click();
+      // 인증 토큰을 위한 숨겨진 input 추가
+      const tokenInput = document.createElement('input');
+      tokenInput.type = 'hidden';
+      tokenInput.name = 'token';
+      tokenInput.value = token;
+      form.appendChild(tokenInput);
       
-      // 즉시 정리 (브라우저가 다운로드를 시작한 후)
+      // iframe과 폼을 페이지에 추가
+      document.body.appendChild(iframe);
+      document.body.appendChild(form);
+      
+      // 폼 제출
+      form.submit();
+      
+      // 정리 (5초 후)
       setTimeout(() => {
         try {
-          window.URL.revokeObjectURL(url);
-          if (document.body.contains(a)) {
-            document.body.removeChild(a);
+          if (document.body.contains(form)) {
+            document.body.removeChild(form);
+          }
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
           }
         } catch (cleanupError) {
           console.warn("정리 중 오류:", cleanupError);
         }
-      }, 1000);
+      }, 5000);
 
-      toast({
-        title: "다운로드 완료",
-        description: `번역된 DOCX 파일이 다운로드되었습니다: ${translatedFileName}`,
-      });
+      // 성공 메시지 표시 (약간의 지연 후)
+      setTimeout(() => {
+        toast({
+          title: "다운로드 시작됨",
+          description: `번역된 DOCX 파일 다운로드가 시작되었습니다: ${translatedFileName}`,
+        });
+      }, 500);
 
     } catch (error) {
       console.error("DOCX 다운로드 오류:", error);
