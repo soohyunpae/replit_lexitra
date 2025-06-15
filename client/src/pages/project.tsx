@@ -78,6 +78,13 @@ export default function Project() {
   const [selectedFiles, setSelectedFiles] = useState<number[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingSegments, setIsLoadingSegments] = useState(false);
+  const [isComponentMounted, setIsComponentMounted] = useState(false);
+
+  // 컴포넌트 마운트 상태 안정화
+  useEffect(() => {
+    setIsComponentMounted(true);
+    return () => setIsComponentMounted(false);
+  }, []);
   
 
   // 관리자 권한 체크
@@ -430,15 +437,14 @@ export default function Project() {
     return response.json();
   };
 
-  // DOCX 다운로드 함수 - 상태 보존하면서 안전한 다운로드
-  const downloadTranslatedDocx = async (fileId: number, fileName: string) => {
-    try {
+  // DOCX 다운로드 mutation - React Query로 상태 관리
+  const downloadDocxMutation = useMutation({
+    mutationFn: async ({ fileId, fileName }: { fileId: number; fileName: string }) => {
       const token = localStorage.getItem("auth_token") || "";
       const translatedFileName = fileName.replace('.docx', '_translated.docx');
 
       console.log("DOCX 다운로드 시작:", { fileId, fileName, translatedFileName });
 
-      // React의 상태 관리를 방해하지 않도록 비동기 처리
       const response = await fetch(`/api/files/${fileId}/download-docx`, {
         method: 'GET',
         headers: {
@@ -452,44 +458,63 @@ export default function Project() {
         throw new Error(`다운로드 실패: ${response.status} ${errorText}`);
       }
 
-      // blob 생성
       const blob = await response.blob();
       console.log('Blob created:', blob.size, 'bytes');
       
-      // 브라우저의 다운로드 API 사용 - 최신 방식
-      if ('navigator' in window && 'msSaveBlob' in (window.navigator as any)) {
-        // Internet Explorer
-        (window.navigator as any).msSaveBlob(blob, translatedFileName);
-      } else {
-        // 모던 브라우저 - URL.createObjectURL 사용하되 React 상태와 격리
-        const url = URL.createObjectURL(blob);
-        
-        // 다운로드 링크 생성 - React 렌더링과 완전히 분리
-        const downloadLink = document.createElement('a');
-        downloadLink.style.display = 'none';
-        downloadLink.href = url;
-        downloadLink.download = translatedFileName;
-        
-        // 문서에 추가하지 않고 직접 클릭
-        downloadLink.click();
-        
-        // 즉시 정리
-        URL.revokeObjectURL(url);
-      }
-
+      // 안전한 다운로드 처리
+      const url = URL.createObjectURL(blob);
+      const downloadLink = document.createElement('a');
+      downloadLink.style.display = 'none';
+      downloadLink.href = url;
+      downloadLink.download = translatedFileName;
+      
+      downloadLink.click();
+      URL.revokeObjectURL(url);
+      
+      return { fileName: translatedFileName };
+    },
+    onSuccess: (data) => {
       toast({
         title: "다운로드 완료",
-        description: `번역된 DOCX 파일이 다운로드되었습니다: ${translatedFileName}`,
+        description: `번역된 DOCX 파일이 다운로드되었습니다: ${data.fileName}`,
       });
-
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error("DOCX 다운로드 오류:", error);
       toast({
         title: "다운로드 실패",
         description: error instanceof Error ? error.message : "다운로드 중 오류가 발생했습니다.",
         variant: "destructive",
       });
-    }
+    },
+  });
+
+  // 다운로드 함수 - 순수 DOM 조작으로 React 우회
+  const downloadTranslatedDocx = (fileId: number, fileName: string) => {
+    const token = localStorage.getItem("auth_token") || "";
+    const translatedFileName = fileName.replace('.docx', '_translated.docx');
+    
+    // 숨겨진 iframe 생성하여 다운로드 수행
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:absolute;width:1px;height:1px;top:-100px;left:-100px;border:none;';
+    iframe.src = `data:text/html,<html><head></head><body><script>
+      window.location.href = "/api/files/${fileId}/download-docx?token=${encodeURIComponent(token)}";
+    </script></body></html>`;
+    
+    document.body.appendChild(iframe);
+    
+    // iframe 정리
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+    }, 5000);
+    
+    // 토스트 메시지
+    toast({
+      title: "다운로드 시작됨",
+      description: `번역된 DOCX 파일 다운로드가 시작되었습니다: ${translatedFileName}`,
+    });
   };
 
   // Fetch segments for each file
