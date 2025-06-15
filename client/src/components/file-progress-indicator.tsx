@@ -77,11 +77,11 @@ export function FileProgressIndicator({ projectId }: FileProgressIndicatorProps)
                   : '오류'}
               </Badge>
             </div>
-            
+
             {item.message && (
               <p className="text-xs text-muted-foreground">{item.message}</p>
             )}
-            
+
             {item.status === 'processing' && (
               <Progress value={item.progress} 
                 className={
@@ -89,17 +89,17 @@ export function FileProgressIndicator({ projectId }: FileProgressIndicatorProps)
                 }
               />
             )}
-            
+
             {item.status === 'completed' && (
               <Progress value={100} className="bg-green-100" />
             )}
-            
+
             {item.status === 'error' && (
               <Progress value={100} className="bg-red-100" />
             )}
           </div>
         ))}
-        
+
         {!isReady && (
           <div className="text-xs text-muted-foreground flex items-center gap-1 mt-2">
             <Clock className="h-3 w-3" />

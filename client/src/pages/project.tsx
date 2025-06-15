@@ -1005,7 +1005,8 @@ export default function Project() {
                 onOpenChange={setShowCompleteDialog}
               >
                 <DialogContent>
-                  <DialogHeader>
+                  <Dialog```text
+Header>
                     <DialogTitle>{t("projects.confirmComplete")}</DialogTitle>
                     <DialogDescription>
                       {t("projects.completeDescription")}
@@ -1470,6 +1471,132 @@ export default function Project() {
                       completed: 0,
                       percentage: 0,
                     };
+
+                    // FileProgressIndicator 컴포넌트 정의
+                    const FileProgressIndicator = ({
+                      processingStatus,
+                      processingProgress,
+                      errorMessage,
+                      className,
+                    }: {
+                      processingStatus: string;
+                      processingProgress: number;
+                      errorMessage?: string;
+                      className?: string;
+                    }) => {
+                      let statusText = "";
+                      let progressValue = 0;
+                      let statusColor = "gray"; // 기본 색상
+                      let showProgress = true;
+                      let animation = "";
+
+                      switch (processingStatus) {
+                        case "pending":
+                          statusText = "대기 중";
+                          progressValue = 0;
+                          statusColor = "gray";
+                          showProgress = false;
+                          break;
+                        case "partially_ready":
+                          statusText = "일부 번역 완료";
+                          progressValue = processingProgress;
+                          statusColor = "orange";
+                          animation = "animate-pulse";
+                          break;
+                        case "processing":
+                          statusText = `파일 처리 중 ${processingProgress ? `(${processingProgress}%)` : ""
+                            }`;
+                          progressValue = processingProgress;
+                          statusColor = "blue";
+                          animation = "animate-spin";
+                          break;
+                        case "translating":
+                          statusText = `번역 중 ${processingProgress ? `(${processingProgress}%)` : ""
+                            }`;
+                          progressValue = processingProgress;
+                          statusColor = "orange";
+                          animation = "animate-pulse";
+                          break;
+                        case "ready":
+                          statusText = "번역 완료";
+                          progressValue = 100;
+                          statusColor = "green";
+                          showProgress = false;
+                          break;
+                        case "error":
+                          statusText = "처리 실패";
+                          progressValue = 100;
+                          statusColor = "red";
+                          showProgress = false;
+                          break;
+                        default:
+                          statusText = "알 수 없는 상태";
+                          progressValue = 0;
+                          statusColor = "gray";
+                          showProgress = false;
+                      }
+
+                      return (
+                        <div className={`flex items-center ${className}`}>
+                          {processingStatus === "pending" && (
+                            <div className="flex items-center">
+                              <div className="h-3 w-3 bg-gray-400 rounded-full mr-1"></div>
+                              <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full">
+                                {statusText}
+                              </span>
+                            </div>
+                          )}
+                          {processingStatus === "partially_ready" && (
+                            <div className="flex items-center">
+                              <div className="h-3 w-3 bg-orange-400 animate-pulse rounded-full mr-1"></div>
+                              <span className="text-xs px-2 py-0.5 bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-300 rounded-full">
+                                {statusText}
+                              </span>
+                            </div>
+                          )}
+                          {processingStatus === "processing" && (
+                            <div className="flex items-center">
+                              <div className={`animate-spin h-3 w-3 border-2 border-primary border-t-transparent rounded-full mr-1 ${animation}`}></div>
+                              <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded">
+                                {statusText}
+                              </span>
+                            </div>
+                          )}
+                          {processingStatus === "translating" && (
+                            <div className="flex items-center">
+                              <div className={`animate-pulse h-3 w-3 bg-orange-400 rounded-full mr-1 ${animation}`}></div>
+                              <span className="text-xs px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded">
+                                {statusText}
+                              </span>
+                            </div>
+                          )}
+                          {processingStatus === "ready" && (
+                            <div className="flex items-center">
+                              <div className="h-3 w-3 bg-green-400 rounded-full mr-1"></div>
+                              <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
+                                {statusText}
+                              </span>
+                            </div>
+                          )}
+                          {processingStatus === "error" && (
+                            <div className="flex items-center">
+                              <div className="h-3 w-3 bg-red-400 rounded-full mr-1"></div>
+                              <span className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded">
+                                {statusText}
+                              </span>
+                              {errorMessage && (
+                                <span
+                                  className="text-xs text-red-600 dark:text-red-400 ml-2 truncate max-w-[200px]"
+                                  title={errorMessage}
+                                >
+                                  {errorMessage}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    };
                     return (
                       <div
                         key={file.id}
@@ -1481,72 +1608,13 @@ export default function Project() {
                               <h3 className="font-medium truncate">
                                 {file.name}
                               </h3>
-                              {file.processingStatus && (
-                                <div className="ml-2">
-                                  {file.processingStatus === "pending" && (
-                                    <div className="flex items-center">
-                                      <div className="h-3 w-3 bg-gray-400 rounded-full mr-1"></div>
-                                      <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full">
-                                        대기 중
-                                      </span>
-                                    </div>
-                                  )}
-                                  {file.processingStatus === "partially_ready" && (
-                                    <div className="flex items-center">
-                                      <div className="h-3 w-3 bg-orange-400 animate-pulse rounded-full mr-1"></div>
-                                      <span className="text-xs px-2 py-0.5 bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-300 rounded-full">
-                                        일부 번역 완료
-                                      </span>
-                                    </div>
-                                  )}
-                                  {file.processingStatus === "processing" && (
-                                    <div className="flex items-center">
-                                      <div className="animate-spin h-3 w-3 border-2 border-primary border-t-transparent rounded-full mr-1"></div>
-                                      <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded">
-                                        파일 처리 중{" "}
-                                        {file.processingProgress
-                                          ? `(${file.processingProgress}%)`
-                                          : ""}
-                                      </span>
-                                    </div>
-                                  )}
-                                  {file.processingStatus === "translating" && (
-                                    <div className="flex items-center">
-                                      <div className="animate-pulse h-3 w-3 bg-orange-400 rounded-full mr-1"></div>
-                                      <span className="text-xs px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded">
-                                        번역 중{" "}
-                                        {file.processingProgress
-                                          ? `(${file.processingProgress}%)`
-                                          : ""}
-                                      </span>
-                                    </div>
-                                  )}
-                                  {file.processingStatus === "ready" && (
-                                    <div className="flex items-center">
-                                      <div className="h-3 w-3 bg-green-400 rounded-full mr-1"></div>
-                                      <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
-                                        번역 완료
-                                      </span>
-                                    </div>
-                                  )}
-                                  {file.processingStatus === "error" && (
-                                    <div className="flex items-center">
-                                      <div className="h-3 w-3 bg-red-400 rounded-full mr-1"></div>
-                                      <span className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded">
-                                        처리 실패
-                                      </span>
-                                      {file.errorMessage && (
-                                        <span
-                                          className="text-xs text-red-600 dark:text-red-400 ml-2 truncate max-w-[200px]"
-                                          title={file.errorMessage}
-                                        >
-                                          {file.errorMessage}
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
+                              {/* File status indicator */}
+                              <FileProgressIndicator
+                                processingStatus={file.processingStatus || "pending"}
+                                processingProgress={file.processingProgress || 0}
+                                errorMessage={file.errorMessage}
+                                className="ml-2"
+                              />
                             </div>
                             <div className="flex items-center gap-2">
                               {file.processingStatus === "pending" ? (
@@ -1929,5 +1997,3 @@ export default function Project() {
     </MainLayout>
   );
 }
-
-// Analysis: The code has been modified to add DOCX download functionality to the project page, including a download button in the file list, a download function, and necessary state management.

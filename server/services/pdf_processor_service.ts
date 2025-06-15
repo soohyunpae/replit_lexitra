@@ -182,7 +182,9 @@ async function translateSingleSegment(
     // 번역 중 상태로 업데이트
     await db.update(schema.translationUnits)
       .set({
-        status: 'translating',
+        status: 'Draft', // 번역 워크플로에 맞는 상태
+        target: '번역 중...', // 사용자에게 진행 상황 표시
+        origin: 'MT',
         updatedAt: new Date()
       })
       .where(eq(schema.translationUnits.id, segment.id));
@@ -196,20 +198,23 @@ async function translateSingleSegment(
     await db.update(schema.translationUnits)
       .set({
         target: translation,
-        status: 'MT',
+        status: 'Draft', // MT 번역은 Draft 상태로 시작
         origin: 'MT',
         updatedAt: new Date()
       })
       .where(eq(schema.translationUnits.id, segment.id));
 
+    console.log(`세그먼트 ${segment.id} 번역 완료: ${segment.source.substring(0, 50)}...`);
+
   } catch (error) {
     console.error(`세그먼트 ${segment.id} 번역 실패:`, error);
     
-    // 번역 실패 시 에러 상태로 표시
+    // 번역 실패 시 원문 그대로 두고 Draft 상태 유지
     await db.update(schema.translationUnits)
       .set({
-        status: 'error',
-        target: '',
+        target: '', // 빈 상태로 두어 수동 번역 필요함을 표시
+        status: 'Draft',
+        origin: 'HT', // 수동 번역 필요
         updatedAt: new Date()
       })
       .where(eq(schema.translationUnits.id, segment.id));
@@ -223,22 +228,30 @@ async function translateRemainingSegments(
   fileId: number
 ): Promise<void> {
   let completedCount = 0;
+  const totalRemaining = segments.length;
+  
+  console.log(`백그라운드 번역 시작: ${totalRemaining}개 세그먼트`);
   
   for (const segment of segments) {
     await translateSingleSegment(segment, sourceLanguage, targetLanguage);
     completedCount++;
     
     // 진행률 업데이트 (70% + 나머지 30%를 점진적으로)
-    const progress = 70 + Math.round((completedCount / segments.length) * 30);
+    const progress = 70 + Math.round((completedCount / totalRemaining) * 30);
     await updateProcessingProgress(fileId, progress, "translating");
     
+    // 진행 상황 로그
+    if (completedCount % 5 === 0 || completedCount === totalRemaining) {
+      console.log(`백그라운드 번역 진행: ${completedCount}/${totalRemaining} (${progress}%)`);
+    }
+    
     // 과부하 방지를 위한 짧은 대기
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 150));
   }
   
   // 모든 번역 완료
   await updateProcessingProgress(fileId, 100, "ready");
-  console.log(`모든 세그먼트 번역 완료: ${segments.length + 10}개`);
+  console.log(`✅ 모든 세그먼트 번역 완료: 총 ${10 + totalRemaining}개`);
 }
 
 async function translateWithRetry(
