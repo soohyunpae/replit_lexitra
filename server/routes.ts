@@ -2763,8 +2763,7 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
 
       try {
         // docx 라이브러리를 사용하여 DOCX 파일 생성
-        const docx = require('docx');
-        const { Document, Packer, Paragraph, TextRun } = docx;
+        const { Document, Packer, Paragraph, TextRun } = await import('docx');
 
         // 번역된 텍스트들을 DOCX 문서로 변환
         const translatedParagraphs = segments
