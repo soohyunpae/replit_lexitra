@@ -10,7 +10,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { formatDate, formatFileSize } from "@/lib/utils";
-import { downloadFile, downloadDocxFile } from "@/lib/api";
+import { downloadFile } from "@/lib/api";
 import { TranslationUnit } from "@/types";
 import { File as FileType } from "@shared/schema";
 import {
@@ -444,14 +444,29 @@ export default function Project() {
     return response.json();
   };
 
-  // DOCX 다운로드 함수 - 개선된 유틸리티 함수 사용
+  // DOCX 다운로드 함수 - a 태그를 사용하여 진짜 파일 다운로드로 처리
   const downloadTranslatedDocx = async (fileId: number, fileName: string) => {
     try {
+      const token = localStorage.getItem("auth_token") || "";
       const translatedFileName = fileName.replace(".docx", "_translated.docx");
-      
-      // 새로운 유틸리티 함수 사용
-      await downloadDocxFile(fileId, fileName);
-      
+
+      console.log("DOCX 다운로드 시작:", {
+        fileId,
+        fileName,
+        translatedFileName,
+      });
+
+      // 다운로드 URL 생성
+      const downloadUrl = `/api/files/${fileId}/download-docx?token=${encodeURIComponent(token)}`;
+
+      // a 태그를 사용하여 다운로드 트리거 (페이지 이동/공백 방지)
+      const anchor = document.createElement("a");
+      anchor.href = downloadUrl;
+      anchor.download = ""; // filename will be handled by backend Content-Disposition
+      document.body.appendChild(anchor); // Firefox 호환성
+      anchor.click();
+      document.body.removeChild(anchor);
+
       toast({
         title: "다운로드 시작",
         description: `파일 다운로드가 시작되었습니다: ${translatedFileName}`,

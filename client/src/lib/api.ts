@@ -7,7 +7,7 @@ export async function downloadFile(url: string, filename: string): Promise<void>
     // 디버깅 메시지
     console.log(`파일 다운로드 시작: ${url}, 파일명: ${filename}`);
 
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('authToken');
     console.log(`인증 토큰 ${token ? '존재함' : '존재하지 않음'}`);
 
     // 직접 fetch를 사용하여 다운로드 (페이지 이동 방지)
@@ -29,7 +29,7 @@ export async function downloadFile(url: string, filename: string): Promise<void>
     const downloadUrl = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = downloadUrl;
-    a.download = filename;
+    a.download = filename || 'download';
     a.style.display = 'none';
     document.body.appendChild(a);
 
