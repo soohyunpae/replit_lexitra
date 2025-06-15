@@ -1503,17 +1503,17 @@ export default function Project() {
                           animation = "animate-pulse";
                           break;
                         case "processing":
-                          statusText = t("projects.statusProcessing", { 
-                            progress: processingProgress ? processingProgress : ""
-                          });
+                          statusText = processingProgress 
+                            ? t("projects.statusProcessing") + ` (${processingProgress}%)`
+                            : t("projects.statusProcessing");
                           progressValue = processingProgress;
                           statusColor = "blue";
                           animation = "animate-spin";
                           break;
                         case "translating":
-                          statusText = t("projects.statusTranslating", { 
-                            progress: processingProgress ? processingProgress : ""
-                          });
+                          statusText = processingProgress 
+                            ? t("projects.statusTranslating") + ` (${processingProgress}%)`
+                            : t("projects.statusTranslating");
                           progressValue = processingProgress;
                           statusColor = "orange";
                           animation = "animate-pulse";
