@@ -421,7 +421,7 @@ export default function Project() {
     return response.json();
   };
 
-  // DOCX 다운로드 함수 - 페이지 네비게이션 방지 (순수 fetch 방식)
+  // DOCX 다운로드 함수 - 안전한 다운로드 방식으로 페이지 네비게이션 방지
   const downloadTranslatedDocx = async (fileId: number, fileName: string) => {
     try {
       setIsDownloadingDocx(true);
@@ -431,7 +431,7 @@ export default function Project() {
 
       console.log("DOCX 다운로드 시작:", { fileId, fileName, translatedFileName });
 
-      // 순수 fetch API를 사용한 안전한 다운로드
+      // fetch API를 사용한 안전한 다운로드
       const response = await fetch(`/api/files/${fileId}/download-docx`, {
         method: "POST",
         headers: {
@@ -447,37 +447,61 @@ export default function Project() {
         throw new Error(errorText || "DOCX 다운로드에 실패했습니다.");
       }
 
-      // Content-Type 확인
-      const contentType = response.headers.get('content-type');
-      console.log("Response Content-Type:", contentType);
-
       // Blob으로 변환하여 다운로드
       const blob = await response.blob();
       console.log("Blob size:", blob.size, "type:", blob.type);
       
-      // Blob URL 생성 및 다운로드
-      const url = window.URL.createObjectURL(blob);
-      
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = translatedFileName;
-      a.style.display = 'none';
-      
-      // 임시로 DOM에 추가하고 클릭
-      document.body.appendChild(a);
-      a.click();
-      
-      // 즉시 정리 (브라우저가 다운로드를 시작한 후)
-      setTimeout(() => {
-        try {
-          window.URL.revokeObjectURL(url);
-          if (document.body.contains(a)) {
-            document.body.removeChild(a);
-          }
-        } catch (cleanupError) {
-          console.warn("정리 중 오류:", cleanupError);
+      // 안전한 다운로드 방식 1: window.open 사용
+      try {
+        const url = window.URL.createObjectURL(blob);
+        
+        // 새 창으로 다운로드 (페이지 네비게이션 방지)
+        const downloadWindow = window.open('', '_blank');
+        if (downloadWindow) {
+          downloadWindow.location.href = url;
+          // 즉시 창 닫기 (다운로드는 진행됨)
+          setTimeout(() => {
+            downloadWindow.close();
+            window.URL.revokeObjectURL(url);
+          }, 100);
+        } else {
+          // 팝업이 차단된 경우 기존 방식 사용
+          throw new Error("Popup blocked");
         }
-      }, 1000);
+      } catch (windowError) {
+        console.log("window.open 방식 실패, 대안 방식 사용:", windowError);
+        
+        // 대안 방식: 안전한 DOM 조작
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        
+        // 중요: 현재 페이지와 다른 target 설정
+        a.href = url;
+        a.download = translatedFileName;
+        a.target = '_self';
+        a.rel = 'noopener noreferrer';
+        
+        // 이벤트 방지를 위한 추가 설정
+        a.onclick = (e) => {
+          e.stopPropagation();
+          // 다운로드 후 즉시 정리
+          setTimeout(() => {
+            try {
+              window.URL.revokeObjectURL(url);
+              if (a.parentNode) {
+                a.parentNode.removeChild(a);
+              }
+            } catch (cleanupError) {
+              console.warn("정리 중 오류:", cleanupError);
+            }
+          }, 100);
+        };
+        
+        // 숨김 처리 후 클릭
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+      }
 
       toast({
         title: "다운로드 완료",
