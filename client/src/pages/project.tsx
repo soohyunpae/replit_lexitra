@@ -1498,10 +1498,6 @@ export default function Project() {
                                         일부 번역 완료
                                       </span>
                                     </div>
-                                  )}g-gray-900/30 text-gray-700 dark:text-gray-400 rounded">
-                                        대기 중
-                                      </span>
-                                    </div>
                                   )}
                                   {file.processingStatus === "processing" && (
                                     <div className="flex items-center">
