@@ -426,39 +426,39 @@ export default function Project() {
     try {
       setIsDownloadingDocx(true);
 
-      const response = await fetch(`/api/files/${fileId}/download-docx`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("auth_token") || ""}`,
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "DOCX 다운로드에 실패했습니다.");
-      }
-
-      // 파일 다운로드 처리
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-
+      // 다운로드 URL 생성
+      const token = localStorage.getItem("auth_token") || "";
+      const downloadUrl = `/api/files/${fileId}/download-docx`;
       const translatedFileName = fileName.replace('.docx', '_translated.docx');
-      a.href = url;
-      a.download = translatedFileName;
-      document.body.appendChild(a);
-      a.click();
 
-      // 정리
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      // POST 요청을 위한 폼 생성
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = downloadUrl;
+      form.target = '_blank'; // 새 창에서 다운로드
+      form.style.display = 'none';
 
-      toast({
-        title: "다운로드 완료",
-        description: `번역된 DOCX 파일이 다운로드되었습니다: ${translatedFileName}`,
-      });
+      // 인증 토큰을 위한 숨겨진 input 추가
+      const tokenInput = document.createElement('input');
+      tokenInput.type = 'hidden';
+      tokenInput.name = 'token';
+      tokenInput.value = token;
+      form.appendChild(tokenInput);
+
+      // 폼을 페이지에 추가하고 제출
+      document.body.appendChild(form);
+      form.submit();
+
+      // 폼 제거
+      document.body.removeChild(form);
+
+      // 성공 메시지 표시 (약간의 지연 후)
+      setTimeout(() => {
+        toast({
+          title: "다운로드 시작됨",
+          description: `번역된 DOCX 파일 다운로드가 시작되었습니다: ${translatedFileName}`,
+        });
+      }, 500);
 
     } catch (error) {
       console.error("DOCX 다운로드 오류:", error);
