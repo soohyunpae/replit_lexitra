@@ -250,14 +250,14 @@ export function EditableSegment(props: EditableSegmentProps) {
   const debouncedUpdateSegment = useDebouncedCallback((updateData: any) => {
     try {
       if (!liveSegment) return;
-      
+
       // 현재 상태 스냅샷
       const snapshot = {
         target: liveSegment.target || "",
         status: liveSegment.status || "Edited",
         origin: liveSegment.origin || "HT"
       };
-      
+
       // fileId 검사 및 추가
       if (!updateData.fileId) {
         console.warn("fileId is missing, adding from props", { 
@@ -267,7 +267,7 @@ export function EditableSegment(props: EditableSegmentProps) {
         });
         updateData.fileId = fileId || segment.fileId;
       }
-      
+
       // 필수 필드 모두 있는지 확인
       if (!updateData.fileId) {
         console.error("Failed to update segment: Missing fileId");
@@ -282,7 +282,7 @@ export function EditableSegment(props: EditableSegmentProps) {
               console.log('Segment update success:', response);
               // Handle both old format (direct segment) and new format (with segment property)
               const segmentData = response.segment || response;
-              
+
               // 안전하게 호출
               const updatedTarget = segmentData.target || snapshot.target;
               const updatedStatus = segmentData.status || snapshot.status;
@@ -487,7 +487,7 @@ export function EditableSegment(props: EditableSegmentProps) {
                     <MessageSquare className="h-3.5 w-3.5" />
                   </div>
                 )}
-                
+
                 {/* 상태 뱃지 */}
                 <button
                   type="button"

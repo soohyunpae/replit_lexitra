@@ -709,8 +709,8 @@
   "languages": {
     "en": "EN",
     "ko": "KO",
-    "english": "English",
-    "korean": "Korean",
+    "english": "EN",
+    "korean": "KO",
     "japanese": "Japanese",
     "chinese": "Chinese",
     "languagePair": "Language Pair"

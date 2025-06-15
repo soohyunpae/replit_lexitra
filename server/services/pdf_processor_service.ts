@@ -141,29 +141,104 @@ async function translateSegments(fileId: number, projectId: number): Promise<voi
     where: eq(schema.translationUnits.fileId, fileId)
   });
 
-  // 각 세그먼트 번역 (재시도 로직 포함)
-  for (const segment of segments) {
-    try {
-      const translation = await translateWithRetry(
-        segment.source,
-        project.sourceLanguage,
-        project.targetLanguage
-      );
-
-      await db.update(schema.translationUnits)
-        .set({
-          target: translation,
-          status: 'translated',
-          origin: 'gpt',
-          updatedAt: new Date()
-        })
-        .where(eq(schema.translationUnits.id, segment.id));
-
-    } catch (error) {
-      console.error(`세그먼트 ${segment.id} 번역 실패:`, error);
-      // 개별 세그먼트 실패는 전체 프로세스를 중단시키지 않음
-    }
+  if (segments.length === 0) {
+    return;
   }
+
+  // 1단계: 첫 10개 세그먼트를 우선 번역 (사용자가 빠르게 확인 가능)
+  const initialBatch = segments.slice(0, 10);
+  const remainingSegments = segments.slice(10);
+
+  console.log(`첫 번째 배치: ${initialBatch.length}개 세그먼트 번역 시작`);
+  
+  // 첫 10개 세그먼트 번역
+  for (const segment of initialBatch) {
+    await translateSingleSegment(segment, project.sourceLanguage, project.targetLanguage);
+  }
+
+  // 첫 번째 배치 완료 후 파일 상태를 'partially_ready'로 업데이트
+  await updateProcessingProgress(fileId, 70, "partially_ready");
+  
+  console.log(`첫 번째 배치 완료. 나머지 ${remainingSegments.length}개 세그먼트 백그라운드 번역 시작`);
+
+  // 2단계: 나머지 세그먼트를 백그라운드에서 순차적으로 번역
+  if (remainingSegments.length > 0) {
+    // 백그라운드에서 나머지 번역 처리
+    setImmediate(async () => {
+      await translateRemainingSegments(remainingSegments, project.sourceLanguage, project.targetLanguage, fileId);
+    });
+  } else {
+    // 모든 번역 완료
+    await updateProcessingProgress(fileId, 100, "ready");
+  }
+}
+
+async function translateSingleSegment(
+  segment: any, 
+  sourceLanguage: string, 
+  targetLanguage: string
+): Promise<void> {
+  try {
+    // 번역 중 상태로 업데이트
+    await db.update(schema.translationUnits)
+      .set({
+        status: 'translating',
+        updatedAt: new Date()
+      })
+      .where(eq(schema.translationUnits.id, segment.id));
+
+    const translation = await translateWithRetry(
+      segment.source,
+      sourceLanguage,
+      targetLanguage
+    );
+
+    await db.update(schema.translationUnits)
+      .set({
+        target: translation,
+        status: 'MT',
+        origin: 'MT',
+        updatedAt: new Date()
+      })
+      .where(eq(schema.translationUnits.id, segment.id));
+
+  } catch (error) {
+    console.error(`세그먼트 ${segment.id} 번역 실패:`, error);
+    
+    // 번역 실패 시 에러 상태로 표시
+    await db.update(schema.translationUnits)
+      .set({
+        status: 'error',
+        target: '',
+        updatedAt: new Date()
+      })
+      .where(eq(schema.translationUnits.id, segment.id));
+  }
+}
+
+async function translateRemainingSegments(
+  segments: any[],
+  sourceLanguage: string,
+  targetLanguage: string,
+  fileId: number
+): Promise<void> {
+  let completedCount = 0;
+  
+  for (const segment of segments) {
+    await translateSingleSegment(segment, sourceLanguage, targetLanguage);
+    completedCount++;
+    
+    // 진행률 업데이트 (70% + 나머지 30%를 점진적으로)
+    const progress = 70 + Math.round((completedCount / segments.length) * 30);
+    await updateProcessingProgress(fileId, progress, "translating");
+    
+    // 과부하 방지를 위한 짧은 대기
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  
+  // 모든 번역 완료
+  await updateProcessingProgress(fileId, 100, "ready");
+  console.log(`모든 세그먼트 번역 완료: ${segments.length + 10}개`);
 }
 
 async function translateWithRetry(

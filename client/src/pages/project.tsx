@@ -1486,7 +1486,19 @@ export default function Project() {
                                   {file.processingStatus === "pending" && (
                                     <div className="flex items-center">
                                       <div className="h-3 w-3 bg-gray-400 rounded-full mr-1"></div>
-                                      <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400 rounded">
+                                      <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full">
+                                        대기 중
+                                      </span>
+                                    </div>
+                                  )}
+                                  {file.processingStatus === "partially_ready" && (
+                                    <div className="flex items-center">
+                                      <div className="h-3 w-3 bg-orange-400 animate-pulse rounded-full mr-1"></div>
+                                      <span className="text-xs px-2 py-0.5 bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-300 rounded-full">
+                                        일부 번역 완료
+                                      </span>
+                                    </div>
+                                  )}g-gray-900/30 text-gray-700 dark:text-gray-400 rounded">
                                         대기 중
                                       </span>
                                     </div>

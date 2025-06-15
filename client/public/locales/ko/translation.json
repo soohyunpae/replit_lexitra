@@ -194,7 +194,7 @@
     "confirmComplete": "완료 확인",
     "completeDescription": "이 프로젝트를 완료로 표시하시겠습니까? 완료된 프로젝트는 더 이상 편집할 수 없습니다.",
     "confirmReopen": "재개 확인",
-    "reopenDescription": "이 완료된 프로젝트를 재개하고 상태를 ���행 중으로 변경하시겠습니까?",
+    "reopenDescription": "이 완료된 프로젝트를 재개하고 상태를 행 중으로 변경하시겠습니까?",
     "translationSummary": "번역 상태 요약",
     "words": "단어",
     "reviewedRate": "검토한 세그먼트",
@@ -355,7 +355,7 @@
     "targetText": "대상 텍스트",
     "context": "컨텍스트",
     "entryAdded": "항목이 성공적으로 추가되었습니다",
-    "entryUpdated": "항목이 성공 ��으로 업데이트되었습니다",
+    "entryUpdated": "항목이 성공 으로 업데이트되었습니다",
     "entryDeleted": "항목이 성공적으로 삭제되었습니다",
     "importGlossary": "용어집 가져오기",
     "exportGlossary": "용어집 내보내기",
@@ -609,7 +609,7 @@
       "draft": "초안"
     }
   },
-  "tm": {
+  "tm":{
     "title": "번역 메모리",
     "entryDeletedSuccess": "번역 메모리 항목이 성공적으로 삭제되었습니다.",
     "failedToDeleteEntry": "항목 삭제 실패: {{message}}",

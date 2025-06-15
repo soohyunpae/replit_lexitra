@@ -40,13 +40,13 @@ const storage = multer.diskStorage({
     const randomString = Math.random().toString(36).substring(2, 8);
     const ext = path.extname(file.originalname);
     const safeFileName = `${timestamp}-${randomString}${ext}`;
-    
+
     // 원본 파일명 저장 (req에 커스텀 프로퍼티 추가)
     if (!req.fileOriginalNames) {
       req.fileOriginalNames = {};
     }
     req.fileOriginalNames[safeFileName] = file.originalname;
-    
+
     cb(null, safeFileName);
   }
 });
@@ -222,7 +222,7 @@ router.post('/process-project', verifyToken, upload.single('file'), async (req: 
 router.get('/status/:fileId', verifyToken, async (req: Request, res: Response) => {
   try {
     const { fileId } = req.params;
-    
+
     if (!fileId || isNaN(parseInt(fileId))) {
       return res.status(400).json({ error: "Invalid file ID" });
     }
