@@ -430,7 +430,7 @@ export default function Project() {
     return response.json();
   };
 
-  // DOCX 다운로드 함수 - 상태 보존하면서 안전한 다운로드
+  // DOCX 다운로드 함수 - 안정성 개선
   const downloadTranslatedDocx = async (fileId: number, fileName: string) => {
     try {
       const token = localStorage.getItem("auth_token") || "";
@@ -438,48 +438,35 @@ export default function Project() {
 
       console.log("DOCX 다운로드 시작:", { fileId, fileName, translatedFileName });
 
-      // React의 상태 관리를 방해하지 않도록 비동기 처리
-      const response = await fetch(`/api/files/${fileId}/download-docx`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`다운로드 실패: ${response.status} ${errorText}`);
-      }
-
-      // blob 생성
-      const blob = await response.blob();
-      console.log('Blob created:', blob.size, 'bytes');
+      // 새 창에서 다운로드 처리 (페이지 이동 방지)
+      const downloadUrl = `/api/files/${fileId}/download-docx?token=${encodeURIComponent(token)}`;
       
-      // 브라우저의 다운로드 API 사용 - 최신 방식
-      if ('navigator' in window && 'msSaveBlob' in (window.navigator as any)) {
-        // Internet Explorer
-        (window.navigator as any).msSaveBlob(blob, translatedFileName);
-      } else {
-        // 모던 브라우저 - URL.createObjectURL 사용하되 React 상태와 격리
-        const url = URL.createObjectURL(blob);
-        
-        // 다운로드 링크 생성 - React 렌더링과 완전히 분리
-        const downloadLink = document.createElement('a');
-        downloadLink.style.display = 'none';
-        downloadLink.href = url;
-        downloadLink.download = translatedFileName;
-        
-        // 문서에 추가하지 않고 직접 클릭
-        downloadLink.click();
-        
-        // 즉시 정리
-        URL.revokeObjectURL(url);
-      }
+      // iframe을 사용한 안전한 다운로드
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = downloadUrl;
+      
+      // 다운로드 완료 후 iframe 제거
+      iframe.onload = () => {
+        setTimeout(() => {
+          if (iframe.parentNode) {
+            iframe.parentNode.removeChild(iframe);
+          }
+        }, 1000);
+      };
+      
+      iframe.onerror = () => {
+        if (iframe.parentNode) {
+          iframe.parentNode.removeChild(iframe);
+        }
+        throw new Error('다운로드 요청 실패');
+      };
+      
+      document.body.appendChild(iframe);
 
       toast({
-        title: "다운로드 완료",
-        description: `번역된 DOCX 파일이 다운로드되었습니다: ${translatedFileName}`,
+        title: "다운로드 시작",
+        description: `파일 다운로드가 시작되었습니다: ${translatedFileName}`,
       });
 
     } catch (error) {
