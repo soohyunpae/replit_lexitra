@@ -1504,7 +1504,7 @@ export default function Project() {
                           break;
                         case "processing":
                           statusText = processingProgress 
-                            ? t("projects.statusProcessing") + ` (${processingProgress}%)`
+                            ? `${t("projects.statusProcessing")} (${processingProgress}%)`
                             : t("projects.statusProcessing");
                           progressValue = processingProgress;
                           statusColor = "blue";
@@ -1512,7 +1512,7 @@ export default function Project() {
                           break;
                         case "translating":
                           statusText = processingProgress 
-                            ? t("projects.statusTranslating") + ` (${processingProgress}%)`
+                            ? `${t("projects.statusTranslating")} (${processingProgress}%)`
                             : t("projects.statusTranslating");
                           progressValue = processingProgress;
                           statusColor = "orange";
