@@ -53,6 +53,25 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import {
+  FileText,
+  Calendar,
+  Users,
+  Clock,
+  Upload,
+  ChevronDown,
+  ChevronRight,
+  Plus,
+  TextCursorInput,
+  Trash2,
+  Save,
+  Settings,
+  MoreHorizontal,
+  FileX,
+  AlertTriangle,
+  RotateCw,
+  Download,
+} from "lucide-react";
 
 export default function Project() {
   const [isMatch, params] = useRoute("/projects/:id");
@@ -60,6 +79,10 @@ export default function Project() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const [selectedFiles, setSelectedFiles] = useState<number[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isLoadingSegments, setIsLoadingSegments] = useState(false);
+  const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
 
   // 관리자 권한 체크
   const isAdmin = useMemo(() => user?.role === "admin", [user?.role]);
@@ -396,10 +419,61 @@ export default function Project() {
     },
   });
 
-  // Get all segments for all files in this project
+  // Get file segments
   const getFileSegments = async (fileId: number) => {
     const response = await apiRequest("GET", `/api/segments/${fileId}`);
     return response.json();
+  };
+
+  // DOCX 다운로드 함수
+  const downloadTranslatedDocx = async (fileId: number, fileName: string) => {
+    try {
+      setIsDownloadingDocx(true);
+
+      const response = await fetch(`/api/files/${fileId}/download-docx`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("auth_token") || ""}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "DOCX 다운로드에 실패했습니다.");
+      }
+
+      // 파일 다운로드 처리
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+
+      const translatedFileName = fileName.replace('.docx', '_translated.docx');
+      a.href = url;
+      a.download = translatedFileName;
+      document.body.appendChild(a);
+      a.click();
+
+      // 정리
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "다운로드 완료",
+        description: `번역된 DOCX 파일이 다운로드되었습니다: ${translatedFileName}`,
+      });
+
+    } catch (error) {
+      console.error("DOCX 다운로드 오류:", error);
+      toast({
+        title: "다운로드 실패",
+        description: error instanceof Error ? error.message : "DOCX 다운로드 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloadingDocx(false);
+    }
   };
 
   // Fetch segments for each file
@@ -1491,7 +1565,30 @@ export default function Project() {
                             </div>
                           </div>
 
-                          <div className="flex justify-end">
+                          
+                          <div className="flex justify-end gap-2">
+                            {file.name.toLowerCase().endsWith('.docx') && 
+                             file.processingStatus === "ready" && (
+                              <Button
+                                onClick={() => downloadTranslatedDocx(file.id, file.name)}
+                                variant="outline"
+                                size="sm"
+                                className="h-8"
+                                disabled={isDownloadingDocx}
+                              >
+                                {isDownloadingDocx ? (
+                                  <>
+                                    <div className="animate-spin h-3 w-3 border-2 border-primary border-t-transparent rounded-full mr-1"></div>
+                                    다운로드 중...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Download className="h-3.5 w-3.5 mr-1" />
+                                    다운로드
+                                  </>
+                                )}
+                              </Button>
+                            )}
                             <Button
                               onClick={() =>
                                 navigate(`/translation/${file.id}`)
@@ -1500,31 +1597,13 @@ export default function Project() {
                                 project.status === "Unclaimed" ||
                                 (project.status === "Claimed" &&
                                   project.claimedBy !== user?.id &&
-                                  user?.role !== "admin") ||
-                                file.processingStatus === "processing" ||
-                                file.processingStatus === "error"
+                                  !user?.isAdmin) ||
+                                file.processingStatus !== "ready"
                               }
-                              variant={
-                                project.status === "Unclaimed" ||
-                                (project.status === "Claimed" &&
-                                  project.claimedBy !== user?.id &&
-                                  user?.role !== "admin") ||
-                                file.processingStatus === "processing" ||
-                                file.processingStatus === "error"
-                                  ? "outline"
-                                  : "default"
-                              }
+                              size="sm"
+                              className="h-8"
                             >
-                              {file.processingStatus === "processing"
-                                ? t("projects.fileProcessing")
-                                : file.processingStatus === "error"
-                                  ? t("projects.fileProcessingError")
-                                  : project.status === "Unclaimed"
-                                    ? t("projects.claimProjectFirst")
-                                    : project.status === "Claimed" &&
-                                        project.claimedBy !== user?.id
-                                      ? t("projects.claimedByAnotherUser")
-                                      : t("projects.openEditor")}
+                              {t("projects.openEditor")}
                             </Button>
                           </div>
                         </div>
@@ -1789,8 +1868,7 @@ export default function Project() {
                 </CardTitle>
                 <CardDescription />
               </CardHeader>
-              <CardContent>
-                {isNotesEditing ? (
+              <CardContent>                {isNotesEditing ? (
                   <Textarea
                     placeholder={t("projects.notesPlaceholder")}
                     className="min-h-24"
@@ -1834,4 +1912,4 @@ export default function Project() {
   );
 }
 
-// Analysis: The code has been modified to include translations for project page strings and project details using the i18next library.
+// Analysis: The code has been modified to add DOCX download functionality to the project page, including a download button in the file list, a download function, and necessary state management.
