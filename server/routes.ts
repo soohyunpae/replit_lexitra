@@ -2725,6 +2725,114 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
       return handleApiError(res, error);
     }
   });
+
+  // 번역 완료된 파일의 DOCX 다운로드 API
+  app.post(`${apiPrefix}/files/:id/download-docx`, verifyToken, async (req, res) => {
+    try {
+      const fileId = parseInt(req.params.id);
+      
+      if (isNaN(fileId)) {
+        return res.status(400).json({ message: "Invalid file ID" });
+      }
+
+      // 파일 정보 조회
+      const file = await db.query.files.findFirst({
+        where: eq(schema.files.id, fileId),
+        with: {
+          project: true
+        }
+      });
+
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+
+      if (!file.name.toLowerCase().endsWith('.docx')) {
+        return res.status(400).json({ message: "Only DOCX files are supported for download" });
+      }
+
+      // 해당 파일의 번역된 세그먼트들을 가져오기
+      const segments = await db.query.translationUnits.findMany({
+        where: eq(schema.translationUnits.fileId, fileId),
+        orderBy: schema.translationUnits.id
+      });
+
+      if (segments.length === 0) {
+        return res.status(400).json({ message: "No translation segments found" });
+      }
+
+      try {
+        // docx 라이브러리를 사용하여 DOCX 파일 생성
+        const docx = require('docx');
+        const { Document, Packer, Paragraph, TextRun } = docx;
+
+        // 번역된 텍스트들을 DOCX 문서로 변환
+        const translatedParagraphs = segments
+          .filter(segment => segment.target && segment.target.trim() !== '')
+          .map(segment => 
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: segment.target,
+                  size: 24 // 12pt
+                })
+              ],
+              spacing: {
+                after: 200 // paragraph spacing
+              }
+            })
+          );
+
+        // 빈 번역이 있는 경우를 위한 대체 텍스트
+        if (translatedParagraphs.length === 0) {
+          translatedParagraphs.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: "번역된 내용이 없습니다.",
+                  size: 24
+                })
+              ]
+            })
+          );
+        }
+
+        // DOCX 문서 생성
+        const doc = new Document({
+          sections: [{
+            properties: {},
+            children: translatedParagraphs
+          }]
+        });
+
+        // 문서를 버퍼로 변환
+        const buffer = await Packer.toBuffer(doc);
+
+        // 파일명 설정 (원본명에서 _translated 추가)
+        const originalName = file.name.replace('.docx', '');
+        const translatedFileName = `${originalName}_translated.docx`;
+
+        // 다운로드 헤더 설정
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(translatedFileName)}"`);
+        res.setHeader('Content-Length', buffer.length);
+
+        // 파일 전송
+        return res.send(buffer);
+
+      } catch (docxError) {
+        console.error("DOCX 생성 오류:", docxError);
+        return res.status(500).json({ 
+          message: "DOCX 파일 생성 중 오류가 발생했습니다.",
+          error: docxError instanceof Error ? docxError.message : "Unknown error"
+        });
+      }
+
+    } catch (error) {
+      console.error("DOCX 다운로드 오류:", error);
+      return handleApiError(res, error);
+    }
+  });
   app.post(`${apiPrefix}/files`, verifyToken, async (req, res) => {
     try {
       const file = req.file;
