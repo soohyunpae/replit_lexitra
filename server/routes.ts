@@ -150,30 +150,191 @@ except Exception as e:
   });
 };
 
-// 세그먼트 처리 헬퍼 함수
+// 진행률 업데이트 헬퍼 함수
+async function updateProcessingProgress(
+  fileId: number,
+  progress: number,
+  status: string,
+  errorMessage?: string
+) {
+  const updateData: any = {
+    processingProgress: Math.max(0, Math.min(100, progress)),
+    processingStatus: status,
+    updatedAt: new Date(),
+  };
+  
+  if (errorMessage) {
+    updateData.errorMessage = errorMessage;
+  }
+  
+  await db
+    .update(schema.files)
+    .set(updateData)
+    .where(eq(schema.files.id, fileId));
+}
+
+// 재시도 로직을 포함한 GPT 번역 함수
+async function translateWithRetry(
+  text: string,
+  sourceLanguage: string,
+  targetLanguage: string,
+  maxRetries: number = 3,
+  context?: string[],
+  glossaryTerms?: { source: string; target: string }[]
+): Promise<string> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await translateWithGPT({
+        source: text,
+        sourceLanguage,
+        targetLanguage,
+        context,
+        glossaryTerms,
+      });
+      return result.target;
+    } catch (error) {
+      console.error(`번역 시도 ${attempt}/${maxRetries} 실패:`, error);
+      
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      
+      // 지수 백오프: 1초, 2초, 3초 대기
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+    }
+  }
+  return text; // 최종 실패 시 원문 반환
+}
+
+// 단일 세그먼트 번역 함수
+async function translateSingleSegment(
+  segment: any,
+  sourceLanguage: string,
+  targetLanguage: string,
+  tmMatches: any[] = [],
+  glossaryTerms: any[] = []
+): Promise<void> {
+  try {
+    // TM 매칭 찾기
+    const relevantTmMatches = tmMatches
+      .filter((tm) => calculateSimilarity(segment.source, tm.source) > 0.7)
+      .slice(0, 5);
+
+    // 용어집 매칭 찾기
+    const relevantTerms = glossaryTerms.filter((term) =>
+      segment.source.toLowerCase().includes(term.source.toLowerCase()),
+    );
+
+    // 컨텍스트 준비
+    const context = relevantTmMatches.map((tm) => `${tm.source} => ${tm.target}`);
+
+    // GPT 번역 (재시도 로직 포함)
+    const translatedText = await translateWithRetry(
+      segment.source,
+      sourceLanguage,
+      targetLanguage,
+      3,
+      context.length > 0 ? context : undefined,
+      relevantTerms.length > 0 ? relevantTerms.map(term => ({
+        source: term.source,
+        target: term.target,
+      })) : undefined
+    );
+
+    // 번역 결과 저장
+    await db
+      .update(schema.translationUnits)
+      .set({
+        target: translatedText,
+        status: "MT",
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.translationUnits.id, segment.id));
+
+    console.log(
+      `세그먼트 ${segment.id} 번역 완료: "${segment.source.substring(0, 30)}..." => "${translatedText.substring(0, 30)}..."`
+    );
+  } catch (error) {
+    console.error(`세그먼트 ${segment.id} 번역 실패:`, error);
+    
+    // 번역 실패 시 원문을 target에 저장하고 상태 표시
+    await db
+      .update(schema.translationUnits)
+      .set({
+        target: `[번역 실패] ${segment.source}`,
+        status: "Draft",
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.translationUnits.id, segment.id));
+  }
+}
+
+// 나머지 세그먼트 백그라운드 번역 함수
+async function translateRemainingSegments(
+  segments: any[],
+  fileId: number,
+  sourceLanguage: string,
+  targetLanguage: string,
+  tmMatches: any[] = [],
+  glossaryTerms: any[] = []
+): Promise<void> {
+  const totalRemaining = segments.length;
+  
+  console.log(`백그라운드 번역 시작: ${totalRemaining}개 세그먼트`);
+  
+  // 백그라운드 번역 시작할 때 translating 상태로 업데이트
+  await updateProcessingProgress(fileId, 70, "translating");
+  
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i];
+    
+    // 진행률 계산 (70%에서 100%로)
+    const progress = 70 + Math.round((i / segments.length) * 30);
+    
+    try {
+      await translateSingleSegment(
+        segment,
+        sourceLanguage,
+        targetLanguage,
+        tmMatches,
+        glossaryTerms
+      );
+      
+      // 진행률 업데이트
+      await updateProcessingProgress(fileId, progress, "translating");
+      
+    } catch (error) {
+      console.error(`세그먼트 ${segment.id} 번역 중 오류:`, error);
+    }
+  }
+  
+  // 번역 완료 후 ready 상태로 업데이트
+  await updateProcessingProgress(fileId, 100, "ready");
+  console.log('✅ 모든 번역 처리 완료');
+}
+
+// 통일된 세그먼트 처리 함수 (모든 파일 형식 지원)
 async function processFileSegments(
   fileId: number,
   fileContent: string,
   projectId: number,
 ) {
   try {
-    // Parse content into segments by splitting into sentences
+    // 1단계: 세그먼트 생성 및 저장 (0% → 30%)
+    await updateProcessingProgress(fileId, 5, "processing");
+    
     const segmentText = (text: string): string[] => {
-      // Matches end of sentence: period, question mark, exclamation mark followed by space or end
-      // But doesn't split on common abbreviations, decimal numbers, etc.
       const sentences = [];
       const regex = /[.!?]\s+|[.!?]$/g;
       let match;
       let lastIndex = 0;
 
-      // Split on sentence endings
       while ((match = regex.exec(text)) !== null) {
         const sentence = text.substring(lastIndex, match.index + 1).trim();
         if (sentence) sentences.push(sentence);
         lastIndex = match.index + match[0].length;
       }
 
-      // Add any remaining text
       if (lastIndex < text.length) {
         const remainingText = text.substring(lastIndex).trim();
         if (remainingText) sentences.push(remainingText);
@@ -182,166 +343,126 @@ async function processFileSegments(
       return sentences.length > 0 ? sentences : [text.trim()];
     };
 
-    // 문장 단위로 세그먼트 분리
     const segments = segmentText(fileContent);
-    console.log(
-      `[비동기 처리] 파일 ID: ${fileId}에서 ${segments.length}개의 세그먼트 생성`,
-    );
+    console.log(`파일 ID: ${fileId}에서 ${segments.length}개의 세그먼트 생성`);
+    
+    await updateProcessingProgress(fileId, 15, "processing");
 
-    // 세그먼트 저장
-    if (segments.length > 0) {
-      const segmentInserts = segments.map((segmentText) => ({
-        source: segmentText,
-        target: "",
-        fileId: fileId,
-        status: "Draft",
-        origin: "MT",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }));
+    if (segments.length === 0) {
+      await updateProcessingProgress(fileId, 100, "ready");
+      return;
+    }
 
-      // 세그먼트 데이터베이스 저장
-      const savedSegments = await db
-        .insert(schema.translationUnits)
-        .values(segmentInserts)
-        .returning();
+    // 세그먼트 데이터베이스 저장
+    const segmentInserts = segments.map((segmentText) => ({
+      source: segmentText,
+      target: "",
+      fileId: fileId,
+      status: "Draft",
+      origin: "MT",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }));
 
-      console.log(
-        `[비동기 처리] ${savedSegments.length}개의 세그먼트 저장 완료`,
-      );
+    const savedSegments = await db
+      .insert(schema.translationUnits)
+      .values(segmentInserts)
+      .returning();
 
-      // 만약 OpenAI API가 사용 가능하면 자동 번역 적용
-      const projectInfo = await db.query.projects.findFirst({
-        where: eq(schema.projects.id, projectId),
-      });
+    console.log(`${savedSegments.length}개의 세그먼트 저장 완료`);
+    await updateProcessingProgress(fileId, 30, "processing");
 
-      // 프로젝트 소스 언어와 타겟 언어 확인
-      if (
-        projectInfo &&
-        projectInfo.sourceLanguage &&
-        projectInfo.targetLanguage
-      ) {
-        console.log("[비동기 처리] 자동 번역 준비 중...");
+    // 2단계: 프로젝트 정보 및 TM/용어집 준비 (30% → 40%)
+    const projectInfo = await db.query.projects.findFirst({
+      where: eq(schema.projects.id, projectId),
+    });
 
-        // TM 매칭 준비
-        const tmMatches = await db.query.translationMemory.findMany({
-          where: and(
-            eq(
-              schema.translationMemory.sourceLanguage,
-              projectInfo.sourceLanguage,
-            ),
-            eq(
-              schema.translationMemory.targetLanguage,
-              projectInfo.targetLanguage,
-            ),
-          ),
-          limit: 100,
-        });
+    if (!projectInfo?.sourceLanguage || !projectInfo?.targetLanguage) {
+      await updateProcessingProgress(fileId, 100, "ready");
+      return;
+    }
 
-        // 용어집 준비
-        const glossaryTerms = await db.query.glossary.findMany({
-          where: and(
-            eq(schema.glossary.sourceLanguage, projectInfo.sourceLanguage),
-            eq(schema.glossary.targetLanguage, projectInfo.targetLanguage),
-          ),
-          limit: 100,
-        });
+    console.log("자동 번역 준비 중...");
+    await updateProcessingProgress(fileId, 35, "processing");
 
-        // 각 세그먼트에 대해 자동 번역 실행 및 업데이트
-        for (const segment of savedSegments) {
-          try {
-            // TM 매칭 찾기
-            const relevantTmMatches = tmMatches
-              .filter(
-                (tm) => calculateSimilarity(segment.source, tm.source) > 0.7,
-              )
-              .slice(0, 5);
+    // TM 매칭 준비
+    const tmMatches = await db.query.translationMemory.findMany({
+      where: and(
+        eq(schema.translationMemory.sourceLanguage, projectInfo.sourceLanguage),
+        eq(schema.translationMemory.targetLanguage, projectInfo.targetLanguage),
+      ),
+      limit: 100,
+    });
 
-            // 용어집 매칭 찾기
-            const relevantTerms = glossaryTerms.filter((term) =>
-              segment.source.toLowerCase().includes(term.source.toLowerCase()),
-            );
+    // 용어집 준비
+    const glossaryTerms = await db.query.glossary.findMany({
+      where: and(
+        eq(schema.glossary.sourceLanguage, projectInfo.sourceLanguage),
+        eq(schema.glossary.targetLanguage, projectInfo.targetLanguage),
+      ),
+      limit: 100,
+    });
 
-            // TM 컨텍스트 준비
-            const context = relevantTmMatches.map(
-              (tm) => `${tm.source} => ${tm.target}`,
-            );
+    await updateProcessingProgress(fileId, 40, "processing");
 
-            // 용어 컨텍스트 준비
-            const terminology = relevantTerms.map(
-              (term) => `${term.source} => ${term.target}`,
-            );
-
-            // GPT 번역 호출
-            const translationResult = await translateWithGPT({
-              source: segment.source,
-              sourceLanguage: projectInfo.sourceLanguage,
-              targetLanguage: projectInfo.targetLanguage,
-              context: context.length > 0 ? context : undefined,
-              glossaryTerms: relevantTerms.map((term) => ({
-                source: term.source,
-                target: term.target,
-              })),
-            });
-
-            if (translationResult) {
-              // 번역 결과 저장
-              await db
-                .update(schema.translationUnits)
-                .set({
-                  target: translationResult.target,
-                  status: "MT",
-                  updatedAt: new Date(),
-                })
-                .where(eq(schema.translationUnits.id, segment.id));
-
-              console.log(
-                `[비동기 처리] 세그먼트 ID ${segment.id} 번역 완료: "${segment.source.substring(
-                  0,
-                  30,
-                )}..." => "${translationResult.target.substring(0, 30)}..."`,
-              );
-            }
-          } catch (translationError) {
-            console.error(
-              `[비동기 처리] 세그먼트 ID ${segment.id} 번역 실패:`,
-              translationError,
-            );
-          }
-        }
-
-        // 모든 세그먼트의 번역이 완료되면 파일 상태를 "ready"로 업데이트
-        await db
-          .update(schema.files)
-          .set({
-            processingStatus: "ready", // 전체 처리 완료 상태로 업데이트
-            updatedAt: new Date(),
-          })
-          .where(eq(schema.files.id, fileId));
-
-        console.log(
-          `[비동기 처리] 파일 ID ${fileId}의 모든 처리 완료. 상태를 'ready'로 변경함`,
+    // 3단계: 첫 10개 세그먼트 우선 번역 (40% → 70%)
+    const initialBatch = savedSegments.slice(0, 10);
+    console.log(`우선 번역 시작: ${initialBatch.length}개 세그먼트`);
+    
+    for (let i = 0; i < initialBatch.length; i++) {
+      const segment = initialBatch[i];
+      const progress = 40 + Math.round((i / initialBatch.length) * 30); // 40%에서 70%로
+      
+      try {
+        await translateSingleSegment(
+          segment,
+          projectInfo.sourceLanguage,
+          projectInfo.targetLanguage,
+          tmMatches,
+          glossaryTerms
         );
+        
+        await updateProcessingProgress(fileId, progress, "processing");
+      } catch (error) {
+        console.error(`우선 번역 세그먼트 ${segment.id} 오류:`, error);
       }
     }
-  } catch (error) {
-    console.error(
-      `[비동기 처리] 세그먼트 처리 오류 (파일 ID: ${fileId}):`,
-      error,
-    );
 
-    // 오류 발생 시 파일 상태를 "error"로 업데이트
-    await db
-      .update(schema.files)
-      .set({
-        processingStatus: "error",
-        errorMessage:
-          error instanceof Error
-            ? error.message
-            : "Unknown error during segment processing",
-        updatedAt: new Date(),
-      })
-      .where(eq(schema.files.id, fileId));
+    // 70% 완료 시점에서 partially_ready 상태로 변경
+    if (savedSegments.length > 10) {
+      await updateProcessingProgress(fileId, 70, "partially_ready");
+      
+      // 4단계: 나머지 세그먼트 백그라운드 번역 (70% → 100%)
+      const remainingSegments = savedSegments.slice(10);
+      console.log(`나머지 ${remainingSegments.length}개 세그먼트 백그라운드 번역 시작`);
+      
+      // 백그라운드에서 나머지 번역 실행
+      setImmediate(async () => {
+        await translateRemainingSegments(
+          remainingSegments,
+          fileId,
+          projectInfo.sourceLanguage,
+          projectInfo.targetLanguage,
+          tmMatches,
+          glossaryTerms
+        );
+      });
+    } else {
+      // 10개 이하인 경우 즉시 완료
+      await updateProcessingProgress(fileId, 100, "ready");
+    }
+
+    console.log(`파일 ID ${fileId}의 초기 처리 완료`);
+
+  } catch (error) {
+    console.error(`세그먼트 처리 오류 (파일 ID: ${fileId}):`, error);
+
+    await updateProcessingProgress(
+      fileId, 
+      0, 
+      "error",
+      error instanceof Error ? error.message : "Unknown error during segment processing"
+    );
   }
 }
 
