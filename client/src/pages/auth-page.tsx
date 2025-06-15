@@ -154,11 +154,11 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Password</FormLabel>
+                            <FormLabel>{t("auth.password")}</FormLabel>
                             <FormControl>
                               <Input
                                 type="password"
-                                placeholder="Enter your password"
+                                placeholder={t("auth.enterPassword")}
                                 {...field}
                               />
                             </FormControl>
@@ -221,11 +221,11 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Password</FormLabel>
+                            <FormLabel>{t("auth.password")}</FormLabel>
                             <FormControl>
                               <Input
                                 type="password"
-                                placeholder="Enter your password"
+                                placeholder={t("auth.enterPassword")}
                                 {...field}
                               />
                             </FormControl>

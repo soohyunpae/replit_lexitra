@@ -44,14 +44,22 @@
   "auth": {
     "login": "로그인",
     "signup": "회원가입",
+    "register": "회원가입",
     "email": "이메일",
     "password": "비밀번호",
     "username": "사용자 이름",
     "forgotPassword": "비밀번호를 잊으셨나요?",
     "resetPassword": "비밀번호 재설정",
+    "platformDescription": "특허 문서 전문 번역 플랫폼",
+    "loginDescription": "계정에 접속하려면 로그인 정보를 입력하세요",
+    "registerDescription": "시작하려면 새 계정을 생성하세요",
+    "enterUsername": "사용자 이름을 입력하세요",
+    "enterPassword": "비밀번호를 입력하세요",
+    "confirmPassword": "비밀번호 확인",
+    "reenterPassword": "비밀번호를 다시 입력하세요",
     "Error": "유효하지 않은 사용자 이름 또는 비밀번호",
     "logoutSuccess": "로그아웃 성공",
-    "logoutSuccessDesc": "성공적으로 로그아웃되었습니다."
+    "logoutSuccessDesc": "성공적으로 로그아웃되었습니다.",
     "loggingOut": "로그아웃 중...",
     "loginSuccess": "로그인 성공",
     "welcomeUser": "{{username}}님, 환영합니다.",
@@ -60,7 +68,6 @@
     "registerFailed": "회원가입 실패",
     "logoutError": "로그아웃 오류",
     "logoutErrorDesc": "로그아웃에 문제가 있었지만 처리되었습니다. 다시 로그인해주세요."
-    
   },
   "dashboard": {
     "title": "대시보드",
