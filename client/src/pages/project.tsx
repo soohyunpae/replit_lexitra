@@ -421,7 +421,7 @@ export default function Project() {
     return response.json();
   };
 
-  // DOCX 다운로드 함수 - 새 창에서 열기 방식 (페이지 네비게이션 방지)
+  // DOCX 다운로드 함수 - a 태그 download 방식 (페이지 네비게이션 완전 방지)
   const downloadTranslatedDocx = (fileId: number, fileName: string) => {
     try {
       const token = localStorage.getItem("auth_token") || "";
@@ -429,26 +429,18 @@ export default function Project() {
 
       console.log("DOCX 다운로드 시작:", { fileId, fileName, translatedFileName });
 
-      // 새 창에서 POST 요청을 통한 다운로드 (현재 페이지에 영향 없음)
-      const downloadForm = document.createElement('form');
-      downloadForm.method = 'POST';
-      downloadForm.action = `/api/files/${fileId}/download-docx`;
-      downloadForm.target = '_blank'; // 새 창에서 열기
-      downloadForm.style.display = 'none';
+      // a 태그를 사용한 안전한 다운로드 (페이지 이동 없음)
+      const downloadLink = document.createElement('a');
+      downloadLink.href = `/api/files/${fileId}/download-docx?token=${encodeURIComponent(token)}`;
+      downloadLink.download = translatedFileName;
+      downloadLink.style.display = 'none';
       
-      // 인증 토큰을 위한 숨겨진 input 추가
-      const tokenInput = document.createElement('input');
-      tokenInput.type = 'hidden';
-      tokenInput.name = 'token';
-      tokenInput.value = token;
-      downloadForm.appendChild(tokenInput);
+      // 임시로 DOM에 추가하고 클릭
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
       
-      // 폼을 페이지에 추가하고 제출
-      document.body.appendChild(downloadForm);
-      downloadForm.submit();
-      
-      // 폼 정리
-      document.body.removeChild(downloadForm);
+      // 즉시 정리
+      document.body.removeChild(downloadLink);
 
       toast({
         title: "다운로드 시작됨",
