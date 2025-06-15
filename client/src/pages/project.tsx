@@ -421,7 +421,7 @@ export default function Project() {
     return response.json();
   };
 
-  // DOCX 다운로드 함수 - fetch를 사용한 blob 처리 방식
+  // DOCX 다운로드 함수 - 안전한 blob 처리 방식
   const downloadTranslatedDocx = async (fileId: number, fileName: string) => {
     try {
       const token = localStorage.getItem("auth_token") || "";
@@ -434,7 +434,6 @@ export default function Project() {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
         },
         credentials: 'include',
       });
@@ -447,24 +446,48 @@ export default function Project() {
       // 응답을 blob으로 변환
       const blob = await response.blob();
       
-      // blob을 사용하여 다운로드 링크 생성
+      // MIME 타입 확인
+      const contentType = response.headers.get('content-type');
+      console.log('Response content type:', contentType);
+      
+      // blob 크기 확인
+      if (blob.size === 0) {
+        throw new Error('파일이 비어있습니다.');
+      }
+      
+      console.log('Blob size:', blob.size, 'bytes');
+      
+      // 안전한 다운로드 링크 생성
       const url = window.URL.createObjectURL(blob);
       const downloadLink = document.createElement('a');
+      
+      // 다운로드 링크 설정
       downloadLink.href = url;
       downloadLink.download = translatedFileName;
       downloadLink.style.display = 'none';
+      downloadLink.target = '_blank'; // 새 창에서 열기 (fallback)
       
-      // 임시로 DOM에 추가하고 클릭
+      // DOM에 추가
       document.body.appendChild(downloadLink);
+      
+      // 다운로드 트리거
+      console.log('다운로드 링크 클릭 시도');
       downloadLink.click();
       
-      // 정리
-      document.body.removeChild(downloadLink);
-      window.URL.revokeObjectURL(url);
+      // 짧은 지연 후 정리 (브라우저가 다운로드를 시작할 시간을 줌)
+      setTimeout(() => {
+        try {
+          document.body.removeChild(downloadLink);
+          window.URL.revokeObjectURL(url);
+          console.log('다운로드 링크 정리 완료');
+        } catch (cleanupError) {
+          console.warn('정리 중 오류 (무시 가능):', cleanupError);
+        }
+      }, 100);
 
       toast({
-        title: "다운로드 완료",
-        description: `번역된 DOCX 파일이 다운로드되었습니다: ${translatedFileName}`,
+        title: "다운로드 시작됨",
+        description: `번역된 DOCX 파일 다운로드가 시작되었습니다: ${translatedFileName}`,
       });
 
     } catch (error) {
