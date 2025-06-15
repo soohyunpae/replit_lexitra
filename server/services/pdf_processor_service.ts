@@ -117,7 +117,8 @@ async function createSegments(
     fileId,
     source: segment.source,
     target: '',
-    status: 'new' as const,
+    status: 'Draft' as const,  // 초기 상태는 Draft
+    origin: '',                // 초기 origin은 빈 값
     page: segment.page,
     createdAt: new Date(),
     updatedAt: new Date()
@@ -208,15 +209,7 @@ async function translateSingleSegment(
   targetLanguage: string
 ): Promise<void> {
   try {
-    // 번역 중 상태로 업데이트
-    await db.update(schema.translationUnits)
-      .set({
-        status: 'Draft', // 번역 워크플로에 맞는 상태
-        target: '번역 중...', // 사용자에게 진행 상황 표시
-        origin: 'MT',
-        updatedAt: new Date()
-      })
-      .where(eq(schema.translationUnits.id, segment.id));
+    console.log(`PDF 세그먼트 ${segment.id} 번역 시작 - 현재 상태: ${segment.status}, origin: ${segment.origin}`);
 
     const translation = await translateWithRetry(
       segment.source,
@@ -224,26 +217,28 @@ async function translateSingleSegment(
       targetLanguage
     );
 
-    await db.update(schema.translationUnits)
+    // 번역 완료 후 상태 업데이트
+    const updateResult = await db.update(schema.translationUnits)
       .set({
         target: translation,
-        status: 'MT', // MT 번역 완료 시 바로 MT 상태로 설정
-        origin: 'MT',
+        status: 'MT',  // 기계번역 완료 상태
+        origin: 'MT',  // 기계번역 출처
         updatedAt: new Date()
       })
-      .where(eq(schema.translationUnits.id, segment.id));
+      .where(eq(schema.translationUnits.id, segment.id))
+      .returning();
 
-    console.log(`세그먼트 ${segment.id} 번역 완료: ${segment.source.substring(0, 50)}...`);
+    console.log(`PDF 세그먼트 ${segment.id} 번역 완료: status=${updateResult[0]?.status}, origin=${updateResult[0]?.origin}`);
 
   } catch (error) {
-    console.error(`세그먼트 ${segment.id} 번역 실패:`, error);
+    console.error(`PDF 세그먼트 ${segment.id} 번역 실패:`, error);
 
-    // 번역 실패 시 원문 그대로 두고 상태 유지
+    // 번역 실패 시 Draft 상태로 유지
     await db.update(schema.translationUnits)
       .set({
-        target: '', // 빈 상태로 두어 수동 번역 필요함을 표시
-        status: 'new', // 번역되지 않은 상태로 되돌림
-        origin: '', // origin 초기화
+        target: '',
+        status: 'Draft',  // Draft 상태 유지
+        origin: '',       // origin 초기화
         updatedAt: new Date()
       })
       .where(eq(schema.translationUnits.id, segment.id));

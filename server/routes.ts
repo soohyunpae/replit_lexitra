@@ -215,6 +215,8 @@ async function translateSingleSegment(
   glossaryTerms: any[] = []
 ): Promise<void> {
   try {
+    console.log(`세그먼트 ${segment.id} 번역 시작 - 현재 상태: ${segment.status}, origin: ${segment.origin}`);
+    
     // TM 매칭 찾기
     const relevantTmMatches = tmMatches
       .filter((tm) => calculateSimilarity(segment.source, tm.source) > 0.7)
@@ -241,29 +243,31 @@ async function translateSingleSegment(
       })) : undefined
     );
 
-    // 번역 결과 저장
-    await db
+    // 번역 결과 저장 - status와 origin을 명확하게 MT로 설정
+    const updateResult = await db
       .update(schema.translationUnits)
       .set({
         target: translatedText,
-        status: "MT", // 번역 완료 시 바로 MT 상태로 설정
-        origin: "MT", // origin도 함께 설정
+        status: "MT",   // 기계번역 완료 상태
+        origin: "MT",   // 기계번역 출처
         updatedAt: new Date(),
       })
-      .where(eq(schema.translationUnits.id, segment.id));
+      .where(eq(schema.translationUnits.id, segment.id))
+      .returning();
 
     console.log(
-      `세그먼트 ${segment.id} 번역 완료: "${segment.source.substring(0, 30)}..." => "${translatedText.substring(0, 30)}..."`
+      `세그먼트 ${segment.id} 번역 완료: status=${updateResult[0]?.status}, origin=${updateResult[0]?.origin}`
     );
   } catch (error) {
     console.error(`세그먼트 ${segment.id} 번역 실패:`, error);
     
-    // 번역 실패 시 원문을 target에 저장하고 상태 표시
+    // 번역 실패 시 Draft 상태로 유지하고 target은 빈 상태로
     await db
       .update(schema.translationUnits)
       .set({
-        target: `[번역 실패] ${segment.source}`,
-        status: "Draft",
+        target: "",
+        status: "Draft",  // 번역 실패 시 Draft 상태 유지
+        origin: "",       // origin 초기화
         updatedAt: new Date(),
       })
       .where(eq(schema.translationUnits.id, segment.id));
@@ -359,8 +363,8 @@ async function processFileSegments(
       source: segmentText,
       target: "",
       fileId: fileId,
-      status: "Draft",
-      origin: "MT",
+      status: "Draft", // 초기 상태는 Draft
+      origin: "",      // 초기에는 빈 origin
       createdAt: new Date(),
       updatedAt: new Date(),
     }));
