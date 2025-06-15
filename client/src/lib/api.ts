@@ -10,44 +10,42 @@ export async function downloadFile(url: string, filename: string): Promise<void>
     const token = localStorage.getItem('authToken');
     console.log(`인증 토큰 ${token ? '존재함' : '존재하지 않음'}`);
 
-    // 브라우저의 기본 다운로드 방식 사용
-    const downloadWindow = window.open(url, '_blank');
+    // 직접 fetch를 사용하여 다운로드 (페이지 이동 방지)
+    console.log('fetch 방식으로 안전한 다운로드 진행');
 
-    // 새 창이 차단되었는지 확인
-    if (!downloadWindow || downloadWindow.closed || typeof downloadWindow.closed === 'undefined') {
-      // 새 창이 차단되었거나 열리지 않았다면, fetch 사용
-      console.log('새 창이 차단되었거나 열리지 않음, fetch 방식으로 대체');
-
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : ''
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : ''
       }
+    });
 
-      const blob = await response.blob();
-      console.log(`파일 blob 생성 성공: ${blob.size} bytes, type: ${blob.type}`);
-
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = filename || 'download';
-      a.style.display = 'none';
-      document.body.appendChild(a);
-
-      console.log('다운로드 링크 생성 및 클릭');
-      a.click();
-
-      // 정리
-      window.URL.revokeObjectURL(downloadUrl);
-      document.body.removeChild(a);
-      console.log('다운로드 링크 정리 완료');
-    } else {
-      console.log('새 창으로 다운로드 진행 중');
+    if (!response.ok) {
+      throw new Error(`Download failed: ${response.status} ${response.statusText}`);
     }
+
+    const blob = await response.blob();
+    console.log(`파일 blob 생성 성공: ${blob.size} bytes, type: ${blob.type}`);
+
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = filename || 'download';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+
+    console.log('다운로드 링크 생성 및 클릭');
+    a.click();
+
+    // 짧은 지연 후 정리
+    setTimeout(() => {
+      try {
+        window.URL.revokeObjectURL(downloadUrl);
+        document.body.removeChild(a);
+        console.log('다운로드 링크 정리 완료');
+      } catch (cleanupError) {
+        console.warn('정리 중 오류 (무시 가능):', cleanupError);
+      }
+    }, 100);
   } catch (error) {
     console.error("Error downloading file:", error);
     throw error;

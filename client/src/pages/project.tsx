@@ -394,10 +394,19 @@ export default function Project() {
       const a = document.createElement('a');
       a.href = url;
       a.download = `${project.name}_translated_${Date.now()}.docx`;
+      a.style.display = 'none';
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      
+      // 짧은 지연 후 정리
+      setTimeout(() => {
+        try {
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } catch (cleanupError) {
+          console.warn('정리 중 오류 (무시 가능):', cleanupError);
+        }
+      }, 100);
     },
     onSuccess: () => {
       toast({
@@ -461,11 +470,10 @@ export default function Project() {
       const url = window.URL.createObjectURL(blob);
       const downloadLink = document.createElement('a');
       
-      // 다운로드 링크 설정
+      // 다운로드 링크 설정 - target="_blank" 제거하여 페이지 이동 방지
       downloadLink.href = url;
       downloadLink.download = translatedFileName;
       downloadLink.style.display = 'none';
-      downloadLink.target = '_blank'; // 새 창에서 열기 (fallback)
       
       // DOM에 추가
       document.body.appendChild(downloadLink);
