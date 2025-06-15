@@ -227,7 +227,7 @@ async function translateSingleSegment(
     await db.update(schema.translationUnits)
       .set({
         target: translation,
-        status: 'Draft', // MT 번역은 Draft 상태로 시작
+        status: 'MT', // MT 번역 완료 시 바로 MT 상태로 설정
         origin: 'MT',
         updatedAt: new Date()
       })
@@ -238,12 +238,12 @@ async function translateSingleSegment(
   } catch (error) {
     console.error(`세그먼트 ${segment.id} 번역 실패:`, error);
 
-    // 번역 실패 시 원문 그대로 두고 Draft 상태 유지
+    // 번역 실패 시 원문 그대로 두고 상태 유지
     await db.update(schema.translationUnits)
       .set({
         target: '', // 빈 상태로 두어 수동 번역 필요함을 표시
-        status: 'Draft',
-        origin: 'HT', // 수동 번역 필요
+        status: 'new', // 번역되지 않은 상태로 되돌림
+        origin: '', // origin 초기화
         updatedAt: new Date()
       })
       .where(eq(schema.translationUnits.id, segment.id));

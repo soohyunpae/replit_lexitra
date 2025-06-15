@@ -246,7 +246,8 @@ async function translateSingleSegment(
       .update(schema.translationUnits)
       .set({
         target: translatedText,
-        status: "MT",
+        status: "MT", // 번역 완료 시 바로 MT 상태로 설정
+        origin: "MT", // origin도 함께 설정
         updatedAt: new Date(),
       })
       .where(eq(schema.translationUnits.id, segment.id));
