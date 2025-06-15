@@ -168,6 +168,24 @@ export default function Translation() {
     }
   }, [fileId]);
 
+  // Auto-refresh segments during translation to show real-time updates
+  useEffect(() => {
+    if (!file || !fileId) return;
+
+    // If file is being translated, refresh segments every 3 seconds
+    if (file.processingStatus === "translating" || 
+        (file.processingStatus === "processing" && (file.processingProgress || 0) >= 70)) {
+      const refreshInterval = setInterval(() => {
+        console.log("Auto-refreshing segments for translating file");
+        queryClient.invalidateQueries({
+          queryKey: [`/api/files/${fileId}`],
+        });
+      }, 3000); // Refresh every 3 seconds
+
+      return () => clearInterval(refreshInterval);
+    }
+  }, [file?.processingStatus, file?.processingProgress, fileId]);
+
   // Auto-translation on file load
   useEffect(() => {
     const performAutoTranslation = async () => {

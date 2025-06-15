@@ -6,6 +6,15 @@ import { StatusTypes } from "@shared/schema";
 export const useSegments = (fileId: number) => {
   const queryClient = useQueryClient();
 
+  // Check if file is being translated to adjust refetch interval
+  const { data: fileData } = useQuery({
+    queryKey: [`/api/files/${fileId}`],
+    enabled: !!fileId,
+  });
+
+  const isTranslating = fileData?.processingStatus === "translating" || 
+                       (fileData?.processingStatus === "processing" && (fileData?.processingProgress || 0) >= 70);
+
   const { data: segments = [], ...rest } = useQuery({
     queryKey: ["segments", fileId],
     queryFn: async () => {
@@ -13,9 +22,10 @@ export const useSegments = (fileId: number) => {
       return response.json();
     },
     enabled: !!fileId,
-    staleTime: 30000, // 30 seconds
+    staleTime: isTranslating ? 2000 : 30000, // Shorter cache time when translating
     gcTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    refetchInterval: isTranslating ? 3000 : false, // Auto-refresh every 3 seconds when translating
   });
 
   const { mutate: updateSegmentMutation } = useMutation({
