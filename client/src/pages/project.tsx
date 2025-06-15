@@ -989,8 +989,7 @@ export default function Project() {
                       onClick={() => setShowReleaseDialog(true)}
                       disabled={releaseProject.isPending}
                     >
-                      ```python
-{releaseProject.isPending
+                      {releaseProject.isPending
                         ? t("projects.releasing")
                         : t("projects.release")}
                     </Button>
@@ -1766,7 +1765,9 @@ export default function Project() {
                                 (project.status === "Claimed" &&
                                   project.claimedBy !== user?.id &&
                                   !user?.isAdmin) ||
-                                file.processingStatus !== "ready"
+                                (file.processingStatus !== "ready" && 
+                                 file.processingStatus !== "partially_ready" && 
+                                 file.processingStatus !== "translating")
                               }
                               size="sm"
                               className="h-8"

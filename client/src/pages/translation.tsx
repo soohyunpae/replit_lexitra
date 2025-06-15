@@ -397,8 +397,9 @@ export default function Translation() {
     );
   }
 
-  // 파일이 아직 처리 중인 경우 (processing, pending)
-  if (file.processingStatus === "processing" || file.processingStatus === "pending") {
+  // 파일이 아직 처리 중인 경우 (processing, pending) - 70% 미만인 경우만
+  if ((file.processingStatus === "processing" && (file.processingProgress || 0) < 70) || 
+      file.processingStatus === "pending") {
     return (
       <MainLayout title={t("translation.fileProcessing")}>
         <div className="flex-1 flex items-center justify-center">
