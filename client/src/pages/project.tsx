@@ -421,17 +421,36 @@ export default function Project() {
     return response.json();
   };
 
-  // DOCX 다운로드 함수 - a 태그 download 방식 (페이지 네비게이션 완전 방지)
-  const downloadTranslatedDocx = (fileId: number, fileName: string) => {
+  // DOCX 다운로드 함수 - fetch를 사용한 blob 처리 방식
+  const downloadTranslatedDocx = async (fileId: number, fileName: string) => {
     try {
       const token = localStorage.getItem("auth_token") || "";
       const translatedFileName = fileName.replace('.docx', '_translated.docx');
 
       console.log("DOCX 다운로드 시작:", { fileId, fileName, translatedFileName });
 
-      // a 태그를 사용한 안전한 다운로드 (페이지 이동 없음)
+      // fetch를 사용하여 파일 데이터 요청
+      const response = await fetch(`/api/files/${fileId}/download-docx`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`다운로드 실패: ${response.status} ${errorText}`);
+      }
+
+      // 응답을 blob으로 변환
+      const blob = await response.blob();
+      
+      // blob을 사용하여 다운로드 링크 생성
+      const url = window.URL.createObjectURL(blob);
       const downloadLink = document.createElement('a');
-      downloadLink.href = `/api/files/${fileId}/download-docx?token=${encodeURIComponent(token)}`;
+      downloadLink.href = url;
       downloadLink.download = translatedFileName;
       downloadLink.style.display = 'none';
       
@@ -439,12 +458,13 @@ export default function Project() {
       document.body.appendChild(downloadLink);
       downloadLink.click();
       
-      // 즉시 정리
+      // 정리
       document.body.removeChild(downloadLink);
+      window.URL.revokeObjectURL(url);
 
       toast({
-        title: "다운로드 시작됨",
-        description: `번역된 DOCX 파일 다운로드가 시작되었습니다: ${translatedFileName}`,
+        title: "다운로드 완료",
+        description: `번역된 DOCX 파일이 다운로드되었습니다: ${translatedFileName}`,
       });
 
     } catch (error) {
