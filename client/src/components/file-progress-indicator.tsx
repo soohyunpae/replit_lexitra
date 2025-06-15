@@ -1,4 +1,6 @@
+
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, CheckCircle, Clock, FileText, RefreshCw } from 'lucide-react';
@@ -10,6 +12,8 @@ interface FileProgressIndicatorProps {
 }
 
 export function FileProgressIndicator({ projectId }: FileProgressIndicatorProps) {
+  const { t } = useTranslation();
+  
   // WebSocket 연결 및 파일 진행 상황 확인
   const { isReady, fileProgress } = useWebSocket({
     reconnectOnClose: true,
@@ -37,7 +41,7 @@ export function FileProgressIndicator({ projectId }: FileProgressIndicatorProps)
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          파일 처리 진행 상황
+          {t("projects.fileProcessing")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -71,10 +75,10 @@ export function FileProgressIndicator({ projectId }: FileProgressIndicatorProps)
                 }
               >
                 {item.status === 'processing'
-                  ? '처리 중'
+                  ? t("projects.processing")
                   : item.status === 'completed'
-                  ? '완료됨'
-                  : '오류'}
+                  ? t("projects.ready")
+                  : t("projects.error")}
               </Badge>
             </div>
 
@@ -103,7 +107,7 @@ export function FileProgressIndicator({ projectId }: FileProgressIndicatorProps)
         {!isReady && (
           <div className="text-xs text-muted-foreground flex items-center gap-1 mt-2">
             <Clock className="h-3 w-3" />
-            서버와 연결 중...
+            {t("common.loading")}
           </div>
         )}
       </CardContent>

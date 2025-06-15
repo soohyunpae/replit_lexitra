@@ -1005,8 +1005,7 @@ export default function Project() {
                 onOpenChange={setShowCompleteDialog}
               >
                 <DialogContent>
-                  <Dialog```text
-Header>
+                  <DialogHeader>
                     <DialogTitle>{t("projects.confirmComplete")}</DialogTitle>
                     <DialogDescription>
                       {t("projects.completeDescription")}
@@ -1492,45 +1491,47 @@ Header>
 
                       switch (processingStatus) {
                         case "pending":
-                          statusText = "대기 중";
+                          statusText = t("projects.statusPending");
                           progressValue = 0;
                           statusColor = "gray";
                           showProgress = false;
                           break;
                         case "partially_ready":
-                          statusText = "일부 번역 완료";
+                          statusText = t("projects.statusPartiallyReady");
                           progressValue = processingProgress;
                           statusColor = "orange";
                           animation = "animate-pulse";
                           break;
                         case "processing":
-                          statusText = `파일 처리 중 ${processingProgress ? `(${processingProgress}%)` : ""
-                            }`;
+                          statusText = t("projects.statusProcessing", { 
+                            progress: processingProgress ? processingProgress : ""
+                          });
                           progressValue = processingProgress;
                           statusColor = "blue";
                           animation = "animate-spin";
                           break;
                         case "translating":
-                          statusText = `번역 중 ${processingProgress ? `(${processingProgress}%)` : ""
-                            }`;
+                          statusText = t("projects.statusTranslating", { 
+                            progress: processingProgress ? processingProgress : ""
+                          });
                           progressValue = processingProgress;
                           statusColor = "orange";
                           animation = "animate-pulse";
                           break;
                         case "ready":
-                          statusText = "번역 완료";
+                          statusText = t("projects.statusReady");
                           progressValue = 100;
                           statusColor = "green";
                           showProgress = false;
                           break;
                         case "error":
-                          statusText = "처리 실패";
+                          statusText = t("projects.statusError");
                           progressValue = 100;
                           statusColor = "red";
                           showProgress = false;
                           break;
                         default:
-                          statusText = "알 수 없는 상태";
+                          statusText = t("projects.statusError");
                           progressValue = 0;
                           statusColor = "gray";
                           showProgress = false;
