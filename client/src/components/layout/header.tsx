@@ -115,6 +115,15 @@ export function Header({
               </SheetContent>
             </Sheet>
           )}
+          
+          {/* Logo */}
+          <Link href="/">
+            <img 
+              src="/logo.png" 
+              alt="Lexitra Logo" 
+              className="h-8 w-auto"
+            />
+          </Link>
         </div>
       
         <div className="flex items-center space-x-3">
