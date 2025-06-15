@@ -57,7 +57,6 @@ import {
   Calendar,
   Users,
   Clock,
-  Upload,
   ChevronDown,
   ChevronRight,
   Plus,
