@@ -126,6 +126,14 @@ async function createSegments(
   await db.insert(schema.translationUnits).values(segmentData);
 }
 
+// 번역 진행률 상수 정의
+const PROGRESS_MILESTONES = {
+  INITIAL_BATCH_SIZE: 10,           // 우선 번역할 세그먼트 수
+  PARTIAL_READY_THRESHOLD: 70,      // 일부 완료로 표시할 진행률
+  TRANSLATION_START: 70,            // 나머지 번역 시작 진행률
+  COMPLETE: 100                     // 완료 진행률
+};
+
 async function translateSegments(fileId: number, projectId: number): Promise<void> {
   // 프로젝트 언어 정보 가져오기
   const project = await db.query.projects.findFirst({
@@ -145,9 +153,9 @@ async function translateSegments(fileId: number, projectId: number): Promise<voi
     return;
   }
 
-  // 1단계: 첫 10개 세그먼트를 우선 번역 (사용자가 빠르게 확인 가능)
-  const initialBatch = segments.slice(0, 10);
-  const remainingSegments = segments.slice(10);
+  // 1단계: 첫 N개 세그먼트를 우선 번역 (사용자가 빠르게 확인 가능)
+  const initialBatch = segments.slice(0, PROGRESS_MILESTONES.INITIAL_BATCH_SIZE);
+  const remainingSegments = segments.slice(PROGRESS_MILESTONES.INITIAL_BATCH_SIZE);
 
   console.log(`첫 번째 배치: ${initialBatch.length}개 세그먼트 번역 시작`);
 
@@ -157,7 +165,7 @@ async function translateSegments(fileId: number, projectId: number): Promise<voi
   }
 
   // 첫 번째 배치 완료 후 파일 상태를 'partially_ready'로 업데이트
-  await updateProcessingProgress(fileId, 70, "partially_ready");
+  await updateProcessingProgress(fileId, PROGRESS_MILESTONES.PARTIAL_READY_THRESHOLD, "partially_ready");
 
   console.log(`첫 번째 배치 완료. 나머지 ${remainingSegments.length}개 세그먼트 백그라운드 번역 시작`);
 
@@ -168,13 +176,9 @@ async function translateSegments(fileId: number, projectId: number): Promise<voi
       await translateRemainingSegments(remainingSegments, project.sourceLanguage, project.targetLanguage, fileId);
     });
   } else {
-    // 모든 번역 완료
+    // 모든 번역 완료 (세그먼트가 10개 이하인 경우)
     await updateProcessingProgress(fileId, 100, "ready");
   }
-
-  // 3단계: GPT 번역 실행 (processingProgress: 70% → 100%)
-  console.log('[비동기 처리] GPT 번역 시작');
-  await updateProcessingProgress(fileId, 70, 'translating');
 
   for (let i = 0; i < segments.length; i++) {
     const segment = segments[i];
@@ -261,8 +265,9 @@ async function translateRemainingSegments(
     await translateSingleSegment(segment, sourceLanguage, targetLanguage);
     completedCount++;
 
-    // 진행률 업데이트 (70% + 나머지 30%를 점진적으로)
-    const progress = 70 + Math.round((completedCount / totalRemaining) * 30);
+    // 진행률 업데이트 (PARTIAL_READY_THRESHOLD% + 나머지를 점진적으로)
+    const remainingProgress = PROGRESS_MILESTONES.COMPLETE - PROGRESS_MILESTONES.PARTIAL_READY_THRESHOLD;
+    const progress = PROGRESS_MILESTONES.PARTIAL_READY_THRESHOLD + Math.round((completedCount / totalRemaining) * remainingProgress);
     await updateProcessingProgress(fileId, progress, "translating");
 
     // 진행 상황 로그
