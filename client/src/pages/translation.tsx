@@ -397,6 +397,64 @@ export default function Translation() {
     );
   }
 
+  // 파일이 아직 처리 중인 경우 (processing, pending)
+  if (file.processingStatus === "processing" || file.processingStatus === "pending") {
+    return (
+      <MainLayout title={t("translation.fileProcessing")}>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+            <h2 className="text-xl font-medium mb-2">
+              {t("translation.fileProcessing")}
+            </h2>
+            <p className="text-muted-foreground">
+              {t("translation.fileProcessingDesc")}
+            </p>
+            {file.processingProgress && (
+              <div className="mt-4 w-64 mx-auto">
+                <div className="flex justify-between text-sm text-muted-foreground mb-1">
+                  <span>{t("translation.progress")}</span>
+                  <span>{file.processingProgress}%</span>
+                </div>
+                <div className="w-full bg-secondary rounded-full h-2">
+                  <div 
+                    className="bg-primary h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${file.processingProgress}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // 파일 처리가 실패한 경우
+  if (file.processingStatus === "error") {
+    return (
+      <MainLayout title={t("translation.processingError")}>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h2 className="text-xl font-medium mb-2">
+              {t("translation.processingError")}
+            </h2>
+            <p className="text-muted-foreground">
+              {file.errorMessage || t("translation.processingErrorDesc")}
+            </p>
+            <Button
+              onClick={() => setLocation(`/project/${project.id}`)}
+              className="mt-4"
+            >
+              {t("translation.goBackToProject")}
+            </Button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   // 접근 권한 오류
   if (accessError) {
     return (

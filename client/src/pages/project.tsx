@@ -78,6 +78,7 @@ export default function Project() {
   const [selectedFiles, setSelectedFiles] = useState<number[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingSegments, setIsLoadingSegments] = useState(false);
+  const [previousFileStates, setPreviousFileStates] = useState<Record<number, string>>({});
 
   // 관리자 권한 체크
   const isAdmin = useMemo(() => user?.role === "admin", [user?.role]);
@@ -166,6 +167,15 @@ export default function Project() {
     staleTime: 5 * 60 * 1000, // 5분
     refetchOnWindowFocus: false,
     refetchOnMount: true,
+    refetchInterval: (data) => {
+      // 파일들 중 하나라도 처리 중이면 5초마다 업데이트
+      const hasProcessingFiles = data?.files?.some(file => 
+        file.processingStatus === "processing" || 
+        file.processingStatus === "translating" ||
+        file.processingStatus === "partially_ready"
+      );
+      return hasProcessingFiles ? 5000 : false;
+    },
   });
 
   // Get all TM entries to count TM matches
@@ -811,6 +821,50 @@ export default function Project() {
     },
   });
 
+  // 프로젝트 상태에 따른 액션 버튼 표시 결정
+  const showActionButtons = project && (
+    project.status === "Unclaimed" || 
+    (project.status === "Claimed" && project.claimedBy === user?.id) ||
+    user?.role === "admin"
+  );
+
+  // 파일 상태 변화 감지 및 알림
+  useEffect(() => {
+    if (project?.files) {
+      project.files.forEach(file => {
+        const previousStatus = previousFileStates[file.id];
+        const currentStatus = file.processingStatus;
+
+        // 번역 완료 알림
+        if (previousStatus && previousStatus !== "ready" && currentStatus === "ready") {
+          toast({
+            title: t("files.processingComplete"),
+            description: `${file.name} ${t("files.translationCompleted")}`,
+            duration: 5000,
+          });
+        }
+
+        // 일부 번역 완료 알림 (처음 70% 도달)
+        if (previousStatus && 
+            !["partially_ready", "translating", "ready"].includes(previousStatus) && 
+            currentStatus === "partially_ready") {
+          toast({
+            title: t("files.partiallyReady"),
+            description: `${file.name} ${t("files.partialTranslationReady")}`,
+            duration: 3000,
+          });
+        }
+      });
+
+      // 현재 상태 저장
+      const newStates: Record<number, string> = {};
+      project.files.forEach(file => {
+        newStates[file.id] = file.processingStatus || "pending";
+      });
+      setPreviousFileStates(newStates);
+    }
+  }, [project?.files, t, toast, previousFileStates]);
+
   if (isLoading) {
     console.log("Project is loading...");
     return (
@@ -935,7 +989,8 @@ export default function Project() {
                       onClick={() => setShowReleaseDialog(true)}
                       disabled={releaseProject.isPending}
                     >
-                      {releaseProject.isPending
+                      ```python
+{releaseProject.isPending
                         ? t("projects.releasing")
                         : t("projects.release")}
                     </Button>
@@ -1484,7 +1539,7 @@ export default function Project() {
                       className?: string;
                     }) => {
                       console.log('FileProgressIndicator:', { processingStatus, processingProgress });
-                      
+
                       let statusText = "";
                       let progressValue = 0;
                       let statusColor = "gray"; // 기본 색상
@@ -1828,7 +1883,7 @@ export default function Project() {
                           }
                         }}
                       >
-                        <Upload className="h-6 w-6 text-muted-foreground mb-2" />
+                        <Upload className="h-6 w-6 text-muted-foreground mb-2"/>
                         <p className="text-xs text-muted-foreground">
                           {t("projects.dropFilesHere")}
                         </p>
