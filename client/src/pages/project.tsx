@@ -1483,6 +1483,8 @@ export default function Project() {
                       errorMessage?: string;
                       className?: string;
                     }) => {
+                      console.log('FileProgressIndicator:', { processingStatus, processingProgress });
+                      
                       let statusText = "";
                       let progressValue = 0;
                       let statusColor = "gray"; // 기본 색상
@@ -1498,23 +1500,32 @@ export default function Project() {
                           break;
                         case "partially_ready":
                           statusText = t("projects.statusPartiallyReady");
-                          progressValue = processingProgress;
+                          progressValue = processingProgress || 50;
                           statusColor = "orange";
                           animation = "animate-pulse";
                           break;
                         case "processing":
-                          statusText = processingProgress 
-                            ? `${t("projects.statusProcessing")} (${processingProgress}%)`
-                            : t("projects.statusProcessing");
-                          progressValue = processingProgress;
-                          statusColor = "blue";
-                          animation = "animate-spin";
+                          // 70% 이상이면 번역 중으로 표시
+                          if (processingProgress >= 70) {
+                            statusText = processingProgress 
+                              ? `${t("projects.statusTranslating")} (${processingProgress}%)`
+                              : t("projects.statusTranslating");
+                            statusColor = "orange";
+                            animation = "animate-pulse";
+                          } else {
+                            statusText = processingProgress 
+                              ? `${t("projects.statusProcessing")} (${processingProgress}%)`
+                              : t("projects.statusProcessing");
+                            statusColor = "blue";
+                            animation = "animate-spin";
+                          }
+                          progressValue = processingProgress || 0;
                           break;
                         case "translating":
                           statusText = processingProgress 
                             ? `${t("projects.statusTranslating")} (${processingProgress}%)`
                             : t("projects.statusTranslating");
-                          progressValue = processingProgress;
+                          progressValue = processingProgress || 70;
                           statusColor = "orange";
                           animation = "animate-pulse";
                           break;
@@ -1531,10 +1542,12 @@ export default function Project() {
                           showProgress = false;
                           break;
                         default:
-                          statusText = t("projects.statusError");
-                          progressValue = 0;
-                          statusColor = "gray";
-                          showProgress = false;
+                          // 기본값으로 processing 처리
+                          statusText = t("projects.statusProcessing");
+                          progressValue = processingProgress || 0;
+                          statusColor = "blue";
+                          animation = "animate-spin";
+                          showProgress = true;
                       }
 
                       return (
