@@ -59,7 +59,6 @@ import {
   Clock,
   ChevronDown,
   ChevronRight,
-  Plus,
   TextCursorInput,
   Trash2,
   Save,
