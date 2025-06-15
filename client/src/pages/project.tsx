@@ -78,7 +78,7 @@ export default function Project() {
   const [selectedFiles, setSelectedFiles] = useState<number[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingSegments, setIsLoadingSegments] = useState(false);
-  const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
+  
 
   // 관리자 권한 체크
   const isAdmin = useMemo(() => user?.role === "admin", [user?.role]);
@@ -421,66 +421,39 @@ export default function Project() {
     return response.json();
   };
 
-  // DOCX 다운로드 함수 - iframe을 사용한 안전한 다운로드
-  const downloadTranslatedDocx = async (fileId: number, fileName: string) => {
+  // DOCX 다운로드 함수 - 새 창에서 열기 방식 (페이지 네비게이션 방지)
+  const downloadTranslatedDocx = (fileId: number, fileName: string) => {
     try {
-      setIsDownloadingDocx(true);
-
       const token = localStorage.getItem("auth_token") || "";
       const translatedFileName = fileName.replace('.docx', '_translated.docx');
 
       console.log("DOCX 다운로드 시작:", { fileId, fileName, translatedFileName });
 
-      // iframe을 사용한 안전한 다운로드 (페이지 네비게이션 방지)
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.style.position = 'absolute';
-      iframe.style.left = '-9999px';
-      
-      // POST 요청을 위한 폼 생성
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = `/api/files/${fileId}/download-docx`;
-      form.target = iframe.name;
-      
-      // iframe 이름 설정
-      iframe.name = `download-frame-${Date.now()}`;
+      // 새 창에서 POST 요청을 통한 다운로드 (현재 페이지에 영향 없음)
+      const downloadForm = document.createElement('form');
+      downloadForm.method = 'POST';
+      downloadForm.action = `/api/files/${fileId}/download-docx`;
+      downloadForm.target = '_blank'; // 새 창에서 열기
+      downloadForm.style.display = 'none';
       
       // 인증 토큰을 위한 숨겨진 input 추가
       const tokenInput = document.createElement('input');
       tokenInput.type = 'hidden';
       tokenInput.name = 'token';
       tokenInput.value = token;
-      form.appendChild(tokenInput);
+      downloadForm.appendChild(tokenInput);
       
-      // iframe과 폼을 페이지에 추가
-      document.body.appendChild(iframe);
-      document.body.appendChild(form);
+      // 폼을 페이지에 추가하고 제출
+      document.body.appendChild(downloadForm);
+      downloadForm.submit();
       
-      // 폼 제출
-      form.submit();
-      
-      // 정리 (5초 후)
-      setTimeout(() => {
-        try {
-          if (document.body.contains(form)) {
-            document.body.removeChild(form);
-          }
-          if (document.body.contains(iframe)) {
-            document.body.removeChild(iframe);
-          }
-        } catch (cleanupError) {
-          console.warn("정리 중 오류:", cleanupError);
-        }
-      }, 5000);
+      // 폼 정리
+      document.body.removeChild(downloadForm);
 
-      // 성공 메시지 표시 (약간의 지연 후)
-      setTimeout(() => {
-        toast({
-          title: "다운로드 시작됨",
-          description: `번역된 DOCX 파일 다운로드가 시작되었습니다: ${translatedFileName}`,
-        });
-      }, 500);
+      toast({
+        title: "다운로드 시작됨",
+        description: `번역된 DOCX 파일 다운로드가 시작되었습니다: ${translatedFileName}`,
+      });
 
     } catch (error) {
       console.error("DOCX 다운로드 오류:", error);
@@ -489,8 +462,6 @@ export default function Project() {
         description: error instanceof Error ? error.message : "DOCX 다운로드 중 오류가 발생했습니다.",
         variant: "destructive",
       });
-    } finally {
-      setIsDownloadingDocx(false);
     }
   };
 
@@ -1592,19 +1563,9 @@ export default function Project() {
                                 variant="outline"
                                 size="sm"
                                 className="h-8"
-                                disabled={isDownloadingDocx}
                               >
-                                {isDownloadingDocx ? (
-                                  <>
-                                    <div className="animate-spin h-3 w-3 border-2 border-primary border-t-transparent rounded-full mr-1"></div>
-                                    다운로드 중...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Download className="h-3.5 w-3.5 mr-1" />
-                                    다운로드
-                                  </>
-                                )}
+                                <Download className="h-3.5 w-3.5 mr-1" />
+                                다운로드
                               </Button>
                             )}
                             <Button
