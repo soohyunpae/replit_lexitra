@@ -2729,8 +2729,8 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
   // 번역 완료된 파일의 DOCX 다운로드 API
   app.get(`${apiPrefix}/files/:id/download-docx`, async (req, res) => {
     try {
-      // 토큰 검증 (헤더에서)
-      const token = req.headers.authorization?.split(" ")[1];
+      // 토큰 검증 (헤더 또는 쿼리 파라미터에서)
+      const token = req.headers.authorization?.split(" ")[1] || req.query.token as string;
       
       if (!token) {
         return res.status(401).json({ message: "No token provided" });

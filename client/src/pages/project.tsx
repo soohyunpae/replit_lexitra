@@ -430,7 +430,7 @@ export default function Project() {
     return response.json();
   };
 
-  // DOCX 다운로드 함수 - 안전한 blob 처리 방식
+  // DOCX 다운로드 함수 - iframe을 이용한 안전한 다운로드
   const downloadTranslatedDocx = async (fileId: number, fileName: string) => {
     try {
       const token = localStorage.getItem("auth_token") || "";
@@ -438,65 +438,38 @@ export default function Project() {
 
       console.log("DOCX 다운로드 시작:", { fileId, fileName, translatedFileName });
 
-      // fetch를 사용하여 파일 데이터 요청
-      const response = await fetch(`/api/files/${fileId}/download-docx`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`다운로드 실패: ${response.status} ${errorText}`);
-      }
-
-      // 응답을 blob으로 변환
-      const blob = await response.blob();
+      // iframe을 사용한 다운로드 방식 - 페이지 네비게이션 완전 방지
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.style.visibility = 'hidden';
+      iframe.style.position = 'absolute';
+      iframe.style.left = '-9999px';
+      iframe.style.width = '1px';
+      iframe.style.height = '1px';
       
-      // MIME 타입 확인
-      const contentType = response.headers.get('content-type');
-      console.log('Response content type:', contentType);
+      document.body.appendChild(iframe);
       
-      // blob 크기 확인
-      if (blob.size === 0) {
-        throw new Error('파일이 비어있습니다.');
-      }
+      // iframe 내에서 다운로드 수행
+      const downloadUrl = `/api/files/${fileId}/download-docx?token=${encodeURIComponent(token)}`;
+      iframe.src = downloadUrl;
       
-      console.log('Blob size:', blob.size, 'bytes');
-      
-      // 안전한 다운로드 링크 생성
-      const url = window.URL.createObjectURL(blob);
-      const downloadLink = document.createElement('a');
-      
-      // 다운로드 링크 설정 - target="_blank" 제거하여 페이지 이동 방지
-      downloadLink.href = url;
-      downloadLink.download = translatedFileName;
-      downloadLink.style.display = 'none';
-      
-      // DOM에 추가
-      document.body.appendChild(downloadLink);
-      
-      // 다운로드 트리거
-      console.log('다운로드 링크 클릭 시도');
-      downloadLink.click();
-      
-      // 짧은 지연 후 정리 (브라우저가 다운로드를 시작할 시간을 줌)
-      setTimeout(() => {
-        try {
-          document.body.removeChild(downloadLink);
-          window.URL.revokeObjectURL(url);
-          console.log('다운로드 링크 정리 완료');
-        } catch (cleanupError) {
-          console.warn('정리 중 오류 (무시 가능):', cleanupError);
-        }
-      }, 100);
-
+      // 다운로드 성공 표시
       toast({
         title: "다운로드 시작됨",
         description: `번역된 DOCX 파일 다운로드가 시작되었습니다: ${translatedFileName}`,
       });
+      
+      // iframe 정리
+      setTimeout(() => {
+        try {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+          console.log('iframe 정리 완료');
+        } catch (cleanupError) {
+          console.warn('iframe 정리 중 오류 (무시 가능):', cleanupError);
+        }
+      }, 3000); // 3초 후 정리
 
     } catch (error) {
       console.error("DOCX 다운로드 오류:", error);
@@ -1602,10 +1575,15 @@ export default function Project() {
                             {file.name.toLowerCase().endsWith('.docx') && 
                              file.processingStatus === "ready" && (
                               <Button
-                                onClick={() => downloadTranslatedDocx(file.id, file.name)}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  downloadTranslatedDocx(file.id, file.name);
+                                }}
                                 variant="outline"
                                 size="sm"
                                 className="h-8"
+                                type="button"
                               >
                                 <Download className="h-3.5 w-3.5 mr-1" />
                                 다운로드
