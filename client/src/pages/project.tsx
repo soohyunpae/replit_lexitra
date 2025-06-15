@@ -430,46 +430,36 @@ export default function Project() {
     return response.json();
   };
 
-  // DOCX 다운로드 함수 - iframe을 이용한 안전한 다운로드
-  const downloadTranslatedDocx = async (fileId: number, fileName: string) => {
+  // DOCX 다운로드 함수 - 새 탭 방식으로 안전한 다운로드
+  const downloadTranslatedDocx = (fileId: number, fileName: string) => {
     try {
       const token = localStorage.getItem("auth_token") || "";
       const translatedFileName = fileName.replace('.docx', '_translated.docx');
 
       console.log("DOCX 다운로드 시작:", { fileId, fileName, translatedFileName });
 
-      // iframe을 사용한 다운로드 방식 - 페이지 네비게이션 완전 방지
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.style.visibility = 'hidden';
-      iframe.style.position = 'absolute';
-      iframe.style.left = '-9999px';
-      iframe.style.width = '1px';
-      iframe.style.height = '1px';
-      
-      document.body.appendChild(iframe);
-      
-      // iframe 내에서 다운로드 수행
+      // 새 탭에서 다운로드 진행 - 현재 페이지는 유지
       const downloadUrl = `/api/files/${fileId}/download-docx?token=${encodeURIComponent(token)}`;
-      iframe.src = downloadUrl;
+      console.log('새 탭에서 다운로드 시도:', downloadUrl);
+      
+      const newTab = window.open(downloadUrl, '_blank');
+      
+      // 새 탭이 열렸다면 즉시 닫기 (다운로드 시작 후)
+      if (newTab) {
+        setTimeout(() => {
+          try {
+            newTab.close();
+          } catch (e) {
+            console.log('새 탭을 닫을 수 없음 (브라우저 정책)');
+          }
+        }, 1000);
+      }
       
       // 다운로드 성공 표시
       toast({
         title: "다운로드 시작됨",
         description: `번역된 DOCX 파일 다운로드가 시작되었습니다: ${translatedFileName}`,
       });
-      
-      // iframe 정리
-      setTimeout(() => {
-        try {
-          if (document.body.contains(iframe)) {
-            document.body.removeChild(iframe);
-          }
-          console.log('iframe 정리 완료');
-        } catch (cleanupError) {
-          console.warn('iframe 정리 중 오류 (무시 가능):', cleanupError);
-        }
-      }, 3000); // 3초 후 정리
 
     } catch (error) {
       console.error("DOCX 다운로드 오류:", error);
