@@ -78,13 +78,6 @@ export default function Project() {
   const [selectedFiles, setSelectedFiles] = useState<number[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingSegments, setIsLoadingSegments] = useState(false);
-  const [isComponentMounted, setIsComponentMounted] = useState(false);
-
-  // 컴포넌트 마운트 상태 안정화
-  useEffect(() => {
-    setIsComponentMounted(true);
-    return () => setIsComponentMounted(false);
-  }, []);
   
 
   // 관리자 권한 체크
@@ -437,14 +430,15 @@ export default function Project() {
     return response.json();
   };
 
-  // DOCX 다운로드 mutation - React Query로 상태 관리
-  const downloadDocxMutation = useMutation({
-    mutationFn: async ({ fileId, fileName }: { fileId: number; fileName: string }) => {
+  // DOCX 다운로드 함수 - 상태 보존하면서 안전한 다운로드
+  const downloadTranslatedDocx = async (fileId: number, fileName: string) => {
+    try {
       const token = localStorage.getItem("auth_token") || "";
       const translatedFileName = fileName.replace('.docx', '_translated.docx');
 
       console.log("DOCX 다운로드 시작:", { fileId, fileName, translatedFileName });
 
+      // React의 상태 관리를 방해하지 않도록 비동기 처리
       const response = await fetch(`/api/files/${fileId}/download-docx`, {
         method: 'GET',
         headers: {
@@ -458,85 +452,44 @@ export default function Project() {
         throw new Error(`다운로드 실패: ${response.status} ${errorText}`);
       }
 
+      // blob 생성
       const blob = await response.blob();
       console.log('Blob created:', blob.size, 'bytes');
       
-      // 안전한 다운로드 처리
-      const url = URL.createObjectURL(blob);
-      const downloadLink = document.createElement('a');
-      downloadLink.style.display = 'none';
-      downloadLink.href = url;
-      downloadLink.download = translatedFileName;
-      
-      downloadLink.click();
-      URL.revokeObjectURL(url);
-      
-      return { fileName: translatedFileName };
-    },
-    onSuccess: (data) => {
+      // 브라우저의 다운로드 API 사용 - 최신 방식
+      if ('navigator' in window && 'msSaveBlob' in (window.navigator as any)) {
+        // Internet Explorer
+        (window.navigator as any).msSaveBlob(blob, translatedFileName);
+      } else {
+        // 모던 브라우저 - URL.createObjectURL 사용하되 React 상태와 격리
+        const url = URL.createObjectURL(blob);
+        
+        // 다운로드 링크 생성 - React 렌더링과 완전히 분리
+        const downloadLink = document.createElement('a');
+        downloadLink.style.display = 'none';
+        downloadLink.href = url;
+        downloadLink.download = translatedFileName;
+        
+        // 문서에 추가하지 않고 직접 클릭
+        downloadLink.click();
+        
+        // 즉시 정리
+        URL.revokeObjectURL(url);
+      }
+
       toast({
         title: "다운로드 완료",
-        description: `번역된 DOCX 파일이 다운로드되었습니다: ${data.fileName}`,
+        description: `번역된 DOCX 파일이 다운로드되었습니다: ${translatedFileName}`,
       });
-    },
-    onError: (error) => {
+
+    } catch (error) {
       console.error("DOCX 다운로드 오류:", error);
       toast({
         title: "다운로드 실패",
         description: error instanceof Error ? error.message : "다운로드 중 오류가 발생했습니다.",
         variant: "destructive",
       });
-    },
-  });
-
-  // 다운로드 함수 - React 이벤트 루프 외부에서 실행
-  const downloadTranslatedDocx = (fileId: number, fileName: string) => {
-    const token = localStorage.getItem("auth_token") || "";
-    const translatedFileName = fileName.replace('.docx', '_translated.docx');
-    
-    // setTimeout을 사용하여 React의 이벤트 처리 사이클과 분리
-    setTimeout(() => {
-      // 네이티브 fetch API 사용하여 다운로드
-      fetch(`/api/files/${fileId}/download-docx?token=${encodeURIComponent(token)}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        credentials: 'include',
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('다운로드 실패');
-        }
-        return response.blob();
-      })
-      .then(blob => {
-        // Blob URL 생성 및 다운로드
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = translatedFileName;
-        
-        // React DOM과 분리하여 실행
-        document.body.appendChild(a);
-        a.click();
-        
-        // 정리
-        setTimeout(() => {
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        }, 100);
-      })
-      .catch(error => {
-        console.error('다운로드 오류:', error);
-      });
-    }, 0);
-    
-    toast({
-      title: "다운로드 시작됨",
-      description: `번역된 DOCX 파일 다운로드가 시작되었습니다: ${translatedFileName}`,
-    });
+    }
   };
 
   // Fetch segments for each file

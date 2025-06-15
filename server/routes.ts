@@ -2829,17 +2829,13 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         const originalName = file.name.replace('.docx', '');
         const translatedFileName = `${originalName}_translated.docx`;
 
-        // 강화된 다운로드 헤더 설정 - 페이지 네비게이션 방지
+        // 배포 환경 호환 다운로드 헤더 설정
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
         res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(translatedFileName)}; filename="${translatedFileName}"`);
         res.setHeader('Content-Length', buffer.length.toString());
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');
-        
-        // 브라우저가 다운로드로 인식하도록 강제하는 헤더들
-        res.setHeader('Content-Transfer-Encoding', 'binary');
-        res.setHeader('Accept-Ranges', 'bytes');
         
         // CORS 헤더 (배포 환경 대응)
         res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
@@ -2849,10 +2845,6 @@ app.get(`${apiPrefix}/projects`, verifyToken, async (req, res) => {
         // 추가 보안 헤더
         res.setHeader('X-Content-Type-Options', 'nosniff');
         res.setHeader('Content-Security-Policy', "default-src 'none'");
-        
-        // 브라우저 네비게이션 방지를 위한 추가 헤더
-        res.setHeader('X-Download-Options', 'noopen');
-        res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
 
         // 파일 전송
         return res.send(buffer);
