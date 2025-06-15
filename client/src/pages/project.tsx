@@ -489,28 +489,50 @@ export default function Project() {
     },
   });
 
-  // 다운로드 함수 - 순수 DOM 조작으로 React 우회
+  // 다운로드 함수 - React 이벤트 루프 외부에서 실행
   const downloadTranslatedDocx = (fileId: number, fileName: string) => {
     const token = localStorage.getItem("auth_token") || "";
     const translatedFileName = fileName.replace('.docx', '_translated.docx');
     
-    // 숨겨진 iframe 생성하여 다운로드 수행
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:absolute;width:1px;height:1px;top:-100px;left:-100px;border:none;';
-    iframe.src = `data:text/html,<html><head></head><body><script>
-      window.location.href = "/api/files/${fileId}/download-docx?token=${encodeURIComponent(token)}";
-    </script></body></html>`;
-    
-    document.body.appendChild(iframe);
-    
-    // iframe 정리
+    // setTimeout을 사용하여 React의 이벤트 처리 사이클과 분리
     setTimeout(() => {
-      if (document.body.contains(iframe)) {
-        document.body.removeChild(iframe);
-      }
-    }, 5000);
+      // 네이티브 fetch API 사용하여 다운로드
+      fetch(`/api/files/${fileId}/download-docx?token=${encodeURIComponent(token)}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        credentials: 'include',
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('다운로드 실패');
+        }
+        return response.blob();
+      })
+      .then(blob => {
+        // Blob URL 생성 및 다운로드
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = translatedFileName;
+        
+        // React DOM과 분리하여 실행
+        document.body.appendChild(a);
+        a.click();
+        
+        // 정리
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+      })
+      .catch(error => {
+        console.error('다운로드 오류:', error);
+      });
+    }, 0);
     
-    // 토스트 메시지
     toast({
       title: "다운로드 시작됨",
       description: `번역된 DOCX 파일 다운로드가 시작되었습니다: ${translatedFileName}`,
